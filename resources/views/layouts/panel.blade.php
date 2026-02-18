@@ -22,9 +22,9 @@
 
     $navItems = $isSuperAdmin
         ? [
-            ['label' => 'Dashboard', 'route' => 'superadmin.dashboard', 'active' => 'superadmin.dashboard'],
-            ['label' => 'Gyms', 'route' => 'superadmin.gyms.index', 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*'],
-            ['label' => 'Inbox', 'route' => 'superadmin.notifications.index', 'active' => 'superadmin.notifications.*'],
+            ['label' => 'Panel', 'route' => 'superadmin.dashboard', 'active' => 'superadmin.dashboard'],
+            ['label' => 'Gimnasios', 'route' => 'superadmin.gyms.index', 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*'],
+            ['label' => 'Notificaciones', 'route' => 'superadmin.notifications.index', 'active' => 'superadmin.notifications.*'],
           ]
         : [
             ['label' => 'Recepcion', 'route' => 'reception.index', 'active' => 'reception.*'],
@@ -32,7 +32,7 @@
             ['label' => 'Planes', 'route' => 'plans.index', 'active' => 'plans.*'],
             ['label' => 'Caja', 'route' => 'cash.index', 'active' => 'cash.*'],
             ['label' => 'Reportes', 'route' => 'reports.index', 'active' => 'reports.*'],
-            ['label' => 'Config', 'route' => 'settings.index', 'active' => 'settings.*'],
+            ['label' => 'Configuracion', 'route' => 'settings.index', 'active' => 'settings.*'],
           ];
 
     $statusVariant = match ($gymSubscriptionStatus) {
@@ -122,7 +122,7 @@
                     @endif
 
                     <a href="{{ route('settings.index') }}" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold">
-                        Config
+                        Configuracion
                     </a>
 
                     <span class="theme-chip hidden rounded-full px-3 py-1 text-xs font-semibold md:inline-flex">

@@ -30,7 +30,15 @@ class ReportController extends Controller
         $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
 
-        $methodLabels = $incomeByMethod->pluck('method')->values();
+        $methodLabels = $incomeByMethod
+            ->pluck('method')
+            ->map(fn (string $method) => match ($method) {
+                'cash' => 'Efectivo',
+                'card' => 'Tarjeta',
+                'transfer' => 'Transferencia',
+                default => $method,
+            })
+            ->values();
         $methodIncomeData = $incomeByMethod->map(fn ($row) => (float) $row->income_total)->values();
         $methodExpenseData = $incomeByMethod->map(fn ($row) => (float) $row->expense_total)->values();
 
@@ -170,10 +178,15 @@ class ReportController extends Controller
             fputcsv($handle, []);
 
             fputcsv($handle, ['INGRESOS POR METODO']);
-            fputcsv($handle, ['Metodo', 'Income', 'Expense', 'Balance', 'Movimientos']);
+            fputcsv($handle, ['Metodo', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
             foreach ($incomeByMethod as $row) {
                 fputcsv($handle, [
-                    $row->method,
+                    match ($row->method) {
+                        'cash' => 'Efectivo',
+                        'card' => 'Tarjeta',
+                        'transfer' => 'Transferencia',
+                        default => $row->method,
+                    },
                     number_format((float) $row->income_total, 2, '.', ''),
                     number_format((float) $row->expense_total, 2, '.', ''),
                     number_format((float) $row->balance, 2, '.', ''),
@@ -197,13 +210,22 @@ class ReportController extends Controller
             fputcsv($handle, []);
 
             fputcsv($handle, ['DETALLE MOVIMIENTOS']);
-            fputcsv($handle, ['ID', 'Fecha', 'Type', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
+            fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
             foreach ($movements as $movement) {
                 fputcsv($handle, [
                     $movement->id,
                     $movement->occurred_at?->format('Y-m-d H:i:s'),
-                    $movement->type,
-                    $movement->method,
+                    match ($movement->type) {
+                        'income' => 'Ingreso',
+                        'expense' => 'Egreso',
+                        default => $movement->type,
+                    },
+                    match ($movement->method) {
+                        'cash' => 'Efectivo',
+                        'card' => 'Tarjeta',
+                        'transfer' => 'Transferencia',
+                        default => $movement->method,
+                    },
                     number_format((float) $movement->amount, 2, '.', ''),
                     $movement->membership?->client?->full_name ?? '',
                     $movement->createdBy?->name ?? '',

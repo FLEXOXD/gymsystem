@@ -27,6 +27,22 @@
         if ($latestMembership?->ends_at) {
             $daysLeft = now()->startOfDay()->diffInDays($latestMembership->ends_at->copy()->startOfDay(), false);
         }
+        $statusLabels = [
+            'active' => 'Activo',
+            'inactive' => 'Inactivo',
+            'expired' => 'Vencido',
+            'cancelled' => 'Cancelado',
+        ];
+        $methodLabels = [
+            'cash' => 'Efectivo',
+            'card' => 'Tarjeta',
+            'transfer' => 'Transferencia',
+        ];
+        $attendanceMethodLabels = [
+            'document' => 'Documento',
+            'rfid' => 'RFID',
+            'qr' => 'QR',
+        ];
     @endphp
 
     <x-ui.card>
@@ -122,7 +138,7 @@
             <div class="grid gap-2 text-sm ui-text md:grid-cols-2">
                 <p><span class="font-semibold text-slate-900">Nombre:</span> {{ $client->full_name }}</p>
                 <p><span class="font-semibold text-slate-900">Documento:</span> {{ $client->document_number }}</p>
-                <p><span class="font-semibold text-slate-900">Estado:</span> {{ $client->status }}</p>
+                <p><span class="font-semibold text-slate-900">Estado:</span> {{ $statusLabels[$client->status] ?? $client->status }}</p>
                 <p><span class="font-semibold text-slate-900">Telefono:</span> {{ $client->phone ?: '-' }}</p>
             </div>
         </div>
@@ -231,9 +247,9 @@
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Estado</span>
                     <select name="status" class="ui-input">
-                        <option value="active">active</option>
-                        <option value="expired">expired</option>
-                        <option value="cancelled">cancelled</option>
+                        <option value="active">Activo</option>
+                        <option value="expired">Vencido</option>
+                        <option value="cancelled">Cancelado</option>
                     </select>
                 </label>
 
@@ -241,9 +257,9 @@
                     <span>Metodo de pago</span>
                     <select name="payment_method" required class="ui-input">
                         <option value="">Seleccione</option>
-                        <option value="cash" @selected(old('payment_method') === 'cash')>cash</option>
-                        <option value="card" @selected(old('payment_method') === 'card')>card</option>
-                        <option value="transfer" @selected(old('payment_method') === 'transfer')>transfer</option>
+                        <option value="cash" @selected(old('payment_method') === 'cash')>Efectivo</option>
+                        <option value="card" @selected(old('payment_method') === 'card')>Tarjeta</option>
+                        <option value="transfer" @selected(old('payment_method') === 'transfer')>Transferencia</option>
                     </select>
                 </label>
             </div>
@@ -306,7 +322,10 @@
                     <tr class="border-b border-slate-100 text-sm">
                         <td class="px-3 py-3">{{ $attendance->date?->toDateString() ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $attendance->time ?? '-' }}</td>
-                        <td class="px-3 py-3">{{ $attendance->credential?->type ?? 'document' }}</td>
+                        @php
+                            $attendanceMethod = $attendance->credential?->type ?? 'document';
+                        @endphp
+                        <td class="px-3 py-3">{{ $attendanceMethodLabels[$attendanceMethod] ?? strtoupper($attendanceMethod) }}</td>
                         <td class="px-3 py-3 font-mono text-xs">{{ $attendance->credential?->value ? substr($attendance->credential->value, -10) : '-' }}</td>
                     </tr>
                 @empty
@@ -338,7 +357,7 @@
                         <td class="px-3 py-3">{{ $movement->occurred_at?->format('Y-m-d H:i') ?? '-' }}</td>
                         <td class="px-3 py-3">#{{ $movement->membership_id }}</td>
                         <td class="px-3 py-3">{{ $movement->membership?->plan?->name ?? '-' }}</td>
-                        <td class="px-3 py-3">{{ $movement->method }}</td>
+                        <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
                         <td class="px-3 py-3 font-semibold text-emerald-700">${{ number_format((float) $movement->amount, 2) }}</td>
                         <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
                     </tr>

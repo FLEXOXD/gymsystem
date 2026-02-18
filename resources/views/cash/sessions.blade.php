@@ -17,9 +17,9 @@
                     <th class="px-3 py-3">Estado</th>
                     <th class="px-3 py-3">Apertura</th>
                     <th class="px-3 py-3">Cierre</th>
-                    <th class="px-3 py-3">Opening</th>
-                    <th class="px-3 py-3">Expected</th>
-                    <th class="px-3 py-3">Difference</th>
+                    <th class="px-3 py-3">Apertura</th>
+                    <th class="px-3 py-3">Esperado</th>
+                    <th class="px-3 py-3">Diferencia</th>
                     <th class="px-3 py-3">Abierta por</th>
                     <th class="px-3 py-3">Cerrada por</th>
                     <th class="px-3 py-3">Detalle</th>

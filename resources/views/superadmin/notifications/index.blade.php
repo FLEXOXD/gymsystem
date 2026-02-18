@@ -1,10 +1,10 @@
 @extends('layouts.panel')
 
-@section('title', 'Inbox de notificaciones')
+@section('title', 'Bandeja de notificaciones')
 @section('page-title', 'Notificaciones pendientes')
 
 @section('content')
-    <x-ui.card title="Inbox de notificaciones" subtitle="Avisos automaticos por vencimiento y dias de gracia.">
+    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automaticos por vencimiento y dias de gracia.">
         <form method="GET" action="{{ route('superadmin.notifications.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
                 Fecha
@@ -19,7 +19,7 @@
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                     <th class="px-3 py-3">Tipo</th>
-                    <th class="px-3 py-3">Gym</th>
+                    <th class="px-3 py-3">Gimnasio</th>
                     <th class="px-3 py-3">Plan</th>
                     <th class="px-3 py-3">Vence</th>
                     <th class="px-3 py-3">Canal</th>
@@ -33,14 +33,23 @@
                         $typeClass = str_starts_with($notification->type, 'grace_')
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
                             : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200';
+                        $typeLabel = match ($notification->type) {
+                            'expires_7' => 'Vence en 7 dias',
+                            'expires_3' => 'Vence en 3 dias',
+                            'expires_1' => 'Vence en 1 dia',
+                            'grace_1' => 'Gracia dia 1',
+                            'grace_2' => 'Gracia dia 2',
+                            'grace_3' => 'Gracia dia 3',
+                            default => str_replace('_', ' ', $notification->type),
+                        };
                     @endphp
                     <tr class="border-b border-slate-100 align-top text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3">
                             <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $typeClass }}">
-                                {{ $notification->type }}
+                                {{ $typeLabel }}
                             </span>
                         </td>
-                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/A' }}</td>
+                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/D' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $notification->subscription?->plan_name ?? '-' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $notification->subscription?->ends_at?->toDateString() ?? '-' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $notification->channel }}</td>

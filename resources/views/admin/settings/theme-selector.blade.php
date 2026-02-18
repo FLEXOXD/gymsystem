@@ -28,8 +28,8 @@
          data-current-theme="{{ $currentTheme }}"
          data-update-url="{{ route('settings.theme.update', [], false) }}"
          data-csrf="{{ csrf_token() }}">
-        <x-card title="Theme Selector"
-                subtitle="Personaliza IRON WILL con un look premium. El cambio es instantaneo y se guarda en tu cuenta.">
+        <x-card title="Selector de tema"
+                subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantaneo y se guarda en tu cuenta.">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($themes as $themeKey => $theme)
                     <button type="button"
@@ -153,7 +153,7 @@
                         Como SuperAdmin gestionas multiples gimnasios. El logo, telefono y direccion se administran por cada gym.
                     </p>
                     <a href="{{ route('superadmin.gyms.index') }}" class="ui-button ui-button-primary mt-4">
-                        Ir a Gyms
+                        Ir a Gimnasios
                     </a>
                 </section>
             @else

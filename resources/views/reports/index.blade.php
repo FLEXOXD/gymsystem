@@ -4,7 +4,7 @@
 @section('page-title', 'Reportes')
 
 @section('content')
-    <x-ui.card title="Dashboard de reportes" subtitle="Resumen financiero y operativo del rango seleccionado.">
+    <x-ui.card title="Panel de reportes" subtitle="Resumen financiero y operativo del rango seleccionado.">
         <form method="GET" action="{{ route('reports.index') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
             <label class="space-y-1 text-sm font-semibold ui-muted">
                 <span>Desde</span>
@@ -29,28 +29,28 @@
 
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total ingresos</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Total ingresos</p>
             <p class="mt-2 text-3xl font-black text-emerald-700">${{ number_format((float) $incomeSummary['total_income'], 2) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total egresos</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Total egresos</p>
             <p class="mt-2 text-3xl font-black text-rose-700">${{ number_format((float) $incomeSummary['total_expense'], 2) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Balance</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Balance</p>
             <p class="mt-2 text-3xl font-black text-cyan-700">${{ number_format((float) $incomeSummary['balance'], 2) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Movimientos</p>
-            <p class="mt-2 text-3xl font-black text-slate-900">{{ (int) $incomeSummary['total_movements'] }}</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Movimientos</p>
+            <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $incomeSummary['total_movements'] }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Asistencias</p>
-            <p class="mt-2 text-3xl font-black text-slate-900">{{ (int) $attendanceSummary['total_attendances'] }}</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Asistencias</p>
+            <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $attendanceSummary['total_attendances'] }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Membresias activas</p>
-            <p class="mt-2 text-3xl font-black text-slate-900">{{ (int) $membershipSummary['active'] }}</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Membresias activas</p>
+            <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $membershipSummary['active'] }}</p>
             <div class="mt-3 flex gap-2">
                 <x-ui.badge variant="success">Activos {{ (int) $membershipSummary['active'] }}</x-ui.badge>
                 <x-ui.badge variant="danger">Vencidos {{ (int) $membershipSummary['expired'] }}</x-ui.badge>
@@ -93,8 +93,8 @@
                 data: {
                     labels: methodLabels,
                     datasets: [
-                        { label: 'Income', data: methodIncomeData, backgroundColor: '#059669' },
-                        { label: 'Expense', data: methodExpenseData, backgroundColor: '#dc2626' },
+                        { label: 'Ingresos', data: methodIncomeData, backgroundColor: '#059669' },
+                        { label: 'Egresos', data: methodExpenseData, backgroundColor: '#dc2626' },
                     ],
                 },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' } } },

@@ -283,3 +283,23 @@
         background-color: color-mix(in srgb, var(--card) 85%, #000000);
     }
 }
+
+@layer utilities {
+    .theme-body .text-slate-900,
+    .theme-body .text-slate-800,
+    .theme-body .text-slate-700,
+    .theme-body .text-gray-900,
+    .theme-body .text-gray-800,
+    .theme-body .text-gray-700 {
+        color: var(--text);
+    }
+
+    .theme-body .text-slate-600,
+    .theme-body .text-slate-500,
+    .theme-body .text-slate-400,
+    .theme-body .text-gray-600,
+    .theme-body .text-gray-500,
+    .theme-body .text-gray-400 {
+        color: var(--muted);
+    }
+}

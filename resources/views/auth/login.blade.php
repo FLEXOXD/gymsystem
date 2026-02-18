@@ -33,7 +33,7 @@
             </div>
 
             <div>
-                <label class="ui-muted mb-1 block text-sm font-semibold" for="password">Password</label>
+                <label class="ui-muted mb-1 block text-sm font-semibold" for="password">Contrasena</label>
                 <input
                     id="password"
                     name="password"

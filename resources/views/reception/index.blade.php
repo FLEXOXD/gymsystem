@@ -4,7 +4,7 @@
 @section('page-title', 'Modo recepcion PRO')
 
 @section('content')
-    <x-ui.card title="Check-in unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta auto-envio por lector tipo teclado.">
+    <x-ui.card title="Ingreso unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta auto-envio por lector tipo teclado.">
         <div class="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
             <label class="space-y-2 text-sm font-semibold ui-muted">
                 <span>Valor de entrada</span>
@@ -17,7 +17,7 @@
                 <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 md:h-16">Enviar</x-ui.button>
                 <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
-                    Auto scanner
+                    Autoescaneo
                 </label>
                 <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
@@ -51,7 +51,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Ultimos 10 check-ins">
+    <x-ui.card title="Ultimos 10 ingresos">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[780px]">
                 <thead>
@@ -64,15 +64,24 @@
                 </thead>
                 <tbody>
                 @forelse ($recentAttendances as $attendance)
+                    @php
+                        $attendanceMethod = $attendance->credential?->type ?? 'document';
+                        $attendanceMethodLabel = match ($attendanceMethod) {
+                            'rfid' => 'RFID',
+                            'qr' => 'QR',
+                            'document' => 'Documento',
+                            default => strtoupper((string) $attendanceMethod),
+                        };
+                    @endphp
                     <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3 dark:text-slate-200">{{ $attendance->date?->toDateString() ?? '-' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $attendance->time ?? '-' }}</td>
                         <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $attendance->client?->full_name ?? '-' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $attendance->credential?->type ?? 'document' }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ $attendanceMethodLabel }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">Sin check-ins recientes.</td>
+                        <td colspan="4" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">Sin ingresos recientes.</td>
                     </tr>
                 @endforelse
                 </tbody>
@@ -102,6 +111,11 @@
         const message = document.getElementById('result-message');
         const name = document.getElementById('result-name');
         const membership = document.getElementById('result-membership');
+        const methodLabels = {
+            rfid: 'RFID',
+            qr: 'QR',
+            document: 'Documento',
+        };
 
         let resetTimer = null;
         let scanTimer = null;
@@ -109,6 +123,7 @@
         let lastKeyTimestamp = 0;
         let burstCount = 0;
         let scannerLikely = false;
+        let audioContext = null;
 
         function basePanelClasses() {
             return 'rounded-2xl border p-5 shadow-sm';
@@ -151,24 +166,87 @@
             };
         }
 
+        function getAudioContext() {
+            if (audioContext) return audioContext;
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            audioContext = new Ctx();
+            return audioContext;
+        }
+
+        function playPulse(context, settings) {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+
+            oscillator.type = settings.wave;
+            oscillator.frequency.value = settings.freq;
+
+            // Envelope corto para que suene fuerte sin distorsionar demasiado.
+            const attack = 0.01;
+            const release = 0.06;
+            const start = settings.start;
+            const end = start + settings.duration;
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(settings.gain, start + attack);
+            gain.gain.exponentialRampToValueAtTime(0.0001, Math.max(end, start + attack + release));
+
+            oscillator.start(start);
+            oscillator.stop(end + release);
+        }
+
         function playTone(type) {
             if (!soundEnabled.checked) return;
 
             try {
-                const context = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = context.createOscillator();
-                const gain = context.createGain();
-                oscillator.connect(gain);
-                gain.connect(context.destination);
+                const context = getAudioContext();
+                if (!context) return;
+                if (context.state === 'suspended') {
+                    context.resume();
+                }
 
-                oscillator.type = 'sine';
-                oscillator.frequency.value = type === 'ok' ? 760 : 220;
-                gain.gain.value = 0.03;
+                const now = context.currentTime + 0.001;
 
-                oscillator.start();
-                oscillator.stop(context.currentTime + (type === 'ok' ? 0.12 : 0.2));
+                if (type === 'ok') {
+                    playPulse(context, {
+                        freq: 900,
+                        gain: 0.18,
+                        duration: 0.16,
+                        start: now,
+                        wave: 'triangle',
+                    });
+                    return;
+                }
+
+                // Error: doble tono mas notorio.
+                playPulse(context, {
+                    freq: 260,
+                    gain: 0.23,
+                    duration: 0.17,
+                    start: now,
+                    wave: 'square',
+                });
+                playPulse(context, {
+                    freq: 190,
+                    gain: 0.23,
+                    duration: 0.2,
+                    start: now + 0.2,
+                    wave: 'square',
+                });
             } catch (error) {
                 // Ignore audio failures silently.
+            }
+        }
+
+        function primeAudio() {
+            try {
+                const context = getAudioContext();
+                if (context && context.state === 'suspended') {
+                    context.resume();
+                }
+            } catch (error) {
+                // Ignore audio unlock errors.
             }
         }
 
@@ -226,7 +304,8 @@
             }
 
             message.textContent = payload.message;
-            method.textContent = 'Metodo: ' + (payload.method || '-');
+            const methodText = payload.method ? (methodLabels[payload.method] || String(payload.method).toUpperCase()) : '-';
+            method.textContent = 'Metodo: ' + methodText;
 
             if (payload.client) {
                 name.textContent = payload.client.full_name || '-';
@@ -323,6 +402,8 @@
         }
 
         sendBtn.addEventListener('click', submitCheckIn);
+        window.addEventListener('pointerdown', primeAudio, { once: true });
+        window.addEventListener('keydown', primeAudio, { once: true });
         input.addEventListener('keydown', function (event) {
             if (event.key === 'Enter' || event.key === 'Tab') {
                 event.preventDefault();

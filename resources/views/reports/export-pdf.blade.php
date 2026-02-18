@@ -36,8 +36,8 @@
         <thead>
         <tr>
             <th>Metodo</th>
-            <th>Income</th>
-            <th>Expense</th>
+            <th>Ingresos</th>
+            <th>Egresos</th>
             <th>Balance</th>
             <th>Movimientos</th>
         </tr>
@@ -45,7 +45,7 @@
         <tbody>
         @forelse ($incomeByMethod as $row)
             <tr>
-                <td>{{ $row->method }}</td>
+                <td>{{ match ($row->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $row->method } }}</td>
                 <td>${{ number_format((float) $row->income_total, 2) }}</td>
                 <td>${{ number_format((float) $row->expense_total, 2) }}</td>
                 <td>${{ number_format((float) $row->balance, 2) }}</td>
@@ -92,7 +92,7 @@
         <tr>
             <th>ID</th>
             <th>Fecha</th>
-            <th>Type</th>
+            <th>Tipo</th>
             <th>Metodo</th>
             <th>Monto</th>
             <th>Cliente</th>
@@ -105,8 +105,8 @@
             <tr>
                 <td>{{ $movement->id }}</td>
                 <td>{{ $movement->occurred_at?->format('Y-m-d H:i') }}</td>
-                <td>{{ $movement->type }}</td>
-                <td>{{ $movement->method }}</td>
+                <td>{{ match ($movement->type) { 'income' => 'Ingreso', 'expense' => 'Egreso', default => $movement->type } }}</td>
+                <td>{{ match ($movement->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $movement->method } }}</td>
                 <td>${{ number_format((float) $movement->amount, 2) }}</td>
                 <td>{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                 <td>{{ $movement->createdBy?->name ?? '-' }}</td>

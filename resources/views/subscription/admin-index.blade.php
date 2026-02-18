@@ -4,9 +4,9 @@
 @section('page-title', 'Suscripciones')
 
 @section('content')
-    <x-ui.card title="Suscripciones" subtitle="Vista legacy unificada al layout del panel.">
+    <x-ui.card title="Suscripciones" subtitle="Vista anterior unificada al layout del panel.">
         <p class="mb-4 text-sm text-slate-600 dark:text-slate-300">
-            Esta pantalla se mantiene por compatibilidad. La gestion principal esta en <strong>SuperAdmin -> Gyms</strong>.
+            Esta pantalla se mantiene por compatibilidad. La gestion principal esta en <strong>SuperAdmin -> Gimnasios</strong>.
         </p>
 
         @if (!empty($gyms))
@@ -14,11 +14,11 @@
                 <table class="ui-table min-w-[980px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                        <th class="px-3 py-3">Gym</th>
+                        <th class="px-3 py-3">Gimnasio</th>
                         <th class="px-3 py-3">Plan</th>
                         <th class="px-3 py-3">Precio</th>
                         <th class="px-3 py-3">Fin</th>
-                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3">Estado</th>
                         <th class="px-3 py-3">Acciones</th>
                     </tr>
                     </thead>
@@ -32,9 +32,9 @@
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->plan_name ?? '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription ? '$'.number_format((float) $subscription->price, 2) : '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->ends_at?->toDateString() ?? '-' }}</td>
-                            <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->status ?? 'sin_suscripcion' }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ match ($subscription?->status) { 'active' => 'Activo', 'grace' => 'Gracia', 'suspended' => 'Suspendido', null => 'Sin suscripcion', default => $subscription?->status } }}</td>
                             <td class="px-3 py-3">
-                                <a href="{{ route('superadmin.gyms.index') }}" class="ui-link">Ir a Gyms</a>
+                                <a href="{{ route('superadmin.gyms.index') }}" class="ui-link">Ir a Gimnasios</a>
                             </td>
                         </tr>
                     @endforeach

@@ -1,13 +1,13 @@
 @extends('layouts.panel')
 
-@section('title', 'SuperAdmin Dashboard')
-@section('page-title', 'Dashboard Global')
+@section('title', 'Panel SuperAdmin')
+@section('page-title', 'Panel Global')
 
 @section('content')
     <x-ui.card title="Panel Empresarial Global" subtitle="Vista consolidada de suscripciones SaaS por gimnasio.">
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Total Gyms</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Total gimnasios</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $kpis['total_gyms'] }}</p>
             </article>
             <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/40">

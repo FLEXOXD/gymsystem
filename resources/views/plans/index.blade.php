@@ -26,8 +26,8 @@
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Estado</span>
                     <select name="status" class="ui-input">
-                        <option value="active">active</option>
-                        <option value="inactive">inactive</option>
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
                     </select>
                 </label>
             </div>

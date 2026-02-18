@@ -26,6 +26,11 @@
         </x-ui.card>
     @else
         @php
+            $methodLabels = [
+                'cash' => 'Efectivo',
+                'card' => 'Tarjeta',
+                'transfer' => 'Transferencia',
+            ];
             $methodMap = collect(['cash', 'card', 'transfer'])->map(function (string $method) use ($methodTotals) {
                 $row = $methodTotals->firstWhere('method', $method);
                 return (object) [
@@ -41,22 +46,22 @@
                 : null;
         @endphp
 
-        <x-ui.card title="Turno activo #{{ $openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/A' }}">
+        <x-ui.card title="Turno activo #{{ $openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Opening</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Apertura</p>
                     <p class="mt-1 text-2xl font-black text-slate-900">${{ number_format((float) $openSession->opening_balance, 2) }}</p>
                 </article>
                 <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Income</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Ingresos</p>
                     <p class="mt-1 text-2xl font-black text-emerald-800">${{ number_format((float) $summary['income_total'], 2) }}</p>
                 </article>
                 <article class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700">Expense</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700">Egresos</p>
                     <p class="mt-1 text-2xl font-black text-rose-800">${{ number_format((float) $summary['expense_total'], 2) }}</p>
                 </article>
                 <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
-                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Expected</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Esperado</p>
                     <p class="mt-1 text-2xl font-black text-cyan-800">${{ number_format((float) $summary['expected_balance'], 2) }}</p>
                 </article>
                 <article class="rounded-xl border border-slate-200 bg-white p-3">
@@ -68,7 +73,7 @@
             <div class="mt-4 grid gap-3 md:grid-cols-3">
                 @foreach ($methodMap as $methodTotal)
                     <article class="rounded-xl border border-slate-200 bg-white p-3">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ $methodTotal->method }}</p>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ $methodLabels[$methodTotal->method] ?? $methodTotal->method }}</p>
                         <p class="mt-1 text-sm text-slate-700">Movimientos: <strong>{{ $methodTotal->movements_count }}</strong></p>
                         <p class="text-sm text-emerald-700">+ ${{ number_format($methodTotal->income_total, 2) }}</p>
                         <p class="text-sm text-rose-700">- ${{ number_format($methodTotal->expense_total, 2) }}</p>
@@ -86,8 +91,8 @@
                             <span>Tipo</span>
                             <select name="type" required class="ui-input">
                                 <option value="">Seleccione</option>
-                                <option value="income" @selected(old('type') === 'income')>income</option>
-                                <option value="expense" @selected(old('type') === 'expense')>expense</option>
+                                <option value="income" @selected(old('type') === 'income')>Ingreso</option>
+                                <option value="expense" @selected(old('type') === 'expense')>Egreso</option>
                             </select>
                         </label>
 
@@ -95,9 +100,9 @@
                             <span>Metodo</span>
                             <select name="method" required class="ui-input">
                                 <option value="">Seleccione</option>
-                                <option value="cash" @selected(old('method') === 'cash')>cash</option>
-                                <option value="card" @selected(old('method') === 'card')>card</option>
-                                <option value="transfer" @selected(old('method') === 'transfer')>transfer</option>
+                                <option value="cash" @selected(old('method') === 'cash')>Efectivo</option>
+                                <option value="card" @selected(old('method') === 'card')>Tarjeta</option>
+                                <option value="transfer" @selected(old('method') === 'transfer')>Transferencia</option>
                             </select>
                         </label>
 
@@ -108,7 +113,7 @@
                         </label>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
-                            <span>Membership ID (opcional)</span>
+                            <span>ID de membresia (opcional)</span>
                             <input type="number" name="membership_id" min="1" value="{{ old('membership_id') }}"
                                    class="ui-input">
                         </label>
@@ -123,11 +128,11 @@
                 </form>
             </x-ui.card>
 
-            <x-ui.card title="Cerrar turno" subtitle="Cierre con diferencia contra expected balance.">
-                <p class="text-sm text-slate-700">Expected actual: <strong id="expected-balance">${{ number_format((float) $summary['expected_balance'], 2) }}</strong></p>
+            <x-ui.card title="Cerrar turno" subtitle="Cierre con diferencia contra balance esperado.">
+                <p class="text-sm text-slate-700">Esperado actual: <strong id="expected-balance">${{ number_format((float) $summary['expected_balance'], 2) }}</strong></p>
                 <p class="mt-1 text-sm text-slate-700">
-                    Difference preview:
-                    <strong id="difference-preview">{{ $previewDifference !== null ? '$'.number_format($previewDifference, 2) : 'Ingrese closing balance' }}</strong>
+                    Vista previa de diferencia:
+                    <strong id="difference-preview">{{ $previewDifference !== null ? '$'.number_format($previewDifference, 2) : 'Ingrese monto final' }}</strong>
                 </p>
 
                 <form method="POST" action="{{ route('cash.close') }}" class="mt-4 space-y-4">
@@ -169,7 +174,7 @@
                             <td class="px-3 py-3">
                                 <x-ui.badge :variant="$movement->type === 'income' ? 'success' : 'danger'">{{ $movement->type }}</x-ui.badge>
                             </td>
-                            <td class="px-3 py-3">{{ $movement->method }}</td>
+                            <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
                             <td class="px-3 py-3 font-semibold {{ $movement->type === 'income' ? 'text-emerald-700' : 'text-rose-700' }}">
                                 {{ $movement->type === 'income' ? '+' : '-' }}${{ number_format((float) $movement->amount, 2) }}
                             </td>
@@ -210,7 +215,7 @@
         function updateDifference() {
             const value = Number(closingInput.value || 0);
             if (closingInput.value === '') {
-                differenceText.textContent = 'Ingrese closing balance';
+                differenceText.textContent = 'Ingrese monto final';
                 differenceText.className = '';
                 return;
             }

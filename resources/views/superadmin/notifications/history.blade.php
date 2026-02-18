@@ -4,7 +4,7 @@
 @section('page-title', 'Historial de notificaciones')
 
 @section('content')
-    <x-ui.card title="Historial" subtitle="Notificaciones sent/skipped con filtros por fecha y gimnasio.">
+    <x-ui.card title="Historial" subtitle="Notificaciones enviadas/omitidas con filtros por fecha y gimnasio.">
         <form method="GET" action="{{ route('superadmin.notifications.history') }}" class="mb-4 grid gap-3 md:grid-cols-4">
             <label class="text-sm font-semibold ui-muted">
                 Desde
@@ -15,7 +15,7 @@
                 <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="ui-input mt-1 block w-full">
             </label>
             <label class="text-sm font-semibold ui-muted">
-                Gym
+                Gimnasio
                 <select name="gym_id" class="ui-input mt-1 block w-full">
                     <option value="">Todos</option>
                     @foreach ($gyms as $gym)
@@ -33,9 +33,9 @@
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                     <th class="px-3 py-3">Fecha</th>
-                    <th class="px-3 py-3">Gym</th>
+                    <th class="px-3 py-3">Gimnasio</th>
                     <th class="px-3 py-3">Tipo</th>
-                    <th class="px-3 py-3">Status</th>
+                    <th class="px-3 py-3">Estado</th>
                     <th class="px-3 py-3">Plan</th>
                     <th class="px-3 py-3">Vence</th>
                     <th class="px-3 py-3">Gestionado por</th>
@@ -44,10 +44,21 @@
                 </thead>
                 <tbody>
                 @forelse ($notifications as $notification)
+                    @php
+                        $typeLabel = match ($notification->type) {
+                            'expires_7' => 'Vence en 7 dias',
+                            'expires_3' => 'Vence en 3 dias',
+                            'expires_1' => 'Vence en 1 dia',
+                            'grace_1' => 'Gracia dia 1',
+                            'grace_2' => 'Gracia dia 2',
+                            'grace_3' => 'Gracia dia 3',
+                            default => str_replace('_', ' ', $notification->type),
+                        };
+                    @endphp
                     <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3 dark:text-slate-200">{{ $notification->scheduled_for?->toDateString() }}</td>
-                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/A' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $notification->type }}</td>
+                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/D' }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ $typeLabel }}</td>
                         <td class="px-3 py-3">
                             @php
                                 $statusClass = $notification->status === 'sent'
@@ -55,7 +66,7 @@
                                     : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-100';
                             @endphp
                             <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusClass }}">
-                                {{ $notification->status }}
+                                {{ $notification->status === 'sent' ? 'Enviado' : 'Omitido' }}
                             </span>
                         </td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $notification->subscription?->plan_name ?? '-' }}</td>

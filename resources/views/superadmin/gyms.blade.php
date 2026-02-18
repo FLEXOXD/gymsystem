@@ -1,19 +1,19 @@
 @extends('layouts.panel')
 
-@section('title', 'SuperAdmin Gyms')
-@section('page-title', 'Gyms y Suscripciones')
+@section('title', 'SuperAdmin Gimnasios')
+@section('page-title', 'Gimnasios y Suscripciones')
 
 @section('content')
-    <x-ui.card title="Gimnasios y estado de suscripcion" subtitle="Ordenado por prioridad operativa: grace, active y luego suspended.">
+    <x-ui.card title="Gimnasios y estado de suscripcion" subtitle="Ordenado por prioridad operativa: gracia, activo y luego suspendido.">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[1100px]">
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    <th class="px-3 py-3">Gym</th>
+                    <th class="px-3 py-3">Gimnasio</th>
                     <th class="px-3 py-3">Plan</th>
                     <th class="px-3 py-3">Precio</th>
                     <th class="px-3 py-3">Fin</th>
-                    <th class="px-3 py-3">Status</th>
+                    <th class="px-3 py-3">Estado</th>
                     <th class="px-3 py-3">Dias</th>
                     <th class="px-3 py-3">Ultimo pago</th>
                     <th class="px-3 py-3">Acciones</th>
@@ -36,7 +36,7 @@
                         <td class="px-3 py-3 dark:text-slate-200">{{ \Carbon\Carbon::parse($gym->ends_at)->toDateString() }}</td>
                         <td class="px-3 py-3">
                             <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $badgeClass }}">
-                                {{ $gym->status }}
+                                {{ match ($gym->status) { 'active' => 'Activo', 'grace' => 'Gracia', 'suspended' => 'Suspendido', default => $gym->status } }}
                             </span>
                         </td>
                         <td class="px-3 py-3 dark:text-slate-200">
@@ -48,7 +48,7 @@
                                 -
                             @endif
                         </td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $gym->last_payment_method ?? '-' }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ match ($gym->last_payment_method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', 'transferencia' => 'Transferencia', null => '-', default => $gym->last_payment_method } }}</td>
                         <td class="px-3 py-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <form method="POST" action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}" class="flex items-center gap-2">
@@ -56,7 +56,7 @@
                                     <input type="hidden" name="months" value="1">
                                     <select name="payment_method" class="ui-input px-2 py-1.5 text-xs" required>
                                         @foreach ($paymentMethods as $method)
-                                            <option value="{{ $method }}">{{ $method }}</option>
+                                            <option value="{{ $method }}">{{ match ($method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', 'transferencia' => 'Transferencia', default => $method } }}</option>
                                         @endforeach
                                     </select>
                                     <x-ui.button type="submit" size="sm">Renovar 1 mes</x-ui.button>

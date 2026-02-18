@@ -18,7 +18,7 @@
 
             <div class="flex flex-wrap gap-2">
                 <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
-                <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Dashboard</x-ui.button>
+                <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Panel</x-ui.button>
             </div>
         </form>
     </x-ui.card>

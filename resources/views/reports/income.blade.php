@@ -4,6 +4,13 @@
 @section('page-title', 'Reporte de ingresos y egresos')
 
 @section('content')
+    @php
+        $methodLabels = [
+            'cash' => 'Efectivo',
+            'card' => 'Tarjeta',
+            'transfer' => 'Transferencia',
+        ];
+    @endphp
     <x-ui.card title="Filtro" subtitle="Consulta movimientos por rango de fecha.">
         <form method="GET" action="{{ route('reports.income') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -21,7 +28,7 @@
             <div class="flex gap-2">
                 <x-ui.button :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
                              class="js-loading-link" data-loading-text="Generando CSV...">Exportar CSV</x-ui.button>
-                <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver dashboard</x-ui.button>
+                <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver al panel</x-ui.button>
             </div>
         </form>
     </x-ui.card>
@@ -68,7 +75,7 @@
                         <td class="px-3 py-3">
                             <x-ui.badge :variant="$movement->type === 'income' ? 'success' : 'danger'">{{ $movement->type }}</x-ui.badge>
                         </td>
-                        <td class="px-3 py-3">{{ $movement->method }}</td>
+                        <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
                         <td class="px-3 py-3 font-semibold {{ $movement->type === 'income' ? 'text-emerald-700' : 'text-rose-700' }}">
                             {{ $movement->type === 'income' ? '+' : '-' }}${{ number_format((float) $movement->amount, 2) }}
                         </td>

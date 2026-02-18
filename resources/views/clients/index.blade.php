@@ -4,7 +4,7 @@
 @section('page-title', 'Clientes')
 
 @section('content')
-    <x-ui.card title="Getting Started" subtitle="Checklist rapido para dejar el gimnasio operativo en menos de 1 minuto.">
+    <x-ui.card title="Primeros pasos" subtitle="Checklist rapido para dejar el gimnasio operativo en menos de 1 minuto.">
         <div class="mb-4 flex items-center justify-between gap-3">
             <p class="ui-muted text-sm">
                 Progreso: <strong>{{ $completedOnboarding }}/{{ count($onboarding) }}</strong>
@@ -57,8 +57,8 @@
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Estado</span>
                     <select name="status" class="ui-input">
-                        <option value="active" @selected(old('status', 'active') === 'active')>active</option>
-                        <option value="inactive" @selected(old('status') === 'inactive')>inactive</option>
+                        <option value="active" @selected(old('status', 'active') === 'active')>Activo</option>
+                        <option value="inactive" @selected(old('status') === 'inactive')>Inactivo</option>
                     </select>
                 </label>
             </div>
