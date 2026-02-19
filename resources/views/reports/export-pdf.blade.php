@@ -87,6 +87,12 @@
     </table>
 
     <h2>Detalle de Movimientos</h2>
+    @if (!empty($isPdfDetailTruncated))
+        <p class="muted">
+            El detalle fue limitado a {{ (int) ($pdfMaxDetailRows ?? 0) }} de {{ (int) ($movementsCount ?? 0) }} filas para proteger memoria.
+            Use exportacion CSV para obtener el dataset completo.
+        </p>
+    @endif
     <table>
         <thead>
         <tr>

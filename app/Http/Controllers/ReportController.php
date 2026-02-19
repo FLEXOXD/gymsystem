@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
+    private const PDF_MAX_DETAIL_ROWS = 1200;
+
     public function __construct(
         private readonly ReportService $reportService
     ) {
@@ -74,9 +76,7 @@ class ReportController extends Controller
 
         $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
 
-        $movements = CashMovement::query()
-            ->forGym($gymId)
-            ->betweenOccurredAt($from, $to)
+        $movements = $this->movementsBaseQuery($gymId, $from, $to)
             ->select([
                 'id',
                 'gym_id',
@@ -156,40 +156,17 @@ class ReportController extends Controller
         $attendanceByDay = collect($attendanceSummary['by_day']);
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
 
-        $movements = CashMovement::query()
-            ->forGym($gymId)
-            ->betweenOccurredAt($from, $to)
-            ->select([
-                'id',
-                'gym_id',
-                'cash_session_id',
-                'membership_id',
-                'created_by',
-                'type',
-                'amount',
-                'method',
-                'description',
-                'occurred_at',
-            ])
-            ->with([
-                'createdBy:id,name',
-                'membership:id,client_id',
-                'membership.client:id,first_name,last_name',
-            ])
-            ->orderByDesc('occurred_at')
-            ->get();
-
         $filename = 'reports_'.$from->format('Ymd').'_to_'.$to->format('Ymd').'.csv';
 
         return response()->streamDownload(function () use (
+            $gymId,
             $from,
             $to,
             $incomeSummary,
             $incomeByMethod,
             $attendanceSummary,
             $attendanceByDay,
-            $membershipSummary,
-            $movements
+            $membershipSummary
         ): void {
             $handle = fopen('php://output', 'w');
             if ($handle === false) {
@@ -243,27 +220,53 @@ class ReportController extends Controller
 
             fputcsv($handle, ['DETALLE MOVIMIENTOS']);
             fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
-            foreach ($movements as $movement) {
-                fputcsv($handle, [
-                    $movement->id,
-                    $movement->occurred_at?->format('Y-m-d H:i:s'),
-                    match ($movement->type) {
-                        'income' => 'Ingreso',
-                        'expense' => 'Egreso',
-                        default => $movement->type,
-                    },
-                    match ($movement->method) {
-                        'cash' => 'Efectivo',
-                        'card' => 'Tarjeta',
-                        'transfer' => 'Transferencia',
-                        default => $movement->method,
-                    },
-                    number_format((float) $movement->amount, 2, '.', ''),
-                    $movement->membership?->client?->full_name ?? '',
-                    $movement->createdBy?->name ?? '',
-                    $movement->description ?? '',
-                ]);
-            }
+            $movementsQuery = CashMovement::query()
+                ->forGym($gymId)
+                ->betweenOccurredAt($from, $to)
+                ->leftJoin('users as users', 'users.id', '=', 'cash_movements.created_by')
+                ->leftJoin('memberships as memberships', 'memberships.id', '=', 'cash_movements.membership_id')
+                ->leftJoin('clients as clients', function ($join): void {
+                    $join->on('clients.id', '=', 'memberships.client_id')
+                        ->on('clients.gym_id', '=', 'cash_movements.gym_id');
+                })
+                ->select([
+                    'cash_movements.id as movement_id',
+                    'cash_movements.occurred_at',
+                    'cash_movements.type',
+                    'cash_movements.method',
+                    'cash_movements.amount',
+                    'cash_movements.description',
+                    'users.name as user_name',
+                    'clients.first_name as client_first_name',
+                    'clients.last_name as client_last_name',
+                ])
+                ->orderBy('cash_movements.id');
+
+            $movementsQuery->chunkById(1000, function ($rows) use ($handle): void {
+                foreach ($rows as $row) {
+                    $clientName = trim(((string) ($row->client_first_name ?? '')).' '.((string) ($row->client_last_name ?? '')));
+
+                    fputcsv($handle, [
+                        $row->movement_id,
+                        $row->occurred_at,
+                        match ($row->type) {
+                            'income' => 'Ingreso',
+                            'expense' => 'Egreso',
+                            default => $row->type,
+                        },
+                        match ($row->method) {
+                            'cash' => 'Efectivo',
+                            'card' => 'Tarjeta',
+                            'transfer' => 'Transferencia',
+                            default => $row->method,
+                        },
+                        number_format((float) $row->amount, 2, '.', ''),
+                        $clientName,
+                        (string) ($row->user_name ?? ''),
+                        (string) ($row->description ?? ''),
+                    ]);
+                }
+            }, 'cash_movements.id', 'movement_id');
 
             fclose($handle);
         }, $filename, [
@@ -285,9 +288,11 @@ class ReportController extends Controller
         $attendanceByDay = collect($attendanceSummary['by_day']);
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
 
-        $movements = CashMovement::query()
-            ->forGym($gymId)
-            ->betweenOccurredAt($from, $to)
+        $movementsQuery = $this->movementsBaseQuery($gymId, $from, $to);
+        $movementsCount = (clone $movementsQuery)->count();
+        $isPdfDetailTruncated = $movementsCount > self::PDF_MAX_DETAIL_ROWS;
+
+        $movements = $movementsQuery
             ->select([
                 'id',
                 'gym_id',
@@ -306,6 +311,7 @@ class ReportController extends Controller
                 'membership.client:id,first_name,last_name',
             ])
             ->orderByDesc('occurred_at')
+            ->limit(self::PDF_MAX_DETAIL_ROWS)
             ->get();
 
         $pdf = Pdf::loadView('reports.export-pdf', [
@@ -316,6 +322,9 @@ class ReportController extends Controller
             'attendanceSummary' => $attendanceSummary,
             'attendanceByDay' => $attendanceByDay,
             'membershipSummary' => $membershipSummary,
+            'movementsCount' => $movementsCount,
+            'isPdfDetailTruncated' => $isPdfDetailTruncated,
+            'pdfMaxDetailRows' => self::PDF_MAX_DETAIL_ROWS,
             'movements' => $movements,
         ])->setPaper('a4', 'portrait');
 
@@ -358,5 +367,12 @@ class ReportController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
+    }
+
+    private function movementsBaseQuery(int $gymId, Carbon $from, Carbon $to)
+    {
+        return CashMovement::query()
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to);
     }
 }
