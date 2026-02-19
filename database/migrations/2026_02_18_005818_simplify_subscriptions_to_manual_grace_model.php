@@ -9,9 +9,24 @@ return new class extends Migration
 {
     private function hasIndex(string $table, string $index): bool
     {
-        $result = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
+        $driver = DB::getDriverName();
 
-        return ! empty($result);
+        if ($driver === 'mysql') {
+            $result = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
+
+            return ! empty($result);
+        }
+
+        if ($driver === 'sqlite') {
+            $result = DB::select("PRAGMA index_list('{$table}')");
+            foreach ($result as $row) {
+                if (($row->name ?? null) === $index) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -67,7 +82,9 @@ return new class extends Migration
             });
         }
 
-        DB::statement("ALTER TABLE subscriptions MODIFY status VARCHAR(20) NOT NULL DEFAULT 'active'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE subscriptions MODIFY status VARCHAR(20) NOT NULL DEFAULT 'active'");
+        }
     }
 
     /**
@@ -75,7 +92,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE subscriptions MODIFY status VARCHAR(20) NOT NULL DEFAULT 'trial'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE subscriptions MODIFY status VARCHAR(20) NOT NULL DEFAULT 'trial'");
+        }
 
         if (! Schema::hasColumn('subscriptions', 'trial_ends_at')) {
             Schema::table('subscriptions', function (Blueprint $table) {

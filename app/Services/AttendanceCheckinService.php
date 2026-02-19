@@ -30,18 +30,13 @@ class AttendanceCheckinService
             return $this->buildResponse(false, 'Debes ingresar un valor para check-in.', null, null);
         }
 
-        $candidate = DB::table('clients as clients')
-            ->leftJoin('client_credentials as credentials', function ($join) use ($normalizedValue): void {
-                $join->on('credentials.client_id', '=', 'clients.id')
-                    ->on('credentials.gym_id', '=', 'clients.gym_id')
-                    ->where('credentials.value', '=', $normalizedValue);
+        $candidate = DB::table('client_credentials as credentials')
+            ->join('clients as clients', function ($join): void {
+                $join->on('clients.id', '=', 'credentials.client_id')
+                    ->on('clients.gym_id', '=', 'credentials.gym_id');
             })
-            ->where('clients.gym_id', $gymId)
-            ->where(function ($query) use ($normalizedValue): void {
-                $query->where('clients.document_number', $normalizedValue)
-                    ->orWhereNotNull('credentials.id');
-            })
-            ->orderByRaw('CASE WHEN credentials.id IS NULL THEN 1 ELSE 0 END')
+            ->where('credentials.gym_id', $gymId)
+            ->where('credentials.value', $normalizedValue)
             ->orderByRaw("CASE WHEN credentials.status = 'active' THEN 0 ELSE 1 END")
             ->orderByDesc('credentials.id')
             ->select([
@@ -57,12 +52,37 @@ class AttendanceCheckinService
             ->first();
 
         if (! $candidate) {
-            return $this->buildResponse(
-                ok: false,
-                message: 'No existe un cliente para este valor en el gimnasio.',
-                method: null,
-                client: null
-            );
+            $documentCandidate = DB::table('clients')
+                ->where('gym_id', $gymId)
+                ->where('document_number', $normalizedValue)
+                ->select([
+                    'id as client_id',
+                    'first_name',
+                    'last_name',
+                    'photo_path',
+                    'status as client_status',
+                ])
+                ->first();
+
+            if (! $documentCandidate) {
+                return $this->buildResponse(
+                    ok: false,
+                    message: 'No existe un cliente para este valor en el gimnasio.',
+                    method: null,
+                    client: null
+                );
+            }
+
+            $candidate = (object) [
+                'client_id' => $documentCandidate->client_id,
+                'first_name' => $documentCandidate->first_name,
+                'last_name' => $documentCandidate->last_name,
+                'photo_path' => $documentCandidate->photo_path,
+                'client_status' => $documentCandidate->client_status,
+                'credential_id' => null,
+                'credential_type' => null,
+                'credential_status' => null,
+            ];
         }
 
         $clientPayload = [
@@ -191,6 +211,6 @@ class AttendanceCheckinService
         $sqlState = $exception->errorInfo[0] ?? null;
         $driverCode = (int) ($exception->errorInfo[1] ?? 0);
 
-        return $sqlState === '23000' && $driverCode === 1062;
+        return $sqlState === '23000' && in_array($driverCode, [1062, 19], true);
     }
 }

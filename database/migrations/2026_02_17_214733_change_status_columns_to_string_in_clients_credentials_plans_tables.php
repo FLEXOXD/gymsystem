@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE clients MODIFY status VARCHAR(20) NOT NULL DEFAULT 'active'");
         DB::statement("ALTER TABLE client_credentials MODIFY status VARCHAR(20) NOT NULL DEFAULT 'active'");
         DB::statement("ALTER TABLE plans MODIFY status VARCHAR(20) NOT NULL DEFAULT 'active'");
@@ -20,6 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE clients MODIFY status ENUM('active','inactive') NOT NULL DEFAULT 'active'");
         DB::statement("ALTER TABLE client_credentials MODIFY status ENUM('active','inactive') NOT NULL DEFAULT 'active'");
         DB::statement("ALTER TABLE plans MODIFY status ENUM('active','inactive') NOT NULL DEFAULT 'active'");

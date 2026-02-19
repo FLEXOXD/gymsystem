@@ -1,59 +1,197 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# GymSystem SaaS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema SaaS multi-tenant para gimnasios (Laravel 12) con:
+- recepcion/check-in (RFID/QR/documento),
+- clientes/credenciales/membresias,
+- caja por turnos,
+- reportes (CSV/PDF),
+- suscripciones SaaS con panel SuperAdmin.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+
+- Composer
+- Node.js 20+
+- MySQL 8+
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Instalacion Local
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+cp .env.local.example .env
+composer install
+npm install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+php artisan storage:link
+npm run build
+php artisan serve
+```
 
-## Learning Laravel
+Credenciales demo del seeder:
+- Gym admin: `admin@ironwill.test` / `password`
+- SuperAdmin: `superadmin@gymsaas.test` / `password`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Tests
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan test
+```
 
-## Laravel Sponsors
+## Deploy Oracle Cloud Free Tier (1 VM)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Arquitectura objetivo:
+- 1 VM Ubuntu Always Free
+- Nginx
+- PHP-FPM + OPcache
+- MySQL local
+- Laravel monolito
 
-### Premium Partners
+### 1) Provision inicial de la VM
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+sudo apt update && sudo apt -y upgrade
+sudo apt -y install nginx mysql-server unzip git curl
+sudo apt -y install php8.2-fpm php8.2-cli php8.2-mysql php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-bcmath php8.2-intl
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
 
-## Contributing
+Instalar Node (LTS) para build frontend.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2) Clonar y preparar aplicacion
 
-## Code of Conduct
+```bash
+git clone <tu-repo> /var/www/gymsystem
+cd /var/www/gymsystem
+cp .env.production.example .env
+php artisan key:generate --force
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Configura `.env` de produccion (DB, APP_URL, etc.).
 
-## Security Vulnerabilities
+### 3) Build y migraciones
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install --no-dev --prefer-dist --optimize-autoloader
+npm ci
+npm run build
+php artisan migrate --force
+php artisan db:seed --force
+php artisan storage:link
+```
 
-## License
+### 4) Cache de produccion
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 5) Nginx virtual host
+
+Archivo sugerido: `/etc/nginx/sites-available/gymsystem`
+
+```nginx
+server {
+    listen 80;
+    server_name tu-dominio.com;
+
+    root /var/www/gymsystem/public;
+    index index.php index.html;
+
+    client_max_body_size 2M;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+Activar:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/gymsystem /etc/nginx/sites-enabled/gymsystem
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 6) OPcache recomendado (Free Tier)
+
+Editar `php.ini` de FPM:
+
+```ini
+opcache.enable=1
+opcache.enable_cli=0
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=0
+opcache.revalidate_freq=0
+```
+
+Aplicar:
+
+```bash
+sudo systemctl restart php8.2-fpm
+```
+
+### 7) SSL (Let's Encrypt)
+
+```bash
+sudo apt -y install certbot python3-certbot-nginx
+sudo certbot --nginx -d tu-dominio.com
+```
+
+### 8) Scheduler y Queue Worker
+
+Cron (scheduler cada minuto):
+
+```bash
+* * * * * cd /var/www/gymsystem && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Queue worker (Supervisor o systemd):
+
+```bash
+php artisan queue:work --queue=default --sleep=2 --tries=1 --timeout=90
+```
+
+## Operacion y disco
+
+- Usa `LOG_CHANNEL=daily` y define `LOG_DAILY_DAYS`.
+- Limpieza de archivos temporales:
+
+```bash
+php artisan maintenance:cleanup-files --days=14
+php artisan maintenance:cleanup-files --days=14 --dry-run
+```
+
+## Checklist de Verificacion
+
+Local:
+- [ ] `php artisan test` pasa.
+- [ ] Login admin/superadmin funciona.
+- [ ] Check-in valida membresia y evita duplicados.
+- [ ] Caja impide cobros sin sesion abierta.
+
+Produccion:
+- [ ] `APP_ENV=production`, `APP_DEBUG=false`.
+- [ ] `config/route/view cache` aplicado.
+- [ ] `storage:link` activo.
+- [ ] Cron scheduler configurado.
+- [ ] Worker de cola activo.
+- [ ] SSL valido.
+- [ ] Logs rotando y limpieza temporal programada.
