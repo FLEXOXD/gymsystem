@@ -24,6 +24,7 @@ class Client extends Model
         'document_number',
         'phone',
         'photo_path',
+        'gender',
         'status',
     ];
 

@@ -32,7 +32,11 @@ class Gym extends Model
         'slug',
         'phone',
         'address',
+        'timezone',
         'logo_path',
+        'avatar_male_path',
+        'avatar_female_path',
+        'avatar_neutral_path',
     ];
 
     /**

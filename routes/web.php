@@ -28,7 +28,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
     Route::view('/subscription/expired', 'subscription.expired')->name('subscription.expired');
 
     Route::middleware('check.subscription')->group(function (): void {
@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function (): void {
             ->name('client-credentials.deactivate');
 
         Route::get('/reception', [ReceptionCheckInController::class, 'index'])->name('reception.index');
+        Route::get('/reception/display', [ReceptionCheckInController::class, 'display'])->name('reception.display');
         Route::post('/reception/check-in', [ReceptionCheckInController::class, 'store'])
             ->middleware('throttle:checkin')
             ->name('reception.check-in');
@@ -72,6 +73,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/config/theme', [ThemeController::class, 'update'])->name('settings.theme.update');
         Route::post('/config/gym-profile', [ThemeController::class, 'updateGymProfile'])->name('settings.gym-profile.update');
         Route::post('/config/gym-logo', [ThemeController::class, 'updateGymLogo'])->name('settings.gym-logo.update');
+        Route::post('/config/gym-avatars', [ThemeController::class, 'updateGymAvatars'])->name('settings.gym-avatars.update');
 
         Route::middleware('superadmin')->prefix('superadmin')->name('superadmin.')->group(function (): void {
             Route::get('/dashboard', [SuperAdminDashboardController::class, 'dashboard'])

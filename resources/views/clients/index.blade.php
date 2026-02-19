@@ -34,6 +34,15 @@
                 </label>
 
                 <label class="space-y-1 text-sm font-semibold ui-muted">
+                    <span>Genero</span>
+                    <select name="gender" class="ui-input">
+                        <option value="male" @selected(old('gender') === 'male')>Hombre</option>
+                        <option value="female" @selected(old('gender') === 'female')>Mujer</option>
+                        <option value="neutral" @selected(old('gender', 'neutral') === 'neutral')>Neutral</option>
+                    </select>
+                </label>
+
+                <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Estado</span>
                     <select name="status" class="ui-input">
                         <option value="active" @selected(old('status', 'active') === 'active')>Activo</option>

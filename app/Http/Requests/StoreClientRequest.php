@@ -43,6 +43,7 @@ class StoreClientRequest extends FormRequest
             ],
             'phone' => ['nullable', 'string', 'max:40'],
             'photo_path' => ['nullable', 'string', 'max:255'],
+            'gender' => ['nullable', Rule::in(['male', 'female', 'neutral'])],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
         ];
     }

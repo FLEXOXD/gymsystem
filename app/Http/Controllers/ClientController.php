@@ -43,6 +43,7 @@ class ClientController extends Controller
         $gymId = $this->resolveGymId($request);
         $data = $request->validated();
         $data['gym_id'] = $gymId;
+        $data['gender'] = $data['gender'] ?? 'neutral';
         $data['status'] = $data['status'] ?? 'active';
 
         $client = Client::query()->create($data);
@@ -69,6 +70,7 @@ class ClientController extends Controller
                 'document_number',
                 'phone',
                 'photo_path',
+                'gender',
                 'status',
             ])
             ->with([

@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'check.subscription' => \App\Http\Middleware\CheckSubscriptionMiddleware::class,
             'superadmin' => \App\Http\Middleware\EnsureSuperAdminMiddleware::class,
+            'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

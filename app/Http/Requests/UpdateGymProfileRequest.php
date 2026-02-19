@@ -25,6 +25,16 @@ class UpdateGymProfileRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:255'],
+            'timezone' => [
+                'required',
+                'string',
+                'max:64',
+                static function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value) || ! in_array($value, timezone_identifiers_list(), true)) {
+                        $fail('La zona horaria seleccionada no es valida.');
+                    }
+                },
+            ],
         ];
     }
 }

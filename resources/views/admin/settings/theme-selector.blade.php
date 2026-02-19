@@ -7,19 +7,40 @@
     @php
         $gymInitials = '';
         $gymLogoUrl = null;
+        $gymAvatarUrls = ['male' => null, 'female' => null, 'neutral' => null];
+        $gymTimezone = 'UTC';
+        $avatarCards = [
+            'male' => ['label' => 'Avatar hombre', 'field' => 'avatar_male'],
+            'female' => ['label' => 'Avatar mujer', 'field' => 'avatar_female'],
+            'neutral' => ['label' => 'Avatar neutral', 'field' => 'avatar_neutral'],
+        ];
         $isSuperAdmin = auth()->user()?->gym_id === null;
         if ($gym) {
+            $resolveMediaUrl = function (?string $path): ?string {
+                if (!$path) {
+                    return null;
+                }
+                $trimmedPath = ltrim($path, '/');
+                return str_starts_with($path, 'http://') || str_starts_with($path, 'https://')
+                    ? $path
+                    : (str_starts_with($trimmedPath, 'storage/')
+                        ? asset($trimmedPath)
+                        : asset('storage/'.$trimmedPath));
+            };
+
             $gymInitials = collect(explode(' ', trim($gym->name ?? '')))
                 ->filter()
                 ->map(fn ($word) => mb_substr($word, 0, 1))
                 ->take(2)
                 ->implode('');
             $gymInitials = $gymInitials !== '' ? mb_strtoupper($gymInitials) : 'GY';
-            if (!empty($gym->logo_path)) {
-                $gymLogoUrl = str_starts_with($gym->logo_path, 'http://') || str_starts_with($gym->logo_path, 'https://')
-                    ? $gym->logo_path
-                    : asset('storage/'.ltrim($gym->logo_path, '/'));
-            }
+            $gymLogoUrl = $resolveMediaUrl($gym->logo_path);
+            $gymAvatarUrls = [
+                'male' => $resolveMediaUrl($gym->avatar_male_path),
+                'female' => $resolveMediaUrl($gym->avatar_female_path),
+                'neutral' => $resolveMediaUrl($gym->avatar_neutral_path),
+            ];
+            $gymTimezone = old('timezone', $gym->timezone ?? 'UTC');
         }
     @endphp
 
@@ -141,10 +162,92 @@
                             @enderror
                         </div>
 
+                        <div>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Zona horaria</label>
+                            <div class="space-y-2 rounded-xl border border-white/10 bg-black/10 p-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <input id="timezone-search"
+                                           type="text"
+                                           class="ui-input min-w-[220px] flex-1"
+                                           placeholder="Buscar por pais, ciudad o zona (ej: ecuador, bogota, mexico)">
+                                    <button id="timezone-detect-btn" type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold">
+                                        Usar navegador
+                                    </button>
+                                </div>
+                                <p id="timezone-detect-hint" class="ui-muted text-xs"></p>
+                                <select id="timezone-select" name="timezone" class="ui-input" required>
+                                    @foreach ($timezoneOptions as $timezoneValue => $timezoneLabel)
+                                        <option value="{{ $timezoneValue }}" @selected($gymTimezone === $timezoneValue)>
+                                            {{ $timezoneLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p id="timezone-current" class="ui-muted text-xs"></p>
+                            </div>
+                            <p class="ui-muted mt-1 text-xs">Esta zona se usa para horas de check-in, reportes y panel.</p>
+                            @error('timezone')
+                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <button type="submit" class="ui-button ui-button-primary">Guardar datos del gym</button>
                     </form>
                 </section>
             </div>
+
+            <section class="ui-card">
+                <h3 class="ui-heading text-base">Avatares de recepcion (fallback)</h3>
+                <p class="ui-muted mt-1 text-sm">
+                    Se usan cuando el cliente no tiene foto propia. Puedes subir PNG/JPG/WEBP en formato vertical.
+                </p>
+
+                <form method="POST"
+                      action="{{ route('settings.gym-avatars.update') }}"
+                      enctype="multipart/form-data"
+                      class="mt-4 space-y-4">
+                    @csrf
+
+                    <div class="grid gap-4 md:grid-cols-3">
+                        @foreach ($avatarCards as $avatarKey => $avatarMeta)
+                            @php
+                                $avatarUrl = $gymAvatarUrls[$avatarKey] ?? null;
+                            @endphp
+                            <div class="rounded-2xl border border-white/10 bg-black/10 p-3">
+                                <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ $avatarMeta['label'] }}</p>
+                                <div class="mt-2 overflow-hidden rounded-xl border border-white/10 bg-slate-900/30" style="aspect-ratio: 4/5;">
+                                    @if ($avatarUrl)
+                                        <img src="{{ $avatarUrl }}" alt="{{ $avatarMeta['label'] }}" class="h-full w-full object-cover object-top">
+                                    @else
+                                        <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+                                            <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">Sin avatar</span>
+                                            <span class="text-[10px] uppercase tracking-[0.25em] text-slate-500">{{ strtoupper($avatarKey) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <input type="file"
+                                       name="{{ $avatarMeta['field'] }}"
+                                       accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                       class="ui-input mt-3">
+                                @error($avatarMeta['field'])
+                                    <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @error('avatar_files')
+                        <p class="text-sm font-semibold text-rose-300">{{ $message }}</p>
+                    @enderror
+
+                    <div class="ui-muted text-xs">
+                        <p>Recomendado: 900x1200 px o similar (formato vertical).</p>
+                        <p>Peso maximo por archivo: 4MB.</p>
+                    </div>
+
+                    <button type="submit" class="ui-button ui-button-primary">Guardar avatares</button>
+                </form>
+            </section>
         @else
             @if ($isSuperAdmin)
                 <section class="ui-card">
@@ -184,6 +287,216 @@
 
             const options = Array.from(container.querySelectorAll('[data-theme-option]'));
             const toastStack = document.getElementById('theme-toast-stack');
+            const timezoneSelect = document.getElementById('timezone-select');
+            const timezoneSearch = document.getElementById('timezone-search');
+            const timezoneDetectBtn = document.getElementById('timezone-detect-btn');
+            const timezoneDetectHint = document.getElementById('timezone-detect-hint');
+            const timezoneCurrent = document.getElementById('timezone-current');
+
+            const favoriteTimezoneIds = [
+                'America/Guayaquil',
+                'America/Bogota',
+                'America/Lima',
+                'America/La_Paz',
+                'America/Santiago',
+                'America/Caracas',
+                'America/Mexico_City',
+                'America/Panama',
+                'America/Argentina/Buenos_Aires',
+                'America/New_York',
+                'America/Los_Angeles',
+                'Europe/Madrid',
+            ];
+
+            const timezoneAliasLabels = {
+                'America/Guayaquil': 'Ecuador - Guayaquil',
+                'America/Bogota': 'Colombia - Bogota',
+                'America/Lima': 'Peru - Lima',
+                'America/La_Paz': 'Bolivia - La Paz',
+                'America/Santiago': 'Chile - Santiago',
+                'America/Caracas': 'Venezuela - Caracas',
+                'America/Mexico_City': 'Mexico - Ciudad de Mexico',
+                'America/Panama': 'Panama - Ciudad de Panama',
+                'America/Argentina/Buenos_Aires': 'Argentina - Buenos Aires',
+                'America/New_York': 'Estados Unidos - New York',
+                'America/Los_Angeles': 'Estados Unidos - Los Angeles',
+                'Europe/Madrid': 'Espana - Madrid',
+            };
+
+            const timezoneAliasKeywords = {
+                'America/Guayaquil': 'ecuador quito guayaquil',
+                'America/Bogota': 'colombia bogota medellin',
+                'America/Lima': 'peru lima',
+                'America/La_Paz': 'bolivia la paz',
+                'America/Santiago': 'chile santiago',
+                'America/Caracas': 'venezuela caracas',
+                'America/Mexico_City': 'mexico ciudad de mexico cdmx',
+                'America/Panama': 'panama',
+                'America/Argentina/Buenos_Aires': 'argentina buenos aires',
+                'America/New_York': 'usa estados unidos new york',
+                'America/Los_Angeles': 'usa estados unidos california',
+                'Europe/Madrid': 'espana españa madrid',
+            };
+
+            const normalizeSearch = (value) => String(value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+
+            const timezoneOffsetFromLabel = (label) => {
+                const matched = String(label || '').match(/\((UTC[+-]\d{2}:\d{2})\)/i);
+                return matched ? matched[1].toUpperCase() : 'UTC';
+            };
+
+            const timezoneGeoLabel = (identifier) => {
+                if (timezoneAliasLabels[identifier]) {
+                    return timezoneAliasLabels[identifier];
+                }
+
+                const parts = String(identifier || '').split('/');
+                if (parts.length === 1) {
+                    return parts[0].replace(/_/g, ' ');
+                }
+
+                const region = parts.shift();
+                return `${region} - ${parts.join(' / ').replace(/_/g, ' ')}`;
+            };
+
+            const favoriteTimezoneSet = new Set(favoriteTimezoneIds);
+
+            let timezoneItems = [];
+            let timezoneMap = new Map();
+
+            const rebuildTimezoneIndex = () => {
+                if (!timezoneSelect) return;
+
+                timezoneItems = Array.from(timezoneSelect.options).map((option) => {
+                    const value = String(option.value || '');
+                    const rawLabel = String(option.textContent || '');
+                    const geo = timezoneGeoLabel(value);
+                    const offset = timezoneOffsetFromLabel(rawLabel);
+                    const searchBlob = normalizeSearch([
+                        value,
+                        rawLabel,
+                        geo,
+                        timezoneAliasKeywords[value] || '',
+                    ].join(' '));
+
+                    return {
+                        value,
+                        geo,
+                        offset,
+                        searchBlob,
+                    };
+                });
+
+                timezoneMap = new Map(timezoneItems.map((item) => [item.value, item]));
+            };
+
+            const selectedTimezoneText = () => {
+                if (!timezoneSelect || !timezoneCurrent) return;
+
+                const selected = timezoneMap.get(timezoneSelect.value);
+                if (!selected) {
+                    timezoneCurrent.textContent = 'Seleccionada: -';
+                    return;
+                }
+
+                timezoneCurrent.textContent = `Seleccionada: ${selected.geo} (${selected.offset})`;
+            };
+
+            const renderTimezoneOptions = (query = '', preferredValue = null) => {
+                if (!timezoneSelect) return;
+
+                const normalizedQuery = normalizeSearch(query);
+                const currentValue = preferredValue || timezoneSelect.value;
+                const filtered = timezoneItems
+                    .filter((item) => normalizedQuery === '' || item.searchBlob.includes(normalizedQuery))
+                    .sort((a, b) => {
+                        const aFav = favoriteTimezoneSet.has(a.value) ? 0 : 1;
+                        const bFav = favoriteTimezoneSet.has(b.value) ? 0 : 1;
+                        if (aFav !== bFav) return aFav - bFav;
+
+                        return a.geo.localeCompare(b.geo, 'es', { sensitivity: 'base' });
+                    });
+
+                timezoneSelect.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    const empty = document.createElement('option');
+                    empty.value = '';
+                    empty.textContent = 'Sin coincidencias para tu busqueda';
+                    empty.disabled = true;
+                    empty.selected = true;
+                    timezoneSelect.appendChild(empty);
+                    selectedTimezoneText();
+                    return;
+                }
+
+                filtered.forEach((item) => {
+                    const option = document.createElement('option');
+                    option.value = item.value;
+                    option.textContent = `${favoriteTimezoneSet.has(item.value) ? '★ ' : ''}${item.geo} (${item.offset})`;
+                    timezoneSelect.appendChild(option);
+                });
+
+                const hasCurrent = filtered.some((item) => item.value === currentValue);
+                timezoneSelect.value = hasCurrent ? currentValue : filtered[0].value;
+                selectedTimezoneText();
+            };
+
+            const detectTimezone = () => {
+                try {
+                    return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                } catch (error) {
+                    return '';
+                }
+            };
+
+            const initTimezonePicker = () => {
+                if (!timezoneSelect) return;
+
+                rebuildTimezoneIndex();
+                renderTimezoneOptions('');
+
+                const detectedTimezone = detectTimezone();
+                const detectedInfo = timezoneMap.get(detectedTimezone);
+
+                if (timezoneDetectHint) {
+                    timezoneDetectHint.textContent = detectedInfo
+                        ? `Detectada en este equipo: ${detectedInfo.geo} (${detectedInfo.offset})`
+                        : 'No se pudo detectar automaticamente la zona horaria del navegador.';
+                }
+
+                if (timezoneDetectBtn) {
+                    timezoneDetectBtn.disabled = !detectedInfo;
+                    timezoneDetectBtn.addEventListener('click', () => {
+                        if (!detectedInfo) return;
+                        if (timezoneSearch) {
+                            timezoneSearch.value = '';
+                        }
+                        renderTimezoneOptions('', detectedInfo.value);
+                    });
+                }
+
+                if (timezoneSearch) {
+                    timezoneSearch.addEventListener('input', (event) => {
+                        const value = event.target && typeof event.target.value === 'string'
+                            ? event.target.value
+                            : '';
+                        renderTimezoneOptions(value);
+                    });
+                }
+
+                timezoneSelect.addEventListener('change', () => {
+                    selectedTimezoneText();
+                });
+
+                if (timezoneSelect.value === 'UTC' && detectedInfo && detectedInfo.value !== 'UTC') {
+                    renderTimezoneOptions('', detectedInfo.value);
+                }
+            };
 
             const setActiveCard = (theme) => {
                 options.forEach((card) => {
@@ -290,6 +603,7 @@
                 card.addEventListener('click', () => onSelectTheme(card.dataset.themeOption));
             });
 
+            initTimezonePicker();
             applyTheme(currentTheme);
             setActiveCard(currentTheme);
         })();
