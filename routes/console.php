@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('subscriptions:notify')->dailyAt('08:00');
+Schedule::command('maintenance:cleanup-files --days=14')->dailyAt('03:20');

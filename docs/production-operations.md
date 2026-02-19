@@ -44,6 +44,14 @@ Para ejecucion continua:
 
 - En produccion usa `LOG_CHANNEL=daily`.
 - Ajusta `LOG_DAILY_DAYS` segun el disco disponible.
+- Se agenda limpieza diaria de archivos temporales:
+  - `php artisan maintenance:cleanup-files --days=14`
+- Puedes probar sin borrar con:
+
+```bash
+php artisan maintenance:cleanup-files --days=14 --dry-run
+```
+
 - Si necesitas liberar cache compilada:
 
 ```bash
