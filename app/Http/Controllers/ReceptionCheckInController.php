@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Http\Requests\ReceptionCheckInRequest;
-use App\Services\AttendanceService;
+use App\Services\AttendanceCheckinService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,7 +40,7 @@ class ReceptionCheckInController extends Controller
      */
     public function store(
         ReceptionCheckInRequest $request,
-        AttendanceService $attendanceService
+        AttendanceCheckinService $attendanceService
     ): JsonResponse {
         $userId = (int) $request->user()->id;
         $gymId = $request->user()?->gym_id;
