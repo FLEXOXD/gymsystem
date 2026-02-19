@@ -3,6 +3,10 @@
 
     $pageTitle = trim($__env->yieldContent('title')) ?: 'Panel';
     $user = auth()->user();
+    $activeTheme = $user?->theme ?? 'iron_dark';
+    $darkThemes = ['iron_dark', 'power_red', 'energy_green', 'gold_elite'];
+    $isDarkTheme = in_array($activeTheme, $darkThemes, true);
+    $themeClass = $isDarkTheme ? 'dark theme-dark' : 'theme-light';
     $isSuperAdmin = $user && $user->gym_id === null;
     $gym = $user?->gym;
     $gymName = $isSuperAdmin ? 'SuperAdmin' : ($gym?->name ?? 'Gym');
@@ -43,7 +47,7 @@
     };
 @endphp
 <!DOCTYPE html>
-<html lang="es" class="h-full antialiased" data-theme="{{ $user?->theme ?? 'iron_dark' }}">
+<html lang="es" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $activeTheme }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -4,6 +4,9 @@
 @section('page-title', 'Reportes')
 
 @section('content')
+    @php
+        $currencyFormatter = \App\Support\Currency::class;
+    @endphp
     <x-ui.card title="Panel de reportes" subtitle="Resumen financiero y operativo del rango seleccionado.">
         <form method="GET" action="{{ route('reports.index') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -30,15 +33,15 @@
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <x-ui.card>
             <p class="ui-muted text-xs font-bold uppercase tracking-wider">Total ingresos</p>
-            <p class="mt-2 text-3xl font-black text-emerald-700">${{ number_format((float) $incomeSummary['total_income'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-emerald-700">{{ $currencyFormatter::format((float) $incomeSummary['total_income'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="ui-muted text-xs font-bold uppercase tracking-wider">Total egresos</p>
-            <p class="mt-2 text-3xl font-black text-rose-700">${{ number_format((float) $incomeSummary['total_expense'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-rose-700">{{ $currencyFormatter::format((float) $incomeSummary['total_expense'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="ui-muted text-xs font-bold uppercase tracking-wider">Balance</p>
-            <p class="mt-2 text-3xl font-black text-cyan-700">${{ number_format((float) $incomeSummary['balance'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-cyan-700">{{ $currencyFormatter::format((float) $incomeSummary['balance'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="ui-muted text-xs font-bold uppercase tracking-wider">Movimientos</p>

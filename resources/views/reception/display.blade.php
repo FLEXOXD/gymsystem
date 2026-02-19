@@ -1,10 +1,12 @@
 ﻿@php
     $user = auth()->user();
     $theme = $user?->theme ?? 'iron_dark';
+    $darkThemes = ['iron_dark', 'power_red', 'energy_green', 'gold_elite'];
+    $themeClass = in_array($theme, $darkThemes, true) ? 'dark theme-dark' : 'theme-light';
     $gymName = $user?->gym?->name ?? 'Gym';
 @endphp
 <!DOCTYPE html>
-<html lang="es" class="h-full antialiased" data-theme="{{ $theme }}">
+<html lang="es" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $theme }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,21 +49,21 @@
                     <p id="result-name" class="text-[clamp(1.6rem,2vw,2.6rem)] font-bold leading-tight text-slate-900 dark:text-slate-100">-</p>
 
                     <div class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-                        <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fin membresia</p>
-                            <p id="result-membership" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                        <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresia</p>
+                            <p id="result-membership" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                         </div>
-                        <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fecha check-in</p>
-                            <p id="result-checkin-date" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                        <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fecha check-in</p>
+                            <p id="result-checkin-date" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                         </div>
-                        <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Hora check-in</p>
-                            <p id="result-checkin-time" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                        <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Hora check-in</p>
+                            <p id="result-checkin-time" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                         </div>
-                        <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Visitas del mes</p>
-                            <p id="result-month-visits" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                        <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Visitas del mes</p>
+                            <p id="result-month-visits" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                         </div>
                     </div>
 

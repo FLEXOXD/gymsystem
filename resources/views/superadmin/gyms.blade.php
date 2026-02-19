@@ -32,7 +32,7 @@
                     <tr class="border-b border-slate-100 align-top text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3 font-semibold text-slate-800 dark:text-slate-100">{{ $gym->gym_name }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $gym->plan_name }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">${{ number_format((float) $gym->price, 2) }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ \App\Support\Currency::format((float) $gym->price, $appCurrencyCode) }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ \Carbon\Carbon::parse($gym->ends_at)->toDateString() }}</td>
                         <td class="px-3 py-3">
                             <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $badgeClass }}">

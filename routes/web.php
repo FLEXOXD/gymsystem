@@ -34,7 +34,9 @@ Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
     Route::middleware('check.subscription')->group(function (): void {
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
         Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+        Route::get('/clients/check-document', [ClientController::class, 'checkDocument'])->name('clients.check-document');
         Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+        Route::patch('/clients/{client}/photo', [ClientController::class, 'updatePhoto'])->name('clients.photo.update');
         Route::get('/clients/{client}/card', [ClientCardController::class, 'show'])->name('clients.card');
         Route::get('/clients/{client}/card.pdf', [ClientCardController::class, 'pdf'])->name('clients.card.pdf');
 

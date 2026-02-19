@@ -2,6 +2,8 @@
     :root {
         --bg: #0b0f19;
         --sidebar: #111827;
+        --sidebar-text: #e5e7eb;
+        --sidebar-muted: #94a3b8;
         --primary: #2563eb;
         --accent: #06b6d4;
         --text: #e5e7eb;
@@ -13,6 +15,8 @@
     html[data-theme='iron_dark'] {
         --bg: #0b0f19;
         --sidebar: #111827;
+        --sidebar-text: #e5e7eb;
+        --sidebar-muted: #94a3b8;
         --primary: #2563eb;
         --accent: #06b6d4;
         --text: #e5e7eb;
@@ -24,6 +28,8 @@
     html[data-theme='power_red'] {
         --bg: #0f0f0f;
         --sidebar: #1a1a1a;
+        --sidebar-text: #f4f4f5;
+        --sidebar-muted: #a1a1aa;
         --primary: #dc2626;
         --accent: #ef4444;
         --text: #f4f4f5;
@@ -35,6 +41,8 @@
     html[data-theme='energy_green'] {
         --bg: #0b1215;
         --sidebar: #111827;
+        --sidebar-text: #e8f6ef;
+        --sidebar-muted: #9fb6ac;
         --primary: #16a34a;
         --accent: #22c55e;
         --text: #e8f6ef;
@@ -46,12 +54,66 @@
     html[data-theme='gold_elite'] {
         --bg: #0a0a0a;
         --sidebar: #171717;
+        --sidebar-text: #f9f3dc;
+        --sidebar-muted: #c3b07a;
         --primary: #d4af37;
         --accent: #f59e0b;
         --text: #f9f3dc;
         --muted: #c3b07a;
         --card: #161616;
         --border: #332a16;
+    }
+
+    html[data-theme='light_emerald'] {
+        --bg: #f7fbf8;
+        --sidebar: #123524;
+        --sidebar-text: #ecfdf5;
+        --sidebar-muted: #a7f3d0;
+        --primary: #166534;
+        --accent: #10b981;
+        --text: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --border: #d1d5db;
+    }
+
+    html[data-theme='light_coffee'] {
+        --bg: #fcf9f5;
+        --sidebar: #3d2b1f;
+        --sidebar-text: #f8f2ea;
+        --sidebar-muted: #d8b79b;
+        --primary: #6f4e37;
+        --accent: #a16207;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --card: #ffffff;
+        --border: #d6c9b8;
+    }
+
+    html[data-theme='light_navy'] {
+        --bg: #f6f8fc;
+        --sidebar: #102a43;
+        --sidebar-text: #e2e8f0;
+        --sidebar-muted: #93c5fd;
+        --primary: #1d4ed8;
+        --accent: #0ea5e9;
+        --text: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --border: #cbd5e1;
+    }
+
+    html[data-theme='light_onyx'] {
+        --bg: #f8fafc;
+        --sidebar: #111111;
+        --sidebar-text: #f3f4f6;
+        --sidebar-muted: #9ca3af;
+        --primary: #1f2937;
+        --accent: #111827;
+        --text: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --border: #d1d5db;
     }
 }
 
@@ -68,7 +130,28 @@
     .theme-sidebar {
         background-color: color-mix(in srgb, var(--sidebar) 88%, #000000);
         border-color: var(--border);
-        color: var(--text);
+        color: var(--sidebar-text);
+    }
+
+    .theme-sidebar .ui-heading,
+    .theme-sidebar .ui-text,
+    .theme-sidebar .theme-nav-link,
+    .theme-sidebar .sidebar-label {
+        color: var(--sidebar-text);
+    }
+
+    .theme-sidebar .ui-muted {
+        color: var(--sidebar-muted);
+    }
+
+    .theme-sidebar .ui-button-muted {
+        background-color: color-mix(in srgb, var(--sidebar) 78%, #0f172a);
+        border-color: color-mix(in srgb, var(--sidebar-muted) 30%, var(--border));
+        color: var(--sidebar-text);
+    }
+
+    .theme-sidebar .ui-button-muted:hover {
+        background-color: color-mix(in srgb, var(--sidebar) 68%, #1e293b);
     }
 
     .theme-header {
@@ -88,15 +171,15 @@
     }
 
     .theme-nav-link {
-        color: var(--text);
+        color: var(--sidebar-text);
     }
 
     .theme-nav-link:hover {
-        background-color: color-mix(in srgb, var(--card) 78%, #ffffff);
+        background-color: color-mix(in srgb, var(--sidebar) 76%, #ffffff);
     }
 
     .theme-nav-dot {
-        background-color: color-mix(in srgb, var(--muted) 48%, transparent);
+        background-color: color-mix(in srgb, var(--sidebar-muted) 58%, transparent);
     }
 
     .theme-nav-active {
@@ -285,21 +368,143 @@
 }
 
 @layer utilities {
-    .theme-body .text-slate-900,
-    .theme-body .text-slate-800,
-    .theme-body .text-slate-700,
-    .theme-body .text-gray-900,
-    .theme-body .text-gray-800,
-    .theme-body .text-gray-700 {
-        color: var(--text);
+    /* Modo claro y oscuro separados para evitar cruces de contraste. */
+    .theme-light .ui-heading {
+        color: #0f172a;
     }
 
-    .theme-body .text-slate-600,
-    .theme-body .text-slate-500,
-    .theme-body .text-slate-400,
-    .theme-body .text-gray-600,
-    .theme-body .text-gray-500,
-    .theme-body .text-gray-400 {
-        color: var(--muted);
+    .theme-light .ui-text {
+        color: #1e293b;
+    }
+
+    .theme-light .ui-muted {
+        color: #475569;
+    }
+
+    .theme-light .panel-view table thead tr,
+    .theme-light .ui-table thead tr {
+        background-color: #e2e8f0;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .theme-light .panel-view table tbody tr,
+    .theme-light .ui-table tbody tr {
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    .theme-light .panel-view table tbody tr:nth-child(odd),
+    .theme-light .ui-table tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+
+    .theme-light .panel-view table tbody tr:nth-child(even),
+    .theme-light .ui-table tbody tr:nth-child(even) {
+        background-color: #f1f5f9;
+    }
+
+    .theme-light .panel-view table tbody tr:hover,
+    .theme-light .ui-table tbody tr:hover {
+        background-color: #e0f2fe;
+    }
+
+    .theme-dark .ui-heading {
+        color: #f8fafc;
+    }
+
+    .theme-dark .ui-text {
+        color: #e2e8f0;
+    }
+
+    .theme-dark .ui-muted {
+        color: #cbd5e1;
+    }
+
+    .theme-dark .text-slate-900,
+    .theme-dark .text-slate-800,
+    .theme-dark .text-slate-700,
+    .theme-dark .text-gray-900,
+    .theme-dark .text-gray-800,
+    .theme-dark .text-gray-700 {
+        color: #f1f5f9;
+    }
+
+    .theme-dark .text-slate-600,
+    .theme-dark .text-slate-500,
+    .theme-dark .text-slate-400,
+    .theme-dark .text-gray-600,
+    .theme-dark .text-gray-500,
+    .theme-dark .text-gray-400 {
+        color: #cbd5e1;
+    }
+
+    .theme-dark .panel-view table thead tr,
+    .theme-dark .ui-table thead tr {
+        background-color: #334155;
+        border-color: #475569;
+        color: #cbd5e1;
+    }
+
+    .theme-dark .panel-view table tbody tr,
+    .theme-dark .ui-table tbody tr {
+        color: #e2e8f0;
+    }
+
+    .theme-dark .panel-view table tbody tr:nth-child(odd),
+    .theme-dark .ui-table tbody tr:nth-child(odd) {
+        background-color: #0f172a;
+    }
+
+    .theme-dark .panel-view table tbody tr:nth-child(even),
+    .theme-dark .ui-table tbody tr:nth-child(even) {
+        background-color: #020617;
+    }
+
+    .theme-dark .panel-view table tbody tr:hover,
+    .theme-dark .ui-table tbody tr:hover {
+        background-color: #1e293b;
+    }
+
+    /* Mantiene el contraste correcto del sidebar en ambos modos. */
+    .theme-light .theme-sidebar .ui-heading,
+    .theme-light .theme-sidebar .ui-text,
+    .theme-light .theme-sidebar .theme-nav-link,
+    .theme-light .theme-sidebar .sidebar-label,
+    .theme-dark .theme-sidebar .ui-heading,
+    .theme-dark .theme-sidebar .ui-text,
+    .theme-dark .theme-sidebar .theme-nav-link,
+    .theme-dark .theme-sidebar .sidebar-label {
+        color: var(--sidebar-text);
+    }
+
+    .theme-light .theme-sidebar .ui-muted,
+    .theme-dark .theme-sidebar .ui-muted {
+        color: var(--sidebar-muted);
+    }
+
+    /* Superficies claras dentro de tema oscuro (ej: tarjetas internas en Configuracion). */
+    .theme-dark .theme-surface-light .ui-heading,
+    .theme-dark .theme-surface-light .ui-text {
+        color: #0f172a;
+    }
+
+    .theme-dark .theme-surface-light .ui-muted,
+    .theme-dark .theme-surface-light .text-slate-600,
+    .theme-dark .theme-surface-light .text-slate-500,
+    .theme-dark .theme-surface-light .text-slate-400,
+    .theme-dark .theme-surface-light .text-gray-600,
+    .theme-dark .theme-surface-light .text-gray-500,
+    .theme-dark .theme-surface-light .text-gray-400 {
+        color: #475569;
+    }
+
+    .theme-dark .theme-surface-light .text-slate-900,
+    .theme-dark .theme-surface-light .text-slate-800,
+    .theme-dark .theme-surface-light .text-slate-700,
+    .theme-dark .theme-surface-light .text-gray-900,
+    .theme-dark .theme-surface-light .text-gray-800,
+    .theme-dark .theme-surface-light .text-gray-700 {
+        color: #0f172a;
     }
 }

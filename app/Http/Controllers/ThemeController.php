@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateGymAvatarsRequest;
 use App\Http\Requests\UpdateGymLogoRequest;
 use App\Http\Requests\UpdateGymProfileRequest;
 use App\Http\Requests\UpdateThemeRequest;
+use App\Support\Currency;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +53,34 @@ class ThemeController extends Controller
                 'primary' => '#D4AF37',
                 'accent' => '#F59E0B',
             ],
+            'light_emerald' => [
+                'name' => 'LIGHT EMERALD',
+                'bg' => '#F7FBF8',
+                'sidebar' => '#123524',
+                'primary' => '#166534',
+                'accent' => '#10B981',
+            ],
+            'light_coffee' => [
+                'name' => 'LIGHT COFFEE',
+                'bg' => '#FCF9F5',
+                'sidebar' => '#3D2B1F',
+                'primary' => '#6F4E37',
+                'accent' => '#A16207',
+            ],
+            'light_navy' => [
+                'name' => 'LIGHT NAVY',
+                'bg' => '#F6F8FC',
+                'sidebar' => '#102A43',
+                'primary' => '#1D4ED8',
+                'accent' => '#0EA5E9',
+            ],
+            'light_onyx' => [
+                'name' => 'LIGHT ONYX',
+                'bg' => '#F8FAFC',
+                'sidebar' => '#111111',
+                'primary' => '#1F2937',
+                'accent' => '#111827',
+            ],
         ];
     }
 
@@ -72,6 +101,7 @@ class ThemeController extends Controller
             'themes' => $themes,
             'currentTheme' => $currentTheme,
             'gym' => $user?->gym,
+            'currencyOptions' => Currency::options(),
             'timezoneOptions' => $this->timezoneOptions(),
         ]);
     }

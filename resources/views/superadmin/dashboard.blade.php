@@ -24,7 +24,7 @@
             </article>
             <article class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 shadow-sm dark:border-cyan-800 dark:bg-cyan-900/40">
                 <p class="text-xs font-bold uppercase tracking-widest text-cyan-700 dark:text-cyan-200">MRR Estimado</p>
-                <p class="mt-2 text-3xl font-black text-cyan-800 dark:text-cyan-200">${{ number_format((float) $kpis['mrr_estimated'], 2) }}</p>
+                <p class="mt-2 text-3xl font-black text-cyan-800 dark:text-cyan-200">{{ \App\Support\Currency::format((float) $kpis['mrr_estimated'], $appCurrencyCode) }}</p>
             </article>
             <article class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm dark:border-indigo-800 dark:bg-indigo-900/40">
                 <p class="text-xs font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-200">Vencen En 7 Dias</p>

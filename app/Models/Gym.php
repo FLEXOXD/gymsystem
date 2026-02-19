@@ -33,6 +33,7 @@ class Gym extends Model
         'phone',
         'address',
         'timezone',
+        'currency_code',
         'logo_path',
         'avatar_male_path',
         'avatar_female_path',

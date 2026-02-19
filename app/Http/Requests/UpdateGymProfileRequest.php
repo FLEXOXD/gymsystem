@@ -2,10 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Currency;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateGymProfileRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'currency_code' => strtoupper(trim((string) $this->input('currency_code', 'USD'))),
+        ]);
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -25,6 +34,7 @@ class UpdateGymProfileRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:255'],
+            'currency_code' => ['required', 'string', 'size:3', Rule::in(array_keys(Currency::options()))],
             'timezone' => [
                 'required',
                 'string',

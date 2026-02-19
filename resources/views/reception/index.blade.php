@@ -65,21 +65,21 @@
                 <p id="result-name" class="text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">-</p>
 
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fin membresia</p>
-                        <p id="result-membership" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresia</p>
+                        <p id="result-membership" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fecha check-in</p>
-                        <p id="result-checkin-date" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fecha check-in</p>
+                        <p id="result-checkin-date" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Hora check-in</p>
-                        <p id="result-checkin-time" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Hora check-in</p>
+                        <p id="result-checkin-time" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Visitas del mes</p>
-                        <p id="result-month-visits" class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">-</p>
+                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Visitas del mes</p>
+                        <p id="result-month-visits" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
                 </div>
 
@@ -698,7 +698,37 @@
             }
         }
 
-        function focusInput() {
+        function isEditableElement(element) {
+            if (!(element instanceof HTMLElement)) {
+                return false;
+            }
+
+            if (element.isContentEditable) {
+                return true;
+            }
+
+            const tag = element.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                return true;
+            }
+
+            return Boolean(element.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]'));
+        }
+
+        function canAutoFocusScanner() {
+            const active = document.activeElement;
+            if (!active || active === document.body) {
+                return true;
+            }
+
+            return active === input;
+        }
+
+        function focusInput(force = false) {
+            if (!force && !canAutoFocusScanner()) {
+                return;
+            }
+
             input.focus({ preventScroll: true });
         }
 
@@ -913,6 +943,13 @@
 
             const target = event.target;
             const isInputFocused = target === input;
+            const isTypingElsewhere = target instanceof HTMLElement
+                && isEditableElement(target)
+                && !isInputFocused;
+
+            if (isTypingElsewhere) {
+                return;
+            }
 
             if (event.key === 'Enter' || event.key === 'Tab') {
                 if (!isInputFocused && input.value.trim() !== '') {
@@ -928,7 +965,7 @@
 
             if (!isInputFocused) {
                 event.preventDefault();
-                focusInput();
+                focusInput(true);
                 input.value = normalizeInput(input.value + event.key);
             }
 
@@ -936,11 +973,13 @@
         }, true);
 
         input.addEventListener('blur', function () {
-            setTimeout(focusInput, 120);
+            setTimeout(function () {
+                focusInput();
+            }, 120);
         });
 
         setInterval(function () {
-            if (!document.hidden && document.activeElement !== input) {
+            if (!document.hidden && document.activeElement !== input && canAutoFocusScanner()) {
                 focusInput();
             }
         }, 1000);

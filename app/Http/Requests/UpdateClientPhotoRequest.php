@@ -4,25 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateThemeRequest extends FormRequest
+class UpdateClientPhotoRequest extends FormRequest
 {
-    public const ALLOWED_THEMES = [
-        'iron_dark',
-        'power_red',
-        'energy_green',
-        'gold_elite',
-        'light_emerald',
-        'light_coffee',
-        'light_navy',
-        'light_onyx',
-    ];
-
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user() !== null && $this->user()->gym_id !== null;
     }
 
     /**
@@ -33,7 +22,7 @@ class UpdateThemeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'theme' => ['required', 'string', 'in:'.implode(',', self::ALLOWED_THEMES)],
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 }

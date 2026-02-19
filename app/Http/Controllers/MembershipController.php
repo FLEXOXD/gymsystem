@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Services\CashSessionService;
@@ -95,6 +96,20 @@ class MembershipController extends Controller
                     membershipId: $membership->id,
                     description: 'Cobro membresia #'.$membership->id.' - Plan '.$plan->name
                 );
+
+                // Keep client access status aligned with effective memberships.
+                $hasActiveMembershipToday = Membership::query()
+                    ->forGym($gymId)
+                    ->where('client_id', (int) $data['client_id'])
+                    ->activeOn(now()->toDateString())
+                    ->exists();
+
+                Client::query()
+                    ->forGym($gymId)
+                    ->where('id', (int) $data['client_id'])
+                    ->update([
+                        'status' => $hasActiveMembershipToday ? 'active' : 'inactive',
+                    ]);
             });
         } catch (RuntimeException $exception) {
             return redirect()

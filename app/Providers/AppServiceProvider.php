@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\Currency;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +44,13 @@ class AppServiceProvider extends ServiceProvider
                         'client' => null,
                     ], 429);
                 });
+        });
+
+        View::composer('*', function ($view): void {
+            $currencyCode = Currency::normalizeCode(auth()->user()?->gym?->currency_code);
+
+            $view->with('appCurrencyCode', $currencyCode);
+            $view->with('appCurrencySymbol', Currency::symbol($currencyCode));
         });
     }
 }

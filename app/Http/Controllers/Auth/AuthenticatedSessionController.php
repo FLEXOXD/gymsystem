@@ -38,8 +38,13 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        $user = $request->user();
 
-        return redirect()->intended(route('reception.index'));
+        if ($user?->gym_id === null) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        return redirect()->route('reception.index');
     }
 
     /**

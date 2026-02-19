@@ -54,7 +54,7 @@
                         <td class="px-3 py-3 font-semibold text-slate-700">{{ $plan->id }}</td>
                         <td class="px-3 py-3">{{ $plan->name }}</td>
                         <td class="px-3 py-3">{{ $plan->duration_days }} dias</td>
-                        <td class="px-3 py-3">${{ number_format((float) $plan->price, 2) }}</td>
+                        <td class="px-3 py-3">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }}</td>
                         <td class="px-3 py-3">
                             <x-ui.badge :variant="$plan->status === 'active' ? 'success' : 'muted'">{{ $plan->status }}</x-ui.badge>
                         </td>

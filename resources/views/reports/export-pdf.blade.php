@@ -18,15 +18,18 @@
     </style>
 </head>
 <body>
+    @php
+        $currencyFormatter = \App\Support\Currency::class;
+    @endphp
     <h1>Reportes Profesionales - Gimnasio</h1>
     <p class="muted">Periodo: {{ $from->toDateString() }} a {{ $to->toDateString() }}</p>
 
     <h2>Resumen Financiero</h2>
     <table class="kpis">
         <tr>
-            <td>Total ingresos: ${{ number_format((float) $incomeSummary['total_income'], 2) }}</td>
-            <td>Total egresos: ${{ number_format((float) $incomeSummary['total_expense'], 2) }}</td>
-            <td>Balance: ${{ number_format((float) $incomeSummary['balance'], 2) }}</td>
+            <td>Total ingresos: {{ $currencyFormatter::format((float) $incomeSummary['total_income'], $appCurrencyCode) }}</td>
+            <td>Total egresos: {{ $currencyFormatter::format((float) $incomeSummary['total_expense'], $appCurrencyCode) }}</td>
+            <td>Balance: {{ $currencyFormatter::format((float) $incomeSummary['balance'], $appCurrencyCode) }}</td>
             <td>Movimientos: {{ (int) $incomeSummary['total_movements'] }}</td>
         </tr>
     </table>
@@ -46,9 +49,9 @@
         @forelse ($incomeByMethod as $row)
             <tr>
                 <td>{{ match ($row->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $row->method } }}</td>
-                <td>${{ number_format((float) $row->income_total, 2) }}</td>
-                <td>${{ number_format((float) $row->expense_total, 2) }}</td>
-                <td>${{ number_format((float) $row->balance, 2) }}</td>
+                <td>{{ $currencyFormatter::format((float) $row->income_total, $appCurrencyCode) }}</td>
+                <td>{{ $currencyFormatter::format((float) $row->expense_total, $appCurrencyCode) }}</td>
+                <td>{{ $currencyFormatter::format((float) $row->balance, $appCurrencyCode) }}</td>
                 <td>{{ (int) $row->movements_count }}</td>
             </tr>
         @empty
@@ -113,7 +116,7 @@
                 <td>{{ $movement->occurred_at?->format('Y-m-d H:i') }}</td>
                 <td>{{ match ($movement->type) { 'income' => 'Ingreso', 'expense' => 'Egreso', default => $movement->type } }}</td>
                 <td>{{ match ($movement->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $movement->method } }}</td>
-                <td>${{ number_format((float) $movement->amount, 2) }}</td>
+                <td>{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode) }}</td>
                 <td>{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                 <td>{{ $movement->createdBy?->name ?? '-' }}</td>
                 <td>{{ $movement->description ?: '-' }}</td>

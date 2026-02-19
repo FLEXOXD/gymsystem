@@ -30,7 +30,7 @@
                         <tr class="border-b border-slate-100 text-sm dark:border-slate-800">
                             <td class="px-3 py-3 dark:text-slate-100">{{ $gym->name }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->plan_name ?? '-' }}</td>
-                            <td class="px-3 py-3 dark:text-slate-200">{{ $subscription ? '$'.number_format((float) $subscription->price, 2) : '-' }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ $subscription ? \App\Support\Currency::format((float) $subscription->price, $appCurrencyCode) : '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->ends_at?->toDateString() ?? '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ match ($subscription?->status) { 'active' => 'Activo', 'grace' => 'Gracia', 'suspended' => 'Suspendido', null => 'Sin suscripcion', default => $subscription?->status } }}</td>
                             <td class="px-3 py-3">

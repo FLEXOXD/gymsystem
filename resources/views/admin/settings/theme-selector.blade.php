@@ -40,6 +40,7 @@
                 'female' => $resolveMediaUrl($gym->avatar_female_path),
                 'neutral' => $resolveMediaUrl($gym->avatar_neutral_path),
             ];
+            $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
             $gymTimezone = old('timezone', $gym->timezone ?? 'UTC');
         }
     @endphp
@@ -63,8 +64,8 @@
 
                         <div class="mb-3 flex items-start justify-between gap-2">
                             <div>
-                                <p class="text-xs font-bold uppercase tracking-[0.16em] text-white/70">Tema</p>
-                                <h3 class="mt-1 text-sm font-black tracking-wide text-white">{{ $theme['name'] }}</h3>
+                                <p class="ui-muted text-xs font-bold uppercase tracking-[0.16em]">Tema</p>
+                                <h3 class="ui-heading mt-1 text-sm font-black tracking-wide">{{ $theme['name'] }}</h3>
                             </div>
                             <span data-selected-badge
                                   class="theme-pill-inactive inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">
@@ -163,8 +164,22 @@
                         </div>
 
                         <div>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Moneda</label>
+                            <select name="currency_code" class="ui-input" required>
+                                @foreach ($currencyOptions as $currencyCode => $currencyMeta)
+                                    <option value="{{ $currencyCode }}" @selected($gymCurrencyCode === $currencyCode)>
+                                        {{ $currencyCode }} - {{ $currencyMeta['name'] }} ({{ $currencyMeta['symbol'] }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('currency_code')
+                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Zona horaria</label>
-                            <div class="space-y-2 rounded-xl border border-white/10 bg-black/10 p-3">
+                            <div class="theme-surface-light space-y-2 rounded-xl border border-slate-300/70 bg-slate-50/80 p-3">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <input id="timezone-search"
                                            type="text"
@@ -212,14 +227,14 @@
                             @php
                                 $avatarUrl = $gymAvatarUrls[$avatarKey] ?? null;
                             @endphp
-                            <div class="rounded-2xl border border-white/10 bg-black/10 p-3">
+                            <div class="theme-surface-light rounded-2xl border border-slate-300/70 bg-slate-50/80 p-3">
                                 <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ $avatarMeta['label'] }}</p>
-                                <div class="mt-2 overflow-hidden rounded-xl border border-white/10 bg-slate-900/30" style="aspect-ratio: 4/5;">
+                                <div class="mt-2 overflow-hidden rounded-xl border border-slate-300/70 bg-slate-100" style="aspect-ratio: 4/5;">
                                     @if ($avatarUrl)
                                         <img src="{{ $avatarUrl }}" alt="{{ $avatarMeta['label'] }}" class="h-full w-full object-cover object-top">
                                     @else
                                         <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
-                                            <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">Sin avatar</span>
+                                            <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-700">Sin avatar</span>
                                             <span class="text-[10px] uppercase tracking-[0.25em] text-slate-500">{{ strtoupper($avatarKey) }}</span>
                                         </div>
                                     @endif
@@ -282,6 +297,7 @@
             const rawUpdateUrl = container.dataset.updateUrl || '/config/theme';
             const normalizedUrl = new URL(rawUpdateUrl, window.location.origin);
             const updateUrl = normalizedUrl.pathname + normalizedUrl.search;
+            const darkThemes = new Set(['iron_dark', 'power_red', 'energy_green', 'gold_elite']);
             let currentTheme = container.dataset.currentTheme || 'iron_dark';
             let requestInFlight = false;
 
@@ -520,14 +536,18 @@
 
             const applyTheme = (theme) => {
                 root.setAttribute('data-theme', theme);
+                const isDarkTheme = darkThemes.has(theme);
+                root.classList.toggle('dark', isDarkTheme);
+                root.classList.toggle('theme-dark', isDarkTheme);
+                root.classList.toggle('theme-light', !isDarkTheme);
             };
 
             const pushToast = (message, type = 'success') => {
                 if (!toastStack) return;
 
                 const palette = type === 'success'
-                    ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
-                    : 'border-rose-400/45 bg-rose-500/15 text-rose-100';
+                    ? 'border-emerald-300 bg-emerald-100 text-emerald-800'
+                    : 'border-rose-300 bg-rose-100 text-rose-800';
 
                 const toast = document.createElement('div');
                 toast.className = `pointer-events-auto w-72 rounded-xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur transition ${palette}`;

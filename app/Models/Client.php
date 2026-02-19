@@ -69,6 +69,37 @@ class Client extends Model
     }
 
     /**
+     * Normalize document number preserving display separators.
+     */
+    public static function normalizeDocumentNumber(?string $value): string
+    {
+        $document = trim((string) $value);
+        if ($document === '') {
+            return '';
+        }
+
+        // Replace common unicode dashes with ASCII hyphen.
+        $document = str_replace(["\u{2010}", "\u{2011}", "\u{2012}", "\u{2013}", "\u{2014}", "\u{2212}"], '-', $document);
+        $document = preg_replace('/\s+/u', ' ', $document) ?? '';
+        $document = preg_replace('/\s*-\s*/u', '-', $document) ?? '';
+
+        return mb_strtoupper($document);
+    }
+
+    /**
+     * Canonical document number for comparisons (no separators).
+     */
+    public static function canonicalDocumentNumber(?string $value): string
+    {
+        $normalized = self::normalizeDocumentNumber($value);
+        if ($normalized === '') {
+            return '';
+        }
+
+        return str_replace([' ', '-'], '', $normalized);
+    }
+
+    /**
      * Scope records for a specific gym.
      */
     public function scopeForGym(Builder $query, int $gymId): Builder
@@ -86,10 +117,19 @@ class Client extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $subQuery) use ($value): void {
-            $subQuery->where('document_number', 'like', "%{$value}%")
-                ->orWhere('first_name', 'like', "%{$value}%")
-                ->orWhere('last_name', 'like', "%{$value}%");
-        });
+        $terms = preg_split('/\s+/', $value, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if ($terms === []) {
+            return $query;
+        }
+
+        foreach (array_slice($terms, 0, 6) as $term) {
+            $query->where(function (Builder $subQuery) use ($term): void {
+                $subQuery->where('document_number', 'like', "%{$term}%")
+                    ->orWhere('first_name', 'like', "%{$term}%")
+                    ->orWhere('last_name', 'like', "%{$term}%");
+            });
+        }
+
+        return $query;
     }
 }

@@ -5,6 +5,7 @@
 
 @section('content')
     @php
+        $currencyFormatter = \App\Support\Currency::class;
         $methodLabels = [
             'cash' => 'Efectivo',
             'card' => 'Tarjeta',
@@ -36,15 +37,15 @@
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-ui.card>
             <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total ingresos</p>
-            <p class="mt-2 text-3xl font-black text-emerald-700">${{ number_format((float) $incomeSummary['total_income'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-emerald-700">{{ $currencyFormatter::format((float) $incomeSummary['total_income'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total egresos</p>
-            <p class="mt-2 text-3xl font-black text-rose-700">${{ number_format((float) $incomeSummary['total_expense'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-rose-700">{{ $currencyFormatter::format((float) $incomeSummary['total_expense'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Balance</p>
-            <p class="mt-2 text-3xl font-black text-cyan-700">${{ number_format((float) $incomeSummary['balance'], 2) }}</p>
+            <p class="mt-2 text-3xl font-black text-cyan-700">{{ $currencyFormatter::format((float) $incomeSummary['balance'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
             <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Movimientos</p>
@@ -77,7 +78,7 @@
                         </td>
                         <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
                         <td class="px-3 py-3 font-semibold {{ $movement->type === 'income' ? 'text-emerald-700' : 'text-rose-700' }}">
-                            {{ $movement->type === 'income' ? '+' : '-' }}${{ number_format((float) $movement->amount, 2) }}
+                            {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
                         </td>
                         <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>

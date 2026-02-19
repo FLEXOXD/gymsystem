@@ -26,6 +26,7 @@
         </x-ui.card>
     @else
         @php
+            $currencyFormatter = \App\Support\Currency::class;
             $methodLabels = [
                 'cash' => 'Efectivo',
                 'card' => 'Tarjeta',
@@ -50,19 +51,19 @@
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Apertura</p>
-                    <p class="mt-1 text-2xl font-black text-slate-900">${{ number_format((float) $openSession->opening_balance, 2) }}</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900">{{ $currencyFormatter::format((float) $openSession->opening_balance, $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Ingresos</p>
-                    <p class="mt-1 text-2xl font-black text-emerald-800">${{ number_format((float) $summary['income_total'], 2) }}</p>
+                    <p class="mt-1 text-2xl font-black text-emerald-800">{{ $currencyFormatter::format((float) $summary['income_total'], $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-rose-200 bg-rose-50 p-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-rose-700">Egresos</p>
-                    <p class="mt-1 text-2xl font-black text-rose-800">${{ number_format((float) $summary['expense_total'], 2) }}</p>
+                    <p class="mt-1 text-2xl font-black text-rose-800">{{ $currencyFormatter::format((float) $summary['expense_total'], $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Esperado</p>
-                    <p class="mt-1 text-2xl font-black text-cyan-800">${{ number_format((float) $summary['expected_balance'], 2) }}</p>
+                    <p class="mt-1 text-2xl font-black text-cyan-800">{{ $currencyFormatter::format((float) $summary['expected_balance'], $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-slate-200 bg-white p-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Movimientos</p>
@@ -75,8 +76,8 @@
                     <article class="rounded-xl border border-slate-200 bg-white p-3">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ $methodLabels[$methodTotal->method] ?? $methodTotal->method }}</p>
                         <p class="mt-1 text-sm text-slate-700">Movimientos: <strong>{{ $methodTotal->movements_count }}</strong></p>
-                        <p class="text-sm text-emerald-700">+ ${{ number_format($methodTotal->income_total, 2) }}</p>
-                        <p class="text-sm text-rose-700">- ${{ number_format($methodTotal->expense_total, 2) }}</p>
+                        <p class="text-sm text-emerald-700">+ {{ $currencyFormatter::format((float) $methodTotal->income_total, $appCurrencyCode, true) }}</p>
+                        <p class="text-sm text-rose-700">- {{ $currencyFormatter::format((float) $methodTotal->expense_total, $appCurrencyCode, true) }}</p>
                     </article>
                 @endforeach
             </div>
@@ -129,10 +130,10 @@
             </x-ui.card>
 
             <x-ui.card title="Cerrar turno" subtitle="Cierre con diferencia contra balance esperado.">
-                <p class="text-sm text-slate-700">Esperado actual: <strong id="expected-balance">${{ number_format((float) $summary['expected_balance'], 2) }}</strong></p>
+                <p class="text-sm text-slate-700">Esperado actual: <strong id="expected-balance">{{ $currencyFormatter::format((float) $summary['expected_balance'], $appCurrencyCode) }}</strong></p>
                 <p class="mt-1 text-sm text-slate-700">
                     Vista previa de diferencia:
-                    <strong id="difference-preview">{{ $previewDifference !== null ? '$'.number_format($previewDifference, 2) : 'Ingrese monto final' }}</strong>
+                    <strong id="difference-preview">{{ $previewDifference !== null ? $currencyFormatter::format($previewDifference, $appCurrencyCode) : 'Ingrese monto final' }}</strong>
                 </p>
 
                 <form method="POST" action="{{ route('cash.close') }}" class="mt-4 space-y-4">
@@ -176,7 +177,7 @@
                             </td>
                             <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
                             <td class="px-3 py-3 font-semibold {{ $movement->type === 'income' ? 'text-emerald-700' : 'text-rose-700' }}">
-                                {{ $movement->type === 'income' ? '+' : '-' }}${{ number_format((float) $movement->amount, 2) }}
+                                {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
                             </td>
                             <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                             <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
@@ -210,6 +211,7 @@
             return;
         }
 
+        const currencySymbol = @json($appCurrencySymbol);
         const expected = Number(String(expectedText.textContent).replace(/[^0-9.-]/g, '')) || 0;
 
         function updateDifference() {
@@ -221,7 +223,7 @@
             }
 
             const diff = Math.round((value - expected) * 100) / 100;
-            differenceText.textContent = (diff >= 0 ? '+' : '') + '$' + diff.toFixed(2);
+            differenceText.textContent = (diff >= 0 ? '+' : '') + currencySymbol + Math.abs(diff).toFixed(2);
             if (diff > 0) {
                 differenceText.className = 'text-emerald-700';
             } else if (diff < 0) {
@@ -238,7 +240,7 @@
         closeForm?.addEventListener('submit', function (event) {
             const value = closingInput.value.trim();
             if (!value) return;
-            const ok = confirm('Confirma cierre de turno con monto final $' + Number(value).toFixed(2) + '?');
+            const ok = confirm('Confirma cierre de turno con monto final ' + currencySymbol + Number(value).toFixed(2) + '?');
             if (!ok) {
                 event.preventDefault();
             }

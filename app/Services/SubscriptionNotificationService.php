@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Gym;
 use App\Models\Subscription;
 use App\Models\SubscriptionNotification;
+use App\Support\Currency;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -31,11 +32,11 @@ class SubscriptionNotificationService
     {
         $endsAt = Carbon::parse($subscription->ends_at)->toDateString();
         $plan = $subscription->plan_name;
-        $price = number_format((float) $subscription->price, 2);
+        $price = Currency::format((float) $subscription->price, $gym->currency_code);
 
         return match ($type) {
-            'expires_7' => "Hola {$gym->name}, su plan {$plan} vence en 7 dias ({$endsAt}). Monto: \${$price}. Favor renovar a tiempo.",
-            'expires_3' => "Hola {$gym->name}, recordatorio: su plan {$plan} vence en 3 dias ({$endsAt}). Monto: \${$price}.",
+            'expires_7' => "Hola {$gym->name}, su plan {$plan} vence en 7 dias ({$endsAt}). Monto: {$price}. Favor renovar a tiempo.",
+            'expires_3' => "Hola {$gym->name}, recordatorio: su plan {$plan} vence en 3 dias ({$endsAt}). Monto: {$price}.",
             'expires_1' => "Hola {$gym->name}, su suscripcion {$plan} vence manana ({$endsAt}). Evite suspension renovando hoy.",
             'grace_1' => "Hola {$gym->name}, su suscripcion vencio y hoy es dia 1 de gracia. Renueve para evitar suspension.",
             'grace_2' => "Hola {$gym->name}, hoy es dia 2 de gracia. Renueve hoy para mantener el acceso.",

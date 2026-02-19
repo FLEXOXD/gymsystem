@@ -4,6 +4,9 @@
 @section('page-title', 'Historial de caja')
 
 @section('content')
+    @php
+        $currencyFormatter = \App\Support\Currency::class;
+    @endphp
     <x-ui.card title="Turnos de caja" subtitle="Control historico de apertura y cierre por gimnasio.">
         <div class="mb-4">
             <x-ui.button :href="route('cash.index')" variant="secondary" size="sm">Volver a caja actual</x-ui.button>
@@ -34,9 +37,9 @@
                         </td>
                         <td class="px-3 py-3">{{ $session->opened_at?->format('Y-m-d H:i') ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $session->closed_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                        <td class="px-3 py-3">${{ number_format((float) $session->opening_balance, 2) }}</td>
-                        <td class="px-3 py-3">{{ $session->expected_balance !== null ? '$'.number_format((float) $session->expected_balance, 2) : '-' }}</td>
-                        <td class="px-3 py-3">{{ $session->difference !== null ? '$'.number_format((float) $session->difference, 2) : '-' }}</td>
+                        <td class="px-3 py-3">{{ $currencyFormatter::format((float) $session->opening_balance, $appCurrencyCode) }}</td>
+                        <td class="px-3 py-3">{{ $session->expected_balance !== null ? $currencyFormatter::format((float) $session->expected_balance, $appCurrencyCode) : '-' }}</td>
+                        <td class="px-3 py-3">{{ $session->difference !== null ? $currencyFormatter::format((float) $session->difference, $appCurrencyCode) : '-' }}</td>
                         <td class="px-3 py-3">{{ $session->openedBy?->name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $session->closedBy?->name ?? '-' }}</td>
                         <td class="px-3 py-3">
