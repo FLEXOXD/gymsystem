@@ -21,7 +21,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -50,7 +50,9 @@ Route::middleware('auth')->group(function (): void {
             ->name('client-credentials.deactivate');
 
         Route::get('/reception', [ReceptionCheckInController::class, 'index'])->name('reception.index');
-        Route::post('/reception/check-in', [ReceptionCheckInController::class, 'store'])->name('reception.check-in');
+        Route::post('/reception/check-in', [ReceptionCheckInController::class, 'store'])
+            ->middleware('throttle:checkin')
+            ->name('reception.check-in');
 
         Route::get('/cash', [CashController::class, 'index'])->name('cash.index');
         Route::post('/cash/open', [CashController::class, 'open'])->name('cash.open');
