@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClientRequest;
-use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\Client;
-use App\Models\ClientCredential;
-use App\Models\Membership;
 use App\Models\Plan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -38,40 +35,9 @@ class ClientController extends Controller
 
         $clients = $clientsQuery->paginate(20)->withQueryString();
 
-        $onboarding = [
-            [
-                'label' => 'Crear plan',
-                'done' => Plan::query()->where('gym_id', $gymId)->exists(),
-                'url' => route('plans.index'),
-            ],
-            [
-                'label' => 'Crear cliente',
-                'done' => Client::query()->where('gym_id', $gymId)->exists(),
-                'url' => route('clients.index'),
-            ],
-            [
-                'label' => 'Cobrar/Renovar membresia',
-                'done' => Membership::query()->where('gym_id', $gymId)->exists(),
-                'url' => route('clients.index'),
-            ],
-            [
-                'label' => 'Generar QR o Asignar RFID',
-                'done' => ClientCredential::query()->where('gym_id', $gymId)->exists(),
-                'url' => route('clients.index'),
-            ],
-            [
-                'label' => 'Probar check-in en recepcion',
-                'done' => Attendance::query()->where('gym_id', $gymId)->exists(),
-                'url' => route('reception.index'),
-            ],
-        ];
-        $completedOnboarding = collect($onboarding)->where('done', true)->count();
-
         return view('clients.index', [
             'clients' => $clients,
             'search' => $search,
-            'onboarding' => $onboarding,
-            'completedOnboarding' => $completedOnboarding,
         ]);
     }
 
