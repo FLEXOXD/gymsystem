@@ -54,10 +54,24 @@ class ClientCardController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $clientModel = Client::query()
-            ->with(['gym', 'credentials' => fn ($query) => $query->orderByDesc('id')])
+            ->forGym($gymId)
+            ->select([
+                'id',
+                'gym_id',
+                'first_name',
+                'last_name',
+                'document_number',
+                'phone',
+                'photo_path',
+                'status',
+            ])
+            ->with([
+                'gym:id,name,logo_path',
+                'credentials' => fn ($query) => $query
+                    ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status'])
+                    ->orderByDesc('id'),
+            ])
             ->findOrFail($client);
-
-        abort_if((int) $clientModel->gym_id !== $gymId, 403, 'No autorizado para ver esta tarjeta.');
 
         $activeQrCredential = $clientModel->credentials
             ->where('type', 'qr')

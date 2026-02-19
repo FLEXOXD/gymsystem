@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -77,5 +78,21 @@ class CashSession extends Model
     public function movements(): HasMany
     {
         return $this->hasMany(CashMovement::class);
+    }
+
+    /**
+     * Scope records for a specific gym.
+     */
+    public function scopeForGym(Builder $query, int $gymId): Builder
+    {
+        return $query->where('gym_id', $gymId);
+    }
+
+    /**
+     * Scope only open sessions.
+     */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->where('status', 'open');
     }
 }

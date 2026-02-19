@@ -18,7 +18,8 @@ class PlanController extends Controller
         $gymId = $this->resolveGymId($request);
 
         $plans = Plan::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id', 'name', 'duration_days', 'price', 'status'])
             ->orderByDesc('id')
             ->get();
 

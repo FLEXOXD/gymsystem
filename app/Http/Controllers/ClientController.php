@@ -21,19 +21,13 @@ class ClientController extends Controller
         $gymId = $this->resolveGymId($request);
         $search = trim((string) $request->query('q', ''));
 
-        $clientsQuery = Client::query()
-            ->where('gym_id', $gymId)
-            ->orderByDesc('id');
-
-        if ($search !== '') {
-            $clientsQuery->where(function ($query) use ($search): void {
-                $query->where('document_number', 'like', "%{$search}%")
-                    ->orWhere('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
-            });
-        }
-
-        $clients = $clientsQuery->paginate(20)->withQueryString();
+        $clients = Client::query()
+            ->forGym($gymId)
+            ->search($search)
+            ->select(['id', 'gym_id', 'first_name', 'last_name', 'document_number', 'status'])
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('clients.index', [
             'clients' => $clients,
@@ -66,15 +60,29 @@ class ClientController extends Controller
         $gymId = $this->resolveGymId($request);
 
         $clientModel = Client::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select([
+                'id',
+                'gym_id',
+                'first_name',
+                'last_name',
+                'document_number',
+                'phone',
+                'photo_path',
+                'status',
+            ])
             ->with([
-                'credentials' => fn ($query) => $query->orderByDesc('id'),
+                'credentials' => fn ($query) => $query
+                    ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status', 'created_at'])
+                    ->orderByDesc('id'),
                 'memberships' => fn ($query) => $query
-                    ->with('plan')
+                    ->select(['id', 'gym_id', 'client_id', 'plan_id', 'starts_at', 'ends_at', 'status', 'created_at'])
+                    ->with(['plan:id,gym_id,name,duration_days,price,status'])
                     ->orderByDesc('ends_at')
                     ->orderByDesc('id'),
                 'attendances' => fn ($query) => $query
-                    ->with('credential')
+                    ->select(['id', 'gym_id', 'client_id', 'credential_id', 'date', 'time'])
+                    ->with(['credential:id,client_id,type,value,status'])
                     ->orderByDesc('date')
                     ->orderByDesc('time')
                     ->limit(10),
@@ -82,8 +90,9 @@ class ClientController extends Controller
             ->findOrFail($client);
 
         $plans = Plan::query()
-            ->where('gym_id', $gymId)
-            ->where('status', 'active')
+            ->forGym($gymId)
+            ->active()
+            ->select(['id', 'gym_id', 'name', 'duration_days', 'price', 'status'])
             ->orderBy('name')
             ->get();
 
@@ -116,10 +125,25 @@ class ClientController extends Controller
         $membershipIds = $clientModel->memberships->pluck('id')->filter()->values();
         if ($membershipIds->isNotEmpty()) {
             $recentMembershipPayments = CashMovement::query()
-                ->where('gym_id', $gymId)
+                ->forGym($gymId)
                 ->whereIn('membership_id', $membershipIds)
                 ->where('type', 'income')
-                ->with(['createdBy', 'membership.plan'])
+                ->select([
+                    'id',
+                    'gym_id',
+                    'membership_id',
+                    'created_by',
+                    'type',
+                    'amount',
+                    'method',
+                    'description',
+                    'occurred_at',
+                ])
+                ->with([
+                    'createdBy:id,name',
+                    'membership:id,plan_id',
+                    'membership.plan:id,name',
+                ])
                 ->orderByDesc('occurred_at')
                 ->limit(10)
                 ->get();

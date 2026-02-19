@@ -17,8 +17,8 @@ class CashSessionService
     public function getOpenSession(int $gymId): ?CashSession
     {
         return CashSession::query()
-            ->where('gym_id', $gymId)
-            ->where('status', 'open')
+            ->forGym($gymId)
+            ->open()
             ->orderByDesc('id')
             ->first();
     }
@@ -32,8 +32,8 @@ class CashSessionService
     {
         return DB::transaction(function () use ($gymId, $userId, $openingBalance, $notes): CashSession {
             $hasOpenSession = CashSession::query()
-                ->where('gym_id', $gymId)
-                ->where('status', 'open')
+                ->forGym($gymId)
+                ->open()
                 ->lockForUpdate()
                 ->exists();
 
@@ -73,8 +73,11 @@ class CashSessionService
 
         $membership = null;
         if ($membershipId) {
-            $membership = Membership::query()->find($membershipId);
-            if (! $membership || (int) $membership->gym_id !== $gymId) {
+            $membership = Membership::query()
+                ->forGym($gymId)
+                ->select(['id', 'gym_id'])
+                ->find($membershipId);
+            if (! $membership) {
                 throw new RuntimeException('La membresia no pertenece al gimnasio actual.');
             }
         }
@@ -101,8 +104,8 @@ class CashSessionService
     {
         return DB::transaction(function () use ($gymId, $userId, $closingBalance, $notes): CashSession {
             $session = CashSession::query()
-                ->where('gym_id', $gymId)
-                ->where('status', 'open')
+                ->forGym($gymId)
+                ->open()
                 ->lockForUpdate()
                 ->first();
 
@@ -111,7 +114,7 @@ class CashSessionService
             }
 
             $totals = CashMovement::query()
-                ->where('gym_id', $gymId)
+                ->forGym($gymId)
                 ->where('cash_session_id', $session->id)
                 ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
                 ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")

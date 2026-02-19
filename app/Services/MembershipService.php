@@ -16,11 +16,9 @@ class MembershipService
         $today = Carbon::today()->toDateString();
 
         return Membership::query()
-            ->where('gym_id', $client->gym_id)
+            ->forGym((int) $client->gym_id)
             ->where('client_id', $client->id)
-            ->where('status', 'active')
-            ->whereDate('starts_at', '<=', $today)
-            ->whereDate('ends_at', '>=', $today)
+            ->activeOn($today)
             ->orderByDesc('ends_at')
             ->first();
     }

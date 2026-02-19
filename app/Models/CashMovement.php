@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -70,5 +72,21 @@ class CashMovement extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Scope records for a specific gym.
+     */
+    public function scopeForGym(Builder $query, int $gymId): Builder
+    {
+        return $query->where('gym_id', $gymId);
+    }
+
+    /**
+     * Scope records between date boundaries.
+     */
+    public function scopeBetweenOccurredAt(Builder $query, Carbon $from, Carbon $to): Builder
+    {
+        return $query->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
     }
 }

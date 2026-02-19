@@ -75,9 +75,25 @@ class ReportController extends Controller
         $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
 
         $movements = CashMovement::query()
-            ->where('gym_id', $gymId)
-            ->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->with(['createdBy', 'membership.client'])
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to)
+            ->select([
+                'id',
+                'gym_id',
+                'cash_session_id',
+                'membership_id',
+                'created_by',
+                'type',
+                'amount',
+                'method',
+                'description',
+                'occurred_at',
+            ])
+            ->with([
+                'createdBy:id,name',
+                'membership:id,client_id',
+                'membership.client:id,first_name,last_name',
+            ])
             ->orderByDesc('occurred_at')
             ->paginate(50)
             ->withQueryString();
@@ -141,9 +157,25 @@ class ReportController extends Controller
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
 
         $movements = CashMovement::query()
-            ->where('gym_id', $gymId)
-            ->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->with(['createdBy', 'membership.client'])
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to)
+            ->select([
+                'id',
+                'gym_id',
+                'cash_session_id',
+                'membership_id',
+                'created_by',
+                'type',
+                'amount',
+                'method',
+                'description',
+                'occurred_at',
+            ])
+            ->with([
+                'createdBy:id,name',
+                'membership:id,client_id',
+                'membership.client:id,first_name,last_name',
+            ])
             ->orderByDesc('occurred_at')
             ->get();
 
@@ -254,9 +286,25 @@ class ReportController extends Controller
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
 
         $movements = CashMovement::query()
-            ->where('gym_id', $gymId)
-            ->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->with(['createdBy', 'membership.client'])
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to)
+            ->select([
+                'id',
+                'gym_id',
+                'cash_session_id',
+                'membership_id',
+                'created_by',
+                'type',
+                'amount',
+                'method',
+                'description',
+                'occurred_at',
+            ])
+            ->with([
+                'createdBy:id,name',
+                'membership:id,client_id',
+                'membership.client:id,first_name,last_name',
+            ])
             ->orderByDesc('occurred_at')
             ->get();
 

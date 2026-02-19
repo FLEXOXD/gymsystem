@@ -46,10 +46,14 @@ class AttendanceService
         $credentialId = null;
 
         $credential = ClientCredential::query()
-            ->with(['client' => fn ($query) => $query->where('gym_id', $gymId)])
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->active()
             ->where('value', $normalizedValue)
-            ->where('status', 'active')
+            ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status'])
+            ->with(['client' => fn ($query) => $query
+                ->forGym($gymId)
+                ->select(['id', 'gym_id', 'first_name', 'last_name', 'photo_path', 'status'])
+            ])
             ->first();
 
         if ($credential && $credential->client) {
@@ -60,10 +64,14 @@ class AttendanceService
 
         if (! $client) {
             $inactiveCredential = ClientCredential::query()
-                ->with(['client' => fn ($query) => $query->where('gym_id', $gymId)])
-                ->where('gym_id', $gymId)
+                ->forGym($gymId)
                 ->where('value', $normalizedValue)
                 ->where('status', 'inactive')
+                ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status'])
+                ->with(['client' => fn ($query) => $query
+                    ->forGym($gymId)
+                    ->select(['id', 'gym_id', 'first_name', 'last_name', 'photo_path', 'status'])
+                ])
                 ->first();
 
             if ($inactiveCredential) {
@@ -78,8 +86,9 @@ class AttendanceService
             }
 
             $client = Client::query()
-                ->where('gym_id', $gymId)
+                ->forGym($gymId)
                 ->where('document_number', $normalizedValue)
+                ->select(['id', 'gym_id', 'first_name', 'last_name', 'photo_path', 'status'])
                 ->first();
 
             if ($client) {
@@ -119,7 +128,7 @@ class AttendanceService
         $today = Carbon::today()->toDateString();
 
         if (Attendance::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
             ->where('client_id', $client->id)
             ->whereDate('date', $today)
             ->exists()) {

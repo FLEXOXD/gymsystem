@@ -19,7 +19,8 @@ class ClientCredentialController extends Controller
     {
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id'])
             ->findOrFail($client);
         $value = $request->validated('value');
 
@@ -56,7 +57,8 @@ class ClientCredentialController extends Controller
     {
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id'])
             ->findOrFail($client);
 
         $value = $this->generateQrValue($gymId);
@@ -83,7 +85,8 @@ class ClientCredentialController extends Controller
         $gymId = $this->resolveGymId($request);
 
         $credentialModel = ClientCredential::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id', 'client_id', 'status'])
             ->findOrFail($credential);
 
         $credentialModel->update([
@@ -100,8 +103,7 @@ class ClientCredentialController extends Controller
         do {
             $value = 'qr_'.Str::uuid()->toString();
             $exists = ClientCredential::query()
-                ->where('gym_id', $gymId)
-                ->where('type', 'qr')
+                ->forGym($gymId)
                 ->where('value', $value)
                 ->exists();
         } while ($exists);

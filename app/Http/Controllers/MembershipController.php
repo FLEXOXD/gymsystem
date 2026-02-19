@@ -49,7 +49,8 @@ class MembershipController extends Controller
         ]);
 
         $plan = Plan::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id', 'name', 'duration_days', 'price', 'status'])
             ->findOrFail($data['plan_id']);
 
         $startsAt = Carbon::parse($data['starts_at'])->startOfDay();

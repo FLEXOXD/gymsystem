@@ -43,9 +43,25 @@ class CashController extends Controller
             $summary = $this->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance);
             $methodTotals = $this->buildMethodTotals($gymId, $openSession->id);
             $latestMovements = CashMovement::query()
-                ->where('gym_id', $gymId)
+                ->forGym($gymId)
                 ->where('cash_session_id', $openSession->id)
-                ->with(['createdBy', 'membership.client'])
+                ->select([
+                    'id',
+                    'gym_id',
+                    'cash_session_id',
+                    'type',
+                    'amount',
+                    'method',
+                    'membership_id',
+                    'created_by',
+                    'description',
+                    'occurred_at',
+                ])
+                ->with([
+                    'createdBy:id,name',
+                    'membership:id,client_id',
+                    'membership.client:id,first_name,last_name',
+                ])
                 ->orderByDesc('occurred_at')
                 ->limit(10)
                 ->get();
@@ -151,8 +167,21 @@ class CashController extends Controller
         $gymId = $this->resolveGymId($request);
 
         $sessions = CashSession::query()
-            ->where('gym_id', $gymId)
-            ->with(['openedBy', 'closedBy'])
+            ->forGym($gymId)
+            ->select([
+                'id',
+                'gym_id',
+                'opened_by',
+                'closed_by',
+                'opened_at',
+                'closed_at',
+                'opening_balance',
+                'closing_balance',
+                'expected_balance',
+                'difference',
+                'status',
+            ])
+            ->with(['openedBy:id,name', 'closedBy:id,name'])
             ->orderByDesc('opened_at')
             ->paginate(20);
 
@@ -169,16 +198,45 @@ class CashController extends Controller
         $gymId = $this->resolveGymId($request);
 
         $sessionModel = CashSession::query()
+            ->forGym($gymId)
+            ->select([
+                'id',
+                'gym_id',
+                'opened_by',
+                'closed_by',
+                'opened_at',
+                'closed_at',
+                'opening_balance',
+                'closing_balance',
+                'expected_balance',
+                'difference',
+                'status',
+                'notes',
+            ])
             ->with([
-                'openedBy',
-                'closedBy',
+                'openedBy:id,name',
+                'closedBy:id,name',
                 'movements' => fn ($query) => $query
+                    ->select([
+                        'id',
+                        'gym_id',
+                        'cash_session_id',
+                        'membership_id',
+                        'created_by',
+                        'type',
+                        'amount',
+                        'method',
+                        'description',
+                        'occurred_at',
+                    ])
                     ->orderByDesc('occurred_at')
-                    ->with(['createdBy', 'membership.client']),
+                    ->with([
+                        'createdBy:id,name',
+                        'membership:id,client_id',
+                        'membership.client:id,first_name,last_name',
+                    ]),
             ])
             ->findOrFail($session);
-
-        abort_if((int) $sessionModel->gym_id !== $gymId, 403, 'No autorizado para ver este turno.');
 
         $summary = $this->buildSessionSummary($gymId, $sessionModel->id, (float) $sessionModel->opening_balance);
         $methodTotals = $this->buildMethodTotals($gymId, $sessionModel->id);
@@ -198,7 +256,7 @@ class CashController extends Controller
     private function buildSessionSummary(int $gymId, int $sessionId, float $openingBalance): array
     {
         $totals = CashMovement::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
             ->where('cash_session_id', $sessionId)
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
@@ -226,7 +284,7 @@ class CashController extends Controller
     private function buildMethodTotals(int $gymId, int $sessionId)
     {
         return CashMovement::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
             ->where('cash_session_id', $sessionId)
             ->selectRaw('method')
             ->selectRaw('COUNT(*) as movements_count')

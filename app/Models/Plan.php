@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,5 +39,21 @@ class Plan extends Model
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * Scope records for a specific gym.
+     */
+    public function scopeForGym(Builder $query, int $gymId): Builder
+    {
+        return $query->where('gym_id', $gymId);
+    }
+
+    /**
+     * Scope only active plans.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
     }
 }

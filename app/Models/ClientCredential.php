@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,5 +38,21 @@ class ClientCredential extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Scope records for a specific gym.
+     */
+    public function scopeForGym(Builder $query, int $gymId): Builder
+    {
+        return $query->where('gym_id', $gymId);
+    }
+
+    /**
+     * Scope only active credentials.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
     }
 }

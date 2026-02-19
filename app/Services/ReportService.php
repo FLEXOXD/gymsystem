@@ -19,8 +19,8 @@ class ReportService
     public function getIncomeSummary(int $gymId, Carbon $from, Carbon $to): array
     {
         $totals = CashMovement::query()
-            ->where('gym_id', $gymId)
-            ->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to)
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income")
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense")
             ->selectRaw('COUNT(*) as total_movements')
@@ -43,8 +43,8 @@ class ReportService
     public function getIncomeByMethod(int $gymId, Carbon $from, Carbon $to): Collection
     {
         return CashMovement::query()
-            ->where('gym_id', $gymId)
-            ->whereBetween('occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->forGym($gymId)
+            ->betweenOccurredAt($from, $to)
             ->selectRaw('method')
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
@@ -63,7 +63,7 @@ class ReportService
     public function getAttendanceSummary(int $gymId, Carbon $from, Carbon $to): array
     {
         $byDay = Attendance::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->selectRaw('date')
             ->selectRaw('COUNT(*) as attendances_count')
@@ -87,14 +87,14 @@ class ReportService
         $today = Carbon::today()->toDateString();
 
         $activeClientIds = Membership::query()
-            ->where('gym_id', $gymId)
-            ->where('status', 'active')
+            ->forGym($gymId)
+            ->status('active')
             ->whereDate('ends_at', '>=', $today)
             ->distinct()
             ->pluck('client_id');
 
         $expiredClientIds = Membership::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
             ->where(function ($query) use ($today): void {
                 $query
                     ->where('status', 'expired')
@@ -107,7 +107,7 @@ class ReportService
         return [
             'active' => $activeClientIds->count(),
             'expired' => $expiredClientIds->count(),
-            'total_clients' => Client::query()->where('gym_id', $gymId)->count(),
+            'total_clients' => Client::query()->forGym($gymId)->count(),
         ];
     }
 
@@ -121,10 +121,12 @@ class ReportService
         $today = Carbon::today()->toDateString();
 
         $clients = Client::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id', 'first_name', 'last_name', 'document_number'])
             ->with([
                 'memberships' => fn ($query) => $query
-                    ->where('gym_id', $gymId)
+                    ->forGym($gymId)
+                    ->select(['id', 'gym_id', 'client_id', 'plan_id', 'starts_at', 'ends_at', 'status'])
                     ->orderByDesc('ends_at')
                     ->orderByDesc('id'),
             ])

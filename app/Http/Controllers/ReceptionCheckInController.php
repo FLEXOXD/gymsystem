@@ -22,7 +22,8 @@ class ReceptionCheckInController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $recentAttendances = Attendance::query()
-            ->where('gym_id', $gymId)
+            ->forGym($gymId)
+            ->select(['id', 'gym_id', 'client_id', 'credential_id', 'date', 'time'])
             ->with(['client:id,first_name,last_name,photo_path', 'credential:id,type'])
             ->orderByDesc('date')
             ->orderByDesc('time')

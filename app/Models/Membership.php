@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,5 +70,34 @@ class Membership extends Model
     public function cashMovements(): HasMany
     {
         return $this->hasMany(CashMovement::class);
+    }
+
+    /**
+     * Scope records for a specific gym.
+     */
+    public function scopeForGym(Builder $query, int $gymId): Builder
+    {
+        return $query->where('gym_id', $gymId);
+    }
+
+    /**
+     * Scope by membership status.
+     */
+    public function scopeStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Scope memberships active on a specific date.
+     */
+    public function scopeActiveOn(Builder $query, Carbon|string $date): Builder
+    {
+        $value = $date instanceof Carbon ? $date->toDateString() : (string) $date;
+
+        return $query
+            ->status('active')
+            ->whereDate('starts_at', '<=', $value)
+            ->whereDate('ends_at', '>=', $value);
     }
 }
