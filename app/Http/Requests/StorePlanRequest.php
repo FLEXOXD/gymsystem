@@ -23,6 +23,7 @@ class StorePlanRequest extends FormRequest
     public function rules(): array
     {
         $gymId = $this->user()?->gym_id;
+        $durationUnit = strtolower((string) $this->input('duration_unit', 'days'));
 
         if (! $gymId) {
             return [
@@ -32,7 +33,21 @@ class StorePlanRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:120'],
-            'duration_days' => ['required', 'integer', 'min:1', 'max:3650'],
+            'duration_unit' => ['nullable', Rule::in(['days', 'months'])],
+            'duration_days' => [
+                Rule::requiredIf($durationUnit !== 'months'),
+                'nullable',
+                'integer',
+                'min:1',
+                'max:3650',
+            ],
+            'duration_months' => [
+                Rule::requiredIf($durationUnit === 'months'),
+                'nullable',
+                'integer',
+                'min:1',
+                'max:120',
+            ],
             'price' => ['required', 'numeric', 'min:0'],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
         ];
@@ -47,6 +62,8 @@ class StorePlanRequest extends FormRequest
     {
         return [
             'gym_context.required' => 'El usuario autenticado no tiene gym_id asignado.',
+            'duration_days.required' => 'La duración en días es obligatoria para planes por días.',
+            'duration_months.required' => 'La duración en meses es obligatoria para planes mensuales.',
         ];
     }
 }

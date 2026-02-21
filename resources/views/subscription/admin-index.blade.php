@@ -32,7 +32,7 @@
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->plan_name ?? '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription ? \App\Support\Currency::format((float) $subscription->price, $appCurrencyCode) : '-' }}</td>
                             <td class="px-3 py-3 dark:text-slate-200">{{ $subscription?->ends_at?->toDateString() ?? '-' }}</td>
-                            <td class="px-3 py-3 dark:text-slate-200">{{ match ($subscription?->status) { 'active' => 'Activo', 'grace' => 'Gracia', 'suspended' => 'Suspendido', null => 'Sin suscripcion', default => $subscription?->status } }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ match ($subscription?->status) { 'active' => 'Activo', 'grace' => 'Gracia', 'suspended' => 'Suspendido', null => 'Sin suscripción', default => $subscription?->status } }}</td>
                             <td class="px-3 py-3">
                                 <a href="{{ route('superadmin.gyms.index') }}" class="ui-link">Ir a Gimnasios</a>
                             </td>

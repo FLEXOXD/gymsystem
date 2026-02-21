@@ -32,8 +32,14 @@ class Gym extends Model
         'slug',
         'phone',
         'address',
+        'address_country_code',
+        'address_country_name',
+        'address_state',
+        'address_city',
+        'address_line',
         'timezone',
         'currency_code',
+        'language_code',
         'logo_path',
         'avatar_male_path',
         'avatar_female_path',
@@ -62,6 +68,14 @@ class Gym extends Model
     public function plans(): HasMany
     {
         return $this->hasMany(Plan::class);
+    }
+
+    /**
+     * Get promotions that belong to the gym.
+     */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class);
     }
 
     /**
@@ -94,6 +108,14 @@ class Gym extends Model
     public function subscriptionNotifications(): HasMany
     {
         return $this->hasMany(SubscriptionNotification::class);
+    }
+
+    /**
+     * Get contact suggestions sent by this gym.
+     */
+    public function contactSuggestions(): HasMany
+    {
+        return $this->hasMany(ContactSuggestion::class);
     }
 
     /**

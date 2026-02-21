@@ -46,12 +46,12 @@
                 @forelse ($notifications as $notification)
                     @php
                         $typeLabel = match ($notification->type) {
-                            'expires_7' => 'Vence en 7 dias',
-                            'expires_3' => 'Vence en 3 dias',
-                            'expires_1' => 'Vence en 1 dia',
-                            'grace_1' => 'Gracia dia 1',
-                            'grace_2' => 'Gracia dia 2',
-                            'grace_3' => 'Gracia dia 3',
+                            'expires_7' => 'Vence en 7 días',
+                            'expires_3' => 'Vence en 3 días',
+                            'expires_1' => 'Vence en 1 día',
+                            'grace_1' => 'Gracia día 1',
+                            'grace_2' => 'Gracia día 2',
+                            'grace_3' => 'Gracia día 3',
                             default => str_replace('_', ' ', $notification->type),
                         };
                     @endphp

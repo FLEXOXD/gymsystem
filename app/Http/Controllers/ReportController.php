@@ -116,12 +116,53 @@ class ReportController extends Controller
 
         $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
         $attendanceByDay = collect($attendanceSummary['by_day']);
+        $rangeDays = max(1, $from->copy()->startOfDay()->diffInDays($to->copy()->startOfDay()) + 1);
+
+        $previousTo = $from->copy()->subDay()->endOfDay();
+        $previousFrom = $previousTo->copy()->subDays($rangeDays - 1)->startOfDay();
+        $previousAttendanceSummary = $this->reportService->getAttendanceSummary($gymId, $previousFrom, $previousTo);
+        $previousByDay = collect($previousAttendanceSummary['by_day']);
+
+        $currentTotal = (int) $attendanceSummary['total_attendances'];
+        $previousTotal = (int) $previousAttendanceSummary['total_attendances'];
+        $attendanceDiff = $currentTotal - $previousTotal;
+        $attendanceDiffPct = null;
+        if ($previousTotal > 0) {
+            $attendanceDiffPct = round(($attendanceDiff / $previousTotal) * 100, 1);
+        }
+
+        $currentByDate = $attendanceByDay
+            ->mapWithKeys(fn ($row) => [Carbon::parse((string) $row->date)->toDateString() => (int) $row->attendances_count]);
+        $previousByDate = $previousByDay
+            ->mapWithKeys(fn ($row) => [Carbon::parse((string) $row->date)->toDateString() => (int) $row->attendances_count]);
+
+        $comparisonLabels = collect(range(0, $rangeDays - 1))
+            ->map(fn (int $offset) => $from->copy()->addDays($offset)->format('d/m'))
+            ->values();
+        $attendanceCurrentSeries = collect(range(0, $rangeDays - 1))
+            ->map(fn (int $offset) => (int) ($currentByDate[$from->copy()->addDays($offset)->toDateString()] ?? 0))
+            ->values();
+        $attendancePreviousSeries = collect(range(0, $rangeDays - 1))
+            ->map(fn (int $offset) => (int) ($previousByDate[$previousFrom->copy()->addDays($offset)->toDateString()] ?? 0))
+            ->values();
 
         return view('reports.attendance', [
             'from' => $from,
             'to' => $to,
             'attendanceSummary' => $attendanceSummary,
             'attendanceByDay' => $attendanceByDay,
+            'attendanceComparison' => [
+                'current_total' => $currentTotal,
+                'previous_total' => $previousTotal,
+                'diff' => $attendanceDiff,
+                'diff_pct' => $attendanceDiffPct,
+                'previous_from' => $previousFrom->copy()->startOfDay(),
+                'previous_to' => $previousTo->copy()->endOfDay(),
+                'range_days' => $rangeDays,
+            ],
+            'attendanceComparisonLabels' => $comparisonLabels,
+            'attendanceCurrentSeries' => $attendanceCurrentSeries,
+            'attendancePreviousSeries' => $attendancePreviousSeries,
         ]);
     }
 
@@ -187,7 +228,7 @@ class ReportController extends Controller
             fputcsv($handle, []);
 
             fputcsv($handle, ['INGRESOS POR METODO']);
-            fputcsv($handle, ['Metodo', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
+            fputcsv($handle, ['Método', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
             foreach ($incomeByMethod as $row) {
                 fputcsv($handle, [
                     match ($row->method) {
@@ -219,7 +260,7 @@ class ReportController extends Controller
             fputcsv($handle, []);
 
             fputcsv($handle, ['DETALLE MOVIMIENTOS']);
-            fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
+            fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Usuario', 'Descripción']);
             $movementsQuery = CashMovement::query()
                 ->forGym($gymId)
                 ->betweenOccurredAt($from, $to)

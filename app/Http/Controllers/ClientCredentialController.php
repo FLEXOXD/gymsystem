@@ -15,7 +15,7 @@ class ClientCredentialController extends Controller
     /**
      * Store an RFID credential for a client in current gym.
      */
-    public function storeRfid(StoreRfidCredentialRequest $request, int $client): RedirectResponse
+    public function storeRfid(StoreRfidCredentialRequest $request, string $contextGym, int $client): RedirectResponse
     {
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
@@ -53,7 +53,7 @@ class ClientCredentialController extends Controller
     /**
      * Generate a QR credential for a client in current gym.
      */
-    public function generateQr(Request $request, int $client): RedirectResponse
+    public function generateQr(Request $request, string $contextGym, int $client): RedirectResponse
     {
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
@@ -80,7 +80,7 @@ class ClientCredentialController extends Controller
     /**
      * Deactivate a credential from current gym.
      */
-    public function deactivate(Request $request, int $credential): RedirectResponse
+    public function deactivate(Request $request, string $contextGym, int $credential): RedirectResponse
     {
         $gymId = $this->resolveGymId($request);
 

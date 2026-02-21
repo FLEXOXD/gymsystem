@@ -1,6 +1,6 @@
 @props([
     'title' => 'Sin resultados',
-    'message' => 'No hay informacion para mostrar.',
+    'message' => 'No hay información para mostrar.',
 ])
 
 <div {{ $attributes->class('ui-card border-dashed text-center') }}>

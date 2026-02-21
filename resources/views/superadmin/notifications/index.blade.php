@@ -4,7 +4,7 @@
 @section('page-title', 'Notificaciones pendientes')
 
 @section('content')
-    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automaticos por vencimiento y dias de gracia.">
+    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automáticos por vencimiento y días de gracia.">
         <form method="GET" action="{{ route('superadmin.notifications.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
                 Fecha
@@ -34,12 +34,12 @@
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
                             : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200';
                         $typeLabel = match ($notification->type) {
-                            'expires_7' => 'Vence en 7 dias',
-                            'expires_3' => 'Vence en 3 dias',
-                            'expires_1' => 'Vence en 1 dia',
-                            'grace_1' => 'Gracia dia 1',
-                            'grace_2' => 'Gracia dia 2',
-                            'grace_3' => 'Gracia dia 3',
+                            'expires_7' => 'Vence en 7 días',
+                            'expires_3' => 'Vence en 3 días',
+                            'expires_1' => 'Vence en 1 día',
+                            'grace_1' => 'Gracia día 1',
+                            'grace_2' => 'Gracia día 2',
+                            'grace_3' => 'Gracia día 3',
                             default => str_replace('_', ' ', $notification->type),
                         };
                     @endphp

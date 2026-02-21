@@ -6,7 +6,7 @@
                 <tr>
                     <th>Fecha</th>
                     <th>Hora</th>
-                    <th>Metodo</th>
+                    <th>Método</th>
                     <th>Credencial</th>
                 </tr>
                 </thead>
@@ -34,8 +34,8 @@
                 </svg>
             </div>
             <p class="font-semibold">Sin asistencias recientes.</p>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Registra el proximo ingreso desde Recepcion.</p>
-            <x-ui.button :href="route('reception.index')" variant="ghost" size="sm" class="mt-3">Ir a recepcion</x-ui.button>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Registra el próximo ingreso desde Recepción.</p>
+            <x-ui.button :href="route('reception.index')" variant="ghost" size="sm" class="mt-3">Ir a recepción</x-ui.button>
         </div>
     @endif
 </x-ui.card>

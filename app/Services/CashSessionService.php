@@ -78,7 +78,7 @@ class CashSessionService
                 ->select(['id', 'gym_id'])
                 ->find($membershipId);
             if (! $membership) {
-                throw new RuntimeException('La membresia no pertenece al gimnasio actual.');
+                throw new RuntimeException('La membresía no pertenece al gimnasio actual.');
             }
         }
 

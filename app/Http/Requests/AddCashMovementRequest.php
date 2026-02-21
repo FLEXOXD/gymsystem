@@ -41,7 +41,7 @@ class AddCashMovementRequest extends FormRequest
                     fn ($query) => $query->where('gym_id', $gymId)
                 ),
             ],
-            'description' => ['nullable', 'string', 'max:500'],
+            'description' => ['required', 'string', 'max:500'],
         ];
     }
 
@@ -54,6 +54,7 @@ class AddCashMovementRequest extends FormRequest
     {
         return [
             'gym_context.required' => 'El usuario autenticado no tiene gym_id asignado.',
+            'description.required' => 'Ingresa descripción obligatoria.',
         ];
     }
 }

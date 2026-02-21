@@ -172,7 +172,7 @@ class AttendanceCheckinService
 
             return $this->buildResponse(
                 ok: false,
-                message: 'Membresia no vigente o inactiva.',
+                message: 'Membresía no vigente o inactiva.',
                 method: $method,
                 client: $clientPayload,
                 attempt: null,

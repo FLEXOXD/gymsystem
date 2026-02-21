@@ -33,15 +33,15 @@ class UpdateGymProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'address' => ['nullable', 'string', 'max:255'],
             'currency_code' => ['required', 'string', 'size:3', Rule::in(array_keys(Currency::options()))],
+            'language_code' => ['required', 'string', Rule::in(['es', 'en', 'pt'])],
             'timezone' => [
                 'required',
                 'string',
                 'max:64',
                 static function (string $attribute, mixed $value, \Closure $fail): void {
                     if (! is_string($value) || ! in_array($value, timezone_identifiers_list(), true)) {
-                        $fail('La zona horaria seleccionada no es valida.');
+                        $fail(__('validation_custom.invalid_timezone'));
                     }
                 },
             ],

@@ -11,7 +11,7 @@
                 class="ui-button px-4 py-2 text-xs font-bold uppercase tracking-wide"
                 x-bind:class="activeTab === 'membership' ? 'ui-button-primary' : 'ui-button-ghost'"
                 x-on:click="setTab('membership')">
-            Membresia y pagos
+            Membresía y pagos
         </button>
 
         <button type="button"

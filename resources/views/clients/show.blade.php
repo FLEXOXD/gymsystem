@@ -51,7 +51,7 @@
             } else {
                 $daysAgo = $attDate->diffInDays(now()->startOfDay());
                 if ($daysAgo <= 30) {
-                    $lastAttendanceLabel = ($daysAgo === 1 ? 'Hace 1 dia' : "Hace {$daysAgo} dias").' '.$attTime;
+                    $lastAttendanceLabel = ($daysAgo === 1 ? 'Hace 1 día' : "Hace {$daysAgo} días").' '.$attTime;
                 } else {
                     $lastAttendanceLabel = $attDate->translatedFormat('d M Y').' '.$attTime;
                 }
@@ -71,7 +71,7 @@
         ];
 
         $membershipBadgeVariant = 'muted';
-        $membershipBadgeText = 'Sin membresia';
+        $membershipBadgeText = 'Sin membresía';
         if ($latestMembership) {
             $isActiveMembership = $latestMembership->status === 'active' && $daysLeft !== null && $daysLeft >= 0;
             if ($isActiveMembership && $daysLeft <= 7) {
@@ -88,7 +88,7 @@
 
         $membershipLabel = $membershipBadgeText;
         $membershipEndsLabel = $latestMembership?->ends_at?->translatedFormat('d M Y') ?? 'N/A';
-        $remainingLabel = $daysLeft === null ? 'N/A' : ($daysLeft >= 0 ? $daysLeft.' dias' : 'Vencida');
+        $remainingLabel = $daysLeft === null ? 'N/A' : ($daysLeft >= 0 ? $daysLeft.' días' : 'Vencida');
 
         $methodLabels = [
             'cash' => 'Efectivo',
@@ -102,7 +102,7 @@
             'qr' => 'QR',
         ];
 
-        $membershipErrorKeys = ['plan_id', 'starts_at', 'status', 'payment_method', 'cash'];
+        $membershipErrorKeys = ['plan_id', 'starts_at', 'status', 'payment_method', 'promotion_id', 'cash'];
         $rfidErrorKeys = ['rfid', 'value'];
 
         $openMembershipModal = $errors->hasAny($membershipErrorKeys);
@@ -185,6 +185,7 @@
         @include('clients.partials._modal_membership', [
             'client' => $client,
             'plans' => $plans,
+            'promotions' => $promotions,
         ])
 
         @include('clients.partials._modal_rfid', [
@@ -247,7 +248,7 @@
 
                 requestDeactivate(formId, label) {
                     this.pendingDeactivateFormId = formId;
-                    this.confirmMessage = 'Se desactivara ' + label + '. Esta accion no se puede deshacer desde esta pantalla.';
+                    this.confirmMessage = 'Se desactivará ' + label + '. Esta acción no se puede deshacer desde esta pantalla.';
                     this.confirmOpen = true;
                 },
 
@@ -276,7 +277,7 @@
                         await navigator.clipboard.writeText(value);
                         this.qrCopyFeedback = 'Valor QR copiado.';
                     } catch (error) {
-                        this.qrCopyFeedback = 'No se pudo copiar automaticamente.';
+                        this.qrCopyFeedback = 'No se pudo copiar automáticamente.';
                     }
                 },
             };

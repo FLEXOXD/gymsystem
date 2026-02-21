@@ -197,6 +197,9 @@
     .theme-mobile-nav {
         background-color: color-mix(in srgb, var(--card) 90%, transparent);
         border-color: var(--border);
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+        padding-left: calc(0.5rem + env(safe-area-inset-left));
+        padding-right: calc(0.5rem + env(safe-area-inset-right));
     }
 
     .theme-nav-mobile-link {
@@ -368,6 +371,48 @@
 }
 
 @layer utilities {
+    @supports not (color: color-mix(in srgb, #000000 50%, #ffffff)) {
+        .theme-body {
+            background: var(--bg);
+        }
+
+        .theme-sidebar {
+            background-color: var(--sidebar);
+        }
+
+        .theme-header,
+        .theme-mobile-nav,
+        .ui-card,
+        .ui-input,
+        .ui-button-muted,
+        .ui-alert-info,
+        .theme-chip,
+        .ui-badge-muted {
+            background-color: var(--card);
+        }
+
+        .theme-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .theme-nav-dot {
+            background-color: var(--sidebar-muted);
+        }
+
+        .theme-nav-active,
+        .theme-nav-mobile-active {
+            background: var(--primary);
+        }
+
+        .theme-nav-mobile-link {
+            background-color: var(--card);
+        }
+
+        .ui-link:hover {
+            color: var(--text);
+        }
+    }
+
     /* Modo claro y oscuro separados para evitar cruces de contraste. */
     .theme-light .ui-heading {
         color: #0f172a;

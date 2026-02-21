@@ -3,6 +3,21 @@
 @section('title', 'Reporte de ingresos')
 @section('page-title', 'Reporte de ingresos y egresos')
 
+@push('styles')
+<style>
+    .report-income .movements-scroll {
+        max-height: min(68vh, 720px);
+        overflow: auto;
+        border-radius: 0.75rem;
+        border: 1px solid rgb(203 213 225);
+    }
+
+    .theme-dark .report-income .movements-scroll {
+        border-color: rgb(51 65 85 / 0.85);
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -12,6 +27,7 @@
             'transfer' => 'Transferencia',
         ];
     @endphp
+    <div class="report-income space-y-4">
     <x-ui.card title="Filtro" subtitle="Consulta movimientos por rango de fecha.">
         <form method="GET" action="{{ route('reports.income') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -27,8 +43,8 @@
             <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
 
             <div class="flex gap-2">
-                <x-ui.button :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
-                             class="js-loading-link" data-loading-text="Generando CSV...">Exportar CSV</x-ui.button>
+                <x-ui.button :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                             target="_blank" rel="noopener" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
                 <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver al panel</x-ui.button>
             </div>
         </form>
@@ -36,65 +52,104 @@
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total ingresos</p>
-            <p class="mt-2 text-3xl font-black text-emerald-700">{{ $currencyFormatter::format((float) $incomeSummary['total_income'], $appCurrencyCode) }}</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Total ingresos</p>
+            <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $incomeSummary['total_income'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total egresos</p>
-            <p class="mt-2 text-3xl font-black text-rose-700">{{ $currencyFormatter::format((float) $incomeSummary['total_expense'], $appCurrencyCode) }}</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Total egresos</p>
+            <p class="mt-2 text-3xl font-black text-rose-700 dark:text-rose-300">{{ $currencyFormatter::format((float) $incomeSummary['total_expense'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Balance</p>
-            <p class="mt-2 text-3xl font-black text-cyan-700">{{ $currencyFormatter::format((float) $incomeSummary['balance'], $appCurrencyCode) }}</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Balance</p>
+            <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ $currencyFormatter::format((float) $incomeSummary['balance'], $appCurrencyCode) }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Movimientos</p>
-            <p class="mt-2 text-3xl font-black text-slate-900">{{ (int) $incomeSummary['total_movements'] }}</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos</p>
+            <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $incomeSummary['total_movements'] }}</p>
         </x-ui.card>
     </section>
 
     <x-ui.card title="Detalle de movimientos">
-        <div class="overflow-x-auto">
-            <table class="ui-table min-w-[1100px]">
+        <div class="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
+            <label class="space-y-1 text-sm font-semibold ui-muted">
+                <span>Buscar movimiento</span>
+                <input id="movement-search" type="text" class="ui-input" placeholder="ID, cliente, usuario, descripción..." autocomplete="off">
+            </label>
+
+            <label class="space-y-1 text-sm font-semibold ui-muted">
+                <span>Tipo</span>
+                <select id="movement-type-filter" class="ui-input">
+                    <option value="all">Todos</option>
+                    <option value="income">Solo ingresos</option>
+                    <option value="expense">Solo egresos</option>
+                </select>
+            </label>
+
+            <p class="text-sm text-slate-600 dark:text-slate-300 md:text-right">
+                Mostrando <strong id="movement-visible-count">{{ $movements->count() }}</strong> de <strong>{{ $movements->count() }}</strong> en esta pagina
+            </p>
+        </div>
+
+        <div class="movements-scroll">
+            <table class="ui-table min-w-[1100px] text-slate-800 dark:text-slate-100" data-smart-list-manual>
                 <thead>
-                <tr class="sticky top-0 border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+                <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs uppercase tracking-wider text-slate-600 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-300">
                     <th class="px-3 py-3">ID</th>
                     <th class="px-3 py-3">Fecha</th>
                     <th class="px-3 py-3">Tipo</th>
-                    <th class="px-3 py-3">Metodo</th>
+                    <th class="px-3 py-3">Método</th>
                     <th class="px-3 py-3">Monto</th>
                     <th class="px-3 py-3">Cliente</th>
                     <th class="px-3 py-3">Usuario</th>
-                    <th class="px-3 py-3">Descripcion</th>
+                    <th class="px-3 py-3">Descripción</th>
                 </tr>
                 </thead>
                 <tbody>
                 @forelse ($movements as $movement)
-                    <tr class="border-b border-slate-100 text-sm">
+                    @php
+                        $isIncome = $movement->type === 'income';
+                        $searchIndex = \Illuminate\Support\Str::lower(implode(' ', [
+                            (string) $movement->id,
+                            (string) ($movement->occurred_at?->format('Y-m-d H:i') ?? ''),
+                            (string) ($methodLabels[$movement->method] ?? $movement->method),
+                            (string) ($movement->membership?->client?->full_name ?? ''),
+                            (string) ($movement->createdBy?->name ?? ''),
+                            (string) ($movement->description ?? ''),
+                        ]));
+                    @endphp
+                    <tr data-movement-row data-type="{{ $movement->type }}" data-search="{{ $searchIndex }}" class="border-b border-slate-100 text-sm odd:bg-slate-50/45 hover:bg-cyan-50/70 dark:border-slate-800 dark:odd:bg-slate-900/30 dark:hover:bg-cyan-500/10">
                         <td class="px-3 py-3">{{ $movement->id }}</td>
                         <td class="px-3 py-3">{{ $movement->occurred_at?->format('Y-m-d H:i') ?? '-' }}</td>
                         <td class="px-3 py-3">
                             <x-ui.badge :variant="$movement->type === 'income' ? 'success' : 'danger'">{{ $movement->type }}</x-ui.badge>
                         </td>
                         <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
-                        <td class="px-3 py-3 font-semibold {{ $movement->type === 'income' ? 'text-emerald-700' : 'text-rose-700' }}">
-                            {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
+                        <td class="px-3 py-3">
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-black tracking-wide {{ $isIncome
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200'
+                                : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-400/40 dark:bg-rose-500/20 dark:text-rose-200' }}">
+                                {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
+                            </span>
                         </td>
                         <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $movement->description ?: '-' }}</td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr id="movement-empty-range">
                         <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500">No hay movimientos en este rango.</td>
                     </tr>
                 @endforelse
+                <tr id="movement-empty-filter" class="hidden">
+                    <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
+                </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="mt-4">{{ $movements->links() }}</div>
     </x-ui.card>
+    </div>
 @endsection
 
 @push('scripts')
@@ -113,6 +168,46 @@
                 }, 1800);
             });
         });
+
+        const searchInput = document.getElementById('movement-search');
+        const typeFilter = document.getElementById('movement-type-filter');
+        const visibleCount = document.getElementById('movement-visible-count');
+        const movementRows = Array.from(document.querySelectorAll('[data-movement-row]'));
+        const emptyFilter = document.getElementById('movement-empty-filter');
+
+        function normalizeText(value) {
+            return (value || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function filterMovements() {
+            if (!movementRows.length) return;
+
+            const term = normalizeText(searchInput?.value || '');
+            const type = (typeFilter?.value || 'all').toLowerCase();
+            let totalVisible = 0;
+
+            movementRows.forEach(function (row) {
+                const rowType = (row.getAttribute('data-type') || '').toLowerCase();
+                const haystack = normalizeText(row.getAttribute('data-search') || '');
+                const matchesType = type === 'all' || rowType === type;
+                const matchesText = term === '' || haystack.includes(term);
+                const isVisible = matchesType && matchesText;
+
+                row.classList.toggle('hidden', !isVisible);
+                if (isVisible) totalVisible += 1;
+            });
+
+            if (visibleCount) visibleCount.textContent = String(totalVisible);
+            if (emptyFilter) emptyFilter.classList.toggle('hidden', totalVisible > 0);
+        }
+
+        searchInput?.addEventListener('input', filterMovements);
+        typeFilter?.addEventListener('change', filterMovements);
+        filterMovements();
     })();
 </script>
 @endpush

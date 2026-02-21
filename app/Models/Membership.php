@@ -22,6 +22,13 @@ class Membership extends Model
         'gym_id',
         'client_id',
         'plan_id',
+        'price',
+        'promotion_id',
+        'promotion_name',
+        'promotion_type',
+        'promotion_value',
+        'discount_amount',
+        'bonus_days',
         'starts_at',
         'ends_at',
         'status',
@@ -35,6 +42,10 @@ class Membership extends Model
     protected function casts(): array
     {
         return [
+            'price' => 'decimal:2',
+            'promotion_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'bonus_days' => 'integer',
             'starts_at' => 'date',
             'ends_at' => 'date',
         ];
@@ -62,6 +73,14 @@ class Membership extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Get promotion used for this membership.
+     */
+    public function promotion(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class);
     }
 
     /**

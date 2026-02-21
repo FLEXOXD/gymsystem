@@ -39,12 +39,22 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = $request->user();
+        $user?->forceFill([
+            'last_login_at' => now('UTC'),
+        ])->save();
 
         if ($user?->gym_id === null) {
             return redirect()->route('superadmin.dashboard');
         }
 
-        return redirect()->route('reception.index');
+        $gymSlug = trim((string) ($user?->gym?->slug ?? ''));
+        if ($gymSlug === '') {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Tu usuario no tiene un gimnasio valido asignado.',
+            ]);
+        }
+
+        return redirect()->route('panel.index', ['contextGym' => $gymSlug]);
     }
 
     /**

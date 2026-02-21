@@ -15,7 +15,7 @@ class ClientCardController extends Controller
     /**
      * Show printable card for one client in current gym.
      */
-    public function show(Request $request, int $client): View|RedirectResponse
+    public function show(Request $request, string $contextGym, int $client): View|RedirectResponse
     {
         $cardData = $this->resolveCardData($request, $client);
         if ($cardData instanceof RedirectResponse) {
@@ -28,7 +28,7 @@ class ClientCardController extends Controller
     /**
      * Stream client card as PDF.
      */
-    public function pdf(Request $request, int $client): Response|RedirectResponse
+    public function pdf(Request $request, string $contextGym, int $client): Response|RedirectResponse
     {
         $cardData = $this->resolveCardData($request, $client);
         if ($cardData instanceof RedirectResponse) {

@@ -90,7 +90,7 @@ class SuperAdminNotificationsController extends Controller
         $userId = (int) $request->user()->id;
         $this->notificationService->markAsSent((int) $notification->id, $userId);
 
-        return back()->with('status', 'Notificacion marcada como enviada.');
+        return back()->with('status', 'Notificación marcada como enviada.');
     }
 
     public function markSkipped(Request $request, SubscriptionNotification $notification): RedirectResponse
@@ -98,6 +98,6 @@ class SuperAdminNotificationsController extends Controller
         $userId = (int) $request->user()->id;
         $this->notificationService->markAsSkipped((int) $notification->id, $userId);
 
-        return back()->with('status', 'Notificacion marcada como omitida.');
+        return back()->with('status', 'Notificación marcada como omitida.');
     }
 }

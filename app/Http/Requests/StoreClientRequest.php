@@ -114,6 +114,15 @@ class StoreClientRequest extends FormRequest
             ],
             'membership_starts_at' => ['nullable', Rule::requiredIf($startsMembership), 'date'],
             'membership_price' => ['nullable', Rule::requiredIf($startsMembership), 'numeric', 'min:0'],
+            'promotion_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('promotions', 'id')->where(
+                    fn ($query) => $query
+                        ->where('gym_id', $gymId)
+                        ->where('status', 'active')
+                ),
+            ],
             'payment_method' => ['nullable', Rule::requiredIf($startsMembership), Rule::in(['cash', 'transfer', 'card'])],
             'amount_paid' => ['nullable', Rule::requiredIf($startsMembership), 'numeric', 'min:0'],
         ];
@@ -128,13 +137,14 @@ class StoreClientRequest extends FormRequest
     {
         return [
             'gym_context.required' => 'El usuario autenticado no tiene gym_id asignado.',
-            'phone.regex' => 'El telefono solo puede contener numeros, espacios y + - ( ).',
+            'phone.regex' => 'El teléfono solo puede contener numeros, espacios y + - ( ).',
             'photo.image' => 'La foto debe ser una imagen valida.',
             'photo.max' => 'La foto no puede superar 2MB.',
-            'plan_id.required' => 'Selecciona un plan para iniciar la membresia.',
+            'plan_id.required' => 'Selecciona un plan para iniciar la membresía.',
             'membership_starts_at.required' => 'La fecha de inicio es obligatoria.',
-            'membership_price.required' => 'El precio de la membresia es obligatorio.',
-            'payment_method.required' => 'Selecciona el metodo de pago.',
+            'membership_price.required' => 'El precio de la membresía es obligatorio.',
+            'promotion_id.exists' => 'La promoción seleccionada no es valida o no esta disponible.',
+            'payment_method.required' => 'Selecciona el método de pago.',
             'amount_paid.required' => 'Ingresa el monto pagado.',
         ];
     }

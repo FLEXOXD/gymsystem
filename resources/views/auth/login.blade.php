@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Iniciar sesion</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -10,7 +10,7 @@
 <main class="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-8">
     <section class="ui-card w-full p-6">
         <h1 class="ui-heading text-2xl font-extrabold">Ingreso</h1>
-        <p class="ui-muted mt-2 text-sm">Accede con tu cuenta de recepcion.</p>
+        <p class="ui-muted mt-2 text-sm">Accede con tu cuenta de recepción.</p>
 
         @if ($errors->any())
             <div class="ui-alert ui-alert-danger mt-4">

@@ -1,4 +1,26 @@
 @layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+        html,
+        body {
+            min-height: -webkit-fill-available;
+        }
+
+        .theme-body {
+            min-height: -webkit-fill-available;
+        }
+    }
+
     a:not([class]) {
         color: var(--color-cyan-700);
         text-decoration: underline;
@@ -181,6 +203,10 @@
 
     .ui-modal-backdrop {
         @apply fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 px-4;
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        padding-left: max(1rem, env(safe-area-inset-left));
     }
 
     .ui-modal-panel {
@@ -189,6 +215,11 @@
 }
 
 @layer utilities {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
     .dark .dark\:bg-slate-900 .text-slate-600,
     .dark .dark\:bg-slate-800 .text-slate-600,
     .dark .dark\:bg-slate-950 .text-slate-600 {
@@ -220,5 +251,34 @@
     .dark .dark\:bg-slate-800 .text-gray-900,
     .dark .dark\:bg-slate-950 .text-gray-900 {
         color: var(--color-slate-50);
+    }
+
+    @media (max-width: 1024px) {
+        .panel-view {
+            padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .ui-card {
+            border-radius: 0.9rem;
+            padding: 1rem;
+        }
+
+        .ui-modal-panel {
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+
+        .panel-view {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        .panel-view input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+        .panel-view select,
+        .panel-view textarea {
+            font-size: 16px;
+        }
     }
 }

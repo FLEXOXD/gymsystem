@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Plan;
 use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -79,26 +80,45 @@ class SubscriptionService
     /**
      * Renew subscription by N months.
      */
-    public function renew(int $gymId, int $months = 1, string $paymentMethod = 'efectivo'): Subscription
+    public function renew(int $gymId, int $months = 1, string $paymentMethod = 'efectivo', ?array $planTemplate = null): Subscription
     {
         $months = max(1, $months);
 
         if (! in_array($paymentMethod, self::PAYMENT_METHODS, true)) {
-            throw new InvalidArgumentException('Metodo de pago invalido.');
+            throw new InvalidArgumentException('Método de pago invalido.');
         }
 
-        return DB::transaction(function () use ($gymId, $months, $paymentMethod): Subscription {
+        return DB::transaction(function () use ($gymId, $months, $paymentMethod, $planTemplate): Subscription {
             $subscription = Subscription::query()
                 ->where('gym_id', $gymId)
                 ->lockForUpdate()
                 ->first();
 
             $startsAt = Carbon::today();
-            $endsAt = $startsAt->copy()->addMonthsNoOverflow($months)->subDay();
+            $defaultEndsAt = $startsAt->copy()->addMonthsNoOverflow($months)->subDay();
+            $planName = (string) ($subscription?->plan_name ?? 'Plan Mensual');
+            $price = (float) ($subscription?->price ?? 29.99);
+            $endsAt = $defaultEndsAt;
+
+            if (is_array($planTemplate)) {
+                $templateName = trim((string) ($planTemplate['name'] ?? ''));
+                if ($templateName !== '') {
+                    $planName = $templateName;
+                }
+
+                $price = isset($planTemplate['price']) ? (float) $planTemplate['price'] : $price;
+                $durationUnit = strtolower(trim((string) ($planTemplate['duration_unit'] ?? 'days')));
+                $durationMonths = max(1, (int) ($planTemplate['duration_months'] ?? 1));
+                $durationDays = max(1, (int) ($planTemplate['duration_days'] ?? 30));
+
+                $endsAt = $durationUnit === 'months'
+                    ? $startsAt->copy()->addMonthsNoOverflow($durationMonths)->subDay()
+                    : $startsAt->copy()->addDays($durationDays)->subDay();
+            }
 
             $payload = [
-                'plan_name' => $subscription?->plan_name ?? 'Plan Mensual',
-                'price' => $subscription?->price ?? 29.99,
+                'plan_name' => $planName,
+                'price' => $price,
                 'starts_at' => $startsAt->toDateString(),
                 'ends_at' => $endsAt->toDateString(),
                 'status' => 'active',
@@ -138,13 +158,18 @@ class SubscriptionService
     {
         $startsAt = Carbon::today();
         $endsAt = $startsAt->copy()->addMonthNoOverflow()->subDay();
+        $defaultPlan = Plan::query()
+            ->where('gym_id', $gymId)
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->first(['name', 'price']);
 
         return Subscription::query()->firstOrCreate([
             'gym_id' => $gymId,
         ], [
             'gym_id' => $gymId,
-            'plan_name' => 'Plan Mensual',
-            'price' => 29.99,
+            'plan_name' => $defaultPlan?->name ?? 'Plan Mensual',
+            'price' => $defaultPlan?->price ?? 29.99,
             'starts_at' => $startsAt->toDateString(),
             'ends_at' => $endsAt->toDateString(),
             'status' => 'active',

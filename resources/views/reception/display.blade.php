@@ -1,4 +1,4 @@
-﻿@php
+@php
     $user = auth()->user();
     $theme = $user?->theme ?? 'iron_dark';
     $darkThemes = ['iron_dark', 'power_red', 'energy_green', 'gold_elite'];
@@ -9,28 +9,28 @@
 <html lang="es" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $theme }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla recepcion - {{ config('app.name', 'GymSystem') }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pantalla recepción - {{ config('app.name', 'GymSystem') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="theme-body min-h-screen ui-text">
-<main class="w-full max-w-none space-y-4 px-4 py-4 md:px-6 md:py-6">
-    <header class="flex items-center justify-between rounded-2xl border border-slate-700/40 bg-slate-900/40 px-4 py-3">
+<main class="w-full max-w-none space-y-4 px-3 py-3 md:px-6 md:py-6">
+    <header class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700/40 bg-slate-900/40 px-4 py-3">
         <div>
             <p class="ui-muted text-xs font-bold uppercase tracking-widest">Pantalla espejo</p>
-            <h1 class="ui-heading text-xl font-black md:text-2xl">Recepcion - {{ $gymName }}</h1>
+            <h1 class="ui-heading text-xl font-black md:text-2xl">Recepción - {{ $gymName }}</h1>
         </div>
         <span class="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cyan-200">Live</span>
     </header>
 
-    <section class="grid h-[calc(100vh-130px)] gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <x-ui.card id="result-panel" class="relative h-full overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado en vivo">
+    <section class="grid gap-4 2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <x-ui.card id="result-panel" class="relative border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado en vivo">
             <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-amber-400/10"></div>
-            <div class="relative grid h-full gap-6 xl:grid-cols-[320px_1fr] xl:items-center 2xl:grid-cols-[360px_1fr]">
+            <div class="relative grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] 2xl:grid-cols-[360px_minmax(0,1fr)]">
                 <div class="w-full">
                     <div class="relative overflow-hidden rounded-[1.9rem] border border-slate-300/70 bg-slate-900/20 shadow-2xl dark:border-slate-700/80">
-                        <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-80 w-full object-cover object-top xl:h-[30rem] 2xl:h-[33rem]">
-                        <div id="result-photo-placeholder" class="flex h-80 w-full flex-col items-center justify-center gap-2 bg-slate-50/80 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 xl:h-[30rem] 2xl:h-[33rem]">
+                        <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-64 w-full object-cover object-top sm:h-72 md:h-[22rem] xl:h-[28rem] 2xl:h-[33rem]">
+                        <div id="result-photo-placeholder" class="flex h-64 w-full flex-col items-center justify-center gap-2 bg-slate-50/80 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 sm:h-72 md:h-[22rem] xl:h-[28rem] 2xl:h-[33rem]">
                             <span id="result-avatar-initials" class="text-6xl font-black tracking-wider text-slate-400 dark:text-slate-300">--</span>
                             <span class="text-xs uppercase tracking-[0.22em]">Avatar gym</span>
                         </div>
@@ -40,17 +40,17 @@
 
                 <div class="min-w-0 space-y-4">
                     <div class="flex flex-wrap items-center gap-2">
-                        <p id="result-method" class="inline-flex rounded-full bg-slate-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100">Metodo: -</p>
-                        <span id="result-days-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">Dias restantes: -</span>
+                        <p id="result-method" class="inline-flex rounded-full bg-slate-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100">Método: -</p>
+                        <span id="result-days-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">Días restantes: -</span>
                         <span id="result-month-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">Visitas mes: -</span>
                     </div>
 
-                    <p id="result-message" class="pr-1 text-[clamp(2rem,2.6vw,3.4rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100">Esperando lectura...</p>
-                    <p id="result-name" class="text-[clamp(1.6rem,2vw,2.6rem)] font-bold leading-tight text-slate-900 dark:text-slate-100">-</p>
+                    <p id="result-message" class="pr-1 text-[clamp(1.7rem,4.6vw,3.2rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100">Esperando lectura...</p>
+                    <p id="result-name" class="text-[clamp(1.35rem,3.8vw,2.4rem)] font-bold leading-tight text-slate-900 dark:text-slate-100">-</p>
 
                     <div class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
                         <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresia</p>
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresía</p>
                             <p id="result-membership" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                         </div>
                         <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
@@ -74,15 +74,15 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card class="h-full border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Ultimos 10 ingresos">
-            <div class="h-full overflow-x-auto">
-                <table class="ui-table min-w-[680px]">
+        <x-ui.card class="border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Ultimos 10 ingresos">
+            <div class="overflow-x-auto">
+                <table class="ui-table min-w-[620px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                         <th class="px-3 py-3">Fecha</th>
                         <th class="px-3 py-3">Hora</th>
                         <th class="px-3 py-3">Cliente</th>
-                        <th class="px-3 py-3">Metodo</th>
+                        <th class="px-3 py-3">Método</th>
                     </tr>
                     </thead>
                     <tbody id="recent-attendances-body">
@@ -120,6 +120,10 @@
         const syncGymName = String(@json((string) $syncGymName));
         const syncGymId = Number(@json((int) $syncGymId));
         const gymAvatarUrls = @json($gymAvatarUrls);
+        const syncPollUrl = @json(route('reception.sync.latest'));
+        const latestSyncEventId = String(@json((string) ($latestSyncEventId ?? '')));
+        const latestSyncEventPublishedAt = Number(@json((int) ($latestSyncEventPublishedAt ?? 0))) || 0;
+        const SYNC_POLL_INTERVAL_MS = 2500;
         const syncChannelName = 'reception.checkin.' + String(syncGymId || 0);
         const syncStorageKey = syncChannelName + '.event';
         const syncSourceId = 'display-' + Math.random().toString(36).slice(2);
@@ -150,10 +154,13 @@
 
         let resetTimer = null;
         let lastRenderedAttendanceId = readTopAttendanceId();
-        let lastHandledSyncEventId = null;
+        let lastHandledSyncEventId = latestSyncEventId !== '' ? latestSyncEventId : null;
+        let lastHandledSyncPublishedAt = latestSyncEventPublishedAt > 0 ? latestSyncEventPublishedAt : 0;
+        let syncPollTimer = null;
+        let syncPollInFlight = false;
 
         function basePanelClasses() {
-            return 'relative h-full overflow-hidden rounded-2xl border p-5 shadow-sm';
+            return 'relative overflow-hidden rounded-2xl border p-5 shadow-sm';
         }
 
         function readTopAttendanceId() {
@@ -326,12 +333,12 @@
 
         function daysRemainingInfo(membershipDate) {
             if (!membershipDate) {
-                return { label: 'Dias restantes: -', tone: 'neutral', days: null };
+                return { label: 'Días restantes: -', tone: 'neutral', days: null };
             }
 
             const endDate = new Date(String(membershipDate) + 'T00:00:00');
             if (Number.isNaN(endDate.getTime())) {
-                return { label: 'Dias restantes: -', tone: 'neutral', days: null };
+                return { label: 'Días restantes: -', tone: 'neutral', days: null };
             }
 
             const now = new Date();
@@ -341,7 +348,7 @@
 
             if (days < 0) {
                 return {
-                    label: 'Membresia vencida',
+                    label: 'Membresía vencida',
                     tone: 'danger',
                     days: days,
                 };
@@ -349,7 +356,7 @@
 
             if (days < 5) {
                 return {
-                    label: 'Dias restantes: ' + String(days) + ' dias',
+                    label: 'Días restantes: ' + String(days) + ' días',
                     tone: 'danger',
                     days: days,
                 };
@@ -357,14 +364,14 @@
 
             if (days <= 10) {
                 return {
-                    label: 'Dias restantes: ' + String(days) + ' dias',
+                    label: 'Días restantes: ' + String(days) + ' días',
                     tone: 'warn',
                     days: days,
                 };
             }
 
             return {
-                label: 'Dias restantes: ' + String(days) + ' dias',
+                label: 'Días restantes: ' + String(days) + ' días',
                 tone: 'ok',
                 days: days,
             };
@@ -388,11 +395,11 @@
             }
 
             if (reason === 'membership_inactive') {
-                return 'Membresia no vigente. Renueva para habilitar ingreso.';
+                return 'Membresía no vigente. Renueva para habilitar ingreso.';
             }
 
             if (!payload.ok) {
-                return 'Reintenta con otro metodo o verifica estado del cliente.';
+                return 'Reintenta con otro método o verifica estado del cliente.';
             }
 
             if (monthVisits !== null && monthVisits >= 20) {
@@ -404,7 +411,7 @@
             }
 
             if (daysInfo.days !== null && daysInfo.days >= 0 && daysInfo.days <= 5) {
-                return 'Renovacion cercana: oportunidad perfecta para venta.';
+                return 'Renovación cercana: oportunidad perfecta para venta.';
             }
 
             return 'Buen trabajo. Check-in registrado y flujo estable.';
@@ -523,20 +530,20 @@
             if (payload.ok) {
                 panel.className = basePanelClasses() + ' border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30';
                 method.className = 'inline-flex rounded-full bg-emerald-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-200';
-                message.className = 'pr-1 text-[clamp(2rem,2.6vw,3.4rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-emerald-700 dark:text-emerald-200';
+                message.className = 'pr-1 text-[clamp(1.7rem,4.6vw,3.2rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-emerald-700 dark:text-emerald-200';
             } else if (reason === 'duplicate_attendance') {
                 panel.className = basePanelClasses() + ' border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/25';
                 method.className = 'inline-flex rounded-full bg-amber-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:bg-amber-800/40 dark:text-amber-200';
-                message.className = 'pr-1 text-[clamp(2rem,2.6vw,3.4rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-amber-700 dark:text-amber-200';
+                message.className = 'pr-1 text-[clamp(1.7rem,4.6vw,3.2rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-amber-700 dark:text-amber-200';
             } else {
                 panel.className = basePanelClasses() + ' border-rose-300 bg-rose-50 dark:border-rose-700 dark:bg-rose-900/30';
                 method.className = 'inline-flex rounded-full bg-rose-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-rose-800 dark:bg-rose-800/40 dark:text-rose-200';
-                message.className = 'pr-1 text-[clamp(2rem,2.6vw,3.4rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-rose-700 dark:text-rose-200';
+                message.className = 'pr-1 text-[clamp(1.7rem,4.6vw,3.2rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-rose-700 dark:text-rose-200';
             }
 
             message.textContent = payload.message;
             const methodText = payload.method ? (methodLabels[payload.method] || String(payload.method).toUpperCase()) : '-';
-            method.textContent = 'Metodo: ' + methodText;
+            method.textContent = 'Método: ' + methodText;
 
             const membershipDate = payload.client && payload.client.membership_ends_at
                 ? String(payload.client.membership_ends_at)
@@ -571,8 +578,8 @@
         function renderIdle() {
             panel.className = basePanelClasses() + ' border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900';
             method.className = 'inline-flex rounded-full bg-slate-200 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100';
-            method.textContent = 'Metodo: -';
-            message.className = 'pr-1 text-[clamp(2rem,2.6vw,3.4rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100';
+            method.textContent = 'Método: -';
+            message.className = 'pr-1 text-[clamp(1.7rem,4.6vw,3.2rem)] font-black leading-tight break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100';
             message.textContent = 'Esperando lectura...';
             name.textContent = '-';
             membership.textContent = '-';
@@ -580,7 +587,7 @@
             checkinTime.textContent = '-';
             monthVisitsValue.textContent = '-';
             motivation.textContent = 'Listo para recibir al cliente.';
-            daysPill.textContent = 'Dias restantes: -';
+            daysPill.textContent = 'Días restantes: -';
             monthPill.textContent = 'Visitas mes: -';
             avatarInitials.textContent = '--';
             setPillTone(daysPill, 'neutral');
@@ -612,10 +619,51 @@
             if (!eventData || eventData.type !== 'checkin') return;
             if (eventData.source === syncSourceId) return;
             if (eventData.id && eventData.id === lastHandledSyncEventId) return;
+            const eventPublishedAt = Number(eventData.published_at_ms || eventData.timestamp || 0);
+            if (eventPublishedAt > 0 && eventPublishedAt <= lastHandledSyncPublishedAt) return;
             if (eventData.id) {
                 lastHandledSyncEventId = eventData.id;
             }
+            if (eventPublishedAt > 0) {
+                lastHandledSyncPublishedAt = eventPublishedAt;
+            }
             applySyncedPayload(eventData.payload);
+        }
+
+        async function pollLatestSyncEvent() {
+            if (syncPollInFlight) return;
+
+            syncPollInFlight = true;
+
+            try {
+                const query = lastHandledSyncPublishedAt > 0
+                    ? '?after=' + encodeURIComponent(String(lastHandledSyncPublishedAt))
+                    : '';
+                const response = await fetch(syncPollUrl + query, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const data = await response.json();
+                if (data && data.event) {
+                    handleSyncEvent(data.event);
+                }
+            } catch (error) {
+                // Ignore intermittent network errors while polling.
+            } finally {
+                syncPollInFlight = false;
+            }
+        }
+
+        function startSyncPolling() {
+            pollLatestSyncEvent();
+            syncPollTimer = window.setInterval(pollLatestSyncEvent, SYNC_POLL_INTERVAL_MS);
         }
 
         if (syncChannel) {
@@ -637,6 +685,15 @@
             if (syncChannel) {
                 syncChannel.close();
             }
+            if (syncPollTimer) {
+                clearInterval(syncPollTimer);
+            }
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                pollLatestSyncEvent();
+            }
         });
 
         const initialResult = @json($latestResult);
@@ -648,6 +705,8 @@
         } else {
             renderIdle();
         }
+
+        startSyncPolling();
     })();
 </script>
 </body>

@@ -5,7 +5,7 @@
      x-on:click.self="closeConfirm()"
      x-on:keydown.escape.window="closeConfirm()">
     <div class="ui-modal-panel max-w-md">
-        <h3 class="ui-heading text-lg">Confirmar accion</h3>
+        <h3 class="ui-heading text-lg">Confirmar acción</h3>
         <p class="ui-text mt-2 text-sm" x-text="confirmMessage">Desea continuar?</p>
 
         <div class="mt-4 flex justify-end gap-2">

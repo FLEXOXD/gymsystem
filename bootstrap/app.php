@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.subscription' => \App\Http\Middleware\CheckSubscriptionMiddleware::class,
             'superadmin' => \App\Http\Middleware\EnsureSuperAdminMiddleware::class,
             'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
+            'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

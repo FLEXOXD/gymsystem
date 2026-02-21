@@ -1,6 +1,6 @@
 <div class="grid gap-6 xl:grid-cols-12">
     <div class="space-y-6 xl:col-span-8">
-        <x-ui.card title="Estado de membresia" subtitle="Vista rapida para recepcion y renovacion.">
+        <x-ui.card title="Estado de membresía" subtitle="Vista rapida para recepción y renovación.">
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Estado actual</p>
@@ -11,14 +11,14 @@
                         @endif
                     </div>
                     <p class="mt-3 text-sm text-slate-700 dark:text-slate-300">Vence: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipEndsLabel }}</span></p>
-                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Dias restantes: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $remainingLabel }}</span></p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Días restantes: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $remainingLabel }}</span></p>
                     <x-ui.button type="button" variant="success" class="mt-4 w-full" x-on:click="openMembershipModal()">Cobrar / Renovar</x-ui.button>
                 </div>
 
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Cliente</p>
                     <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">Estado general: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $statusLabels[$client->status] ?? $client->status }}</span></p>
-                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Telefono: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->phone ?: '-' }}</span></p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Teléfono: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->phone ?: '-' }}</span></p>
                     <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Ultima asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></p>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                         </div>
                         <p class="font-semibold">Aun no hay asistencias registradas.</p>
                         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cuando el cliente haga check-in aparecera aqui.</p>
-                        <x-ui.button :href="route('reception.index')" variant="ghost" size="sm" class="mt-3">Ir a recepcion</x-ui.button>
+                        <x-ui.button :href="route('reception.index')" variant="ghost" size="sm" class="mt-3">Ir a recepción</x-ui.button>
                     </div>
                 @endif
             </x-ui.card>
@@ -56,7 +56,7 @@
                         @foreach ($paymentsPreview as $movement)
                             <div class="flex items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm dark:border-white/10 dark:bg-slate-900/40">
                                 <div class="min-w-0">
-                                    <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $movement->membership?->plan?->name ?? 'Pago membresia' }}</p>
+                                    <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $movement->membership?->plan?->name ?? 'Pago membresía' }}</p>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ $movement->occurred_at?->format('Y-m-d H:i') ?? '-' }}</p>
                                 </div>
                                 <span class="font-bold text-emerald-700 dark:text-emerald-300">{{ \App\Support\Currency::format((float) $movement->amount, $appCurrencyCode) }}</span>
@@ -73,7 +73,7 @@
                             </svg>
                         </div>
                         <p class="font-semibold">Sin pagos vinculados todavia.</p>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cobra una membresia para registrar el primer pago.</p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cobra una membresía para registrar el primer pago.</p>
                         <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Cobrar / Renovar</x-ui.button>
                     </div>
                 @endif
@@ -114,7 +114,7 @@
                         <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->document_number }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                        <dt class="text-slate-600 dark:text-slate-400">Telefono</dt>
+                        <dt class="text-slate-600 dark:text-slate-400">Teléfono</dt>
                         <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->phone ?: '-' }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-2">
@@ -128,7 +128,7 @@
         <x-ui.card title="Accesos rapidos" subtitle="Atajos operativos compactos.">
             <div class="space-y-2">
                 <a href="{{ route('reception.index') }}" class="flex items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-800 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-800">
-                    <span>Ir a recepcion</span>
+                    <span>Ir a recepción</span>
                     <span class="text-slate-500 dark:text-slate-400">-></span>
                 </a>
 
@@ -143,7 +143,7 @@
 
                 <div x-cloak x-show="quickMoreOpen" class="space-y-2">
                     <button type="button" class="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-800" x-on:click="setTab('membership')">
-                        <span>Ver membresias y pagos</span>
+                        <span>Ver membresías y pagos</span>
                         <span class="text-slate-500 dark:text-slate-400">Tab</span>
                     </button>
 

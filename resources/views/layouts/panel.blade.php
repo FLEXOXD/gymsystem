@@ -1,7 +1,7 @@
 @php
     use App\Models\Subscription;
 
-    $pageTitle = trim($__env->yieldContent('title')) ?: 'Panel';
+    $pageTitle = trim($__env->yieldContent('title')) ?: __('ui.panel');
     $user = auth()->user();
     $activeTheme = $user?->theme ?? 'iron_dark';
     $darkThemes = ['iron_dark', 'power_red', 'energy_green', 'gold_elite'];
@@ -9,13 +9,33 @@
     $themeClass = $isDarkTheme ? 'dark theme-dark' : 'theme-light';
     $isSuperAdmin = $user && $user->gym_id === null;
     $gym = $user?->gym;
-    $gymName = $isSuperAdmin ? 'SuperAdmin' : ($gym?->name ?? 'Gym');
+    $gymName = $isSuperAdmin ? __('ui.superadmin') : ($gym?->name ?? 'Gym');
     $gymLogo = $gym?->logo_path;
     if ($gymLogo && !str_starts_with($gymLogo, 'http://') && !str_starts_with($gymLogo, 'https://')) {
         $gymLogo = asset('storage/'.ltrim($gymLogo, '/'));
     }
     $gymInitials = collect(explode(' ', trim($gymName)))->filter()->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('');
     $gymInitials = $gymInitials !== '' ? mb_strtoupper($gymInitials) : 'GY';
+    $userName = trim((string) ($user?->name ?? __('ui.guest')));
+    $userEmail = trim((string) ($user?->email ?? ''));
+    $userInitial = mb_strtoupper(mb_substr($userName !== '' ? $userName : 'U', 0, 1));
+    $userPhotoPath = trim((string) ($user?->profile_photo_path ?? ''));
+    $userPhotoUrl = null;
+    if ($userPhotoPath !== '') {
+        if (str_starts_with($userPhotoPath, 'http://') || str_starts_with($userPhotoPath, 'https://')) {
+            $userPhotoUrl = $userPhotoPath;
+        } else {
+            $normalizedUserPhotoPath = ltrim($userPhotoPath, '/');
+            if (str_starts_with($normalizedUserPhotoPath, 'storage/')) {
+                $userPhotoUrl = asset($normalizedUserPhotoPath);
+            } else {
+                $userPhotoUrl = asset('storage/'.$normalizedUserPhotoPath);
+            }
+        }
+    }
+    $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
+    $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
+    $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
 
     $gymSubscriptionStatus = null;
     if (!$isSuperAdmin && $user?->gym_id) {
@@ -26,17 +46,20 @@
 
     $navItems = $isSuperAdmin
         ? [
-            ['label' => 'Panel', 'route' => 'superadmin.dashboard', 'active' => 'superadmin.dashboard'],
-            ['label' => 'Gimnasios', 'route' => 'superadmin.gyms.index', 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*'],
-            ['label' => 'Notificaciones', 'route' => 'superadmin.notifications.index', 'active' => 'superadmin.notifications.*'],
+            ['label' => __('ui.nav.panel'), 'route' => 'superadmin.dashboard', 'active' => 'superadmin.dashboard', 'icon' => 'panel'],
+            ['label' => __('ui.nav.gyms'), 'route' => 'superadmin.gyms.index', 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*', 'icon' => 'gyms'],
+            ['label' => 'Crear nuevo gimnasio', 'route' => 'superadmin.gym.index', 'active' => 'superadmin.gym.*', 'icon' => 'gym'],
+            ['label' => 'Planes', 'route' => 'superadmin.plan-templates.index', 'active' => 'superadmin.plan-templates.*', 'icon' => 'plans'],
+            ['label' => __('ui.nav.notifications'), 'route' => 'superadmin.notifications.index', 'active' => 'superadmin.notifications.*', 'icon' => 'notifications'],
+            ['label' => __('ui.nav.suggestions'), 'route' => 'superadmin.suggestions.index', 'active' => 'superadmin.suggestions.*', 'icon' => 'suggestions'],
           ]
         : [
-            ['label' => 'Recepcion', 'route' => 'reception.index', 'active' => 'reception.*'],
-            ['label' => 'Clientes', 'route' => 'clients.index', 'active' => 'clients.*'],
-            ['label' => 'Planes', 'route' => 'plans.index', 'active' => 'plans.*'],
-            ['label' => 'Caja', 'route' => 'cash.index', 'active' => 'cash.*'],
-            ['label' => 'Reportes', 'route' => 'reports.index', 'active' => 'reports.*'],
-            ['label' => 'Configuracion', 'route' => 'settings.index', 'active' => 'settings.*'],
+            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'active' => 'panel.*', 'icon' => 'panel'],
+            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'active' => 'reception.*', 'icon' => 'reception'],
+            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'active' => 'clients.*', 'icon' => 'clients'],
+            ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'active' => 'plans.*', 'icon' => 'plans'],
+            ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'active' => 'cash.*', 'icon' => 'cash'],
+            ['label' => __('ui.nav.reports'), 'route' => 'reports.index', 'active' => 'reports.*', 'icon' => 'reports'],
           ];
 
     $statusVariant = match ($gymSubscriptionStatus) {
@@ -47,17 +70,80 @@
     };
 @endphp
 <!DOCTYPE html>
-<html lang="es" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $activeTheme }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $activeTheme }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle }} - {{ config('app.name', 'GymSystem') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .smart-list-wrap {
+            max-height: min(68vh, 720px);
+            overflow: auto;
+            border-radius: 0.75rem;
+        }
+        .smart-list-toolbar {
+            display: flex;
+            gap: 0.75rem;
+            align-items: end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+        .smart-list-toolbar label {
+            min-width: 240px;
+            flex: 1 1 280px;
+        }
+        .smart-list-counter {
+            font-size: 0.875rem;
+            color: rgb(71 85 105);
+        }
+        .theme-dark .smart-list-counter {
+            color: rgb(148 163 184);
+        }
+        .smart-list-wrap .ui-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 6;
+            background: rgb(241 245 249 / 0.95);
+            backdrop-filter: blur(3px);
+        }
+        .theme-dark .smart-list-wrap .ui-table thead th {
+            background: rgb(30 41 59 / 0.95);
+        }
+        .theme-dark .ui-table .text-emerald-700 {
+            color: rgb(74 222 128) !important;
+        }
+        .theme-dark .ui-table .text-rose-700 {
+            color: rgb(251 113 133) !important;
+        }
+        @media (max-width: 768px) {
+            .smart-list-wrap {
+                max-height: min(62vh, 560px);
+            }
+            .smart-list-toolbar {
+                align-items: stretch;
+            }
+            .smart-list-toolbar .ui-input {
+                width: 100%;
+            }
+        }
+        @media (max-width: 640px) {
+            .smart-list-toolbar label {
+                min-width: 0;
+                width: 100%;
+                flex-basis: 100%;
+            }
+            #user-menu-dropdown {
+                width: min(92vw, 20rem);
+            }
+        }
+    </style>
     @stack('styles')
 </head>
 <body class="theme-body h-full ui-text">
-<div class="min-h-screen lg:flex">
+<div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
         <div class="theme-divider flex items-center gap-4 border-b px-4 py-4">
             <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
@@ -73,7 +159,7 @@
             </div>
         </div>
 
-        <nav class="flex-1 space-y-1 px-3 py-4">
+        <nav class="space-y-1 px-3 py-4">
             @foreach ($navItems as $item)
                 @php
                     $activePatterns = explode('|', $item['active']);
@@ -82,42 +168,95 @@
                 <a href="{{ route($item['route']) }}"
                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $isActive ? 'theme-nav-active' : 'theme-nav-link' }}">
                     <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : '' }}"></span>
+                    <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
+                        @switch($item['icon'] ?? '')
+                            @case('panel')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M3 4h8v8H3V4Zm10 0h8v5h-8V4ZM3 14h8v6H3v-6Zm10-3h8v9h-8v-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                </svg>
+                                @break
+                            @case('reception')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M6 11h12M12 5v12m7-6a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('clients')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M16 18v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1m16 0v-1a4 4 0 0 0-3-3.87M13 6.13a4 4 0 1 1 0 7.75M9.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('plans')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('cash')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M3 10h18M8 14h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('reports')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M5 19V9m7 10V5m7 14v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('gyms')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 20V8l8-4 8 4v12M9 20v-5h6v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                @break
+                            @case('gym')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="9" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M4.8 18.2v-1a4.2 4.2 0 0 1 8.4 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M16 8v6M13 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('notifications')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M6 10a6 6 0 1 1 12 0v4l2 2H4l2-2v-4Zm4 8a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                @break
+                            @case('suggestions')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M6 5h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-4 3v-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                </svg>
+                                @break
+                            @default
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                </svg>
+                        @endswitch
+                    </span>
                     <span class="sidebar-label">{{ $item['label'] }}</span>
                 </a>
             @endforeach
         </nav>
 
-        <div class="theme-divider border-t px-4 py-3">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="ui-button ui-button-muted w-full">
-                    <span class="sidebar-label">Cerrar sesion</span>
-                    <span class="sidebar-icon hidden">Salir</span>
-                </button>
-            </form>
-        </div>
     </aside>
 
     <div class="flex-1 pb-16 lg:pb-0">
         <header class="theme-header theme-divider sticky top-0 z-20 border-b backdrop-blur">
-            <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
-                <div class="flex items-center gap-2">
+            <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
+                <div class="flex min-w-0 items-center gap-2">
                     <button id="sidebar-toggle" type="button"
                             class="hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex">
-                        Menu
+                        {{ __('ui.menu') }}
                     </button>
                     <div>
-                        <p class="ui-muted text-xs font-bold uppercase tracking-widest">Panel operativo</p>
-                        <h1 class="ui-heading text-lg md:text-xl">@yield('page-title', $pageTitle)</h1>
+                        <p class="ui-muted text-xs font-bold uppercase tracking-widest">{{ __('ui.panel_operativo') }}</p>
+                        <h1 class="ui-heading truncate text-lg md:text-xl">@yield('page-title', $pageTitle)</h1>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex w-full items-center justify-end gap-2 sm:w-auto">
                     @if (!$isSuperAdmin)
                         <form method="GET" action="{{ route('clients.index') }}" class="hidden items-center gap-2 md:flex">
-                            <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar cliente..."
+                            <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('ui.search_client') }}"
                                    class="ui-input w-52">
-                            <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold">Buscar</button>
+                            <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold">{{ __('ui.search') }}</button>
                         </form>
                     @endif
 
@@ -125,20 +264,46 @@
                         <x-badge :variant="$statusVariant">{{ $gymSubscriptionStatus }}</x-badge>
                     @endif
 
-                    <a href="{{ route('settings.index') }}" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold">
-                        Configuracion
-                    </a>
+                    <div id="user-menu-root" class="relative">
+                        <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown">
+                            @if ($userPhotoUrl)
+                                <span class="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">
+                                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
+                                </span>
+                            @else
+                                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
+                            @endif
+                            <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 md:inline">{{ $userName }}</span>
+                            <svg class="h-4 w-4 text-slate-600 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
 
-                    <span class="theme-chip hidden rounded-full px-3 py-1 text-xs font-semibold md:inline-flex">
-                        {{ $user?->name ?? 'Usuario' }}
-                    </span>
+                        <div id="user-menu-dropdown" class="absolute right-0 z-40 mt-2 hidden w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ $userName }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-300">{{ $userEmail !== '' ? $userEmail : __('ui.no_email') }}</p>
+                            </div>
+
+                            <div class="p-2">
+                                <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
+                                <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
+                                <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
+
+                                <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                                    @csrf
+                                    <button type="submit" class="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/30">{{ __('ui.logout') }}</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <main class="panel-view mx-auto w-full max-w-7xl space-y-4 px-4 py-6 md:px-6 lg:px-8">
+        <main class="panel-view mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
             @if (!empty($subscription_grace))
-                <x-toast type="warning" :autohide="false">Su suscripcion ha vencido. Tiene {{ (int) ($subscription_grace_days ?? 3) }} dias de gracia para renovar.</x-toast>
+                <x-toast type="warning" :autohide="false">{{ __('ui.toast.grace_subscription', ['days' => (int) ($subscription_grace_days ?? 3)]) }}</x-toast>
             @endif
 
             @if (session('status'))
@@ -158,18 +323,16 @@
 </div>
 
 <nav class="theme-mobile-nav fixed inset-x-0 bottom-0 z-30 border-t p-2 backdrop-blur lg:hidden">
-    <div class="mx-auto grid max-w-xl grid-cols-5 gap-2">
+    <div class="mx-auto flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
         @foreach ($navItems as $item)
-            @if ($loop->index < 5)
-                @php
-                    $activePatterns = explode('|', $item['active']);
-                    $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
-                @endphp
-                <a href="{{ route($item['route']) }}"
-                   class="rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
-                    {{ $item['label'] }}
-                </a>
-            @endif
+            @php
+                $activePatterns = explode('|', $item['active']);
+                $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
+            @endphp
+            <a href="{{ route($item['route']) }}"
+               class="min-w-[84px] shrink-0 rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
+                {{ $item['label'] }}
+            </a>
         @endforeach
     </div>
 </nav>
@@ -187,15 +350,51 @@
             sidebar.querySelectorAll('.sidebar-label').forEach(function (element) {
                 element.classList.toggle('hidden', collapsed);
             });
-            sidebar.querySelectorAll('.sidebar-icon').forEach(function (element) {
-                element.classList.toggle('hidden', !collapsed);
-            });
             localStorage.setItem('panel.sidebar_collapsed', collapsed ? '1' : '0');
         });
 
         if (sidebar && localStorage.getItem('panel.sidebar_collapsed') === '1') {
             sidebarToggle?.click();
         }
+
+        const userMenuRoot = document.getElementById('user-menu-root');
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenuDropdown = document.getElementById('user-menu-dropdown');
+
+        function closeUserMenu() {
+            if (!userMenuDropdown || !userMenuButton) return;
+            userMenuDropdown.classList.add('hidden');
+            userMenuButton.setAttribute('aria-expanded', 'false');
+        }
+
+        function openUserMenu() {
+            if (!userMenuDropdown || !userMenuButton) return;
+            userMenuDropdown.classList.remove('hidden');
+            userMenuButton.setAttribute('aria-expanded', 'true');
+        }
+
+        userMenuButton?.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (userMenuDropdown?.classList.contains('hidden')) {
+                openUserMenu();
+            } else {
+                closeUserMenu();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!userMenuRoot || !userMenuDropdown) return;
+            const target = event.target;
+            if (target instanceof Node && userMenuRoot.contains(target)) return;
+            closeUserMenu();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeUserMenu();
+            }
+        });
 
         document.querySelectorAll('[data-toast]').forEach(function (toast) {
             const shouldHide = toast.getAttribute('data-autohide') === '1';
@@ -208,6 +407,88 @@
                     toast.remove();
                 }, 250);
             }, delay);
+        });
+
+        function normalizeText(value) {
+            return (value || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function getBodyRows(table) {
+            const rows = table.querySelectorAll('tbody tr');
+            return Array.from(rows).filter(function (row) {
+                return row.querySelector('td') !== null;
+            });
+        }
+
+        function enhanceSmartList(table, index) {
+            if (table.hasAttribute('data-smart-list-manual')) return;
+            if (table.dataset.smartListReady === '1') return;
+
+            const rows = getBodyRows(table);
+            if (rows.length <= 10) return;
+
+            const wrapper = table.closest('.overflow-x-auto') || table.parentElement;
+            if (!wrapper) return;
+
+            table.dataset.smartListReady = '1';
+            wrapper.classList.add('smart-list-wrap');
+
+            const toolbar = document.createElement('div');
+            toolbar.className = 'smart-list-toolbar';
+            const smartListSearchLabel = @js(__('ui.smart_list.search_label'));
+            const smartListSearchPlaceholder = @js(__('ui.smart_list.search_placeholder'));
+            const smartListShowing = @js(__('ui.smart_list.showing'));
+            const smartListOf = @js(__('ui.smart_list.of'));
+            const smartListNoResults = @js(__('ui.smart_list.no_results'));
+            toolbar.innerHTML =
+                '<label class="space-y-1 text-sm font-semibold ui-muted">' +
+                    '<span>' + smartListSearchLabel + '</span>' +
+                    '<input type="text" class="ui-input js-smart-list-search" placeholder="' + smartListSearchPlaceholder + '" autocomplete="off">' +
+                '</label>' +
+                '<p class="smart-list-counter">' + smartListShowing + ' <strong class="js-smart-list-visible">' + rows.length + '</strong> ' + smartListOf + ' <strong>' + rows.length + '</strong></p>';
+
+            wrapper.parentNode.insertBefore(toolbar, wrapper);
+
+            const searchInput = toolbar.querySelector('.js-smart-list-search');
+            const visibleEl = toolbar.querySelector('.js-smart-list-visible');
+
+            const emptyRow = document.createElement('tr');
+            emptyRow.className = 'hidden';
+            emptyRow.innerHTML = '<td colspan="' + (table.querySelectorAll('thead th').length || 1) + '" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">' + smartListNoResults + '</td>';
+            table.querySelector('tbody')?.appendChild(emptyRow);
+
+            rows.forEach(function (row) {
+                row.dataset.smartSearch = normalizeText(row.textContent || '');
+                if (index % 2 === 0) {
+                    row.classList.add('odd:bg-slate-50/45', 'dark:odd:bg-slate-900/30');
+                }
+                row.classList.add('hover:bg-cyan-50/70', 'dark:hover:bg-cyan-500/10');
+            });
+
+            function applyFilter() {
+                const term = normalizeText(searchInput?.value || '');
+                let visible = 0;
+
+                rows.forEach(function (row) {
+                    const matches = term === '' || (row.dataset.smartSearch || '').includes(term);
+                    row.classList.toggle('hidden', !matches);
+                    if (matches) visible += 1;
+                });
+
+                if (visibleEl) visibleEl.textContent = String(visible);
+                emptyRow.classList.toggle('hidden', visible !== 0);
+            }
+
+            searchInput?.addEventListener('input', applyFilter);
+            applyFilter();
+        }
+
+        document.querySelectorAll('table.ui-table').forEach(function (table, index) {
+            enhanceSmartList(table, index);
         });
     })();
 </script>

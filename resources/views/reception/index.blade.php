@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', 'Recepcion')
-@section('page-title', 'Modo recepcion PRO')
+@section('title', 'Recepción')
+@section('page-title', 'Modo recepción PRO')
 
 @section('content')
     <x-ui.card title="Ingreso unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta auto-envio por lector tipo teclado.">
@@ -36,11 +36,11 @@
 
     <x-ui.card id="result-panel" class="relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
         <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-amber-400/10"></div>
-        <div class="relative grid gap-5 xl:grid-cols-[320px_1fr] xl:items-center">
-            <div class="w-full max-w-sm">
+        <div class="relative grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+            <div class="w-full max-w-sm md:max-w-none">
                 <div class="relative overflow-hidden rounded-[1.75rem] border border-slate-300/70 bg-slate-900/20 shadow-2xl dark:border-slate-700/80">
-                    <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-72 w-full object-cover object-top md:h-80 xl:h-[26rem]">
-                    <div id="result-photo-placeholder" class="flex h-72 w-full flex-col items-center justify-center gap-2 bg-slate-50/80 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 md:h-80 xl:h-[26rem]">
+                    <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-64 w-full object-cover object-top sm:h-72 md:h-[22rem] xl:h-[26rem]">
+                    <div id="result-photo-placeholder" class="flex h-64 w-full flex-col items-center justify-center gap-2 bg-slate-50/80 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 sm:h-72 md:h-[22rem] xl:h-[26rem]">
                         <span id="result-avatar-initials" class="text-5xl font-black tracking-wider text-slate-400 dark:text-slate-300">--</span>
                         <span class="text-xs uppercase tracking-[0.24em]">Avatar gym</span>
                     </div>
@@ -51,22 +51,22 @@
             <div class="space-y-4">
                 <div class="flex flex-wrap items-center gap-2">
                     <p id="result-method" class="inline-flex rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-                        Metodo: -
+                        Método: -
                     </p>
                     <span id="result-days-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-                        Dias restantes: -
+                        Días restantes: -
                     </span>
                     <span id="result-month-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">
                         Visitas mes: -
                     </span>
                 </div>
 
-                <p id="result-message" class="pr-1 text-2xl font-black break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100 md:text-3xl">Esperando lectura...</p>
-                <p id="result-name" class="text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">-</p>
+                <p id="result-message" class="pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100">Esperando lectura...</p>
+                <p id="result-name" class="text-[clamp(1.2rem,3.8vw,2rem)] font-bold text-slate-900 dark:text-slate-100">-</p>
 
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresia</p>
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresía</p>
                         <p id="result-membership" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
                     <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
@@ -91,6 +91,15 @@
     </x-ui.card>
 
     <x-ui.card title="Ultimos 10 ingresos">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs text-slate-500 dark:text-slate-300">
+                Historial detallado disponible para los ultimos 2 meses.
+            </p>
+            <button type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
+                Ver asistencias (2 meses)
+            </button>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[780px]">
                 <thead>
@@ -98,7 +107,7 @@
                     <th class="px-3 py-3">Fecha</th>
                     <th class="px-3 py-3">Hora</th>
                     <th class="px-3 py-3">Cliente</th>
-                    <th class="px-3 py-3">Metodo</th>
+                    <th class="px-3 py-3">Método</th>
                 </tr>
                 </thead>
                 <tbody id="recent-attendances-body">
@@ -127,6 +136,69 @@
             </table>
         </div>
     </x-ui.card>
+
+    <div id="attendance-history-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="attendanceHistoryTitle">
+        <div class="ui-modal-panel max-w-6xl">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 id="attendanceHistoryTitle" class="ui-heading text-lg">Asistencias de los ultimos 2 meses</h3>
+                    <p class="mt-1 text-sm ui-muted">
+                        Desde {{ $attendanceHistoryStart }}.
+                        <strong>{{ (int) ($attendanceHistoryTotal ?? 0) }}</strong> registros en ventana operativa.
+                    </p>
+                </div>
+                <button type="button" class="ui-button ui-button-ghost px-2 py-1" data-close-attendance-history aria-label="Cerrar">X</button>
+            </div>
+
+            @if (!empty($attendanceHistoryTruncated))
+                <p class="mt-3 ui-alert ui-alert-warning text-xs">
+                    Se muestran los primeros 2000 registros para mantener velocidad en pantalla.
+                </p>
+            @endif
+
+            <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                <table class="ui-table min-w-[980px]">
+                    <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <th class="px-3 py-3">Fecha</th>
+                        <th class="px-3 py-3">Hora</th>
+                        <th class="px-3 py-3">Cliente</th>
+                        <th class="px-3 py-3">Método</th>
+                        <th class="px-3 py-3">Usuario</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @forelse (($attendanceHistory ?? collect()) as $row)
+                        @php
+                            $historyMethod = $row->credential?->type ?? 'document';
+                            $historyMethodLabel = match ($historyMethod) {
+                                'rfid' => 'RFID',
+                                'qr' => 'QR',
+                                'document' => 'Documento',
+                                default => strtoupper((string) $historyMethod),
+                            };
+                        @endphp
+                        <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
+                            <td class="px-3 py-3 dark:text-slate-200">{{ $row->date?->toDateString() ?? '-' }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ $row->time ?? '-' }}</td>
+                            <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $row->client?->full_name ?? '-' }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ $historyMethodLabel }}</td>
+                            <td class="px-3 py-3 dark:text-slate-200">{{ $row->createdBy?->name ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay asistencias en la ventana de 2 meses.</td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+                <button type="button" class="ui-button ui-button-ghost" data-close-attendance-history>Cerrar</button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -167,6 +239,7 @@
         const motivation = document.getElementById('result-motivation');
         const avatarInitials = document.getElementById('result-avatar-initials');
         const recentAttendancesBody = document.getElementById('recent-attendances-body');
+        const attendanceHistoryModal = document.getElementById('attendance-history-modal');
         const methodLabels = {
             rfid: 'RFID',
             qr: 'QR',
@@ -182,6 +255,22 @@
         let audioContext = null;
         let lastRenderedAttendanceId = readTopAttendanceId();
         let lastHandledSyncEventId = null;
+
+        document.querySelectorAll('[data-open-attendance-history]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                attendanceHistoryModal?.classList.remove('hidden');
+            });
+        });
+        document.querySelectorAll('[data-close-attendance-history]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                attendanceHistoryModal?.classList.add('hidden');
+            });
+        });
+        attendanceHistoryModal?.addEventListener('click', function (event) {
+            if (event.target === attendanceHistoryModal) {
+                attendanceHistoryModal.classList.add('hidden');
+            }
+        });
 
         function basePanelClasses() {
             return 'rounded-2xl border p-5 shadow-sm';
@@ -385,12 +474,12 @@
 
         function daysRemainingInfo(membershipDate) {
             if (!membershipDate) {
-                return { label: 'Dias restantes: -', tone: 'neutral', days: null };
+                return { label: 'Días restantes: -', tone: 'neutral', days: null };
             }
 
             const endDate = new Date(String(membershipDate) + 'T00:00:00');
             if (Number.isNaN(endDate.getTime())) {
-                return { label: 'Dias restantes: -', tone: 'neutral', days: null };
+                return { label: 'Días restantes: -', tone: 'neutral', days: null };
             }
 
             const now = new Date();
@@ -400,7 +489,7 @@
 
             if (days < 0) {
                 return {
-                    label: 'Membresia vencida',
+                    label: 'Membresía vencida',
                     tone: 'danger',
                     days: days,
                 };
@@ -408,7 +497,7 @@
 
             if (days < 5) {
                 return {
-                    label: 'Dias restantes: ' + String(days) + ' dias',
+                    label: 'Días restantes: ' + String(days) + ' días',
                     tone: 'danger',
                     days: days,
                 };
@@ -416,14 +505,14 @@
 
             if (days <= 10) {
                 return {
-                    label: 'Dias restantes: ' + String(days) + ' dias',
+                    label: 'Días restantes: ' + String(days) + ' días',
                     tone: 'warn',
                     days: days,
                 };
             }
 
             return {
-                label: 'Dias restantes: ' + String(days) + ' dias',
+                label: 'Días restantes: ' + String(days) + ' días',
                 tone: 'ok',
                 days: days,
             };
@@ -447,11 +536,11 @@
             }
 
             if (reason === 'membership_inactive') {
-                return 'Membresia no vigente. Renueva para habilitar ingreso.';
+                return 'Membresía no vigente. Renueva para habilitar ingreso.';
             }
 
             if (!payload.ok) {
-                return 'Reintenta con otro metodo o verifica estado del cliente.';
+                return 'Reintenta con otro método o verifica estado del cliente.';
             }
 
             if (monthVisits !== null && monthVisits >= 20) {
@@ -463,7 +552,7 @@
             }
 
             if (daysInfo.days !== null && daysInfo.days >= 0 && daysInfo.days <= 5) {
-                return 'Renovacion cercana: oportunidad perfecta para venta.';
+                return 'Renovación cercana: oportunidad perfecta para venta.';
             }
 
             return 'Buen trabajo. Check-in registrado y flujo estable.';
@@ -774,21 +863,21 @@
             if (payload.ok) {
                 panel.className = basePanelClasses() + ' border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30';
                 method.className = 'mb-2 inline-flex rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-200';
-                message.className = 'pr-1 text-2xl font-black break-words [overflow-wrap:anywhere] text-emerald-700 dark:text-emerald-200 md:text-3xl';
+                message.className = 'pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-emerald-700 dark:text-emerald-200';
                 statusChip.className = 'mt-4 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800';
                 statusChip.textContent = 'Acceso permitido';
                 playTone('ok');
             } else if (reason === 'duplicate_attendance') {
                 panel.className = basePanelClasses() + ' border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/25';
                 method.className = 'mb-2 inline-flex rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-800 dark:bg-amber-800/40 dark:text-amber-200';
-                message.className = 'pr-1 text-2xl font-black break-words [overflow-wrap:anywhere] text-amber-700 dark:text-amber-200 md:text-3xl';
+                message.className = 'pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-amber-700 dark:text-amber-200';
                 statusChip.className = 'mt-4 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-800';
                 statusChip.textContent = 'Ya registrado hoy';
                 playTone('ok');
             } else {
                 panel.className = basePanelClasses() + ' border-rose-300 bg-rose-50 dark:border-rose-700 dark:bg-rose-900/30';
                 method.className = 'mb-2 inline-flex rounded-full bg-rose-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-rose-800 dark:bg-rose-800/40 dark:text-rose-200';
-                message.className = 'pr-1 text-2xl font-black break-words [overflow-wrap:anywhere] text-rose-700 dark:text-rose-200 md:text-3xl';
+                message.className = 'pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-rose-700 dark:text-rose-200';
                 statusChip.className = 'mt-4 inline-flex rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-rose-800';
                 statusChip.textContent = 'Acceso denegado';
                 playTone('error');
@@ -796,7 +885,7 @@
 
             message.textContent = payload.message;
             const methodText = payload.method ? (methodLabels[payload.method] || String(payload.method).toUpperCase()) : '-';
-            method.textContent = 'Metodo: ' + methodText;
+            method.textContent = 'Método: ' + methodText;
 
             const membershipDate = payload.client && payload.client.membership_ends_at
                 ? String(payload.client.membership_ends_at)
@@ -831,8 +920,8 @@
         function renderIdle() {
             panel.className = basePanelClasses() + ' border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900';
             method.className = 'mb-2 inline-flex rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100';
-            method.textContent = 'Metodo: -';
-            message.className = 'pr-1 text-2xl font-black break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100 md:text-3xl';
+            method.textContent = 'Método: -';
+            message.className = 'pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100';
             message.textContent = 'Esperando lectura...';
             statusChip.className = 'mt-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800';
             statusChip.textContent = 'Listo para escanear';
@@ -842,7 +931,7 @@
             checkinTime.textContent = '-';
             monthVisitsValue.textContent = '-';
             motivation.textContent = 'Listo para recibir al cliente.';
-            daysPill.textContent = 'Dias restantes: -';
+            daysPill.textContent = 'Días restantes: -';
             monthPill.textContent = 'Visitas mes: -';
             avatarInitials.textContent = '--';
             setPillTone(daysPill, 'neutral');

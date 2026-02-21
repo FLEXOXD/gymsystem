@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', 'Reporte de membresias')
-@section('page-title', 'Reporte de membresias')
+@section('title', 'Reporte de membresías')
+@section('page-title', 'Reporte de membresías')
 
 @section('content')
     <section class="grid gap-4 md:grid-cols-3">
@@ -19,7 +19,7 @@
         </x-ui.card>
     </section>
 
-    <x-ui.card title="Clientes con membresia activa">
+    <x-ui.card title="Clientes con membresía activa">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[820px]">
                 <thead>
@@ -50,7 +50,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Clientes con membresia vencida o no activa">
+    <x-ui.card title="Clientes con membresía vencida o no activa">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[820px]">
                 <thead>

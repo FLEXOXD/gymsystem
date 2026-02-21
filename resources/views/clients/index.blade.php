@@ -17,7 +17,7 @@
             'all' => 'Todos',
             'active' => 'Activos',
             'expiring' => 'Por vencer',
-            'expired' => 'Vencidos',
+            'expired' => 'Vencid@s',
             'attended_today' => 'Asistieron hoy',
         ];
         $baseFilterQuery = request()->query();
@@ -28,7 +28,23 @@
                 'id' => (int) $plan->id,
                 'name' => (string) $plan->name,
                 'duration_days' => (int) $plan->duration_days,
+                'duration_unit' => \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')),
+                'duration_months' => $plan->duration_months !== null ? (int) $plan->duration_months : null,
                 'price' => (float) $plan->price,
+            ])
+            ->values();
+
+        $promotionCatalog = ($promotions ?? collect())
+            ->map(fn ($promotion) => [
+                'id' => (int) $promotion->id,
+                'plan_id' => $promotion->plan_id !== null ? (int) $promotion->plan_id : null,
+                'name' => (string) $promotion->name,
+                'type' => (string) $promotion->type,
+                'value' => (float) ($promotion->value ?? 0),
+                'starts_at' => optional($promotion->starts_at)?->toDateString(),
+                'ends_at' => optional($promotion->ends_at)?->toDateString(),
+                'max_uses' => $promotion->max_uses !== null ? (int) $promotion->max_uses : null,
+                'times_used' => (int) ($promotion->times_used ?? 0),
             ])
             ->values();
 
@@ -42,6 +58,7 @@
             'plan_id' => old('plan_id') !== null ? (string) old('plan_id') : '',
             'membership_starts_at' => (string) old('membership_starts_at', now()->toDateString()),
             'membership_price' => old('membership_price') !== null ? (string) old('membership_price') : '',
+            'promotion_id' => old('promotion_id') !== null ? (string) old('promotion_id') : '',
             'payment_method' => (string) old('payment_method', 'cash'),
             'amount_paid' => old('amount_paid') !== null ? (string) old('amount_paid') : '',
         ];
@@ -50,6 +67,7 @@
     <div x-data="clientsIndexPage({
             openCreateModal: @js($openCreateModal),
             plans: @js($planCatalog),
+            promotions: @js($promotionCatalog),
             defaults: @js($formDefaults),
             documentCheckUrl: @js(route('clients.check-document')),
         })"
@@ -65,21 +83,21 @@
             <article class="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-4 shadow-lg dark:border-emerald-300/30 dark:bg-emerald-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-200">Activos</p>
                 <p class="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">{{ $stats['active'] }}</p>
-                <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Membresia vigente</p>
+                <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Membresía vigente</p>
             </article>
             <article class="rounded-2xl border border-amber-400/35 bg-amber-500/10 p-4 shadow-lg dark:border-amber-300/30 dark:bg-amber-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-amber-800 dark:text-amber-200">Por vencer</p>
                 <p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">{{ $stats['expiring'] }}</p>
-                <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los proximos 7 dias</p>
+                <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los próximos 7 días</p>
             </article>
             <article class="rounded-2xl border border-rose-400/35 bg-rose-500/10 p-4 shadow-lg dark:border-rose-300/30 dark:bg-rose-400/15">
-                <p class="text-xs font-semibold uppercase tracking-widest text-rose-800 dark:text-rose-200">Vencidos</p>
+                <p class="text-xs font-semibold uppercase tracking-widest text-rose-800 dark:text-rose-200">Vencid@s</p>
                 <p class="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">{{ $stats['expired'] }}</p>
-                <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovacion</p>
+                <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovación</p>
             </article>
         </section>
 
-        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepcion, renovaciones y retencion.">
+        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención.">
             <div class="space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
@@ -121,11 +139,11 @@
                             <th class="px-3 py-3">Cliente</th>
                             <th class="px-3 py-3">Plan</th>
                             <th class="px-3 py-3">Vence</th>
-                            <th class="px-3 py-3">Dias restantes</th>
+                            <th class="px-3 py-3">Días restantes</th>
                             <th class="px-3 py-3">Pago</th>
                             <th class="px-3 py-3">Ultima asistencia</th>
                             <th class="px-3 py-3">Estado</th>
-                            <th class="px-3 py-3">Accion</th>
+                            <th class="px-3 py-3">Acción</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -226,7 +244,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Crear cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Alta rapida de cliente con membresia opcional.</p>
+                            <p class="mt-1 text-sm text-slate-400">Alta rapida de cliente con membresía opcional.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -269,7 +287,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                <span>Telefono</span>
+                                <span>Teléfono</span>
                                 <input type="text" name="phone" x-model="form.phone" class="ui-input" placeholder="Opcional">
                             </label>
 
@@ -309,7 +327,7 @@
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-200">
                                     <input type="checkbox" name="start_membership" value="1" x-model="form.start_membership" x-on:change="onMembershipToggle()" class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400/40">
-                                    Iniciar membresia ahora
+                                    Iniciar membresía ahora
                                 </label>
 
                                 <span class="inline-flex rounded-full border border-slate-600 bg-slate-800 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-200"
@@ -322,7 +340,7 @@
                                     <select name="plan_id" x-model="form.plan_id" x-on:change="onPlanChange()" x-bind:disabled="!form.start_membership" class="ui-input">
                                         <option value="">Selecciona un plan</option>
                                         @foreach ($plans as $plan)
-                                            <option value="{{ $plan->id }}">{{ $plan->name }} ({{ $plan->duration_days }} dias)</option>
+                                            <option value="{{ $plan->id }}">{{ $plan->name }} ({{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }})</option>
                                         @endforeach
                                     </select>
                                 </label>
@@ -338,7 +356,17 @@
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                    <span>Metodo de pago</span>
+                                    <span>Promoción (opcional)</span>
+                                    <select name="promotion_id" x-model="form.promotion_id" x-on:change="onPromotionChange()" x-bind:disabled="!form.start_membership" class="ui-input">
+                                        <option value="">Sin promoción</option>
+                                        <template x-for="promo in availablePromotions()" :key="promo.id">
+                                            <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
+                                        </template>
+                                    </select>
+                                </label>
+
+                                <label class="space-y-1 text-sm font-semibold text-slate-300">
+                                    <span>Método de pago</span>
                                     <select name="payment_method" x-model="form.payment_method" x-bind:disabled="!form.start_membership" class="ui-input">
                                         <option value="cash">Efectivo</option>
                                         <option value="transfer">Transferencia</option>
@@ -354,6 +382,7 @@
                                 <div class="space-y-2 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
                                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha fin estimada</p>
                                     <p class="text-sm font-bold text-slate-100" x-text="membershipEndLabel"></p>
+                                    <p class="text-xs text-slate-400" x-show="promotionSummaryLabel" x-text="promotionSummaryLabel"></p>
                                     <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide"
                                           x-bind:class="paymentBadgeClass"
                                           x-text="paymentStatusLabel"></span>
@@ -361,7 +390,7 @@
                             </div>
 
                             <p x-cloak x-show="form.start_membership && plans.length === 0" class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
-                                No hay planes activos. Crea un plan antes de iniciar membresias desde este modal.
+                                No hay planes activos. Crea un plan antes de iniciar membresías desde este modal.
                             </p>
                         </div>
                     </div>
@@ -390,6 +419,7 @@
                 documentState: 'idle',
                 documentMatchUrl: null,
                 plans: Array.isArray(config.plans) ? config.plans : [],
+                promotions: Array.isArray(config.promotions) ? config.promotions : [],
                 documentCheckUrl: config.documentCheckUrl,
                 form: {
                     first_name: config.defaults?.first_name ?? '',
@@ -401,16 +431,22 @@
                     plan_id: config.defaults?.plan_id ?? '',
                     membership_starts_at: config.defaults?.membership_starts_at ?? new Date().toISOString().slice(0, 10),
                     membership_price: config.defaults?.membership_price ?? '',
+                    promotion_id: config.defaults?.promotion_id ?? '',
                     payment_method: config.defaults?.payment_method ?? 'cash',
                     amount_paid: config.defaults?.amount_paid ?? '',
                 },
                 photoPreview: null,
                 membershipEndLabel: 'N/A',
+                promotionSummaryLabel: '',
 
                 init() {
                     this.recalculateMembershipEnd();
                     if (this.form.document_number !== '') {
                         this.checkDocument();
+                    }
+
+                    if (this.form.start_membership) {
+                        this.onPlanChange();
                     }
 
                     if (this.modalOpen) {
@@ -475,8 +511,120 @@
                     this.form[field] = this.formatPersonName(this.form[field]);
                 },
 
+                normalizePlanDurationUnit(unit) {
+                    return String(unit || '').toLowerCase() === 'months' ? 'months' : 'days';
+                },
+
+                addMonthsNoOverflow(baseDate, monthsToAdd) {
+                    const months = Math.max(1, Number(monthsToAdd || 1));
+                    const baseDay = baseDate.getDate();
+                    const baseMonthIndex = baseDate.getMonth() + months;
+                    const targetYear = baseDate.getFullYear() + Math.floor(baseMonthIndex / 12);
+                    const targetMonth = ((baseMonthIndex % 12) + 12) % 12;
+                    const targetLastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+                    const targetDay = Math.min(baseDay, targetLastDay);
+
+                    return new Date(targetYear, targetMonth, targetDay);
+                },
+
+                computeMembershipEndDate(startDate, plan, bonusDays) {
+                    const unit = this.normalizePlanDurationUnit(plan.duration_unit);
+                    const safeBonusDays = Math.max(0, Math.round(Number(bonusDays || 0)));
+                    let endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+
+                    if (unit === 'months') {
+                        const months = Math.max(1, Math.round(Number(plan.duration_months || 1)));
+                        endDate = this.addMonthsNoOverflow(startDate, months);
+                    } else {
+                        const days = Math.max(1, Math.round(Number(plan.duration_days || 1)));
+                        endDate.setDate(endDate.getDate() + days - 1);
+                    }
+
+                    if (safeBonusDays > 0) {
+                        endDate.setDate(endDate.getDate() + safeBonusDays);
+                    }
+
+                    return endDate;
+                },
+
+                availablePromotions() {
+                    const planId = String(this.form.plan_id || '');
+                    const startDate = this.form.membership_starts_at || new Date().toISOString().slice(0, 10);
+
+                    return this.promotions.filter((promo) => {
+                        const promoPlanId = promo.plan_id !== null ? String(promo.plan_id) : '';
+                        const isPlanMatch = promoPlanId === '' || promoPlanId === planId;
+                        const fromOk = !promo.starts_at || promo.starts_at <= startDate;
+                        const toOk = !promo.ends_at || promo.ends_at >= startDate;
+                        const usesOk = promo.max_uses === null || Number(promo.times_used) < Number(promo.max_uses);
+
+                        return isPlanMatch && fromOk && toOk && usesOk;
+                    });
+                },
+
+                selectedPromotion() {
+                    const promotionId = String(this.form.promotion_id || '');
+                    if (promotionId === '') {
+                        return null;
+                    }
+
+                    return this.availablePromotions().find((promo) => String(promo.id) === promotionId) || null;
+                },
+
+                promotionOptionLabel(promo) {
+                    const value = Number(promo.value || 0);
+                    const byType = {
+                        percentage: `-${value}%`,
+                        fixed: `-${value.toFixed(2)}`,
+                        final_price: `Precio final ${value.toFixed(2)}`,
+                        bonus_days: `+${Math.max(0, Math.round(value))} días`,
+                        two_for_one: '2x1',
+                        bring_friend: 'Trae a un amigo',
+                    };
+                    return `${promo.name} (${byType[promo.type] || promo.type})`;
+                },
+
+                computePromotionalPrice(planPrice, promo) {
+                    const base = Math.max(0, Number(planPrice || 0));
+                    if (!promo) {
+                        return { finalPrice: base, bonusDays: 0, summary: '' };
+                    }
+
+                    const value = Number(promo.value || 0);
+                    let finalPrice = base;
+                    let bonusDays = 0;
+                    let summary = promo.name;
+
+                    if (promo.type === 'percentage') {
+                        const percent = Math.min(Math.max(value, 0), 100);
+                        finalPrice = Math.max(0, base - (base * percent / 100));
+                        summary += `: -${percent}%`;
+                    } else if (promo.type === 'fixed') {
+                        finalPrice = Math.max(0, base - Math.max(0, value));
+                        summary += `: -${value.toFixed(2)}`;
+                    } else if (promo.type === 'final_price') {
+                        finalPrice = Math.max(0, value);
+                        summary += `: precio final ${finalPrice.toFixed(2)}`;
+                    } else if (promo.type === 'bonus_days') {
+                        bonusDays = Math.max(0, Math.round(value));
+                        summary += `: +${bonusDays} días`;
+                    } else if (promo.type === 'two_for_one' || promo.type === 'bring_friend') {
+                        const percent = value > 0 ? Math.min(Math.max(value, 0), 100) : 50;
+                        finalPrice = Math.max(0, base - (base * percent / 100));
+                        summary += `: -${percent}%`;
+                    }
+
+                    return {
+                        finalPrice: Number(finalPrice.toFixed(2)),
+                        bonusDays,
+                        summary,
+                    };
+                },
+
                 onMembershipToggle() {
                     if (!this.form.start_membership) {
+                        this.form.promotion_id = '';
+                        this.promotionSummaryLabel = '';
                         return;
                     }
 
@@ -484,21 +632,39 @@
                     this.recalculateMembershipEnd();
                 },
 
+                onPromotionChange() {
+                    this.onPlanChange();
+                },
+
                 onPlanChange() {
                     const plan = this.plans.find((item) => String(item.id) === String(this.form.plan_id));
                     if (!plan) {
+                        this.form.promotion_id = '';
+                        this.promotionSummaryLabel = '';
                         this.recalculateMembershipEnd();
                         return;
                     }
 
-                    this.form.membership_price = Number(plan.price).toFixed(2);
-                    this.form.amount_paid = Number(plan.price).toFixed(2);
+                    const promo = this.selectedPromotion();
+                    const pricing = this.computePromotionalPrice(plan.price, promo);
+
+                    this.form.membership_price = Number(pricing.finalPrice).toFixed(2);
+                    this.form.amount_paid = Number(pricing.finalPrice).toFixed(2);
+                    this.promotionSummaryLabel = pricing.summary;
+
+                    if (this.form.promotion_id !== '' && !promo) {
+                        this.form.promotion_id = '';
+                        this.promotionSummaryLabel = '';
+                    }
+
                     this.recalculateMembershipEnd();
                 },
 
                 recalculateMembershipEnd() {
                     const plan = this.plans.find((item) => String(item.id) === String(this.form.plan_id));
                     const start = this.form.membership_starts_at;
+                    const promo = this.selectedPromotion();
+                    const promoPricing = plan ? this.computePromotionalPrice(plan.price, promo) : { bonusDays: 0 };
 
                     if (!plan || !start) {
                         this.membershipEndLabel = 'N/A';
@@ -511,8 +677,8 @@
                         return;
                     }
 
-                    startDate.setDate(startDate.getDate() + Math.max(Number(plan.duration_days) || 1, 1) - 1);
-                    this.membershipEndLabel = startDate.toLocaleDateString('es-EC', {
+                    const endDate = this.computeMembershipEndDate(startDate, plan, promoPricing.bonusDays);
+                    this.membershipEndLabel = endDate.toLocaleDateString('es-EC', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
@@ -561,7 +727,7 @@
 
                 get membershipBadgeLabel() {
                     if (!this.form.start_membership) {
-                        return 'Sin membresia';
+                        return 'Sin membresía';
                     }
 
                     if (this.membershipEndLabel === 'N/A') {
@@ -579,11 +745,11 @@
                         return 'Pendiente';
                     }
 
-                    return paid >= price ? 'AL DIA' : 'PENDIENTE';
+                    return paid >= price ? 'AL DÍA' : 'PENDIENTE';
                 },
 
                 get paymentBadgeClass() {
-                    return this.paymentStatusLabel === 'AL DIA'
+                    return this.paymentStatusLabel === 'AL DÍA'
                         ? 'border border-emerald-400/40 bg-emerald-500/20 text-emerald-200'
                         : 'border border-amber-400/40 bg-amber-500/20 text-amber-200';
                 },

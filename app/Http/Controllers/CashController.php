@@ -193,7 +193,7 @@ class CashController extends Controller
     /**
      * Show one session detail with movements and totals.
      */
-    public function show(Request $request, int $session): View
+    public function show(Request $request, string $contextGym, int $session): View
     {
         $gymId = $this->resolveGymId($request);
 

@@ -34,11 +34,11 @@
         </tr>
     </table>
 
-    <h2>Ingresos/Egresos por Metodo</h2>
+    <h2>Ingresos/Egresos por Método</h2>
     <table>
         <thead>
         <tr>
-            <th>Metodo</th>
+            <th>Método</th>
             <th>Ingresos</th>
             <th>Egresos</th>
             <th>Balance</th>
@@ -93,7 +93,7 @@
     @if (!empty($isPdfDetailTruncated))
         <p class="muted">
             El detalle fue limitado a {{ (int) ($pdfMaxDetailRows ?? 0) }} de {{ (int) ($movementsCount ?? 0) }} filas para proteger memoria.
-            Use exportacion CSV para obtener el dataset completo.
+            Use exportación CSV para obtener el dataset completo.
         </p>
     @endif
     <table>
@@ -102,11 +102,11 @@
             <th>ID</th>
             <th>Fecha</th>
             <th>Tipo</th>
-            <th>Metodo</th>
+            <th>Método</th>
             <th>Monto</th>
             <th>Cliente</th>
             <th>Usuario</th>
-            <th>Descripcion</th>
+            <th>Descripción</th>
         </tr>
         </thead>
         <tbody>

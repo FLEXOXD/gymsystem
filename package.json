@@ -4,8 +4,17 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+        "dev:lan": "vite --host 0.0.0.0 --port 5173 --strictPort"
     },
+    "browserslist": [
+        "defaults",
+        "iOS >= 13",
+        "Safari >= 13",
+        "Chrome >= 90",
+        "Firefox >= 90",
+        "Edge >= 90"
+    ],
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.11.0",

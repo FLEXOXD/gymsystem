@@ -1,7 +1,7 @@
 <div class="space-y-6">
-    <x-ui.card title="Membresias" subtitle="Historial y renovaciones del cliente.">
+    <x-ui.card title="Membresías" subtitle="Historial y renovaciones del cliente.">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm text-slate-600 dark:text-slate-400">Registra un nuevo cobro de membresia desde el modal.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Registra un nuevo cobro de membresía desde el modal.</p>
             <x-ui.button type="button" variant="success" size="sm" x-on:click="openMembershipModal()">Cobrar / Renovar</x-ui.button>
         </div>
 
@@ -47,23 +47,23 @@
                         <path d="M3 10h18"/>
                     </svg>
                 </div>
-                <p class="font-semibold">Este cliente aun no tiene membresias.</p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Haz clic en "Cobrar / Renovar" para crear su primera membresia.</p>
-                <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Crear membresia</x-ui.button>
+                <p class="font-semibold">Este cliente aun no tiene membresías.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Haz clic en "Cobrar / Renovar" para crear su primera membresía.</p>
+                <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Crear membresía</x-ui.button>
             </div>
         @endif
     </x-ui.card>
 
-    <x-ui.card title="Pagos relacionados" subtitle="Movimientos de caja vinculados a membresias.">
+    <x-ui.card title="Pagos relacionados" subtitle="Movimientos de caja vinculados a membresías.">
         @if ($recentMembershipPayments->isNotEmpty())
             <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-white/10">
                 <table class="ui-table min-w-[860px]">
                     <thead>
                     <tr>
                         <th>Fecha</th>
-                        <th>Membresia</th>
+                        <th>Membresía</th>
                         <th>Plan</th>
-                        <th>Metodo</th>
+                        <th>Método</th>
                         <th>Monto</th>
                         <th>Registrado por</th>
                     </tr>
@@ -92,7 +92,7 @@
                     </svg>
                 </div>
                 <p class="font-semibold">No hay pagos registrados para este cliente.</p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Los pagos apareceran aqui luego de cobrar una membresia.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Los pagos apareceran aqui luego de cobrar una membresía.</p>
                 <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Cobrar ahora</x-ui.button>
             </div>
         @endif

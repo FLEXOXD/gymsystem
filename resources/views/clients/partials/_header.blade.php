@@ -20,7 +20,7 @@
                 <p class="ui-muted text-sm">Documento: {{ $client->document_number }}</p>
 
                 <div class="flex max-w-4xl flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    <span>Membresia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipLabel }}</span></span>
+                    <span>Membresía: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipLabel }}</span></span>
                     <span class="text-slate-500">|</span>
                     <span>Vence: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipEndsLabel }}</span></span>
                     <span class="text-slate-500">|</span>
@@ -74,7 +74,7 @@
                     <a href="{{ route('reception.index') }}"
                        class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
                        x-on:click="actionsOpen = false">
-                        <span>Ir a recepcion</span>
+                        <span>Ir a recepción</span>
                         <span class="text-xs text-slate-400">Ir</span>
                     </a>
                 </div>

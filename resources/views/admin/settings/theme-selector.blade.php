@@ -1,7 +1,7 @@
-@extends('layouts.panel')
+﻿@extends('layouts.panel')
 
-@section('title', 'Config')
-@section('page-title', 'Configuracion')
+@section('title', __('ui.settings'))
+@section('page-title', __('ui.settings'))
 
 @section('content')
     @php
@@ -9,6 +9,12 @@
         $gymLogoUrl = null;
         $gymAvatarUrls = ['male' => null, 'female' => null, 'neutral' => null];
         $gymTimezone = 'UTC';
+        $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
+        $gymLanguageCode = old('language_code', $gym->language_code ?? 'es');
+        $gymAddressCountry = '-';
+        $gymAddressState = '-';
+        $gymAddressCity = '-';
+        $gymAddressLine = '-';
         $avatarCards = [
             'male' => ['label' => 'Avatar hombre', 'field' => 'avatar_male'],
             'female' => ['label' => 'Avatar mujer', 'field' => 'avatar_female'],
@@ -40,8 +46,38 @@
                 'female' => $resolveMediaUrl($gym->avatar_female_path),
                 'neutral' => $resolveMediaUrl($gym->avatar_neutral_path),
             ];
-            $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
             $gymTimezone = old('timezone', $gym->timezone ?? 'UTC');
+
+            $gymAddressCountry = trim((string) ($gym->address_country_name ?? ''));
+            $gymAddressState = trim((string) ($gym->address_state ?? ''));
+            $gymAddressCity = trim((string) ($gym->address_city ?? ''));
+            $gymAddressLine = trim((string) ($gym->address_line ?? ''));
+
+            if (($gymAddressCountry === '' || $gymAddressState === '' || $gymAddressCity === '') && !empty($gym->address)) {
+                $addressParts = array_values(array_filter(array_map(
+                    static fn ($piece): string => trim((string) $piece),
+                    explode(',', (string) $gym->address)
+                ), static fn ($piece): bool => $piece !== ''));
+                if (count($addressParts) >= 3) {
+                    if ($gymAddressCountry === '') {
+                        $gymAddressCountry = $addressParts[count($addressParts) - 1];
+                    }
+                    if ($gymAddressState === '') {
+                        $gymAddressState = $addressParts[count($addressParts) - 2];
+                    }
+                    if ($gymAddressCity === '') {
+                        $gymAddressCity = $addressParts[count($addressParts) - 3];
+                    }
+                    if ($gymAddressLine === '' && count($addressParts) > 3) {
+                        $gymAddressLine = implode(', ', array_slice($addressParts, 0, -3));
+                    }
+                }
+            }
+
+            $gymAddressCountry = $gymAddressCountry !== '' ? $gymAddressCountry : '-';
+            $gymAddressState = $gymAddressState !== '' ? $gymAddressState : '-';
+            $gymAddressCity = $gymAddressCity !== '' ? $gymAddressCity : '-';
+            $gymAddressLine = $gymAddressLine !== '' ? $gymAddressLine : '-';
         }
     @endphp
 
@@ -135,7 +171,7 @@
 
                 <section class="ui-card">
                     <h3 class="ui-heading text-base">Datos del Gym</h3>
-                    <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial, telefono y direccion principal.</p>
+                    <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial y telefono. Ubicacion definida por SuperAdmin (solo lectura).</p>
 
                     <form method="POST" action="{{ route('settings.gym-profile.update') }}" class="mt-4 space-y-3">
                         @csrf
@@ -154,13 +190,23 @@
                                 <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <div>
-                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Direccion</label>
-                            <textarea name="address" rows="3" class="ui-input">{{ old('address', $gym->address) }}</textarea>
-                            @error('address')
-                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
-                            @enderror
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <div>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Pais (solo lectura)</label>
+                                <input type="text" class="ui-input" value="{{ $gymAddressCountry }}" readonly>
+                            </div>
+                            <div>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Provincia / Estado (solo lectura)</label>
+                                <input type="text" class="ui-input" value="{{ $gymAddressState }}" readonly>
+                            </div>
+                            <div>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Ciudad (solo lectura)</label>
+                                <input type="text" class="ui-input" value="{{ $gymAddressCity }}" readonly>
+                            </div>
+                            <div>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Direccion linea (solo lectura)</label>
+                                <input type="text" class="ui-input" value="{{ $gymAddressLine }}" readonly>
+                            </div>
                         </div>
 
                         <div>
@@ -173,6 +219,18 @@
                                 @endforeach
                             </select>
                             @error('currency_code')
+                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Idioma</label>
+                            <select name="language_code" class="ui-input" required>
+                                @foreach ($languageOptions as $langCode => $langLabel)
+                                    <option value="{{ $langCode }}" @selected($gymLanguageCode === $langCode)>{{ $langLabel }}</option>
+                                @endforeach
+                            </select>
+                            @error('language_code')
                                 <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                             @enderror
                         </div>
@@ -351,7 +409,7 @@
                 'America/Argentina/Buenos_Aires': 'argentina buenos aires',
                 'America/New_York': 'usa estados unidos new york',
                 'America/Los_Angeles': 'usa estados unidos california',
-                'Europe/Madrid': 'espana españa madrid',
+                'Europe/Madrid': 'espana madrid',
             };
 
             const normalizeSearch = (value) => String(value || '')
@@ -453,7 +511,7 @@
                 filtered.forEach((item) => {
                     const option = document.createElement('option');
                     option.value = item.value;
-                    option.textContent = `${favoriteTimezoneSet.has(item.value) ? '★ ' : ''}${item.geo} (${item.offset})`;
+                    option.textContent = `${favoriteTimezoneSet.has(item.value) ? '* ' : ''}${item.geo} (${item.offset})`;
                     timezoneSelect.appendChild(option);
                 });
 

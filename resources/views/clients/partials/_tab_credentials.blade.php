@@ -41,7 +41,7 @@
                     <th>Valor</th>
                     <th>Estado</th>
                     <th>Creado</th>
-                    <th>Accion</th>
+                    <th>Acción</th>
                 </tr>
                 </thead>
                 <tbody>

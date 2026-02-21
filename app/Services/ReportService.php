@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\AttendanceDailySummary;
 use App\Models\CashMovement;
 use App\Models\Client;
 use App\Models\Membership;
@@ -62,7 +63,7 @@ class ReportService
      */
     public function getAttendanceSummary(int $gymId, Carbon $from, Carbon $to): array
     {
-        $byDay = Attendance::query()
+        $rawByDay = Attendance::query()
             ->forGym($gymId)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->selectRaw('date')
@@ -70,6 +71,34 @@ class ReportService
             ->groupBy('date')
             ->orderBy('date')
             ->get();
+
+        $archivedByDay = AttendanceDailySummary::query()
+            ->forGym($gymId)
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->select(['date', 'attendances_count'])
+            ->orderBy('date')
+            ->get();
+
+        $countsByDate = [];
+
+        foreach ($archivedByDay as $row) {
+            $dateKey = $row->date?->toDateString() ?? (string) $row->date;
+            $countsByDate[$dateKey] = (int) ($countsByDate[$dateKey] ?? 0) + (int) $row->attendances_count;
+        }
+
+        foreach ($rawByDay as $row) {
+            $dateKey = $row->date instanceof Carbon ? $row->date->toDateString() : (string) $row->date;
+            $countsByDate[$dateKey] = (int) ($countsByDate[$dateKey] ?? 0) + (int) $row->attendances_count;
+        }
+
+        ksort($countsByDate);
+
+        $byDay = collect($countsByDate)->map(function (int $count, string $date) {
+            return (object) [
+                'date' => $date,
+                'attendances_count' => $count,
+            ];
+        })->values();
 
         return [
             'total_attendances' => (int) $byDay->sum('attendances_count'),

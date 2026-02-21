@@ -211,7 +211,7 @@ return [
     | when flagged "secure" and the Same-Site attribute is set to "none".
     |
     */
-
+    /*funciona esta parte en la  seccion de habiltiar scaner de la segunda pantalla por internet */
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
 ];

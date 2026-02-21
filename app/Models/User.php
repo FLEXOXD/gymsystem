@@ -23,6 +23,28 @@ class User extends Authenticatable
         'gym_id',
         'name',
         'email',
+        'country_iso',
+        'country_name',
+        'address_state',
+        'address_city',
+        'address_line',
+        'gender',
+        'birth_date',
+        'identification_type',
+        'identification_number',
+        'phone_country_iso',
+        'phone_country_dial',
+        'phone_number',
+        'profile_photo_path',
+        'support_contact_label',
+        'support_contact_email',
+        'support_contact_phone',
+        'support_contact_whatsapp',
+        'support_contact_link',
+        'support_contact_message',
+        'support_contact_logo_path',
+        'support_contact_logo_light_path',
+        'support_contact_logo_dark_path',
         'theme',
         'password',
     ];
@@ -47,6 +69,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
+            'birth_date' => 'date',
         ];
     }
 
@@ -96,5 +120,21 @@ class User extends Authenticatable
     public function subscriptionNotificationsManaged(): HasMany
     {
         return $this->hasMany(SubscriptionNotification::class, 'created_by');
+    }
+
+    /**
+     * Get contact suggestions sent by this user.
+     */
+    public function contactSuggestionsSent(): HasMany
+    {
+        return $this->hasMany(ContactSuggestion::class, 'user_id');
+    }
+
+    /**
+     * Get contact suggestions reviewed by this user.
+     */
+    public function reviewedContactSuggestions(): HasMany
+    {
+        return $this->hasMany(ContactSuggestion::class, 'reviewed_by');
     }
 }

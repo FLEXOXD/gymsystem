@@ -10,6 +10,7 @@ use App\Services\AttendanceCheckinService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,9 +30,27 @@ class ReceptionCheckInController extends Controller
         $gymName = trim((string) ($gym?->name ?? 'Gym'));
 
         $recentAttendances = $this->recentAttendancesForGym($gymId);
+        $attendanceHistoryStart = now()->subMonthsNoOverflow(2)->toDateString();
+        $attendanceHistoryBaseQuery = Attendance::query()
+            ->forGym($gymId)
+            ->whereDate('date', '>=', $attendanceHistoryStart);
+        $attendanceHistoryTotal = (clone $attendanceHistoryBaseQuery)->count();
+        $attendanceHistoryLimit = 2000;
+        $attendanceHistory = (clone $attendanceHistoryBaseQuery)
+            ->select(['id', 'gym_id', 'client_id', 'credential_id', 'date', 'time', 'created_by'])
+            ->with(['client:id,first_name,last_name', 'credential:id,type', 'createdBy:id,name'])
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->orderByDesc('id')
+            ->limit($attendanceHistoryLimit)
+            ->get();
 
         return view('reception.index', [
             'recentAttendances' => $recentAttendances,
+            'attendanceHistory' => $attendanceHistory,
+            'attendanceHistoryStart' => $attendanceHistoryStart,
+            'attendanceHistoryTotal' => $attendanceHistoryTotal,
+            'attendanceHistoryTruncated' => $attendanceHistoryTotal > $attendanceHistoryLimit,
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
             'gymAvatarUrls' => $this->gymAvatarUrls($gym),
@@ -49,14 +68,43 @@ class ReceptionCheckInController extends Controller
         $gymName = trim((string) ($gym?->name ?? 'Gym'));
 
         $recentAttendances = $this->recentAttendancesForGym($gymId);
+        $latestSyncEvent = $this->latestSyncEventForGym($gymId);
+        $latestSyncPayload = is_array($latestSyncEvent['payload'] ?? null)
+            ? $latestSyncEvent['payload']
+            : null;
 
         return view('reception.display', [
             'recentAttendances' => $recentAttendances,
-            'latestResult' => $this->latestResultForGym($gymId),
+            'latestResult' => $latestSyncPayload ?? $this->latestResultForGym($gymId),
+            'latestSyncEventId' => (string) ($latestSyncEvent['id'] ?? ''),
+            'latestSyncEventPublishedAt' => (int) ($latestSyncEvent['published_at_ms'] ?? 0),
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
             'gymAvatarUrls' => $this->gymAvatarUrls($gym),
         ]);
+    }
+
+    /**
+     * Get latest cross-device sync event for display polling.
+     */
+    public function syncLatest(Request $request): JsonResponse
+    {
+        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
+
+        $after = (int) $request->integer('after', 0);
+        $event = $this->latestSyncEventForGym($gymId);
+
+        if (! $event) {
+            return response()->json(['event' => null]);
+        }
+
+        $publishedAt = (int) ($event['published_at_ms'] ?? 0);
+        if ($after > 0 && $publishedAt <= $after) {
+            return response()->json(['event' => null]);
+        }
+
+        return response()->json(['event' => $event]);
     }
 
     /**
@@ -67,7 +115,7 @@ class ReceptionCheckInController extends Controller
         AttendanceCheckinService $attendanceService
     ): JsonResponse {
         $userId = (int) $request->user()->id;
-        $gymId = $request->user()?->gym_id;
+        $gymId = (int) ($request->user()?->gym_id ?? 0);
 
         if (! $gymId) {
             $payload = [
@@ -95,7 +143,7 @@ class ReceptionCheckInController extends Controller
 
         try {
             $result = $attendanceService->checkInByValue(
-                (int) $gymId,
+                $gymId,
                 $userId,
                 $request->validated('value')
             );
@@ -116,29 +164,33 @@ class ReceptionCheckInController extends Controller
             ];
 
             Log::warning('reception.check_in.failed', [
-                'gym_id' => (int) $gymId,
+                'gym_id' => $gymId,
                 'user_id' => $userId,
                 'method' => null,
                 'reason' => 'internal_exception',
             ]);
+
+            $this->publishSyncEventForGym($gymId, $payload);
 
             return response()->json($payload, 500);
         }
 
         if ($result['ok']) {
             Log::info('reception.check_in.success', [
-                'gym_id' => (int) $gymId,
+                'gym_id' => $gymId,
                 'user_id' => $userId,
                 'method' => $result['method'],
             ]);
         } else {
             Log::warning('reception.check_in.failed', [
-                'gym_id' => (int) $gymId,
+                'gym_id' => $gymId,
                 'user_id' => $userId,
                 'method' => $result['method'],
                 'reason' => $result['message'],
             ]);
         }
+
+        $this->publishSyncEventForGym($gymId, $result);
 
         return response()->json($result, $result['ok'] ? 200 : 422);
     }
@@ -303,5 +355,40 @@ class ReceptionCheckInController extends Controller
                 $baseDate->copy()->endOfMonth()->toDateString(),
             ])
             ->count();
+    }
+
+    private function publishSyncEventForGym(int $gymId, array $payload): void
+    {
+        if ($gymId <= 0) {
+            return;
+        }
+
+        Cache::put($this->syncCacheKey($gymId), [
+            'id' => (string) Str::ulid(),
+            'type' => 'checkin',
+            'source' => 'server',
+            'payload' => $payload,
+            'published_at_ms' => (int) round(microtime(true) * 1000),
+        ], now()->addHours(12));
+    }
+
+    private function latestSyncEventForGym(int $gymId): ?array
+    {
+        if ($gymId <= 0) {
+            return null;
+        }
+
+        $event = Cache::get($this->syncCacheKey($gymId));
+
+        if (! is_array($event) || ! is_array($event['payload'] ?? null)) {
+            return null;
+        }
+
+        return $event;
+    }
+
+    private function syncCacheKey(int $gymId): string
+    {
+        return 'reception:sync:gym:'.$gymId.':latest';
     }
 }

@@ -13,7 +13,7 @@ class CleanupOperationalFiles extends Command
      * @var string
      */
     protected $signature = 'maintenance:cleanup-files
-        {--days=14 : Eliminar archivos con antiguedad mayor a N dias}
+        {--days=14 : Eliminar archivos con antigüedad mayor a N días}
         {--dry-run : Solo mostrar lo que se eliminaria}';
 
     /**
@@ -72,7 +72,7 @@ class CleanupOperationalFiles extends Command
         }
 
         $mode = $dryRun ? 'simulados' : 'eliminados';
-        $this->info("Archivos escaneados: {$scanned}. Archivos {$mode}: {$deleted}. Dias: {$days}.");
+        $this->info("Archivos escaneados: {$scanned}. Archivos {$mode}: {$deleted}. Días: {$days}.");
 
         return self::SUCCESS;
     }

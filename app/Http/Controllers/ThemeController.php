@@ -5,15 +5,27 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateGymAvatarsRequest;
 use App\Http\Requests\UpdateGymLogoRequest;
 use App\Http\Requests\UpdateGymProfileRequest;
+use App\Http\Requests\UpdateSuperAdminContactRequest;
 use App\Http\Requests\UpdateThemeRequest;
+use App\Http\Requests\UpdateUserProfileRequest;
+use App\Http\Requests\UpdateUserPasswordRequest;
+use App\Http\Requests\LogoutOtherDevicesRequest;
+use App\Models\Subscription;
+use App\Models\User;
 use App\Support\Currency;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class ThemeController extends Controller
 {
@@ -100,9 +112,44 @@ class ThemeController extends Controller
         return view('admin.settings.theme-selector', [
             'themes' => $themes,
             'currentTheme' => $currentTheme,
+            'languageOptions' => $this->languageOptions(),
             'gym' => $user?->gym,
             'currencyOptions' => Currency::options(),
             'timezoneOptions' => $this->timezoneOptions(),
+        ]);
+    }
+
+    /**
+     * Show the profile screen in a dedicated window.
+     */
+    public function profile(Request $request): View
+    {
+        $user = $request->user();
+        $subscription = $user?->gym?->latestSubscription;
+        $membershipSummary = $this->buildMembershipSummary($subscription);
+        $membershipInvoices = $this->buildMembershipInvoices($subscription);
+
+        return view('admin.settings.profile', [
+            'userRoleLabel' => $this->userRoleLabel($user),
+            'phoneCountryOptions' => $this->phoneCountryOptions(),
+            'membershipSummary' => $membershipSummary,
+            'membershipInvoices' => $membershipInvoices,
+        ]);
+    }
+
+    /**
+     * Show the support contact screen.
+     */
+    public function contact(Request $request): View
+    {
+        $viewer = $request->user();
+        $contactOwner = $this->resolveSupportContactOwner($viewer);
+        $contactData = $this->buildSupportContactData($contactOwner);
+
+        return view('contact.index', [
+            'contactOwner' => $contactOwner,
+            'contactData' => $contactData,
+            'isSuperAdminViewer' => $viewer?->gym_id === null,
         ]);
     }
 
@@ -132,11 +179,160 @@ class ThemeController extends Controller
         $user = $request->user();
         $gym = $user?->gym;
 
-        abort_if(! $gym, 403, 'Este usuario no tiene gimnasio asignado.');
+        abort_if(! $gym, 403, __('messages.user_without_gym'));
 
         $gym->update($request->validated());
 
-        return back()->with('status', 'Datos del gym actualizados correctamente.');
+        return back()->with('status', __('messages.gym_profile_updated'));
+    }
+
+    /**
+     * Update user profile details.
+     */
+    public function updateProfile(UpdateUserProfileRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_if(! $user, 403, __('messages.user_not_authenticated'));
+        abort_if($user->gym_id !== null, 403, 'Solo SuperAdmin puede editar este perfil.');
+
+        $data = $request->validated();
+        $photoPath = $user->profile_photo_path;
+        if ($request->hasFile('user_profile_photo')) {
+            $photoPath = $request->file('user_profile_photo')->store('users/profiles', 'public');
+            $this->deletePublicAssetIfLocal($user->profile_photo_path);
+        }
+
+        $user->forceFill([
+            'name' => $data['user_name'],
+            'email' => $data['user_email'],
+            'country_iso' => $data['user_country_iso'],
+            'country_name' => $data['user_country_name'],
+            'gender' => $data['user_gender'] ?? null,
+            'birth_date' => $data['user_birth_date'] ?? null,
+            'identification_type' => $data['user_identification_type'] ?? null,
+            'identification_number' => $data['user_identification_number'] ?? null,
+            'phone_country_iso' => $data['user_phone_country_iso'],
+            'phone_country_dial' => $data['user_phone_country_dial'],
+            'phone_number' => $data['user_phone_number'],
+            'profile_photo_path' => $photoPath,
+        ])->save();
+
+        return back()->with('status', __('messages.profile_updated'));
+    }
+
+    /**
+     * Update support contact data shown in "Contactarse".
+     */
+    public function updateSuperAdminContact(UpdateSuperAdminContactRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->gym_id !== null, 403, __('messages.user_not_authenticated'));
+        if (! $this->supportContactColumnsExist()) {
+            return back()->with('error', 'Falta actualizar base de datos. Ejecuta: php artisan migrate');
+        }
+        $data = $request->validated();
+        unset($data['support_contact_logo_light'], $data['support_contact_logo_dark']);
+
+        $hasLightLogo = $request->hasFile('support_contact_logo_light');
+        $hasDarkLogo = $request->hasFile('support_contact_logo_dark');
+        if ($hasLightLogo || $hasDarkLogo) {
+            if (! $this->supportContactThemeLogoColumnsExist()) {
+                return back()->with('error', 'Falta actualizar base de datos para los logos claro/oscuro. Ejecuta: php artisan migrate');
+            }
+        }
+
+        if ($hasLightLogo) {
+            $data['support_contact_logo_light_path'] = $request->file('support_contact_logo_light')->store('support/contact', 'public');
+            $this->deletePublicAssetIfLocal((string) ($user->support_contact_logo_light_path ?? ''));
+        }
+
+        if ($hasDarkLogo) {
+            $data['support_contact_logo_dark_path'] = $request->file('support_contact_logo_dark')->store('support/contact', 'public');
+            $this->deletePublicAssetIfLocal((string) ($user->support_contact_logo_dark_path ?? ''));
+        }
+
+        $user->forceFill($data)->save();
+
+        return back()->with('status', __('messages.superadmin_contact_updated'));
+    }
+
+    /**
+     * Update user password.
+     */
+    public function updateProfilePassword(UpdateUserPasswordRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if(! $user, 403, __('messages.user_not_authenticated'));
+
+        $user->forceFill([
+            'password' => Hash::make((string) $request->validated('password')),
+        ])->save();
+
+        return back()->with('status', __('messages.password_updated'));
+    }
+
+    /**
+     * Close all other active sessions for current user.
+     */
+    public function logoutOtherDevices(LogoutOtherDevicesRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if(! $user, 403, __('messages.user_not_authenticated'));
+
+        Auth::logoutOtherDevices((string) $request->validated('current_password'));
+
+        if (config('session.driver') === 'database') {
+            DB::table('sessions')
+                ->where('user_id', (int) $user->id)
+                ->where('id', '!=', $request->session()->getId())
+                ->delete();
+        }
+
+        return back()->with('status', __('messages.other_sessions_closed'));
+    }
+
+    /**
+     * Download membership invoice summary PDF for current gym.
+     */
+    public function membershipInvoicePdf(Request $request, int $subscription): Response|RedirectResponse
+    {
+        $user = $request->user();
+        $gymId = (int) ($user?->gym_id ?? 0);
+        abort_if($gymId === 0, 403, __('messages.user_without_gym'));
+
+        $subscriptionModel = Subscription::query()
+            ->where('gym_id', $gymId)
+            ->findOrFail($subscription);
+
+        $startsAt = $subscriptionModel->starts_at?->copy();
+        $endsAt = $subscriptionModel->ends_at?->copy();
+        $periodLabel = __('ui.profile.membership_period_na');
+        if ($startsAt && $endsAt) {
+            $periodLabel = $startsAt->format('Y-m-d').' - '.$endsAt->format('Y-m-d');
+        }
+
+        $invoiceData = [
+            'period' => $periodLabel,
+            'amount' => (float) ($subscriptionModel->price ?? 0),
+            'status' => in_array((string) $subscriptionModel->status, ['active', 'grace'], true) ? 'paid' : 'pending',
+            'payment_method' => (string) ($subscriptionModel->last_payment_method ?? ''),
+            'recorded_at' => $subscriptionModel->updated_at,
+            'plan_name' => (string) ($subscriptionModel->plan_name ?? 'Plan'),
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+        ];
+
+        $pdf = Pdf::loadView('admin.settings.membership-invoice-pdf', [
+            'gymName' => (string) ($user?->gym?->name ?? 'GymSystem'),
+            'userName' => (string) ($user?->name ?? ''),
+            'invoice' => $invoiceData,
+            'currencyCode' => (string) ($user?->gym?->currency_code ?? 'USD'),
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'membership_invoice_'.$subscriptionModel->id.'.pdf';
+
+        return $pdf->stream($filename);
     }
 
     /**
@@ -147,7 +343,7 @@ class ThemeController extends Controller
         $user = $request->user();
         $gym = $user?->gym;
 
-        abort_if(! $gym, 403, 'Este usuario no tiene gimnasio asignado.');
+        abort_if(! $gym, 403, __('messages.user_without_gym'));
 
         $file = $request->file('logo');
         $newPath = $file->store('gyms/logos', 'public');
@@ -159,7 +355,7 @@ class ThemeController extends Controller
             'logo_path' => $newPath,
         ]);
 
-        return back()->with('status', 'Logo actualizado correctamente.');
+        return back()->with('status', __('messages.logo_updated'));
     }
 
     /**
@@ -170,7 +366,7 @@ class ThemeController extends Controller
         $user = $request->user();
         $gym = $user?->gym;
 
-        abort_if(! $gym, 403, 'Este usuario no tiene gimnasio asignado.');
+        abort_if(! $gym, 403, __('messages.user_without_gym'));
 
         $inputs = [
             'avatar_male' => 'avatar_male_path',
@@ -193,7 +389,7 @@ class ThemeController extends Controller
             $gym->update($updates);
         }
 
-        return back()->with('status', 'Avatares actualizados correctamente.');
+        return back()->with('status', __('messages.avatars_updated'));
     }
 
     private function deletePublicAssetIfLocal(?string $path): void
@@ -234,4 +430,226 @@ class ThemeController extends Controller
 
         return $options;
     }
+
+    /**
+     * @return array<string, string>
+     */
+    private function languageOptions(): array
+    {
+        return [
+            'es' => '🇪🇸 Español',
+            'en' => '🇺🇸 English',
+            'pt' => '🇧🇷 Português (Brasil)',
+        ];
+    }
+
+    /**
+     * @return array<int, array{iso:string,dial:string,flag:string,name:string}>
+     */
+    private function phoneCountryOptions(): array
+    {
+        return [
+            ['iso' => 'EC', 'dial' => '+593', 'flag' => '🇪🇨', 'name' => 'Ecuador'],
+            ['iso' => 'CO', 'dial' => '+57', 'flag' => '🇨🇴', 'name' => 'Colombia'],
+            ['iso' => 'PE', 'dial' => '+51', 'flag' => '🇵🇪', 'name' => 'Perú'],
+            ['iso' => 'MX', 'dial' => '+52', 'flag' => '🇲🇽', 'name' => 'México'],
+            ['iso' => 'US', 'dial' => '+1', 'flag' => '🇺🇸', 'name' => 'Estados Unidos'],
+            ['iso' => 'ES', 'dial' => '+34', 'flag' => '🇪🇸', 'name' => 'España'],
+            ['iso' => 'BR', 'dial' => '+55', 'flag' => '🇧🇷', 'name' => 'Brasil'],
+            ['iso' => 'AR', 'dial' => '+54', 'flag' => '🇦🇷', 'name' => 'Argentina'],
+            ['iso' => 'CL', 'dial' => '+56', 'flag' => '🇨🇱', 'name' => 'Chile'],
+            ['iso' => 'BO', 'dial' => '+591', 'flag' => '🇧🇴', 'name' => 'Bolivia'],
+            ['iso' => 'PA', 'dial' => '+507', 'flag' => '🇵🇦', 'name' => 'Panamá'],
+            ['iso' => 'GT', 'dial' => '+502', 'flag' => '🇬🇹', 'name' => 'Guatemala'],
+            ['iso' => 'PY', 'dial' => '+595', 'flag' => '🇵🇾', 'name' => 'Paraguay'],
+            ['iso' => 'UY', 'dial' => '+598', 'flag' => '🇺🇾', 'name' => 'Uruguay'],
+            ['iso' => 'VE', 'dial' => '+58', 'flag' => '🇻🇪', 'name' => 'Venezuela'],
+            ['iso' => 'PT', 'dial' => '+351', 'flag' => '🇵🇹', 'name' => 'Portugal'],
+            ['iso' => 'DO', 'dial' => '+1', 'flag' => '🇩🇴', 'name' => 'República Dominicana'],
+        ];
+    }
+
+    private function userRoleLabel(?\App\Models\User $user): string
+    {
+        if (! $user) {
+            return __('ui.guest');
+        }
+
+        if ($user->gym_id === null) {
+            return 'SuperAdmin';
+        }
+
+        return __('ui.gym_admin');
+    }
+
+    private function resolveSupportContactOwner(?User $viewer): ?User
+    {
+        if ($viewer && $viewer->gym_id === null) {
+            return $viewer;
+        }
+
+        $superAdminQuery = User::query()->whereNull('gym_id');
+        if (! $this->supportContactColumnsExist()) {
+            return $superAdminQuery->orderBy('id')->first();
+        }
+
+        $configured = (clone $superAdminQuery)
+            ->where(function ($query): void {
+                $query
+                    ->whereNotNull('support_contact_email')
+                    ->orWhereNotNull('support_contact_phone')
+                    ->orWhereNotNull('support_contact_whatsapp')
+                    ->orWhereNotNull('support_contact_link')
+                    ->orWhereNotNull('support_contact_message');
+                if ($this->supportContactThemeLogoColumnsExist()) {
+                    $query
+                        ->orWhereNotNull('support_contact_logo_light_path')
+                        ->orWhereNotNull('support_contact_logo_dark_path');
+                } elseif ($this->supportContactLogoColumnExists()) {
+                    $query->orWhereNotNull('support_contact_logo_path');
+                }
+            })
+            ->orderBy('id')
+            ->first();
+
+        return $configured ?? $superAdminQuery->orderBy('id')->first();
+    }
+
+    private function supportContactColumnsExist(): bool
+    {
+        return Schema::hasColumns('users', [
+            'support_contact_label',
+            'support_contact_email',
+            'support_contact_phone',
+            'support_contact_whatsapp',
+            'support_contact_link',
+            'support_contact_message',
+        ]);
+    }
+
+    private function supportContactLogoColumnExists(): bool
+    {
+        return Schema::hasColumn('users', 'support_contact_logo_path');
+    }
+
+    private function supportContactThemeLogoColumnsExist(): bool
+    {
+        return Schema::hasColumns('users', [
+            'support_contact_logo_light_path',
+            'support_contact_logo_dark_path',
+        ]);
+    }
+
+    /**
+     * @return array{
+     *   label:string,
+     *   email:string,
+     *   phone:string,
+     *   whatsapp:string,
+     *   link:string,
+     *   message:string,
+     *   logo_light_url:string,
+     *   logo_dark_url:string
+     * }
+     */
+    private function buildSupportContactData(?User $contactOwner): array
+    {
+        $fallbackPhone = '';
+        if ($contactOwner) {
+            $fallbackPhone = trim(((string) ($contactOwner->phone_country_dial ?? '')).' '.((string) ($contactOwner->phone_number ?? '')));
+        }
+        $logoLightUrl = '';
+        $logoDarkUrl = '';
+        if ($this->supportContactThemeLogoColumnsExist()) {
+            $logoLightUrl = $this->resolvePublicAssetUrl((string) ($contactOwner?->support_contact_logo_light_path ?? ''));
+            $logoDarkUrl = $this->resolvePublicAssetUrl((string) ($contactOwner?->support_contact_logo_dark_path ?? ''));
+        }
+        if ($logoLightUrl === '' && $logoDarkUrl === '' && $this->supportContactLogoColumnExists()) {
+            $legacyLogoUrl = $this->resolvePublicAssetUrl((string) ($contactOwner?->support_contact_logo_path ?? ''));
+            $logoLightUrl = $legacyLogoUrl;
+            $logoDarkUrl = $legacyLogoUrl;
+        }
+
+        return [
+            'label' => trim((string) ($contactOwner?->support_contact_label ?? '')) !== ''
+                ? (string) $contactOwner?->support_contact_label
+                : (string) ($contactOwner?->name ?? 'Soporte'),
+            'email' => (string) ($contactOwner?->support_contact_email ?: $contactOwner?->email ?: 'soporte@gymsystem.app'),
+            'phone' => (string) ($contactOwner?->support_contact_phone ?: $fallbackPhone),
+            'whatsapp' => (string) ($contactOwner?->support_contact_whatsapp ?: $fallbackPhone),
+            'link' => (string) ($contactOwner?->support_contact_link ?? ''),
+            'message' => (string) ($contactOwner?->support_contact_message ?? 'Escríbenos y te ayudamos con tu consulta.'),
+            'logo_light_url' => $logoLightUrl,
+            'logo_dark_url' => $logoDarkUrl,
+        ];
+    }
+
+    private function resolvePublicAssetUrl(?string $path): string
+    {
+        $assetPath = trim((string) $path);
+        if ($assetPath === '') {
+            return '';
+        }
+        if (str_starts_with($assetPath, 'http://') || str_starts_with($assetPath, 'https://')) {
+            return $assetPath;
+        }
+        if (str_starts_with($assetPath, 'storage/')) {
+            return asset($assetPath);
+        }
+
+        return asset('storage/'.$assetPath);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildMembershipSummary(?Subscription $subscription): ?array
+    {
+        if (! $subscription) {
+            return null;
+        }
+
+        $today = now()->startOfDay();
+        $endsAt = $subscription->ends_at?->copy()->startOfDay();
+        $startsAt = $subscription->starts_at?->copy()->startOfDay();
+        $remainingDays = $endsAt ? $today->diffInDays($endsAt, false) : null;
+
+        return [
+            'plan_name' => (string) ($subscription->plan_name ?? 'Plan Mensual'),
+            'status' => (string) ($subscription->status ?? 'active'),
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'remaining_days' => $remainingDays,
+            'price' => (float) ($subscription->price ?? 0),
+            'payment_method' => (string) ($subscription->last_payment_method ?? ''),
+            'updated_at' => $subscription->updated_at,
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildMembershipInvoices(?Subscription $subscription): array
+    {
+        if (! $subscription) {
+            return [];
+        }
+
+        $startsAt = $subscription->starts_at?->copy();
+        $endsAt = $subscription->ends_at?->copy();
+        $periodLabel = __('ui.profile.membership_period_na');
+        if ($startsAt && $endsAt) {
+            $periodLabel = $startsAt->format('Y-m-d').' - '.$endsAt->format('Y-m-d');
+        }
+
+        return [[
+            'id' => (int) $subscription->id,
+            'period' => $periodLabel,
+            'amount' => (float) ($subscription->price ?? 0),
+            'status' => in_array((string) $subscription->status, ['active', 'grace'], true) ? 'paid' : 'pending',
+            'payment_method' => (string) ($subscription->last_payment_method ?? ''),
+            'recorded_at' => $subscription->updated_at,
+        ]];
+    }
 }
+

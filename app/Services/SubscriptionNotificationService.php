@@ -35,13 +35,13 @@ class SubscriptionNotificationService
         $price = Currency::format((float) $subscription->price, $gym->currency_code);
 
         return match ($type) {
-            'expires_7' => "Hola {$gym->name}, su plan {$plan} vence en 7 dias ({$endsAt}). Monto: {$price}. Favor renovar a tiempo.",
-            'expires_3' => "Hola {$gym->name}, recordatorio: su plan {$plan} vence en 3 dias ({$endsAt}). Monto: {$price}.",
-            'expires_1' => "Hola {$gym->name}, su suscripcion {$plan} vence manana ({$endsAt}). Evite suspension renovando hoy.",
-            'grace_1' => "Hola {$gym->name}, su suscripcion vencio y hoy es dia 1 de gracia. Renueve para evitar suspension.",
-            'grace_2' => "Hola {$gym->name}, hoy es dia 2 de gracia. Renueve hoy para mantener el acceso.",
-            'grace_3' => "Hola {$gym->name}, ultimo dia de gracia. Si no renueva hoy, su cuenta sera suspendida.",
-            default => "Recordatorio de suscripcion para {$gym->name}.",
+            'expires_7' => "Hola {$gym->name}, su plan {$plan} vence en 7 días ({$endsAt}). Monto: {$price}. Favor renovar a tiempo.",
+            'expires_3' => "Hola {$gym->name}, recordatorio: su plan {$plan} vence en 3 días ({$endsAt}). Monto: {$price}.",
+            'expires_1' => "Hola {$gym->name}, su suscripción {$plan} vence mañana ({$endsAt}). Evite suspensión renovando hoy.",
+            'grace_1' => "Hola {$gym->name}, su suscripción venció y hoy es día 1 de gracia. Renueve para evitar suspensión.",
+            'grace_2' => "Hola {$gym->name}, hoy es día 2 de gracia. Renueve hoy para mantener el acceso.",
+            'grace_3' => "Hola {$gym->name}, último día de gracia. Si no renueva hoy, su cuenta será suspendida.",
+            default => "Recordatorio de suscripción para {$gym->name}.",
         };
     }
 

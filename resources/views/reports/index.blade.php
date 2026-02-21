@@ -22,8 +22,6 @@
             <x-ui.button type="submit" variant="secondary">Aplicar filtro</x-ui.button>
 
             <div class="flex flex-wrap gap-2">
-                <x-ui.button :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
-                             class="js-loading-link" data-loading-text="Generando CSV...">Exportar CSV</x-ui.button>
                 <x-ui.button :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
                              target="_blank" rel="noopener" variant="ghost" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
             </div>
@@ -52,7 +50,7 @@
             <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $attendanceSummary['total_attendances'] }}</p>
         </x-ui.card>
         <x-ui.card>
-            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Membresias activas</p>
+            <p class="ui-muted text-xs font-bold uppercase tracking-wider">Membresías activas</p>
             <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $membershipSummary['active'] }}</p>
             <div class="mt-3 flex gap-2">
                 <x-ui.badge variant="success">Activos {{ (int) $membershipSummary['active'] }}</x-ui.badge>
@@ -62,19 +60,19 @@
     </section>
 
     <section class="grid gap-4 xl:grid-cols-2">
-        <x-ui.card title="Ingresos / egresos por metodo">
+        <x-ui.card title="Ingresos / egresos por método">
             <canvas id="methodChart" height="120"></canvas>
         </x-ui.card>
-        <x-ui.card title="Asistencias por dia">
+        <x-ui.card title="Asistencias por día">
             <canvas id="attendanceChart" height="120"></canvas>
         </x-ui.card>
     </section>
 
-    <x-ui.card title="Navegacion rapida de reportes">
+    <x-ui.card title="Navegación rapida de reportes">
         <div class="flex flex-wrap gap-2">
             <x-ui.button :href="route('reports.income', request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
             <x-ui.button :href="route('reports.attendance', request()->query())" variant="ghost">Detalle asistencias</x-ui.button>
-            <x-ui.button :href="route('reports.memberships')" variant="ghost">Estado membresias</x-ui.button>
+            <x-ui.button :href="route('reports.memberships')" variant="ghost">Estado membresías</x-ui.button>
         </div>
     </x-ui.card>
 @endsection

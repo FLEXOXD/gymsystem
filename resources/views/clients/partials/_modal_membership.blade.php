@@ -11,8 +11,8 @@
 
             <header class="flex items-start justify-between border-b border-slate-800 px-6 py-4">
                 <div>
-                    <h3 class="text-xl font-black text-slate-100">Cobrar / Renovar membresia</h3>
-                    <p class="mt-1 text-sm text-slate-400">Crea membresia y registra cobro en caja automaticamente.</p>
+                    <h3 class="text-xl font-black text-slate-100">Cobrar / Renovar membresía</h3>
+                    <p class="mt-1 text-sm text-slate-400">Crea membresía y registra cobro en caja automáticamente.</p>
                 </div>
                 <x-ui.button type="button" variant="ghost" size="sm" x-on:click="closeMembershipModal()">Cerrar</x-ui.button>
             </header>
@@ -24,7 +24,7 @@
                         <select name="plan_id" required class="ui-input" x-ref="membershipPlanInput">
                             @foreach ($plans as $plan)
                                 <option value="{{ $plan->id }}" @selected((string) old('plan_id') === (string) $plan->id)>
-                                    {{ $plan->name }} ({{ $plan->duration_days }} dias, {{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }})
+                                    {{ $plan->name }} ({{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}, {{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }})
                                 </option>
                             @endforeach
                         </select>
@@ -49,7 +49,7 @@
                     </label>
 
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
-                        <span>Metodo de pago</span>
+                        <span>Método de pago</span>
                         <select name="payment_method" required class="ui-input">
                             <option value="">Seleccione</option>
                             <option value="cash" @selected(old('payment_method') === 'cash')>Efectivo</option>
@@ -57,11 +57,38 @@
                             <option value="transfer" @selected(old('payment_method') === 'transfer')>Transferencia</option>
                         </select>
                     </label>
+
+                    <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2 xl:col-span-4">
+                        <span>Promoción (opcional)</span>
+                        <select name="promotion_id" class="ui-input">
+                            <option value="">Sin promoción</option>
+                            @foreach (($promotions ?? collect()) as $promotion)
+                                @php
+                                    $promoTypeLabel = match ($promotion->type) {
+                                        'percentage' => '-'.$promotion->value.'%',
+                                        'fixed' => '-'.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
+                                        'final_price' => 'Precio final '.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
+                                        'bonus_days' => '+'.(int) $promotion->value.' días',
+                                        'two_for_one' => '2x1',
+                                        'bring_friend' => 'Trae a un amigo',
+                                        default => (string) $promotion->type,
+                                    };
+                                    $planScopeLabel = $promotion->plan_id
+                                        ? ' - Plan '.($promotion->plan?->name ?? '#'.$promotion->plan_id)
+                                        : ' - Todos los planes';
+                                @endphp
+                                <option value="{{ $promotion->id }}" @selected((string) old('promotion_id') === (string) $promotion->id)>
+                                    {{ $promotion->name }} ({{ $promoTypeLabel }}{{ $planScopeLabel }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-slate-400">La promoción valida precio final y días extra automáticamente.</p>
+                    </label>
                 </div>
 
                 @if ($plans->isEmpty())
                     <div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200">
-                        No hay planes activos disponibles. Crea un plan antes de cobrar membresias.
+                        No hay planes activos disponibles. Crea un plan antes de cobrar membresías.
                     </div>
                 @endif
             </div>
