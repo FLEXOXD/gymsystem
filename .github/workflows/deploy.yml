@@ -1,0 +1,25 @@
+name: Deploy GymSystem
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: 35.225.95.255
+        username: flexjok_agencia
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/gymsystem
+          git pull origin main
+          sudo -u www-data composer install --no-dev --optimize-autoloader
+          sudo -u www-data npm install
+          sudo -u www-data npm run build
+          sudo systemctl restart apache2
