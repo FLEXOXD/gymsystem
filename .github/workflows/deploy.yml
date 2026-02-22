@@ -33,6 +33,10 @@ jobs:
             set -euo pipefail
 
             PROJECT_DIR="/var/www/gymsystem"
+            DEPLOY_USER="$(whoami)"
+
+            # Ensure deploy user can always update git-tracked files
+            sudo chown -R "$DEPLOY_USER:$DEPLOY_USER" "$PROJECT_DIR"
             cd "$PROJECT_DIR"
             git config --global --add safe.directory "$PROJECT_DIR"
 
@@ -56,20 +60,20 @@ jobs:
             npm ci --no-audit --no-fund
             npm run build
 
-            # Database + Laravel caches
-            php artisan migrate --force
-            php artisan storage:link || true
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan view:clear
-            php artisan route:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-
             # Runtime permissions for Laravel write paths
             sudo chown -R www-data:www-data "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
             sudo chmod -R 775 "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
+
+            # Database + Laravel caches (run as web user)
+            sudo -u www-data php artisan migrate --force
+            sudo -u www-data php artisan storage:link || true
+            sudo -u www-data php artisan config:clear
+            sudo -u www-data php artisan cache:clear
+            sudo -u www-data php artisan view:clear
+            sudo -u www-data php artisan route:clear
+            sudo -u www-data php artisan config:cache
+            sudo -u www-data php artisan route:cache
+            sudo -u www-data php artisan view:cache
 
             # Restart web server
             sudo systemctl restart apache2
