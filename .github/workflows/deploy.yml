@@ -33,10 +33,6 @@ jobs:
             set -euo pipefail
 
             PROJECT_DIR="/var/www/gymsystem"
-            DEPLOY_USER="$(whoami)"
-
-            # Ensure deploy user can update the repository safely
-            sudo chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$PROJECT_DIR"
             cd "$PROJECT_DIR"
             git config --global --add safe.directory "$PROJECT_DIR"
 
@@ -48,8 +44,7 @@ jobs:
             # Keep code in sync with main
             git fetch --all --prune
             git checkout main
-            git reset --hard origin/main
-            git clean -fd
+            git pull origin main
 
             # Ensure production mode is active
             grep -q '^APP_ENV=production$' .env || { echo "ERROR: APP_ENV must be production"; exit 1; }
