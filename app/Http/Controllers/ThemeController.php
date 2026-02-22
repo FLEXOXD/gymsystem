@@ -590,14 +590,28 @@ class ThemeController extends Controller
         if ($assetPath === '') {
             return '';
         }
+        if (preg_match('/^[A-Za-z]:[\\\\\\/]/', $assetPath) === 1) {
+            return '';
+        }
+        if (str_starts_with($assetPath, '/tmp/') || str_starts_with($assetPath, 'tmp/')) {
+            return '';
+        }
         if (str_starts_with($assetPath, 'http://') || str_starts_with($assetPath, 'https://')) {
             return $assetPath;
         }
-        if (str_starts_with($assetPath, 'storage/')) {
-            return asset($assetPath);
+
+        $relativePath = ltrim($assetPath, '/');
+        if (str_starts_with($relativePath, 'storage/')) {
+            $relativePath = substr($relativePath, 8);
+        }
+        if ($relativePath === '' || str_contains($relativePath, '..')) {
+            return '';
+        }
+        if (! Storage::disk('public')->exists($relativePath)) {
+            return '';
         }
 
-        return asset('storage/'.$assetPath);
+        return asset('storage/'.$relativePath);
     }
 
     /**

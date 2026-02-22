@@ -97,14 +97,27 @@
             if ($raw === '') {
                 return null;
             }
-            $clean = ltrim($raw, '/');
+            if (preg_match('/^[A-Za-z]:[\\\\\\/]/', $raw) === 1) {
+                return null;
+            }
+            if (str_starts_with($raw, '/tmp/') || str_starts_with($raw, 'tmp/')) {
+                return null;
+            }
             if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
                 return $raw;
             }
+            $clean = ltrim($raw, '/');
+            if (str_starts_with($clean, 'storage/')) {
+                $clean = substr($clean, 8);
+            }
+            if ($clean === '' || str_contains($clean, '..')) {
+                return null;
+            }
+            if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($clean)) {
+                return null;
+            }
 
-            return str_starts_with($clean, 'storage/')
-                ? asset($clean)
-                : asset('storage/'.$clean);
+            return asset('storage/'.$clean);
         };
         $supportContactLogoLightUrl = $resolveSupportLogoUrl((string) ($currentUser?->support_contact_logo_light_path ?? ''));
         $supportContactLogoDarkUrl = $resolveSupportLogoUrl((string) ($currentUser?->support_contact_logo_dark_path ?? ''));
