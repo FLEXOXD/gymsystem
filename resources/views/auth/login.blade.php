@@ -34,16 +34,34 @@
 
             <div>
                 <label class="ui-muted mb-1 block text-sm font-semibold" for="password">Contrasena</label>
-                <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    class="ui-input h-11">
+                <div class="relative">
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        class="ui-input h-11 pr-12">
+                    <button
+                        type="button"
+                        id="toggle-password-visibility"
+                        class="ui-muted absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center"
+                        aria-label="Mostrar contrasena"
+                        aria-controls="password"
+                        aria-pressed="false">
+                        <svg id="password-eye-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        <svg id="password-eye-closed" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M10.5 6.3A11 11 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-4.1 4.8M6.6 8.1C3.8 10 2 12 2 12s3.5 6 10 6a11 11 0 0 0 4.3-.8" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <label class="ui-muted flex items-center gap-2 text-sm">
-                <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300 text-cyan-600">
+                <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300 text-cyan-600" @checked(old('remember'))>
                 <span>Recordarme</span>
             </label>
 
@@ -53,5 +71,26 @@
         </form>
     </section>
 </main>
+<script>
+    (function () {
+        const toggle = document.getElementById('toggle-password-visibility');
+        const input = document.getElementById('password');
+        const eyeOpen = document.getElementById('password-eye-open');
+        const eyeClosed = document.getElementById('password-eye-closed');
+
+        if (!toggle || !input || !eyeOpen || !eyeClosed) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            eyeOpen.classList.toggle('hidden', !showing);
+            eyeClosed.classList.toggle('hidden', showing);
+            toggle.setAttribute('aria-pressed', showing ? 'false' : 'true');
+            toggle.setAttribute('aria-label', showing ? 'Mostrar contrasena' : 'Ocultar contrasena');
+        });
+    })();
+</script>
 </body>
 </html>

@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGymRequest;
 use App\Http\Requests\UpdateGymAdminUserRequest;
 use App\Models\Gym;
-use App\Models\Plan;
-use App\Models\Promotion;
 use App\Models\SuperAdminPlanTemplate;
-use App\Models\SuperAdminPromotionTemplate;
 use App\Models\User;
 use App\Services\SubscriptionService;
 use App\Services\SuperAdminDashboardService;
@@ -118,8 +115,6 @@ class SuperAdminDashboardController extends Controller
                 'identification_number' => $data['admin_identification_number'] ?? null,
                 'password' => Hash::make((string) $data['admin_password']),
             ]);
-
-            $this->copySuperAdminPlanTemplatesToGym((int) $gym->id);
 
             return $gym;
         });
@@ -236,64 +231,6 @@ class SuperAdminDashboardController extends Controller
         }
 
         return $slug;
-    }
-
-    private function copySuperAdminPlanTemplatesToGym(int $gymId): void
-    {
-        if ($gymId <= 0) {
-            return;
-        }
-
-        $planTemplates = SuperAdminPlanTemplate::query()
-            ->where('status', 'active')
-            ->orderBy('id')
-            ->get();
-
-        if ($planTemplates->isEmpty()) {
-            return;
-        }
-
-        $createdPlansByTemplateId = [];
-
-        foreach ($planTemplates as $template) {
-            $plan = Plan::query()->create([
-                'gym_id' => $gymId,
-                'name' => (string) $template->name,
-                'duration_days' => (int) $template->duration_days,
-                'duration_unit' => (string) ($template->duration_unit ?: 'days'),
-                'duration_months' => $template->duration_months !== null ? (int) $template->duration_months : null,
-                'price' => (float) $template->price,
-                'status' => 'active',
-            ]);
-
-            $createdPlansByTemplateId[(int) $template->id] = (int) $plan->id;
-        }
-
-        $promotionTemplates = SuperAdminPromotionTemplate::query()
-            ->where('status', 'active')
-            ->orderBy('id')
-            ->get();
-
-        foreach ($promotionTemplates as $template) {
-            $targetPlanId = null;
-            if ($template->plan_template_id !== null) {
-                $targetPlanId = $createdPlansByTemplateId[(int) $template->plan_template_id] ?? null;
-            }
-
-            Promotion::query()->create([
-                'gym_id' => $gymId,
-                'plan_id' => $targetPlanId,
-                'name' => (string) $template->name,
-                'description' => $template->description !== null ? (string) $template->description : null,
-                'type' => (string) $template->type,
-                'value' => $template->value !== null ? (float) $template->value : null,
-                'starts_at' => $template->starts_at?->toDateString(),
-                'ends_at' => $template->ends_at?->toDateString(),
-                'status' => 'active',
-                'max_uses' => $template->max_uses !== null ? (int) $template->max_uses : null,
-                'times_used' => 0,
-            ]);
-        }
     }
 
     /**

@@ -43,7 +43,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
-    Route::view('/subscription/expired', 'subscription.expired')->name('subscription.expired');
+    Route::get('/subscription/expired', [ThemeController::class, 'subscriptionExpired'])->name('subscription.expired');
 
     Route::middleware('check.subscription')->group(function (): void {
         Route::get('/panel', function (Request $request) {

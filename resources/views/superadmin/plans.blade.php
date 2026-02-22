@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="space-y-5">
-        <x-ui.card title="Planes base para nuevos gimnasios" subtitle="Cada gimnasio nuevo hereda estos planes al momento de crearse.">
+        <x-ui.card title="Planes base para control de suscripciones" subtitle="Estos planes se usan en SuperAdmin para renovaciones. No se copian automaticamente al catalogo interno de cada gimnasio.">
             <form method="POST" action="{{ route('superadmin.plan-templates.store') }}" class="grid gap-3 lg:grid-cols-5">
                 @csrf
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
@@ -94,7 +94,7 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Promociones base" subtitle="Se copian a cada gimnasio nuevo junto con los planes base.">
+        <x-ui.card title="Promociones base" subtitle="Estas promociones son referencias administrativas de SuperAdmin y no se copian automaticamente al panel del gimnasio.">
             <form method="POST" action="{{ route('superadmin.plan-templates.promotions.store') }}" class="grid gap-3 lg:grid-cols-4">
                 @csrf
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
@@ -241,4 +241,3 @@
     })();
 </script>
 @endpush
-

@@ -154,6 +154,29 @@ class ThemeController extends Controller
     }
 
     /**
+     * Show suspended subscription page with SuperAdmin support branding.
+     */
+    public function subscriptionExpired(Request $request): View
+    {
+        $viewer = $request->user();
+        $contactOwner = $this->resolveSupportContactOwner($viewer);
+        $contactData = $this->buildSupportContactData($contactOwner);
+        $gymSlug = trim((string) ($viewer?->gym?->slug ?? ''));
+        $updateUrl = $gymSlug !== ''
+            ? route('panel.index', ['contextGym' => $gymSlug])
+            : route('superadmin.dashboard');
+        $whatsappUrl = $this->buildWhatsappUrl((string) ($contactData['whatsapp'] ?? ''));
+
+        return view('subscription.expired', [
+            'contactData' => $contactData,
+            'updateUrl' => $updateUrl,
+            'gymName' => (string) ($viewer?->gym?->name ?? 'Gym'),
+            'nowLabel' => now()->format('Y-m-d H:i'),
+            'whatsappUrl' => $whatsappUrl,
+        ]);
+    }
+
+    /**
      * Update the authenticated user's selected theme.
      */
     public function update(UpdateThemeRequest $request): JsonResponse
@@ -612,6 +635,16 @@ class ThemeController extends Controller
         }
 
         return asset('storage/'.$relativePath);
+    }
+
+    private function buildWhatsappUrl(string $rawPhone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', $rawPhone);
+        if (! is_string($digits) || $digits === '') {
+            return null;
+        }
+
+        return 'https://wa.me/'.$digits;
     }
 
     /**
