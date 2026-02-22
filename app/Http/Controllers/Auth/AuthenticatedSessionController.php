@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -42,12 +44,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = $request->user();
-        $user?->forceFill([
-            'last_login_at' => now('UTC'),
-        ])->save();
+        $this->touchLastLoginAt($user);
 
         if ($user?->gym_id === null) {
-            return redirect()->route('superadmin.dashboard');
+            if (Route::has('superadmin.dashboard')) {
+                return redirect()->route('superadmin.dashboard');
+            }
+
+            return redirect('/superadmin/dashboard');
         }
 
         $gymSlug = trim((string) ($user?->gym?->slug ?? ''));
@@ -57,7 +61,11 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        return redirect()->route('panel.index', ['contextGym' => $gymSlug]);
+        if (Route::has('panel.index')) {
+            return redirect()->route('panel.index', ['contextGym' => $gymSlug]);
+        }
+
+        return redirect('/'.$gymSlug.'/panel');
     }
 
     /**
@@ -71,6 +79,36 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    /**
+     * Update last login timestamp only when schema supports it.
+     */
+    private function touchLastLoginAt(?User $user): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        static $hasLastLoginAtColumn = null;
+        if ($hasLastLoginAtColumn === null) {
+            $hasLastLoginAtColumn = Schema::hasColumn('users', 'last_login_at');
+        }
+
+        if (! $hasLastLoginAtColumn) {
+            return;
+        }
+
+        try {
+            $user->forceFill([
+                'last_login_at' => now('UTC'),
+            ])->save();
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo guardar last_login_at durante login.', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**
