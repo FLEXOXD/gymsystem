@@ -202,15 +202,6 @@
             margin-bottom: 20px;
         }
 
-        .hero-logo {
-            width: min(62vw, 270px);
-            max-width: 270px;
-            min-width: 170px;
-            height: auto;
-            object-fit: contain;
-            filter: drop-shadow(0 0 18px rgba(57, 255, 20, 0.32));
-        }
-
         .hero-kicker {
             display: inline-flex;
             align-items: center;
@@ -355,6 +346,22 @@
             min-height: 100%;
         }
 
+        .auth-logo-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .auth-logo {
+            width: min(56vw, 250px);
+            max-width: 250px;
+            min-width: 170px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px rgba(57, 255, 20, 0.34));
+        }
+
         .auth h1 {
             margin: 0;
             font-size: clamp(40px, 5.5vw, 58px);
@@ -362,6 +369,8 @@
             text-transform: uppercase;
             letter-spacing: 0.03em;
             font-weight: 900;
+            color: var(--neon-green);
+            text-shadow: 0 0 22px rgba(57, 255, 20, 0.38);
         }
 
         .auth p {
@@ -572,9 +581,6 @@
             <div class="hero-content">
                 <div class="hero-top">
                     <span class="hero-kicker">GymSystem Control</span>
-                    @if ($logoUrl !== '')
-                        <img src="{{ $logoUrl }}" alt="Logo FlexjoK" class="hero-logo">
-                    @endif
                 </div>
 
                 <h2 class="hero-title"><span class="cyan">Modo</span> <span class="solid">Operativo</span></h2>
@@ -605,6 +611,11 @@
         </section>
 
         <section class="panel auth" aria-label="Panel de ingreso">
+            @if ($logoUrl !== '')
+                <div class="auth-logo-wrap">
+                    <img src="{{ $logoUrl }}" alt="Logo FlexjoK" class="auth-logo">
+                </div>
+            @endif
             <h1>Ingreso</h1>
             <p>Accede con tu cuenta de recepcion.</p>
 
