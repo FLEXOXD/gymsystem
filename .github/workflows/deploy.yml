@@ -43,8 +43,9 @@ jobs:
 
             # Keep code in sync with main
             git fetch --all --prune
-            git checkout main
-            git pull origin main
+            git checkout -f main
+            git reset --hard origin/main
+            git clean -fd
 
             # Ensure production mode is active
             grep -q '^APP_ENV=production$' .env || { echo "ERROR: APP_ENV must be production"; exit 1; }
@@ -52,7 +53,7 @@ jobs:
 
             # Install dependencies and build assets
             composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-            npm install --no-audit --no-fund
+            npm ci --no-audit --no-fund
             npm run build
 
             # Database + Laravel caches
