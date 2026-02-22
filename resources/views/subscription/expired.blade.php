@@ -10,9 +10,14 @@
             margin: 0;
             font-family: "Segoe UI", sans-serif;
             background:
-                radial-gradient(circle at 12% 15%, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0) 36%),
-                radial-gradient(circle at 86% 82%, rgba(59, 130, 246, 0.20) 0%, rgba(59, 130, 246, 0) 32%),
-                linear-gradient(135deg, #030303 0%, #0a0f1a 46%, #101826 100%);
+                radial-gradient(circle at 12% 15%, rgba(34, 197, 94, 0.18) 0%, rgba(34, 197, 94, 0) 36%),
+                radial-gradient(circle at 86% 82%, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0) 32%),
+                linear-gradient(135deg, rgba(3, 3, 3, 0.84) 0%, rgba(10, 15, 26, 0.80) 46%, rgba(16, 24, 38, 0.82) 100%),
+                url("https://videos.openai.com/az/vg-assets/task_01kj1zh6a3eymamxzvp3xkvxa0%2F1771740646_img_0.webp?se=2026-02-24T00%3A00%3A00Z&sp=r&sv=2026-02-06&sr=b&skoid=cfbc986b-d2bc-4088-8b71-4f962129715b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-02-21T12%3A15%3A03Z&ske=2026-02-28T12%3A20%3A03Z&sks=b&skv=2026-02-06&sig=MSZ8VUVSt%2BWybWdJM0rIqVt0raIfhn2nH7tYbdBbQ7Q%3D&ac=oaivgprodscus2");
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             color: #0f172a;
             min-height: 100vh;
             min-height: 100dvh;
