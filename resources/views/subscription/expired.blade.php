@@ -142,7 +142,7 @@
     $contactData = $contactData ?? [];
     $logoLightUrl = (string) ($contactData['logo_light_url'] ?? '');
     $logoDarkUrl = (string) ($contactData['logo_dark_url'] ?? '');
-    $logoUrl = $logoDarkUrl !== '' ? $logoDarkUrl : $logoLightUrl;
+    $logoUrl = $logoLightUrl !== '' ? $logoLightUrl : $logoDarkUrl;
     $supportLabel = (string) ($contactData['label'] ?? 'Soporte');
     $supportEmail = trim((string) ($contactData['email'] ?? ''));
     $supportPhone = trim((string) ($contactData['phone'] ?? ''));
