@@ -42,14 +42,24 @@
             align-items: center;
             gap: 12px;
         }
+        .logo-shell {
+            min-height: 84px;
+            min-width: 180px;
+            max-width: min(42vw, 300px);
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0b1838 0%, #07122a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+        }
         .logo {
-            width: 70px;
-            height: 70px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
-            border-radius: 10px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 6px;
+            object-position: left center;
+            display: block;
         }
         .brand-meta p {
             margin: 0;
@@ -133,7 +143,12 @@
             .grid { grid-template-columns: 1fr; }
             .title { font-size: clamp(28px, 10vw, 40px); }
             .msg { font-size: 16px; }
-            .logo { width: 58px; height: 58px; }
+            .logo-shell {
+                min-height: 68px;
+                min-width: 140px;
+                max-width: 220px;
+                padding: 8px 10px;
+            }
         }
     </style>
 </head>
@@ -142,7 +157,7 @@
     $contactData = $contactData ?? [];
     $logoLightUrl = (string) ($contactData['logo_light_url'] ?? '');
     $logoDarkUrl = (string) ($contactData['logo_dark_url'] ?? '');
-    $logoUrl = $logoLightUrl !== '' ? $logoLightUrl : $logoDarkUrl;
+    $logoUrl = $logoDarkUrl !== '' ? $logoDarkUrl : $logoLightUrl;
     $supportLabel = (string) ($contactData['label'] ?? 'Soporte');
     $supportEmail = trim((string) ($contactData['email'] ?? ''));
     $supportPhone = trim((string) ($contactData['phone'] ?? ''));
@@ -154,7 +169,9 @@
         <div class="top">
             <div class="brand">
                 @if ($logoUrl !== '')
-                    <img class="logo" src="{{ $logoUrl }}" alt="Logo de soporte">
+                    <div class="logo-shell">
+                        <img class="logo" src="{{ $logoUrl }}" alt="Logo de soporte">
+                    </div>
                 @endif
                 <div class="brand-meta">
                     <p><strong>{{ $supportLabel }}</strong></p>
