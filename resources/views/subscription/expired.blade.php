@@ -42,21 +42,11 @@
             align-items: center;
             gap: 12px;
         }
-        .logo-shell {
-            min-height: 84px;
-            min-width: 180px;
-            max-width: min(42vw, 300px);
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #0b1838 0%, #07122a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
-        }
         .logo {
-            width: 100%;
-            height: 100%;
+            width: min(42vw, 300px);
+            max-width: 300px;
+            min-width: 160px;
+            height: auto;
             object-fit: contain;
             object-position: left center;
             display: block;
@@ -143,12 +133,7 @@
             .grid { grid-template-columns: 1fr; }
             .title { font-size: clamp(28px, 10vw, 40px); }
             .msg { font-size: 16px; }
-            .logo-shell {
-                min-height: 68px;
-                min-width: 140px;
-                max-width: 220px;
-                padding: 8px 10px;
-            }
+            .logo { max-width: 220px; min-width: 130px; }
         }
     </style>
 </head>
@@ -169,9 +154,7 @@
         <div class="top">
             <div class="brand">
                 @if ($logoUrl !== '')
-                    <div class="logo-shell">
-                        <img class="logo" src="{{ $logoUrl }}" alt="Logo de soporte">
-                    </div>
+                    <img class="logo" src="{{ $logoUrl }}" alt="Logo de soporte">
                 @endif
                 <div class="brand-meta">
                     <p><strong>{{ $supportLabel }}</strong></p>
