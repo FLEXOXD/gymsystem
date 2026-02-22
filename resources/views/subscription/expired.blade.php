@@ -9,10 +9,38 @@
         body {
             margin: 0;
             font-family: "Segoe UI", sans-serif;
-            background: #000000;
+            background:
+                radial-gradient(circle at 12% 15%, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0) 36%),
+                radial-gradient(circle at 86% 82%, rgba(59, 130, 246, 0.20) 0%, rgba(59, 130, 246, 0) 32%),
+                linear-gradient(135deg, #030303 0%, #0a0f1a 46%, #101826 100%);
             color: #0f172a;
             min-height: 100vh;
             min-height: 100dvh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0 1px, transparent 1px 64px),
+                repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 64px);
+            opacity: 0.35;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(circle at 80% 22%, transparent 0 70px, rgba(148, 163, 184, 0.18) 70px 78px, transparent 78px 110px),
+                radial-gradient(circle at 80% 22%, transparent 0 26px, rgba(148, 163, 184, 0.18) 26px 34px, transparent 34px 66px),
+                radial-gradient(circle at 22% 78%, transparent 0 56px, rgba(148, 163, 184, 0.14) 56px 64px, transparent 64px 92px);
+            opacity: 0.45;
         }
         .wrap {
             min-height: 100vh;
@@ -20,6 +48,8 @@
             display: grid;
             place-items: center;
             padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+            position: relative;
+            z-index: 1;
         }
         .card {
             width: min(820px, 100%);
