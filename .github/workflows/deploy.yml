@@ -37,6 +37,7 @@ jobs:
 
             # Ensure deploy user can always update git-tracked files
             sudo chown -R "$DEPLOY_USER:$DEPLOY_USER" "$PROJECT_DIR"
+            sudo chmod -R u+rwX "$PROJECT_DIR"
             cd "$PROJECT_DIR"
             git config --global --add safe.directory "$PROJECT_DIR"
 
@@ -61,8 +62,9 @@ jobs:
             npm run build
 
             # Runtime permissions for Laravel write paths
-            sudo chown -R www-data:www-data "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
-            sudo chmod -R 775 "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
+            sudo chown -R "$DEPLOY_USER":www-data "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
+            sudo find "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache" -type d -exec chmod 2775 {} \;
+            sudo find "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache" -type f -exec chmod 664 {} \;
 
             # Database + Laravel caches (run as web user)
             sudo -u www-data php artisan migrate --force
