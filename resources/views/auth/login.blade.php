@@ -658,11 +658,11 @@
                             aria-label="Mostrar contrasena"
                             aria-controls="password"
                             aria-pressed="false">
-                            <svg id="password-eye-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <svg id="password-eye-open" class="h-5 w-5 is-hidden" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor" stroke-width="1.8"/>
                                 <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
                             </svg>
-                            <svg id="password-eye-closed" class="h-5 w-5 is-hidden" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <svg id="password-eye-closed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
                                 <path d="M10.5 6.3A11 11 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-4.1 4.8M6.6 8.1C3.8 10 2 12 2 12s3.5 6 10 6a11 11 0 0 0 4.3-.8" stroke="currentColor" stroke-width="1.8"/>
                             </svg>
@@ -694,8 +694,8 @@
 
         const syncPasswordIconState = function () {
             const isVisible = input.type === 'text';
-            eyeOpen.classList.toggle('is-hidden', isVisible);
-            eyeClosed.classList.toggle('is-hidden', !isVisible);
+            eyeOpen.classList.toggle('is-hidden', !isVisible);
+            eyeClosed.classList.toggle('is-hidden', isVisible);
             toggle.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
             toggle.setAttribute('aria-label', isVisible ? 'Ocultar contrasena' : 'Mostrar contrasena');
         };
