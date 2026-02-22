@@ -17,7 +17,6 @@ jobs:
   deploy:
     name: Deploy to Google Cloud VM
     runs-on: ubuntu-latest
-    environment: production
     timeout-minutes: 20
 
     steps:
@@ -25,6 +24,7 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
+          port: 22
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
