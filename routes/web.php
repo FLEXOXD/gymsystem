@@ -33,9 +33,25 @@ Route::get('/', function (Request $request) {
     return redirect()->route('superadmin.dashboard');
 });
 
+Route::get('/public', fn () => redirect('/'))->name('public.root.redirect');
+
 Route::middleware('guest')->group(function (): void {
+    // Legacy login endpoint used by some deployments that submit to "/".
+    Route::post('/', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.root');
+
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
+
+    // Compatibility routes when app is exposed with "/public" in the URL.
+    Route::post('/public', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.public.root');
+    Route::get('/public/login', [AuthenticatedSessionController::class, 'create'])->name('login.public');
+    Route::post('/public/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.public.store');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
