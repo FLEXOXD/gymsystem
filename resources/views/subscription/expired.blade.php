@@ -9,7 +9,7 @@
         body {
             margin: 0;
             font-family: "Segoe UI", sans-serif;
-            background: radial-gradient(circle at 15% 20%, #eef4ff 0%, #edf2f7 35%, #e2e8f0 100%);
+            background: #000000;
             color: #0f172a;
             min-height: 100vh;
             min-height: 100dvh;
