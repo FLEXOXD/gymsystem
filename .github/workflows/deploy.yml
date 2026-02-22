@@ -1,25 +1,73 @@
-name: Deploy GymSystem
+name: Deploy GymSystem Production
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: gymsystem-production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
+    name: Deploy to Google Cloud VM
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
 
     steps:
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: 35.225.95.255
-        username: flexjok_agencia
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /var/www/gymsystem
-          git pull origin main
-          sudo -u www-data composer install --no-dev --optimize-autoloader
-          sudo -u www-data npm install
-          sudo -u www-data npm run build
-          sudo systemctl restart apache2
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          command_timeout: 40m
+          script: |
+            set -euo pipefail
+
+            PROJECT_DIR="/var/www/gymsystem"
+
+            cd "$PROJECT_DIR"
+
+            # Safety checks
+            test -f artisan
+            test -f composer.json
+            test -f package.json
+
+            # Keep code in sync with main
+            git fetch --all --prune
+            git checkout main
+            git pull origin main
+
+            # Ensure production mode is active
+            grep -q '^APP_ENV=production$' .env || { echo "ERROR: APP_ENV must be production"; exit 1; }
+            grep -q '^APP_DEBUG=false$' .env || { echo "ERROR: APP_DEBUG must be false"; exit 1; }
+
+            # Install dependencies and build assets
+            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+            npm install --no-audit --no-fund
+            npm run build
+
+            # Database + Laravel caches
+            php artisan migrate --force
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan view:clear
+            php artisan route:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Permissions
+            sudo chown -R www-data:www-data "$PROJECT_DIR"
+            sudo chmod -R 775 storage bootstrap/cache
+
+            # Restart web server
+            sudo systemctl restart apache2
