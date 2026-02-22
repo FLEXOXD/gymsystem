@@ -29,8 +29,11 @@ class StoreGymRequest extends FormRequest
             'admin_name' => $this->normalizeText($this->input('admin_name')),
             'admin_email' => strtolower($this->normalizeText($this->input('admin_email')) ?? ''),
             'admin_gender' => ($gender = strtolower($this->normalizeText($this->input('admin_gender')) ?? '')) !== '' ? $gender : null,
+            'admin_birth_date' => ($birthDate = trim((string) $this->input('admin_birth_date'))) !== '' ? $birthDate : null,
             'admin_identification_type' => ($idType = strtolower($this->normalizeText($this->input('admin_identification_type')) ?? '')) !== '' ? $idType : null,
             'admin_identification_number' => ($idNumber = strtoupper($this->normalizeText($this->input('admin_identification_number')) ?? '')) !== '' ? $idNumber : null,
+            'admin_phone_country_dial' => ($dial = trim((string) $this->input('admin_phone_country_dial'))) !== '' ? $dial : null,
+            'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
         ]);
     }
 
@@ -74,8 +77,11 @@ class StoreGymRequest extends FormRequest
             'admin_name' => ['required', 'string', 'max:120'],
             'admin_email' => ['required', 'email', 'max:120', 'unique:users,email'],
             'admin_gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other', 'prefer_not_say'])],
+            'admin_birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'admin_identification_type' => ['nullable', 'string', Rule::in(['cedula', 'dni', 'passport'])],
             'admin_identification_number' => ['nullable', 'string', 'min:4', 'max:30', 'regex:/^[A-Z0-9\-]+$/'],
+            'admin_phone_country_dial' => ['nullable', 'string', 'max:8', 'regex:/^\+\d{1,4}$/'],
+            'admin_phone_number' => ['nullable', 'string', 'min:6', 'max:15', 'regex:/^\d+$/'],
             'admin_password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
         ];
     }
@@ -96,8 +102,12 @@ class StoreGymRequest extends FormRequest
             'gym_language_code.in' => 'Selecciona un idioma valido.',
             'admin_email.unique' => 'Ese correo ya esta registrado en otro usuario.',
             'admin_gender.in' => 'Selecciona un genero valido.',
+            'admin_birth_date.date' => 'Selecciona una fecha de nacimiento valida.',
+            'admin_birth_date.before_or_equal' => 'La fecha de nacimiento no puede ser futura.',
             'admin_identification_type.in' => 'Selecciona un tipo de identificacion valido.',
             'admin_identification_number.regex' => 'El numero de identificacion solo puede contener letras, numeros y guion.',
+            'admin_phone_country_dial.regex' => 'El codigo de telefono debe tener formato internacional, por ejemplo +593.',
+            'admin_phone_number.regex' => 'El telefono solo puede contener numeros.',
             'admin_password.confirmed' => 'La confirmacion de contrasena no coincide.',
             'admin_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
         ];
@@ -115,6 +125,15 @@ class StoreGymRequest extends FormRequest
 
             if ($identificationType === '' && $identificationNumber !== '') {
                 $validator->errors()->add('admin_identification_type', 'Selecciona el tipo de identificacion.');
+            }
+
+            $phoneDial = (string) ($this->input('admin_phone_country_dial') ?? '');
+            $phoneNumber = (string) ($this->input('admin_phone_number') ?? '');
+            if ($phoneDial !== '' && $phoneNumber === '') {
+                $validator->errors()->add('admin_phone_number', 'Ingresa el telefono.');
+            }
+            if ($phoneDial === '' && $phoneNumber !== '') {
+                $validator->errors()->add('admin_phone_country_dial', 'Ingresa el codigo de telefono.');
             }
         });
     }

@@ -13,8 +13,11 @@
         $addressCity = old('gym_address_city', '');
         $addressLine = old('gym_address_line', '');
         $defaultAdminGender = old('admin_gender', '');
+        $defaultAdminBirthDate = old('admin_birth_date', '');
         $defaultAdminIdentificationType = old('admin_identification_type', '');
         $defaultAdminIdentificationNumber = old('admin_identification_number', '');
+        $defaultAdminPhoneCountryDial = old('admin_phone_country_dial', '+593');
+        $defaultAdminPhoneNumber = old('admin_phone_number', '');
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
         $gymsWithAdmins = $gymsWithAdmins ?? collect();
@@ -197,6 +200,14 @@
                 </div>
 
                 <div>
+                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Fecha de nacimiento</label>
+                    <input type="date" name="admin_birth_date" value="{{ $defaultAdminBirthDate }}" class="ui-input" max="{{ now()->format('Y-m-d') }}">
+                    @error('admin_birth_date')
+                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Tipo de identificacion</label>
                     <select name="admin_identification_type" class="ui-input">
                         <option value="" @selected($defaultAdminIdentificationType === '')>No especificado</option>
@@ -213,6 +224,22 @@
                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Cedula / numero de identificacion</label>
                     <input type="text" name="admin_identification_number" value="{{ $defaultAdminIdentificationNumber }}" class="ui-input" placeholder="Ej: 1726309071">
                     @error('admin_identification_number')
+                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Codigo telefono del admin</label>
+                    <input type="text" name="admin_phone_country_dial" value="{{ $defaultAdminPhoneCountryDial }}" class="ui-input" placeholder="+593">
+                    @error('admin_phone_country_dial')
+                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Telefono del admin</label>
+                    <input type="text" name="admin_phone_number" value="{{ $defaultAdminPhoneNumber }}" class="ui-input" placeholder="0991234567">
+                    @error('admin_phone_number')
                         <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                     @enderror
                 </div>
