@@ -583,7 +583,7 @@
                     <span class="hero-kicker">GymSystem Control</span>
                 </div>
 
-                <h2 class="hero-title"><span class="cyan">Modo</span> <span class="solid">Operativo</span></h2>
+                <h2 class="hero-title"><span class="cyan">Modos</span> <span class="solid">Operativo</span></h2>
 
                 <p class="hero-subtitle">Gestiona asistencia, membresias, caja y rendimiento del gimnasio desde un centro operativo rapido, seguro y en tiempo real.</p>
 
