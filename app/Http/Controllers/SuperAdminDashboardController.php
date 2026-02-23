@@ -75,8 +75,11 @@ class SuperAdminDashboardController extends Controller
     public function storeGym(StoreGymRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $profilePhotoPath = $request->hasFile('admin_profile_photo')
+            ? $request->file('admin_profile_photo')->store('users/profiles', 'public')
+            : null;
 
-        $gym = DB::transaction(function () use ($data): Gym {
+        $gym = DB::transaction(function () use ($data, $profilePhotoPath): Gym {
             $slug = $this->generateUniqueGymSlug((string) $data['gym_name']);
             $address = GymLocationCatalog::buildAddress(
                 country: (string) $data['gym_address_country'],
@@ -116,6 +119,7 @@ class SuperAdminDashboardController extends Controller
                 'birth_date' => $data['admin_birth_date'] ?? null,
                 'identification_type' => $data['admin_identification_type'] ?? null,
                 'identification_number' => $data['admin_identification_number'] ?? null,
+                'profile_photo_path' => $profilePhotoPath,
                 'password' => Hash::make((string) $data['admin_password']),
             ]);
 

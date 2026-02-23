@@ -48,6 +48,47 @@
         .profile-country-item:hover {
             background: rgb(30 41 59 / 0.55);
         }
+        .profile-personal-mode {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .profile-personal-mode.mode-hidden {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            max-height: 0;
+            overflow: hidden;
+            margin-top: 0 !important;
+        }
+        .profile-summary-grid {
+            display: grid;
+            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .profile-summary-item {
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            background: color-mix(in srgb, var(--card-muted) 88%, transparent);
+        }
+        .profile-summary-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .profile-summary-value {
+            display: block;
+            margin-top: 0.3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-word;
+        }
+        .profile-edit-toggle {
+            cursor: pointer;
+        }
     </style>
 @endpush
 
@@ -69,6 +110,9 @@
         $profileAddressState = trim((string) ($currentUser?->address_state ?? ''));
         $profileAddressCity = trim((string) ($currentUser?->address_city ?? ''));
         $profileAddressLine = trim((string) ($currentUser?->address_line ?? ''));
+        $profileLocationLabel = collect([$profileAddressLine, $profileAddressCity, $profileAddressState, $profileCountryName])
+            ->filter(static fn ($value): bool => trim((string) $value) !== '')
+            ->implode(', ');
         $profileGender = old('user_gender', (string) ($currentUser?->gender ?? ''));
         $profileBirthDate = old('user_birth_date', $currentUser?->birth_date?->format('Y-m-d'));
         $profileIdentificationType = old('user_identification_type', (string) ($currentUser?->identification_type ?? ''));
@@ -148,6 +192,22 @@
             ? 'Cuenta maestra de SuperAdmin y canales publicos de soporte.'
             : __('ui.profile.card_subtitle');
         $profilePersonalReadOnly = ! $isSuperAdmin;
+        $personalEditErrorKeys = [
+            'user_profile_photo',
+            'user_first_name',
+            'user_last_name',
+            'user_email',
+            'user_gender',
+            'user_birth_date',
+            'user_identification_type',
+            'user_identification_number',
+            'user_country_iso',
+            'user_country_name',
+            'user_phone_country_iso',
+            'user_phone_country_dial',
+            'user_phone_number',
+        ];
+        $personalEditHasErrors = $errors->hasAny($personalEditErrorKeys);
         $lastAccessRaw = $currentUser?->getRawOriginal('last_login_at');
         $lastAccessLabel = $lastAccessRaw
             ? \Illuminate\Support\Carbon::parse((string) $lastAccessRaw, 'UTC')->timezone($profileTimezone)->format('d/m/Y H:i:s').' ('.$profileTimezone.')'
@@ -185,15 +245,87 @@
                     <div id="profile-panel-personal" class="profile-accordion-panel border-t border-[var(--border)] px-4 py-4 {{ $profileDefaultPanel === 'personal' ? '' : 'hidden' }}">
                         <p class="ui-muted text-sm">{{ __('ui.profile.personal_info_hint') }}</p>
 
-                        <form method="POST" action="{{ route('settings.profile.update') }}" enctype="multipart/form-data" class="mt-4 space-y-3">
-                            @csrf
+                        <div id="profile-personal-read-mode"
+                             class="profile-personal-mode mt-4 space-y-4"
+                             data-address-state="{{ $profileAddressState }}"
+                             data-address-city="{{ $profileAddressCity }}"
+                             data-address-line="{{ $profileAddressLine }}">
                             @if ($profilePersonalReadOnly)
                                 <p class="rounded-xl border border-amber-300/60 bg-amber-100/60 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-300/40 dark:bg-amber-300/10 dark:text-amber-100">
                                     Perfil en solo lectura. Estos datos se editan desde SuperAdmin.
                                 </p>
                             @endif
 
-                            <fieldset class="space-y-3" @disabled($profilePersonalReadOnly)>
+                            <div class="rounded-xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
+                                <div class="flex flex-wrap items-start gap-4">
+                                    <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-[var(--border)] bg-slate-100 text-2xl font-black uppercase text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                                        @if ($profilePhotoUrl)
+                                            <img id="profile-read-photo-image" src="{{ $profilePhotoUrl }}" alt="{{ __('ui.profile.profile_photo') }}" class="h-full w-full object-cover">
+                                        @else
+                                            <span id="profile-read-photo-fallback">{{ mb_substr((string) ($currentUser?->name ?? 'U'), 0, 1) }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="min-w-[260px] flex-1">
+                                        <div class="profile-summary-grid">
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.first_name') }}</span>
+                                                <span id="profile-read-first-name" class="profile-summary-value">{{ $profileFirstName !== '' ? $profileFirstName : '-' }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.last_name') }}</span>
+                                                <span id="profile-read-last-name" class="profile-summary-value">{{ $profileLastName !== '' ? $profileLastName : '-' }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.email') }}</span>
+                                                <a id="profile-read-email" class="profile-summary-value hover:underline" href="mailto:{{ old('user_email', $currentUser?->email) }}">{{ old('user_email', $currentUser?->email) }}</a>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.phone_required') }}</span>
+                                                <span id="profile-read-phone" class="profile-summary-value">{{ trim($profilePhoneDial.' '.$profilePhoneNumber) !== '' ? trim($profilePhoneDial.' '.$profilePhoneNumber) : '-' }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.gender') }}</span>
+                                                <span id="profile-read-gender" class="profile-summary-value">{{ $profileGender !== '' ? __('ui.profile.gender_options.'.$profileGender) : __('ui.profile.gender_options.not_set') }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.birth_date') }}</span>
+                                                <span id="profile-read-birth-date" class="profile-summary-value">{{ $profileBirthDate ?: '-' }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.identification_type') }}</span>
+                                                <span id="profile-read-identification-type" class="profile-summary-value">{{ $profileIdentificationType !== '' ? __('ui.profile.identification_options.'.$profileIdentificationType) : __('ui.profile.identification_options.not_set') }}</span>
+                                            </div>
+                                            <div class="profile-summary-item">
+                                                <span class="profile-summary-label">{{ __('ui.profile.identification_number') }}</span>
+                                                <span id="profile-read-identification-number" class="profile-summary-value">{{ $profileIdentificationNumber !== '' ? $profileIdentificationNumber : '-' }}</span>
+                                            </div>
+                                            <div class="profile-summary-item md:col-span-2">
+                                                <span class="profile-summary-label">Ubicacion</span>
+                                                <span id="profile-read-location" class="profile-summary-value">{{ $profileLocationLabel !== '' ? $profileLocationLabel : '-' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (! $profilePersonalReadOnly)
+                                <button id="profile-edit-toggle"
+                                        type="button"
+                                        class="profile-edit-toggle ui-button ui-button-ghost px-3 py-2 text-xs font-bold"
+                                        aria-expanded="false">
+                                    Editar perfil
+                                </button>
+                            @endif
+                        </div>
+
+                        @if (! $profilePersonalReadOnly)
+                        <form id="profile-personal-edit-form"
+                              method="POST"
+                              action="{{ route('settings.profile.update') }}"
+                              enctype="multipart/form-data"
+                              class="profile-personal-mode mode-hidden mt-4 space-y-3"
+                              data-start-editing="{{ $personalEditHasErrors ? '1' : '0' }}">
+                            @csrf
                             <div class="rounded-xl border border-[var(--border)] p-3">
                                 <label class="ui-muted mb-2 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.profile_photo') }}</label>
                                 <div class="flex flex-wrap items-center gap-3">
@@ -206,6 +338,7 @@
                                     </div>
                                     <div class="min-w-[220px] flex-1">
                                         <input type="file"
+                                               id="profile-photo-input"
                                                name="user_profile_photo"
                                                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                                class="ui-input">
@@ -245,7 +378,7 @@
                             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.gender') }}</label>
-                                    <select name="user_gender" class="ui-input">
+                                    <select id="profile-gender" name="user_gender" class="ui-input">
                                         <option value="">{{ __('ui.profile.gender_options.not_set') }}</option>
                                         <option value="male" @selected($profileGender === 'male')>{{ __('ui.profile.gender_options.male') }}</option>
                                         <option value="female" @selected($profileGender === 'female')>{{ __('ui.profile.gender_options.female') }}</option>
@@ -259,7 +392,7 @@
 
                                 <div>
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.birth_date') }}</label>
-                                    <input type="date" name="user_birth_date" value="{{ $profileBirthDate }}" class="ui-input">
+                                    <input id="profile-birth-date" type="date" name="user_birth_date" value="{{ $profileBirthDate }}" class="ui-input">
                                     @error('user_birth_date')
                                         <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                                     @enderror
@@ -356,12 +489,13 @@
                                     <input type="text" class="ui-input" value="{{ $profileAddressLine !== '' ? $profileAddressLine : '-' }}" readonly>
                                 </div>
                             </div>
-                            </fieldset>
 
-                            @if (! $profilePersonalReadOnly)
-                                <button type="submit" class="ui-button ui-button-primary">{{ __('ui.profile.save_profile') }}</button>
-                            @endif
+                            <div class="flex flex-wrap gap-2">
+                                <button type="submit" class="ui-button ui-button-primary">Guardar</button>
+                                <button id="profile-cancel-edit" type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold">Cancelar</button>
+                            </div>
                         </form>
+                        @endif
                     </div>
                 </section>
 
@@ -740,13 +874,30 @@
             const countryIsoHidden = document.getElementById('profile-country-iso');
             const countryNameHidden = document.getElementById('profile-country-name-hidden');
             const phoneCountryIsoHidden = document.getElementById('profile-phone-country-iso');
+            const profileReadMode = document.getElementById('profile-personal-read-mode');
+            const profileEditForm = document.getElementById('profile-personal-edit-form');
+            const profileEditToggleButton = document.getElementById('profile-edit-toggle');
+            const profileCancelEditButton = document.getElementById('profile-cancel-edit');
             const profileFirstName = document.getElementById('profile-first-name');
             const profileLastName = document.getElementById('profile-last-name');
             const profileEmail = document.getElementById('profile-email');
+            const profileGenderField = document.getElementById('profile-gender');
+            const profileBirthDateField = document.getElementById('profile-birth-date');
             const profileIdentificationType = document.getElementById('profile-identification-type');
             const profileIdentificationNumber = document.getElementById('profile-identification-number');
             const profilePhoneDial = document.getElementById('profile-phone-dial');
             const profilePhoneNumber = document.getElementById('profile-phone-number');
+            const profileReadFirstName = document.getElementById('profile-read-first-name');
+            const profileReadLastName = document.getElementById('profile-read-last-name');
+            const profileReadEmail = document.getElementById('profile-read-email');
+            const profileReadPhone = document.getElementById('profile-read-phone');
+            const profileReadGender = document.getElementById('profile-read-gender');
+            const profileReadBirthDate = document.getElementById('profile-read-birth-date');
+            const profileReadIdentificationType = document.getElementById('profile-read-identification-type');
+            const profileReadIdentificationNumber = document.getElementById('profile-read-identification-number');
+            const profileReadLocation = document.getElementById('profile-read-location');
+            const profilePhotoInput = document.getElementById('profile-photo-input');
+            const profileReadPhotoImage = document.getElementById('profile-read-photo-image');
             const billingFirstName = document.getElementById('billing-first-name');
             const billingLastName = document.getElementById('billing-last-name');
             const billingIdentificationType = document.getElementById('billing-identification-type');
@@ -756,6 +907,7 @@
             const activeLocale = (document.documentElement.getAttribute('lang') || 'es').toLowerCase();
             let countriesIndex = [];
             let isMenuOpen = false;
+            let isEditing = false;
             let applyCountry = () => {};
 
             const normalize = (value) => String(value || '')
@@ -1042,6 +1194,172 @@
                 sanitizeNumber();
             };
 
+            const initProfilePersonalMode = () => {
+                if (!profileReadMode) return;
+                if (!profileEditForm || !profileEditToggleButton || !profileCancelEditButton) {
+                    return;
+                }
+
+                const genderLabels = {
+                    male: @js(__('ui.profile.gender_options.male')),
+                    female: @js(__('ui.profile.gender_options.female')),
+                    other: @js(__('ui.profile.gender_options.other')),
+                    prefer_not_say: @js(__('ui.profile.gender_options.prefer_not_say')),
+                };
+                const genderFallback = @js(__('ui.profile.gender_options.not_set'));
+                const identificationLabels = {
+                    cedula: @js(__('ui.profile.identification_options.cedula')),
+                    dni: @js(__('ui.profile.identification_options.dni')),
+                    passport: @js(__('ui.profile.identification_options.passport')),
+                };
+                const identificationFallback = @js(__('ui.profile.identification_options.not_set'));
+
+                const trackedFields = [
+                    profileFirstName,
+                    profileLastName,
+                    profileEmail,
+                    profileGenderField,
+                    profileBirthDateField,
+                    profileIdentificationType,
+                    profileIdentificationNumber,
+                    countrySearchInput,
+                    countryIsoHidden,
+                    countryNameHidden,
+                    phoneCountryIsoHidden,
+                    profilePhoneDial,
+                    profilePhoneNumber,
+                ].filter(Boolean);
+
+                const initialState = {};
+                trackedFields.forEach((field) => {
+                    if (field?.id) {
+                        initialState[field.id] = field.value;
+                    }
+                });
+
+                const formatDate = (value) => {
+                    const raw = String(value || '').trim();
+                    if (raw === '') return '-';
+                    const parts = raw.split('-');
+                    if (parts.length !== 3) return raw;
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                };
+
+                const updateReadMode = () => {
+                    if (profileReadFirstName && profileFirstName) profileReadFirstName.textContent = profileFirstName.value.trim() || '-';
+                    if (profileReadLastName && profileLastName) profileReadLastName.textContent = profileLastName.value.trim() || '-';
+
+                    const emailValue = profileEmail?.value?.trim() || '-';
+                    if (profileReadEmail) {
+                        profileReadEmail.textContent = emailValue;
+                        profileReadEmail.setAttribute('href', emailValue !== '-' ? `mailto:${emailValue}` : '#');
+                    }
+
+                    if (profileReadPhone) {
+                        const dial = String(profilePhoneDial?.value || '').trim();
+                        const number = String(profilePhoneNumber?.value || '').trim();
+                        profileReadPhone.textContent = `${dial} ${number}`.trim() || '-';
+                    }
+
+                    if (profileReadGender) {
+                        const genderKey = String(profileGenderField?.value || '').toLowerCase();
+                        profileReadGender.textContent = genderLabels[genderKey] || genderFallback;
+                    }
+
+                    if (profileReadBirthDate) {
+                        profileReadBirthDate.textContent = formatDate(profileBirthDateField?.value || '');
+                    }
+
+                    if (profileReadIdentificationType) {
+                        const idType = String(profileIdentificationType?.value || '').toLowerCase();
+                        profileReadIdentificationType.textContent = identificationLabels[idType] || identificationFallback;
+                    }
+
+                    if (profileReadIdentificationNumber) {
+                        const idNumber = String(profileIdentificationNumber?.value || '').trim();
+                        profileReadIdentificationNumber.textContent = idNumber || '-';
+                    }
+
+                    if (profileReadLocation) {
+                        const line = String(profileReadMode.dataset.addressLine || '').trim();
+                        const city = String(profileReadMode.dataset.addressCity || '').trim();
+                        const state = String(profileReadMode.dataset.addressState || '').trim();
+                        const country = String(countryNameHidden?.value || '').trim();
+                        const location = [line, city, state, country].filter((part) => part !== '').join(', ');
+                        profileReadLocation.textContent = location || '-';
+                    }
+                };
+
+                const setEditMode = (nextValue) => {
+                    isEditing = !!nextValue;
+                    profileReadMode.classList.toggle('mode-hidden', isEditing);
+                    profileEditForm.classList.toggle('mode-hidden', !isEditing);
+                    profileEditToggleButton.setAttribute('aria-expanded', String(isEditing));
+                    if (isEditing) {
+                        profileFirstName?.focus();
+                    } else {
+                        updateReadMode();
+                    }
+                };
+
+                const restoreInitialState = () => {
+                    trackedFields.forEach((field) => {
+                        if (!field?.id) return;
+                        if (Object.prototype.hasOwnProperty.call(initialState, field.id)) {
+                            field.value = initialState[field.id];
+                        }
+                    });
+
+                    if (countryIsoHidden && countriesIndex.length > 0) {
+                        const selectedCountry = countriesIndex.find((country) => country.iso === String(countryIsoHidden.value || '').toUpperCase());
+                        if (selectedCountry) {
+                            applyCountry(selectedCountry);
+                        }
+                    }
+
+                    profilePhotoInput && (profilePhotoInput.value = '');
+                    trackedFields.forEach((field) => {
+                        field?.dispatchEvent(new Event('input', { bubbles: true }));
+                        field?.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                };
+
+                const handlePhotoPreview = () => {
+                    if (!profilePhotoInput || !profileReadPhotoImage) return;
+                    const file = profilePhotoInput.files?.[0];
+                    if (!file) {
+                        profileReadPhotoImage.src = @js($profilePhotoUrl ?? '');
+                        return;
+                    }
+                    const objectUrl = URL.createObjectURL(file);
+                    profileReadPhotoImage.src = objectUrl;
+                };
+
+                window.toggleEditMode = function toggleEditMode(nextValue) {
+                    if (typeof nextValue === 'boolean') {
+                        setEditMode(nextValue);
+                    } else {
+                        setEditMode(!isEditing);
+                    }
+                };
+
+                profileEditToggleButton.addEventListener('click', () => window.toggleEditMode(true));
+                profileCancelEditButton.addEventListener('click', () => {
+                    restoreInitialState();
+                    window.toggleEditMode(false);
+                });
+                profilePhotoInput?.addEventListener('change', handlePhotoPreview);
+
+                trackedFields.forEach((field) => {
+                    field?.addEventListener('input', updateReadMode);
+                    field?.addEventListener('change', updateReadMode);
+                });
+
+                updateReadMode();
+                const startEditing = profileEditForm.dataset.startEditing === '1';
+                setEditMode(startEditing);
+            };
+
             const initBillingMirror = () => {
                 const identificationLabels = {
                     cedula: @js(__('ui.profile.identification_options.cedula')),
@@ -1108,10 +1426,15 @@
                 });
             };
 
-            initCountryAndPhonePicker();
-            initProfilePhoneNumber();
-            initBillingMirror();
-            initProfileAccordion();
+            const bootstrapProfile = async () => {
+                await initCountryAndPhonePicker();
+                initProfilePhoneNumber();
+                initBillingMirror();
+                initProfilePersonalMode();
+                initProfileAccordion();
+            };
+
+            bootstrapProfile();
         })();
     </script>
 @endpush

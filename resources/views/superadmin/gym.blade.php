@@ -61,7 +61,7 @@
 
     <div class="space-y-5">
         <x-ui.card title="Crear nuevo gimnasio" subtitle="Se crea el gimnasio y su usuario administrador principal.">
-            <form method="POST" action="{{ route('superadmin.gyms.store') }}" class="grid gap-3 lg:grid-cols-3">
+            <form method="POST" action="{{ route('superadmin.gyms.store') }}" enctype="multipart/form-data" class="grid gap-3 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -240,6 +240,15 @@
                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Telefono del admin</label>
                     <input type="text" name="admin_phone_number" value="{{ $defaultAdminPhoneNumber }}" class="ui-input" placeholder="0991234567">
                     @error('admin_phone_number')
+                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Foto de perfil del admin (opcional)</label>
+                    <input type="file" name="admin_profile_photo" class="ui-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                    <p class="ui-muted mt-1 text-[11px]">JPG/PNG/WEBP, maximo 15MB.</p>
+                    @error('admin_profile_photo')
                         <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                     @enderror
                 </div>

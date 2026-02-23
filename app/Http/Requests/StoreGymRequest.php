@@ -82,6 +82,7 @@ class StoreGymRequest extends FormRequest
             'admin_identification_number' => ['nullable', 'string', 'min:4', 'max:30', 'regex:/^[A-Z0-9\-]+$/'],
             'admin_phone_country_dial' => ['nullable', 'string', 'max:8', 'regex:/^\+\d{1,4}$/'],
             'admin_phone_number' => ['nullable', 'string', 'min:6', 'max:15', 'regex:/^\d+$/'],
+            'admin_profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'admin_password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
         ];
     }
@@ -108,6 +109,9 @@ class StoreGymRequest extends FormRequest
             'admin_identification_number.regex' => 'El numero de identificacion solo puede contener letras, numeros y guion.',
             'admin_phone_country_dial.regex' => 'El codigo de telefono debe tener formato internacional, por ejemplo +593.',
             'admin_phone_number.regex' => 'El telefono solo puede contener numeros.',
+            'admin_profile_photo.image' => 'La foto del admin debe ser una imagen valida.',
+            'admin_profile_photo.mimes' => 'La foto del admin debe ser JPG, JPEG, PNG o WEBP.',
+            'admin_profile_photo.max' => 'La foto del admin no puede superar 15MB.',
             'admin_password.confirmed' => 'La confirmacion de contrasena no coincide.',
             'admin_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
         ];

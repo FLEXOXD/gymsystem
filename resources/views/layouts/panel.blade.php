@@ -36,6 +36,8 @@
     $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
     $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
     $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
+    $brandHomeRoute = $isSuperAdmin ? 'superadmin.dashboard' : 'panel.index';
+    $brandHomeUrl = route($brandHomeRoute);
 
     $gymSubscriptionStatus = null;
     if (!$isSuperAdmin && $user?->gym_id) {
@@ -145,7 +147,8 @@
 <body class="theme-body h-full ui-text">
 <div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
-        <div class="theme-divider flex items-center gap-4 border-b px-4 py-4">
+        <a href="{{ $brandHomeUrl }}"
+           class="theme-divider flex items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
             <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
                 @if ($gymLogo)
                     <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain" style="transform: scale(1.55); transform-origin: center;">
@@ -157,7 +160,7 @@
                 <p class="ui-muted text-xs font-bold uppercase tracking-widest">GymSystem</p>
                 <p class="ui-heading text-base">{{ $gymName }}</p>
             </div>
-        </div>
+        </a>
 
         <nav class="space-y-1 px-3 py-4">
             @foreach ($navItems as $item)
