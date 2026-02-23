@@ -1,4 +1,4 @@
-name: Deploy GymSystem Production
+name: Deploy GymSystem Production (PRO)
 
 on:
   push:
@@ -13,99 +13,128 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
-    name: Deploy to Google Cloud VM
+  build_and_deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+
+    env:
+      PROJECT_NAME: gymsystem
+      REMOTE_BASE: /var/www/gymsystem
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------- BUILD (GitHub) ----------
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer:v2
+          coverage: none
+
+      - name: Composer install (production)
+        run: |
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --no-interaction \
+            --prefer-dist
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install JS deps + build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Prepare artifact folder
+        run: |
+          rm -rf deploy_artifact
+          mkdir -p deploy_artifact
+          rsync -a --delete \
+            --exclude=".git" \
+            --exclude=".github" \
+            --exclude="node_modules" \
+            --exclude="tests" \
+            --exclude=".env" \
+            ./ deploy_artifact/
+
+          # seguridad: no mandar storage (va en shared)
+          rm -rf deploy_artifact/storage || true
+
+      - name: Create tar.gz
+        run: |
+          tar -czf deploy.tar.gz -C deploy_artifact .
+
+      # ---------- UPLOAD (SCP) ----------
+      - name: Upload artifact to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          key: |
+            ${{ secrets.SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+
+      # ---------- DEPLOY (SSH) ----------
+      - name: Deploy on server (atomic)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          port: 22
           username: ${{ secrets.SSH_USER }}
-
-          # ✅ IMPORTANTE: multiline key (evita "none publickey")
+          port: ${{ secrets.SSH_PORT || 22 }}
           key: |
             ${{ secrets.SSH_KEY }}
-
-          # (Opcional) Si quieres asegurar que conectas al server correcto:
-          # fingerprint: ${{ secrets.SSH_FINGERPRINT }}
-
           script_stop: true
           command_timeout: 40m
           script: |
             set -Eeuo pipefail
 
-            PROJECT_DIR="/var/www/gymsystem"
-            DEPLOY_USER="$(whoami)"
+            BASE="${{ env.REMOTE_BASE }}"
+            RELEASES="$BASE/releases"
+            SHARED="$BASE/shared"
+            TS="$(date +%Y%m%d%H%M%S)"
+            NEW_RELEASE="$RELEASES/$TS"
 
-            echo "=============================="
-            echo " Deploy GymSystem Production"
-            echo " User: $DEPLOY_USER"
-            echo " Host: $(hostname)"
-            echo " Dir : $PROJECT_DIR"
-            echo " Time: $(date -Is)"
-            echo "=============================="
+            echo "== Paths =="
+            echo "BASE=$BASE"
+            echo "NEW_RELEASE=$NEW_RELEASE"
 
-            echo "== Check project dir =="
-            test -d "$PROJECT_DIR" || { echo "ERROR: No existe $PROJECT_DIR"; exit 1; }
-            cd "$PROJECT_DIR"
+            # sudo sin password ya lo tienes, pero igual:
+            sudo -n true
 
-            echo "== Check sudo (sin password) =="
-            sudo -n true || { echo "ERROR: sudo pide password. Revisa /etc/sudoers.d/gymsystem-deploy"; exit 1; }
+            # Crear estructura si no existe
+            mkdir -p "$RELEASES" "$SHARED/storage"
+            test -f "$SHARED/.env" || { echo "ERROR: Falta $SHARED/.env"; exit 1; }
 
-            echo "== Tool versions =="
-            php -v || true
-            command -v composer >/dev/null || { echo "ERROR: composer no instalado"; exit 1; }
-            composer -V
-            command -v node >/dev/null || { echo "ERROR: node no instalado"; exit 1; }
-            node -v
-            command -v npm >/dev/null || { echo "ERROR: npm no instalado"; exit 1; }
-            npm -v
+            # Desempacar artifact
+            mkdir -p "$NEW_RELEASE"
+            tar -xzf /tmp/deploy.tar.gz -C "$NEW_RELEASE"
+            rm -f /tmp/deploy.tar.gz
 
-            echo "== Safety checks =="
-            test -f artisan || { echo "ERROR: No existe artisan en $PROJECT_DIR"; exit 1; }
-            test -f composer.json || { echo "ERROR: No existe composer.json"; exit 1; }
-            test -f package.json || { echo "ERROR: No existe package.json"; exit 1; }
-            test -f .env || { echo "ERROR: No existe .env en $PROJECT_DIR"; exit 1; }
+            cd "$NEW_RELEASE"
 
-            echo "== Git safe directory =="
-            git config --global --add safe.directory "$PROJECT_DIR" || true
+            # Enlazar .env y storage (persistente)
+            ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            rm -rf "$NEW_RELEASE/storage" || true
+            ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
 
-            echo "== Update code (main) =="
-            git fetch --all --prune
-            git checkout -f main
-            git reset --hard origin/main
-            git clean -fd
-
-            echo "== .env checks (flexible) =="
-            grep -Eq '^APP_ENV=production\b' .env || { echo "ERROR: APP_ENV debe ser production"; exit 1; }
-            grep -Eq '^APP_DEBUG=false\b' .env || { echo "ERROR: APP_DEBUG debe ser false"; exit 1; }
-
-            echo "== Install PHP deps =="
-            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-            echo "== Build assets =="
-            npm ci --no-audit --no-fund
-            npm run build
-
-            echo "== Determine web user =="
+            # Permisos para Laravel
             WEB_USER="www-data"
-            if id -u www-data >/dev/null 2>&1; then
-              WEB_USER="www-data"
-            elif id -u apache >/dev/null 2>&1; then
-              WEB_USER="apache"
-            fi
-            echo "Web user: $WEB_USER"
+            if id -u apache >/dev/null 2>&1; then WEB_USER="apache"; fi
 
-            echo "== Laravel writable dirs permissions =="
-            sudo chown -R "$DEPLOY_USER":"$WEB_USER" "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
-            sudo find "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache" -type d -exec chmod 2775 {} \;
-            sudo find "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache" -type f -exec chmod 664 {} \;
+            sudo chown -R "${{ secrets.SSH_USER }}":"$WEB_USER" "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" || true
+            sudo find "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" -type d -exec chmod 2775 {} \; || true
+            sudo find "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" -type f -exec chmod 664 {} \; || true
 
-            echo "== Migrate + caches =="
+            # Migraciones + caches (con web user)
             sudo -u "$WEB_USER" php artisan migrate --force
             sudo -u "$WEB_USER" php artisan storage:link || true
             sudo -u "$WEB_USER" php artisan optimize:clear
@@ -113,7 +142,10 @@ jobs:
             sudo -u "$WEB_USER" php artisan route:cache || sudo -u "$WEB_USER" php artisan route:clear
             sudo -u "$WEB_USER" php artisan view:cache  || sudo -u "$WEB_USER" php artisan view:clear
 
-            echo "== Restart web services (auto-detect) =="
+            # Symlink atómico
+            ln -sfn "$NEW_RELEASE" "$BASE/current"
+
+            # Reiniciar web
             if systemctl list-units --type=service --all | grep -q apache2.service; then
               sudo systemctl restart apache2
               echo "Restarted apache2"
@@ -125,7 +157,11 @@ jobs:
                 echo "Restarted php8.2-fpm"
               fi
             else
-              echo "WARN: No encontré apache2 ni nginx para reiniciar"
+              echo "WARN: No encontré apache2 ni nginx"
             fi
 
-            echo "✅ Deploy terminado"
+            # Limpieza: deja últimos 5 releases
+            cd "$RELEASES"
+            ls -1dt */ | tail -n +6 | xargs -r rm -rf
+
+            echo "✅ Deploy PRO terminado"
