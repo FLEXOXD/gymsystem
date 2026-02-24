@@ -199,7 +199,7 @@
                 $hasBrandImage = ($isSuperAdmin && !empty($userPhotoUrl)) || (!$isSuperAdmin && !empty($gymLogo));
             @endphp
             <div id="brand-logo-badge" @class([
-                'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black',
+                'flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black',
                 'theme-logo-badge' => ! $hasBrandImage,
                 'bg-transparent shadow-none' => $hasBrandImage,
             ])>
@@ -208,9 +208,9 @@
                 @elseif ($gymLogo)
                     <img src="{{ $gymLogo }}"
                          alt="Logo"
-                         class="h-full w-full object-contain object-center"
+                         class="h-full w-full scale-125 object-contain object-center"
                          data-fallback-src="{{ (!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : '' }}"
-                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
+                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain','scale-125'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
                     <span data-logo-fallback class="hidden text-lg font-black uppercase">{{ $gymInitials }}</span>
                 @else
                     <span class="text-lg font-black uppercase">{{ $gymInitials }}</span>
@@ -330,11 +330,11 @@
                     <div id="user-menu-root" class="relative">
                         <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown">
                             @if ($userPhotoUrl)
-                                <span class="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full">
+                                <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full">
                                     <img id="user-avatar-image" src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
                                 </span>
                             @else
-                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
+                                <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
                             @endif
                             <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 md:inline">{{ $userName }}</span>
                             <svg class="h-4 w-4 text-slate-600 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
