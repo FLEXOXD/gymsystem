@@ -38,13 +38,9 @@
     $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
     $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
     $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
-    if ($isSuperAdmin) {
-        $brandHomeUrl = route('superadmin.dashboard');
-    } else {
-        $brandHomeUrl = $gymSlug !== ''
-            ? route('panel.index', $gymRouteParams)
-            : route('panel.legacy');
-    }
+    $brandHomeUrl = $isSuperAdmin
+        ? route('superadmin.dashboard')
+        : route('panel.legacy');
 
     $gymSubscriptionStatus = null;
     if (!$isSuperAdmin && $user?->gym_id) {
