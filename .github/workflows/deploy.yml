@@ -151,6 +151,20 @@ jobs:
             sudo ln -sfn "$BASE/current/public" "$BASE/public"
             echo "Legacy docroot link => $(readlink -f "$BASE/public")"
 
+            # Enforce Apache vhosts to always use current/public (never a fixed release path).
+            if [ -d /etc/apache2 ]; then
+              for conf in /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/*.conf; do
+                [ -f "$conf" ] || continue
+                sudo sed -E -i "s#/var/www/gymsystem/releases/[0-9]{14}/public#/var/www/gymsystem/current/public#g" "$conf"
+              done
+              if sudo grep -R -q "/var/www/gymsystem/releases/[0-9]\{14\}/public" /etc/apache2/sites-available /etc/apache2/sites-enabled; then
+                echo "ERROR: Apache still has hardcoded release paths"
+                sudo grep -R "/var/www/gymsystem/releases/[0-9]\{14\}/public" /etc/apache2/sites-available /etc/apache2/sites-enabled || true
+                exit 1
+              fi
+              sudo apachectl -t
+            fi
+
             # Best-effort post deploy tasks: do not fail the deployment here.
             set +e
             set +o pipefail
@@ -176,8 +190,43 @@ jobs:
               echo "WARN: No encontre apache2 ni nginx"
             fi
 
+            # Delete corrupted releases (missing critical files) to avoid confusion.
+            sudo bash -lc "for d in '$RELEASES'/*; do \
+              [ -d \"\$d\" ] || continue; \
+              [ \"\$d\" = '$NEW_RELEASE' ] && continue; \
+              if [ ! -f \"\$d/artisan\" ] || [ ! -f \"\$d/public/index.php\" ] || [ ! -f \"\$d/vendor/autoload.php\" ]; then \
+                echo \"Removing corrupted release: \$d\"; \
+                rm -rf \"\$d\"; \
+              fi; \
+            done"
+
+            # Keep only latest 5 releases.
             sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf"
 
             echo "Deploy PRO terminado"
             exit 0
+
+      - name: Post-deploy health check (/login)
+        run: |
+          URL="${{ secrets.HEALTHCHECK_URL }}"
+          if [ -z "$URL" ]; then
+            URL="https://gymsystemflexjokagencia.duckdns.org/login"
+          fi
+
+          echo "Healthcheck URL: $URL"
+          OK=0
+          for i in $(seq 1 12); do
+            CODE="$(curl -k -sS -o /dev/null -w '%{http_code}' -I "$URL")"
+            echo "Attempt $i -> HTTP $CODE"
+            if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
+              OK=1
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$OK" -ne 1 ]; then
+            echo "ERROR: Health check failed. Expected 200/302 on $URL"
+            exit 1
+          fi
 
