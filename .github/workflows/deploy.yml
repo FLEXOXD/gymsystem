@@ -17,9 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
-    env:
-      REMOTE_BASE: /var/www/gymsystem
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,7 +91,7 @@ jobs:
           script: |
             set -Eeuo pipefail
 
-            BASE="${REMOTE_BASE}"
+            BASE="/var/www/gymsystem"
             RELEASES="$BASE/releases"
             SHARED="$BASE/shared"
             TS="$(date +%Y%m%d%H%M%S)"
