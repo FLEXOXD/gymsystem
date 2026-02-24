@@ -62,42 +62,22 @@ jobs:
             --exclude="tests" \
             --exclude=".env" \
             ./ deploy_artifact/
-
-          # seguridad: no mandar storage (va en shared)
           rm -rf deploy_artifact/storage || true
 
       - name: Create tar.gz
         run: |
           tar -czf deploy.tar.gz -C deploy_artifact .
 
-      # ---------- UPLOAD (SSH + BASE64) ----------
-      - name: Upload artifact to server (SSH base64, no scp-action)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          echo "== Write SSH key to temp file =="
-          KEY_FILE="$(mktemp)"
-          printf "%s" "${{ secrets.SSH_KEY }}" > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
-
-          HOST="${{ secrets.SSH_HOST }}"
-          USER="${{ secrets.SSH_USER }}"
-          PORT="22"
-
-          echo "== Ensure /tmp exists and can write deploy.tar.gz =="
-          ssh -o StrictHostKeyChecking=no -i "$KEY_FILE" -p "$PORT" "$USER@$HOST" \
-            "rm -f /tmp/deploy.tar.gz && touch /tmp/deploy.tar.gz && chmod 600 /tmp/deploy.tar.gz"
-
-          echo "== Send deploy.tar.gz as base64 =="
-          base64 -w 0 deploy.tar.gz | ssh -o StrictHostKeyChecking=no -i "$KEY_FILE" -p "$PORT" "$USER@$HOST" \
-            "base64 -d > /tmp/deploy.tar.gz"
-
-          echo "== Verify uploaded file =="
-          ssh -o StrictHostKeyChecking=no -i "$KEY_FILE" -p "$PORT" "$USER@$HOST" \
-            "ls -lh /tmp/deploy.tar.gz"
-
-          rm -f "$KEY_FILE"
+      # ---------- UPLOAD (SCP) ----------
+      - name: Upload artifact to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: 22
+          key: ${{ secrets.SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
 
       # ---------- DEPLOY (SSH) ----------
       - name: Deploy on server (atomic)
@@ -106,63 +86,44 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           port: 22
-          key: |
-            ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }}
           script_stop: true
           command_timeout: 40m
           script: |
             set -Eeuo pipefail
 
-            BASE="${{ env.REMOTE_BASE }}"
+            BASE="${REMOTE_BASE}"
             RELEASES="$BASE/releases"
             SHARED="$BASE/shared"
             TS="$(date +%Y%m%d%H%M%S)"
             NEW_RELEASE="$RELEASES/$TS"
 
-            echo "=============================="
-            echo " Deploy PRO"
-            echo " Host: $(hostname)"
-            echo " User: $(whoami)"
-            echo " Base: $BASE"
-            echo " Release: $NEW_RELEASE"
-            echo " Time: $(date -Is)"
-            echo "=============================="
+            echo "== Paths =="
+            echo "BASE=$BASE"
+            echo "NEW_RELEASE=$NEW_RELEASE"
 
-            # sudo sin password (ya lo configuraste)
             sudo -n true
 
-            # Crear estructura si no existe
             mkdir -p "$RELEASES" "$SHARED/storage"
-
-            # .env debe estar persistente en shared
             test -f "$SHARED/.env" || { echo "ERROR: Falta $SHARED/.env"; exit 1; }
 
-            # Desempacar artifact
             mkdir -p "$NEW_RELEASE"
             tar -xzf /tmp/deploy.tar.gz -C "$NEW_RELEASE"
             rm -f /tmp/deploy.tar.gz
 
             cd "$NEW_RELEASE"
 
-            # Enlazar .env y storage (persistente)
             ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             rm -rf "$NEW_RELEASE/storage" || true
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
 
-            # Determinar usuario web
             WEB_USER="www-data"
             if id -u apache >/dev/null 2>&1; then WEB_USER="apache"; fi
-            echo "Web user: $WEB_USER"
 
-            # Permisos para Laravel
             sudo chown -R "${{ secrets.SSH_USER }}":"$WEB_USER" "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" || true
             sudo find "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" -type d -exec chmod 2775 {} \; || true
             sudo find "$SHARED/storage" "$NEW_RELEASE/bootstrap/cache" -type f -exec chmod 664 {} \; || true
 
-            # Safety checks
-            test -f artisan || { echo "ERROR: No existe artisan"; exit 1; }
-
-            # Migraciones + caches (con web user)
             sudo -u "$WEB_USER" php artisan migrate --force
             sudo -u "$WEB_USER" php artisan storage:link || true
             sudo -u "$WEB_USER" php artisan optimize:clear
@@ -170,10 +131,8 @@ jobs:
             sudo -u "$WEB_USER" php artisan route:cache || sudo -u "$WEB_USER" php artisan route:clear
             sudo -u "$WEB_USER" php artisan view:cache  || sudo -u "$WEB_USER" php artisan view:clear
 
-            # Symlink atómico
             ln -sfn "$NEW_RELEASE" "$BASE/current"
 
-            # Reiniciar web
             if systemctl list-units --type=service --all | grep -q apache2.service; then
               sudo systemctl restart apache2
               echo "Restarted apache2"
@@ -188,7 +147,6 @@ jobs:
               echo "WARN: No encontré apache2 ni nginx"
             fi
 
-            # Limpieza: deja últimos 5 releases
             cd "$RELEASES"
             ls -1dt */ | tail -n +6 | xargs -r rm -rf
 
