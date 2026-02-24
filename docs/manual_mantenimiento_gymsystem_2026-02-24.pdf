@@ -1,0 +1,805 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 7 /Kids [ 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R ] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 1751 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+(MANUAL DE MANTENIMIENTO - GYMSYSTEM \(PRODUCCION\)) Tj
+T*
+(------------------------------------------------) Tj
+T*
+() Tj
+T*
+(Fecha de referencia: 24 de febrero de 2026) Tj
+T*
+(Servidor: Google Cloud VM Ubuntu 22.04) Tj
+T*
+(Stack: Laravel 12, PHP 8.2, Apache, Redis, MySQL, systemd workers) Tj
+T*
+() Tj
+T*
+(1\) OBJETIVO) Tj
+T*
+(-----------) Tj
+T*
+() Tj
+T*
+(Este manual te permite mantener tu sistema estable, rapido y seguro, con tareas claras para:) Tj
+T*
+() Tj
+T*
+(* Monitoreo) Tj
+T*
+(* Respaldos) Tj
+T*
+(* Seguridad) Tj
+T*
+(* Rendimiento) Tj
+T*
+(* Respuesta a incidentes) Tj
+T*
+() Tj
+T*
+(2\) ESTADO ACTUAL CONFIRMADO) Tj
+T*
+(---------------------------) Tj
+T*
+() Tj
+T*
+(* VM: e2-medium \(2 vCPU, 4 GB RAM\)) Tj
+T*
+(* RAM observada: 3.8 GiB + 2 GiB swap) Tj
+T*
+(* Disco root: 9.6 GB, uso aproximado 71%) Tj
+T*
+(* PHP: 8.2.30) Tj
+T*
+(* Laravel: 12.52.0) Tj
+T*
+(* Redis activo) Tj
+T*
+(* Apache activo) Tj
+T*
+(* Workers de cola activos: laravel-worker@1, @2, @3, @4) Tj
+T*
+(* Queue/cache/session en Redis) Tj
+T*
+() Tj
+T*
+(3\) ALERTAS DE MONITORING YA CONFIGURADAS) Tj
+T*
+(----------------------------------------) Tj
+T*
+() Tj
+T*
+(3.1 CPU) Tj
+T*
+() Tj
+T*
+(* Nombre: VM CPU > 70% \(10m\)) Tj
+T*
+(* Metrica: VM Instance - CPU utilization) Tj
+T*
+(* Trigger: Above threshold) Tj
+T*
+(* Umbral: 70) Tj
+T*
+(* Duracion: 10 min) Tj
+T*
+(* Notificacion: correo) Tj
+T*
+() Tj
+T*
+(3.2 RAM) Tj
+T*
+() Tj
+T*
+(* Nombre: VM RAM > 85% \(10m\)) Tj
+T*
+(* Metrica: VM Instance - Memory utilization) Tj
+T*
+(* Trigger: Above threshold) Tj
+T*
+(* Umbral: 85) Tj
+T*
+(* Duracion: 10 min) Tj
+T*
+(* Notificacion: correo) Tj
+T*
+() Tj
+T*
+(3.3 Disco) Tj
+T*
+() Tj
+T*
+(* Nombre: VM DISK > 85% \(10m\)) Tj
+T*
+(* Metrica: VM Instance - Disk utilization) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1653 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+(* Trigger: Above threshold) Tj
+T*
+(* Umbral: 85) Tj
+T*
+(* Duracion: 10 min) Tj
+T*
+(* Filtro recomendado: state=used y device del root \(ejemplo /dev/sda1\)) Tj
+T*
+(* Notificacion: correo) Tj
+T*
+() Tj
+T*
+(4\) COMANDOS DE CHEQUEO RAPIDO \(SALUD\)) Tj
+T*
+(-------------------------------------) Tj
+T*
+() Tj
+T*
+(Ejecutar desde SSH:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(free -h) Tj
+T*
+(df -h) Tj
+T*
+(php -v) Tj
+T*
+(sudo systemctl is-active apache2 redis-server) Tj
+T*
+(sudo systemctl is-active laravel-worker@1 laravel-worker@2 laravel-worker@3 laravel-worker@4) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Resultado esperado:) Tj
+T*
+() Tj
+T*
+(* Servicios en `active`) Tj
+T*
+(* Disco menor a 85%) Tj
+T*
+(* RAM con margen libre) Tj
+T*
+() Tj
+T*
+(5\) COLA Y WORKERS \(PRODUCCION\)) Tj
+T*
+(------------------------------) Tj
+T*
+() Tj
+T*
+(5.1 Validar workers) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(sudo systemctl status laravel-worker@1 laravel-worker@2 laravel-worker@3 laravel-worker@4) Tj
+T*
+(--no-pager) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(5.2 Reiniciar workers \(despues de deploy o cambios de config\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(sudo systemctl restart laravel-worker@1 laravel-worker@2 laravel-worker@3 laravel-worker@4) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(5.3 Reinicio limpio de colas Laravel) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(cd /var/www/gymsystem/current) Tj
+T*
+(sudo -u www-data php artisan queue:restart) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(6\) CACHE, CONFIG Y OPTIMIZACION LARAVEL) Tj
+T*
+(---------------------------------------) Tj
+T*
+() Tj
+T*
+(Despues de cambios en `.env` o `config/*`:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(cd /var/www/gymsystem/current) Tj
+T*
+(sudo -u www-data php artisan optimize:clear) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1868 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+(sudo -u www-data php artisan config:cache) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Verificaciones:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(sudo -u www-data php artisan config:show queue.default) Tj
+T*
+(sudo -u www-data php artisan config:show cache.default) Tj
+T*
+(sudo -u www-data php artisan config:show session.driver) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Esperado:) Tj
+T*
+() Tj
+T*
+(* queue.default = redis) Tj
+T*
+(* cache.default = redis) Tj
+T*
+(* session.driver = redis) Tj
+T*
+() Tj
+T*
+(7\) RESPALDOS \(BACKUP\) Y RESTAURACION) Tj
+T*
+(------------------------------------) Tj
+T*
+() Tj
+T*
+(7.1 BACKUP RAPIDO) Tj
+T*
+(-----------------) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(set -a) Tj
+T*
+(source /var/www/gymsystem/shared/.env) Tj
+T*
+(set +a) Tj
+T*
+() Tj
+T*
+(TS="$\(date +%F-%H%M%S\)") Tj
+T*
+(BACKUP_DIR="/var/backups/gymsystem") Tj
+T*
+(mkdir -p "$BACKUP_DIR") Tj
+T*
+() Tj
+T*
+(cp /var/www/gymsystem/shared/.env "$BACKUP_DIR/env-$TS.bak") Tj
+T*
+(mysqldump --no-tablespaces -h "${DB_HOST:-localhost}" -P "${DB_PORT:-3306}" -u "$DB_USERNAME") Tj
+T*
+(-p"$DB_PASSWORD" "$DB_DATABASE" | gzip > "$BACKUP_DIR/db-$TS.sql.gz") Tj
+T*
+(tar -czf "$BACKUP_DIR/storage-$TS.tar.gz" -C /var/www/gymsystem/shared storage) Tj
+T*
+(ls -lh "$BACKUP_DIR" | tail -n 5) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(7.2 RESTORE TEST \(RECOMENDADO MENSUAL\)) Tj
+T*
+(--------------------------------------) Tj
+T*
+() Tj
+T*
+(* Restaurar en base temporal, validar que abre y luego borrar base temporal.) Tj
+T*
+(* Nunca restaurar encima de produccion sin backup previo.) Tj
+T*
+() Tj
+T*
+(8\) SEGURIDAD BASE YA APLICADA) Tj
+T*
+(-----------------------------) Tj
+T*
+() Tj
+T*
+(* UFW activo con reglas minimas \(OpenSSH + Apache Full\)) Tj
+T*
+(* Fail2ban activo para SSH) Tj
+T*
+(* SSH hardening:) Tj
+T*
+(* PermitRootLogin no) Tj
+T*
+(* PasswordAuthentication no) Tj
+T*
+(* PubkeyAuthentication yes) Tj
+T*
+() Tj
+T*
+(Comandos de validacion:) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1591 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+() Tj
+T*
+() Tj
+T*
+(sudo ufw status numbered) Tj
+T*
+(sudo fail2ban-client status) Tj
+T*
+(sudo fail2ban-client status sshd) Tj
+T*
+(sudo grep -E '^\(PermitRootLogin|PasswordAuthentication|PubkeyAuthentication\)') Tj
+T*
+(/etc/ssh/sshd_config) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(9\) OPCACHE \(PHP 8.2\)) Tj
+T*
+(--------------------) Tj
+T*
+() Tj
+T*
+(Configuracion recomendada ya aplicada:) Tj
+T*
+() Tj
+T*
+(* opcache.enable=1) Tj
+T*
+(* opcache.enable_cli=1) Tj
+T*
+(* opcache.memory_consumption=256) Tj
+T*
+(* opcache.interned_strings_buffer=32) Tj
+T*
+(* opcache.max_accelerated_files=50000) Tj
+T*
+(* opcache.validate_timestamps=0) Tj
+T*
+(* opcache.revalidate_freq=0) Tj
+T*
+() Tj
+T*
+(Verificar:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(php -i | grep -E "opcache.enable =>|opcache.enable_cli =>|opcache.memory_consumption) Tj
+T*
+(=>|opcache.max_accelerated_files =>|opcache.validate_timestamps =>|opcache.revalidate_freq =>") Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(10\) LIMPIEZA DE DISCO) Tj
+T*
+(---------------------) Tj
+T*
+() Tj
+T*
+(10.1 DIAGNOSTICO) Tj
+T*
+(----------------) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(sudo du -xhd1 / | sort -h) Tj
+T*
+(sudo du -xhd1 /var | sort -h) Tj
+T*
+(sudo du -xhd1 /var/lib | sort -h) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(10.2 LIMPIEZA SEGURA) Tj
+T*
+(--------------------) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(sudo apt clean) Tj
+T*
+(sudo apt autoremove -y) Tj
+T*
+(sudo apt autoclean) Tj
+T*
+(sudo journalctl --vacuum-time=7d) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(10.3 RELEASES VIEJOS \(SI APLICA\)) Tj
+T*
+(--------------------------------) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(ls -1dt /var/www/gymsystem/releases/* | tail -n +6) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1499 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+() Tj
+T*
+() Tj
+T*
+(Si muestra rutas, puedes borrar solo esos releases viejos y mantener los 5 mas recientes.) Tj
+T*
+() Tj
+T*
+(11\) RESPUESTA A ALERTAS \(PLAYBOOK\)) Tj
+T*
+(----------------------------------) Tj
+T*
+() Tj
+T*
+(11.1 SI ALERTA CPU > 70% \(10M\)) Tj
+T*
+(------------------------------) Tj
+T*
+() Tj
+T*
+(1. Revisar procesos:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(top) Tj
+T*
+(ps aux --sort=-%cpu | head) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(2. Revisar workers y cola.) Tj
+T*
+(3. Revisar endpoint pesado o cron.) Tj
+T*
+(4. Si se repite en horas pico por varios dias: subir VM \(mas vCPU\).) Tj
+T*
+() Tj
+T*
+(11.2 SI ALERTA RAM > 85% \(10M\)) Tj
+T*
+(------------------------------) Tj
+T*
+() Tj
+T*
+(1. Revisar memoria:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(free -h) Tj
+T*
+(ps aux --sort=-%mem | head) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(2. Revisar consumo de Apache y workers.) Tj
+T*
+(3. Reinicio controlado de workers.) Tj
+T*
+(4. Si persiste: aumentar RAM de VM.) Tj
+T*
+() Tj
+T*
+(11.3 SI ALERTA DISK > 85% \(10M\)) Tj
+T*
+(-------------------------------) Tj
+T*
+() Tj
+T*
+(1. Revisar:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(df -h) Tj
+T*
+(sudo du -xhd1 /var | sort -h) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(2. Limpiar logs/cache/paquetes.) Tj
+T*
+(3. Limpiar releases viejos.) Tj
+T*
+(4. Si sigue alto: ampliar disco en GCP.) Tj
+T*
+() Tj
+T*
+(12\) RUTINA OPERATIVA RECOMENDADA) Tj
+T*
+(--------------------------------) Tj
+T*
+() Tj
+T*
+(Diario \(5 min\)) Tj
+T*
+() Tj
+T*
+(* Revisar alertas GCP) Tj
+T*
+(* Ver `df -h` y estado de servicios) Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1886 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+() Tj
+T*
+(Diario rapido \(2 min\)) Tj
+T*
+() Tj
+T*
+(Puedes ejecutar este script para validacion rapida:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(bash /var/www/gymsystem/current/scripts/server_2min_check.sh) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Si trabajas desde otra ruta:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(APP_DIR=/var/www/gymsystem/current bash /var/www/gymsystem/current/scripts/server_2min_check.sh) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Interpretacion:) Tj
+T*
+() Tj
+T*
+(* `Summary: X OK / 0 FAIL` => estado estable) Tj
+T*
+(* Cualquier `FAIL` => revisar ese punto antes de abrir horario de trabajo) Tj
+T*
+() Tj
+T*
+(Semanal \(15-20 min\)) Tj
+T*
+() Tj
+T*
+(* Ejecutar backup completo) Tj
+T*
+(* Revisar logs de errores Laravel y Apache) Tj
+T*
+(* Revisar fallos de jobs) Tj
+T*
+() Tj
+T*
+(Mensual \(30 min\)) Tj
+T*
+() Tj
+T*
+(* Restore test de backup) Tj
+T*
+(* Revisar costos GCP) Tj
+T*
+(* Revisar uso pico \(CPU/RAM/disco\) para decidir escalado) Tj
+T*
+() Tj
+T*
+(13\) UMBRALES PARA ESCALAR VM) Tj
+T*
+(----------------------------) Tj
+T*
+() Tj
+T*
+(Escalar cuando ocurra al menos una condicion de forma repetida \(semanas\):) Tj
+T*
+() Tj
+T*
+(* CPU > 70% sostenido en horas pico) Tj
+T*
+(* RAM > 85% frecuente) Tj
+T*
+(* Disco > 80% con tendencia de subida) Tj
+T*
+(* Tiempo de respuesta del sistema sube de forma visible) Tj
+T*
+() Tj
+T*
+(14\) COMANDO UNICO DE DIAGNOSTICO RAPIDO) Tj
+T*
+(---------------------------------------) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(echo "=== FECHA ===" && date) Tj
+T*
+(echo "=== CPU/RAM ===" && nproc && free -h) Tj
+T*
+(echo "=== DISCO ===" && df -h) Tj
+T*
+(echo "=== SERVICIOS ===" && sudo systemctl is-active apache2 redis-server laravel-worker@1) Tj
+T*
+(laravel-worker@2 laravel-worker@3 laravel-worker@4) Tj
+T*
+(echo "=== VERSIONES ===" && php -v | head -n 2 && redis-server --version | head -n 1) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(15\) RECOMENDACION FINAL) Tj
+T*
+(-----------------------) Tj
+T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 222 >>
+stream
+BT
+/F1 10 Tf
+13 TL
+45 800 Td
+() Tj
+T*
+(Tu servidor quedo bien optimizado para etapa inicial/comercial. Manteniendo este runbook,) Tj
+T*
+(alertas y backups, reduces mucho riesgo operativo mientras creces clientes.) Tj
+T*
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
+endobj
+xref
+0 18
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000163 00000 n 
+0000000233 00000 n 
+0000002036 00000 n 
+0000002162 00000 n 
+0000003867 00000 n 
+0000003993 00000 n 
+0000005913 00000 n 
+0000006039 00000 n 
+0000007683 00000 n 
+0000007811 00000 n 
+0000009363 00000 n 
+0000009491 00000 n 
+0000011430 00000 n 
+0000011558 00000 n 
+0000011832 00000 n 
+trailer
+<< /Size 18 /Root 1 0 R >>
+startxref
+11960
+%%EOF
