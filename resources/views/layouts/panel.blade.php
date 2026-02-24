@@ -54,9 +54,21 @@
     $userInitial = mb_strtoupper(mb_substr($userName !== '' ? $userName : 'U', 0, 1));
     $userPhotoPath = trim((string) ($user?->profile_photo_path ?? ''));
     $userPhotoUrl = $resolvePublicMediaUrl($userPhotoPath);
-    $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
-    $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
-    $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
+    if (! $isSuperAdmin && $gymSlug !== '' && \Illuminate\Support\Facades\Route::has('gym.settings.index')) {
+        $settingsUrl = route('gym.settings.index', $gymRouteParams);
+    } else {
+        $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
+    }
+    if (! $isSuperAdmin && $gymSlug !== '' && \Illuminate\Support\Facades\Route::has('gym.profile.index')) {
+        $profileUrl = route('gym.profile.index', $gymRouteParams);
+    } else {
+        $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
+    }
+    if (! $isSuperAdmin && $gymSlug !== '' && \Illuminate\Support\Facades\Route::has('gym.contact.index')) {
+        $contactUrl = route('gym.contact.index', $gymRouteParams);
+    } else {
+        $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
+    }
     $brandHomeUrl = $isSuperAdmin
         ? route('superadmin.dashboard')
         : ($gymSlug !== '' ? route('panel.index', $gymRouteParams) : route('panel.legacy'));
@@ -190,7 +202,8 @@
                     <img src="{{ $gymLogo }}"
                          alt="Logo"
                          class="h-full w-full object-contain object-center p-1.5"
-                         onerror="this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
+                         data-fallback-src="{{ (!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : '' }}"
+                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain','p-1.5'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
                     <span data-logo-fallback class="hidden text-lg font-black uppercase">{{ $gymInitials }}</span>
                 @else
                     <span class="text-lg font-black uppercase">{{ $gymInitials }}</span>

@@ -170,6 +170,19 @@ Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
                 Route::get('/reports/memberships', [ReportController::class, 'memberships'])->name('reports.memberships');
                 Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])->name('reports.export.csv');
                 Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+
+                // Context-aware profile/settings/contact routes for gym users.
+                Route::get('/profile', [ThemeController::class, 'profile'])->name('gym.profile.index');
+                Route::get('/contact', [ThemeController::class, 'contact'])->name('gym.contact.index');
+                Route::post('/contact/suggestions', [ContactSuggestionController::class, 'store'])->name('gym.contact.suggestions.store');
+                Route::get('/profile/membership-invoices/{subscription}/pdf', [ThemeController::class, 'membershipInvoicePdf'])
+                    ->name('gym.profile.membership-invoice.pdf');
+                Route::get('/config', [ThemeController::class, 'index'])->name('gym.settings.index');
+                Route::post('/config/theme', [ThemeController::class, 'update'])->name('gym.settings.theme.update');
+                Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->name('gym.settings.profile.update');
+                Route::post('/config/gym-profile', [ThemeController::class, 'updateGymProfile'])->name('gym.settings.gym-profile.update');
+                Route::post('/config/gym-logo', [ThemeController::class, 'updateGymLogo'])->name('gym.settings.gym-logo.update');
+                Route::post('/config/gym-avatars', [ThemeController::class, 'updateGymAvatars'])->name('gym.settings.gym-avatars.update');
             });
 
         Route::get('/profile', [ThemeController::class, 'profile'])->name('profile.index');
