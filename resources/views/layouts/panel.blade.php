@@ -40,7 +40,7 @@
     $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
     $brandHomeUrl = $isSuperAdmin
         ? route('superadmin.dashboard')
-        : route('panel.legacy');
+        : ($gymSlug !== '' ? route('panel.index', $gymRouteParams) : route('panel.legacy'));
 
     $gymSubscriptionStatus = null;
     if (!$isSuperAdmin && $user?->gym_id) {
@@ -150,8 +150,10 @@
 <body class="theme-body h-full ui-text">
 <div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
-        <a href="{{ $brandHomeUrl }}"
-           class="theme-divider flex items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
+        <a id="brand-home-link"
+           href="{{ $brandHomeUrl }}"
+           data-home-url="{{ $brandHomeUrl }}"
+           class="theme-divider relative z-10 flex items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
             <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
                 @if ($gymLogo)
                     <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain" style="transform: scale(1.55); transform-origin: center;">
@@ -495,6 +497,14 @@
 
         document.querySelectorAll('table.ui-table').forEach(function (table, index) {
             enhanceSmartList(table, index);
+        });
+
+        const brandHomeLink = document.getElementById('brand-home-link');
+        brandHomeLink?.addEventListener('click', function (event) {
+            const targetUrl = brandHomeLink.getAttribute('data-home-url');
+            if (!targetUrl) return;
+            event.preventDefault();
+            window.location.href = targetUrl;
         });
     })();
 </script>
