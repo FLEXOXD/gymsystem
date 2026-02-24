@@ -23,15 +23,36 @@
         $isSuperAdmin = auth()->user()?->gym_id === null;
         if ($gym) {
             $resolveMediaUrl = function (?string $path): ?string {
-                if (!$path) {
+                $rawPath = trim((string) $path);
+                if ($rawPath === '') {
                     return null;
                 }
-                $trimmedPath = ltrim($path, '/');
-                return str_starts_with($path, 'http://') || str_starts_with($path, 'https://')
-                    ? $path
-                    : (str_starts_with($trimmedPath, 'storage/')
-                        ? asset($trimmedPath)
-                        : asset('storage/'.$trimmedPath));
+                if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
+                    return $rawPath;
+                }
+
+                $normalized = str_replace('\\', '/', ltrim($rawPath, '/'));
+
+                $publicStorageMarker = '/storage/app/public/';
+                $markerPos = strpos($normalized, $publicStorageMarker);
+                if ($markerPos !== false) {
+                    $normalized = substr($normalized, $markerPos + strlen($publicStorageMarker));
+                }
+
+                if (str_starts_with($normalized, 'public/')) {
+                    $normalized = substr($normalized, strlen('public/'));
+                }
+
+                if (str_starts_with($normalized, 'storage/')) {
+                    $normalized = substr($normalized, strlen('storage/'));
+                }
+
+                $normalized = ltrim($normalized, '/');
+                if ($normalized === '') {
+                    return null;
+                }
+
+                return asset('storage/'.$normalized);
             };
 
             $gymInitials = collect(explode(' ', trim($gym->name ?? '')))

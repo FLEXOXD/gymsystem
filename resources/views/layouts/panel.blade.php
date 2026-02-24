@@ -1,6 +1,40 @@
 @php
     use App\Models\Subscription;
 
+    $resolvePublicMediaUrl = function (?string $path): ?string {
+        $rawPath = trim((string) $path);
+        if ($rawPath === '') {
+            return null;
+        }
+
+        if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
+            return $rawPath;
+        }
+
+        $normalized = str_replace('\\', '/', ltrim($rawPath, '/'));
+
+        $publicStorageMarker = '/storage/app/public/';
+        $markerPos = strpos($normalized, $publicStorageMarker);
+        if ($markerPos !== false) {
+            $normalized = substr($normalized, $markerPos + strlen($publicStorageMarker));
+        }
+
+        if (str_starts_with($normalized, 'public/')) {
+            $normalized = substr($normalized, strlen('public/'));
+        }
+
+        if (str_starts_with($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+
+        $normalized = ltrim($normalized, '/');
+        if ($normalized === '') {
+            return null;
+        }
+
+        return asset('storage/'.$normalized);
+    };
+
     $pageTitle = trim($__env->yieldContent('title')) ?: __('ui.panel');
     $user = auth()->user();
     $activeTheme = $user?->theme ?? 'iron_dark';
@@ -12,29 +46,14 @@
     $gymSlug = trim((string) ($gym?->slug ?? ''));
     $gymRouteParams = $gymSlug !== '' ? ['contextGym' => $gymSlug] : [];
     $gymName = $isSuperAdmin ? __('ui.superadmin') : ($gym?->name ?? 'Gym');
-    $gymLogo = $gym?->logo_path;
-    if ($gymLogo && !str_starts_with($gymLogo, 'http://') && !str_starts_with($gymLogo, 'https://')) {
-        $gymLogo = asset('storage/'.ltrim($gymLogo, '/'));
-    }
+    $gymLogo = $resolvePublicMediaUrl($gym?->logo_path);
     $gymInitials = collect(explode(' ', trim($gymName)))->filter()->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('');
     $gymInitials = $gymInitials !== '' ? mb_strtoupper($gymInitials) : 'GY';
     $userName = trim((string) ($user?->name ?? __('ui.guest')));
     $userEmail = trim((string) ($user?->email ?? ''));
     $userInitial = mb_strtoupper(mb_substr($userName !== '' ? $userName : 'U', 0, 1));
     $userPhotoPath = trim((string) ($user?->profile_photo_path ?? ''));
-    $userPhotoUrl = null;
-    if ($userPhotoPath !== '') {
-        if (str_starts_with($userPhotoPath, 'http://') || str_starts_with($userPhotoPath, 'https://')) {
-            $userPhotoUrl = $userPhotoPath;
-        } else {
-            $normalizedUserPhotoPath = ltrim($userPhotoPath, '/');
-            if (str_starts_with($normalizedUserPhotoPath, 'storage/')) {
-                $userPhotoUrl = asset($normalizedUserPhotoPath);
-            } else {
-                $userPhotoUrl = asset('storage/'.$normalizedUserPhotoPath);
-            }
-        }
-    }
+    $userPhotoUrl = $resolvePublicMediaUrl($userPhotoPath);
     $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
     $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
     $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
