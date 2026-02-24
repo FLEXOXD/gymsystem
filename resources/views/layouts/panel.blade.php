@@ -9,6 +9,8 @@
     $themeClass = $isDarkTheme ? 'dark theme-dark' : 'theme-light';
     $isSuperAdmin = $user && $user->gym_id === null;
     $gym = $user?->gym;
+    $gymSlug = trim((string) ($gym?->slug ?? ''));
+    $gymRouteParams = $gymSlug !== '' ? ['contextGym' => $gymSlug] : [];
     $gymName = $isSuperAdmin ? __('ui.superadmin') : ($gym?->name ?? 'Gym');
     $gymLogo = $gym?->logo_path;
     if ($gymLogo && !str_starts_with($gymLogo, 'http://') && !str_starts_with($gymLogo, 'https://')) {
@@ -36,8 +38,13 @@
     $settingsUrl = \Illuminate\Support\Facades\Route::has('settings.index') ? route('settings.index') : '#';
     $profileUrl = \Illuminate\Support\Facades\Route::has('profile.index') ? route('profile.index') : '#';
     $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
-    $brandHomeRoute = $isSuperAdmin ? 'superadmin.dashboard' : 'panel.index';
-    $brandHomeUrl = route($brandHomeRoute);
+    if ($isSuperAdmin) {
+        $brandHomeUrl = route('superadmin.dashboard');
+    } else {
+        $brandHomeUrl = $gymSlug !== ''
+            ? route('panel.index', $gymRouteParams)
+            : route('panel.legacy');
+    }
 
     $gymSubscriptionStatus = null;
     if (!$isSuperAdmin && $user?->gym_id) {
@@ -48,20 +55,20 @@
 
     $navItems = $isSuperAdmin
         ? [
-            ['label' => __('ui.nav.panel'), 'route' => 'superadmin.dashboard', 'active' => 'superadmin.dashboard', 'icon' => 'panel'],
-            ['label' => __('ui.nav.gyms'), 'route' => 'superadmin.gyms.index', 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*', 'icon' => 'gyms'],
-            ['label' => 'Crear nuevo gimnasio', 'route' => 'superadmin.gym.index', 'active' => 'superadmin.gym.*', 'icon' => 'gym'],
-            ['label' => 'Planes', 'route' => 'superadmin.plan-templates.index', 'active' => 'superadmin.plan-templates.*', 'icon' => 'plans'],
-            ['label' => __('ui.nav.notifications'), 'route' => 'superadmin.notifications.index', 'active' => 'superadmin.notifications.*', 'icon' => 'notifications'],
-            ['label' => __('ui.nav.suggestions'), 'route' => 'superadmin.suggestions.index', 'active' => 'superadmin.suggestions.*', 'icon' => 'suggestions'],
+            ['label' => __('ui.nav.panel'), 'route' => 'superadmin.dashboard', 'params' => [], 'active' => 'superadmin.dashboard', 'icon' => 'panel'],
+            ['label' => __('ui.nav.gyms'), 'route' => 'superadmin.gyms.index', 'params' => [], 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*', 'icon' => 'gyms'],
+            ['label' => 'Crear nuevo gimnasio', 'route' => 'superadmin.gym.index', 'params' => [], 'active' => 'superadmin.gym.*', 'icon' => 'gym'],
+            ['label' => 'Planes', 'route' => 'superadmin.plan-templates.index', 'params' => [], 'active' => 'superadmin.plan-templates.*', 'icon' => 'plans'],
+            ['label' => __('ui.nav.notifications'), 'route' => 'superadmin.notifications.index', 'params' => [], 'active' => 'superadmin.notifications.*', 'icon' => 'notifications'],
+            ['label' => __('ui.nav.suggestions'), 'route' => 'superadmin.suggestions.index', 'params' => [], 'active' => 'superadmin.suggestions.*', 'icon' => 'suggestions'],
           ]
         : [
-            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'active' => 'panel.*', 'icon' => 'panel'],
-            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'active' => 'reception.*', 'icon' => 'reception'],
-            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'active' => 'clients.*', 'icon' => 'clients'],
-            ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'active' => 'plans.*', 'icon' => 'plans'],
-            ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'active' => 'cash.*', 'icon' => 'cash'],
-            ['label' => __('ui.nav.reports'), 'route' => 'reports.index', 'active' => 'reports.*', 'icon' => 'reports'],
+            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
+            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
+            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
+            ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
+            ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
+            ['label' => __('ui.nav.reports'), 'route' => 'reports.index', 'params' => $gymRouteParams, 'active' => 'reports.*', 'icon' => 'reports'],
           ];
 
     $statusVariant = match ($gymSubscriptionStatus) {
@@ -168,7 +175,7 @@
                     $activePatterns = explode('|', $item['active']);
                     $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
                 @endphp
-                <a href="{{ route($item['route']) }}"
+                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $isActive ? 'theme-nav-active' : 'theme-nav-link' }}">
                     <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : '' }}"></span>
                     <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
