@@ -580,7 +580,7 @@
         <section class="panel hero" aria-label="Panel de modo operativo">
             <div class="hero-content">
                 <div class="hero-top">
-                    <span class="hero-kicker">GymSystem Controlos</span>
+                    <span class="hero-kicker">GymSystem Control</span>
                 </div>
 
                 <h2 class="hero-title"><span class="cyan">Modo</span> <span class="solid">Operativo</span></h2>
