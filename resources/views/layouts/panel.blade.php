@@ -164,7 +164,7 @@
            data-home-url="{{ $brandHomeUrl }}"
            class="theme-divider relative z-50 flex cursor-pointer items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
            style="pointer-events:auto;">
-            <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
+            <div id="brand-logo-badge" class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
                 @if ($isSuperAdmin && $userPhotoUrl)
                     <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
                 @elseif ($gymLogo)
@@ -288,7 +288,7 @@
                         <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown">
                             @if ($userPhotoUrl)
                                 <span class="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">
-                                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
+                                    <img id="user-avatar-image" src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
                                 </span>
                             @else
                                 <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
@@ -518,6 +518,23 @@
             event.preventDefault();
             window.location.href = targetUrl;
         });
+
+        // SuperAdmin-only visual sync:
+        // if top-right avatar exists, mirror it into the sidebar brand badge.
+        const isSuperAdminViewer = @json($isSuperAdmin);
+        if (isSuperAdminViewer) {
+            const brandLogoBadge = document.getElementById('brand-logo-badge');
+            const topAvatarImage = document.getElementById('user-avatar-image') || document.querySelector('#user-menu-button img');
+            const topAvatarSrc = topAvatarImage?.getAttribute('src') || '';
+            if (brandLogoBadge && topAvatarSrc !== '') {
+                brandLogoBadge.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = topAvatarSrc;
+                img.alt = topAvatarImage?.getAttribute('alt') || 'SuperAdmin';
+                img.className = 'h-full w-full object-cover';
+                brandLogoBadge.appendChild(img);
+            }
+        }
     })();
 </script>
 @stack('scripts')
