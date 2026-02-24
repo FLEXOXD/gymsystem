@@ -1,4 +1,4 @@
-name: Deploy GymSystem Production (PRO)
+﻿name: Deploy GymSystem Production (PRO)
 
 on:
   push:
@@ -145,24 +145,25 @@ jobs:
 
             sudo -u "$WEB_USER" php "$BASE/current/artisan" queue:restart || true
             if systemctl list-units --type=service --all | grep -q laravel-worker.service; then
-              sudo systemctl restart laravel-worker
-              echo "Restarted laravel-worker"
+              sudo systemctl restart laravel-worker || echo "WARN: No se pudo reiniciar laravel-worker"
+              echo "Restart attempt: laravel-worker"
             fi
 
             if systemctl list-units --type=service --all | grep -q apache2.service; then
-              sudo systemctl restart apache2
-              echo "Restarted apache2"
+              sudo systemctl restart apache2 || echo "WARN: No se pudo reiniciar apache2"
+              echo "Restart attempt: apache2"
             elif systemctl list-units --type=service --all | grep -q nginx.service; then
-              sudo systemctl restart nginx
-              echo "Restarted nginx"
+              sudo systemctl restart nginx || echo "WARN: No se pudo reiniciar nginx"
+              echo "Restart attempt: nginx"
               if systemctl list-units --type=service --all | grep -q php8.2-fpm.service; then
-                sudo systemctl restart php8.2-fpm
-                echo "Restarted php8.2-fpm"
+                sudo systemctl restart php8.2-fpm || echo "WARN: No se pudo reiniciar php8.2-fpm"
+                echo "Restart attempt: php8.2-fpm"
               fi
             else
-              echo "WARN: No encontré apache2 ni nginx"
+              echo "WARN: No encontrÃ© apache2 ni nginx"
             fi
 
-            sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf"
+            sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf" || echo "WARN: No se pudo limpiar releases antiguos"
 
-            echo "✅ Deploy PRO terminado"
+            echo "âœ… Deploy PRO terminado"
+
