@@ -143,27 +143,33 @@ jobs:
 
             sudo ln -sfn "$NEW_RELEASE" "$BASE/current"
 
-            sudo -u "$WEB_USER" php "$BASE/current/artisan" queue:restart || true
+            # Best-effort post deploy tasks: do not fail the deployment here.
+            set +e
+            set +o pipefail
+
+            sudo -u "$WEB_USER" php "$BASE/current/artisan" queue:restart
+
             if systemctl list-units --type=service --all | grep -q laravel-worker.service; then
-              sudo systemctl restart laravel-worker || echo "WARN: No se pudo reiniciar laravel-worker"
+              sudo systemctl restart laravel-worker
               echo "Restart attempt: laravel-worker"
             fi
 
             if systemctl list-units --type=service --all | grep -q apache2.service; then
-              sudo systemctl restart apache2 || echo "WARN: No se pudo reiniciar apache2"
+              sudo systemctl restart apache2
               echo "Restart attempt: apache2"
             elif systemctl list-units --type=service --all | grep -q nginx.service; then
-              sudo systemctl restart nginx || echo "WARN: No se pudo reiniciar nginx"
+              sudo systemctl restart nginx
               echo "Restart attempt: nginx"
               if systemctl list-units --type=service --all | grep -q php8.2-fpm.service; then
-                sudo systemctl restart php8.2-fpm || echo "WARN: No se pudo reiniciar php8.2-fpm"
+                sudo systemctl restart php8.2-fpm
                 echo "Restart attempt: php8.2-fpm"
               fi
             else
-              echo "WARN: No encontrÃ© apache2 ni nginx"
+              echo "WARN: No encontre apache2 ni nginx"
             fi
 
-            sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf" || echo "WARN: No se pudo limpiar releases antiguos"
+            sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf"
 
-            echo "âœ… Deploy PRO terminado"
+            echo "Deploy PRO terminado"
+            exit 0
 
