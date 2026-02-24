@@ -143,6 +143,14 @@ jobs:
 
             sudo ln -sfn "$NEW_RELEASE" "$BASE/current"
 
+            # Compatibility for servers still using legacy Apache DocumentRoot:
+            # /var/www/gymsystem/public -> /var/www/gymsystem/current/public
+            if [ -d "$BASE/public" ] && [ ! -L "$BASE/public" ]; then
+              sudo rm -rf "$BASE/public"
+            fi
+            sudo ln -sfn "$BASE/current/public" "$BASE/public"
+            echo "Legacy docroot link => $(readlink -f "$BASE/public")"
+
             # Best-effort post deploy tasks: do not fail the deployment here.
             set +e
             set +o pipefail
