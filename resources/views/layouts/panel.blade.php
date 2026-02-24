@@ -168,7 +168,7 @@
                 @if ($isSuperAdmin && $userPhotoUrl)
                     <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
                 @elseif ($gymLogo)
-                    <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain" style="transform: scale(1.55); transform-origin: center;">
+                    <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain p-1">
                 @else
                     {{ $gymInitials }}
                 @endif
