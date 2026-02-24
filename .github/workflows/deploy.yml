@@ -103,18 +103,18 @@ jobs:
 
             sudo -n true
 
-            mkdir -p "$RELEASES" "$SHARED/storage"
-            test -f "$SHARED/.env" || { echo "ERROR: Falta $SHARED/.env"; exit 1; }
+            sudo mkdir -p "$RELEASES" "$SHARED/storage"
+            sudo test -f "$SHARED/.env" || { echo "ERROR: Falta $SHARED/.env"; exit 1; }
 
-            mkdir -p "$NEW_RELEASE"
-            tar -xzf /tmp/deploy.tar.gz -C "$NEW_RELEASE"
+            sudo mkdir -p "$NEW_RELEASE"
+            sudo tar -xzf /tmp/deploy.tar.gz -C "$NEW_RELEASE"
             rm -f /tmp/deploy.tar.gz
 
             cd "$NEW_RELEASE"
 
-            ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
-            rm -rf "$NEW_RELEASE/storage" || true
-            ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
+            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            sudo rm -rf "$NEW_RELEASE/storage" || true
+            sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
 
             WEB_USER="www-data"
             if id -u apache >/dev/null 2>&1; then WEB_USER="apache"; fi
@@ -130,7 +130,7 @@ jobs:
             sudo -u "$WEB_USER" php artisan route:cache || sudo -u "$WEB_USER" php artisan route:clear
             sudo -u "$WEB_USER" php artisan view:cache  || sudo -u "$WEB_USER" php artisan view:clear
 
-            ln -sfn "$NEW_RELEASE" "$BASE/current"
+            sudo ln -sfn "$NEW_RELEASE" "$BASE/current"
 
             sudo -u "$WEB_USER" php "$BASE/current/artisan" queue:restart || true
             if systemctl list-units --type=service --all | grep -q laravel-worker.service; then
@@ -152,7 +152,6 @@ jobs:
               echo "WARN: No encontré apache2 ni nginx"
             fi
 
-            cd "$RELEASES"
-            ls -1dt */ | tail -n +6 | xargs -r rm -rf
+            sudo bash -lc "cd '$RELEASES' && ls -1dt */ | tail -n +6 | xargs -r rm -rf"
 
             echo "✅ Deploy PRO terminado"
