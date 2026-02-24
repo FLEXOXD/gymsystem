@@ -233,11 +233,11 @@
              class="ui-modal-backdrop"
              x-on:click.self="closeCreateClient()"
              x-on:keydown.escape.window="closeCreateClient()">
-            <div class="w-full max-w-3xl rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl"
+            <div class="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl"
                  x-transition.scale.origin.top
                  role="dialog"
                  aria-modal="true">
-                <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" class="space-y-0" x-on:submit="normalizeNameField('first_name'); normalizeNameField('last_name'); submitting = true">
+                <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" class="flex min-h-0 flex-1 flex-col space-y-0" x-on:submit="normalizeNameField('first_name'); normalizeNameField('last_name'); submitting = true">
                     @csrf
                     <input type="hidden" name="_open_create_modal" value="1">
 
@@ -254,7 +254,7 @@
                         </button>
                     </header>
 
-                    <div class="space-y-5 px-5 py-5">
+                    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Nombre</span>
@@ -395,7 +395,7 @@
                         </div>
                     </div>
 
-                    <footer class="flex items-center justify-end gap-3 border-t border-slate-800 px-5 py-4">
+                    <footer class="flex shrink-0 items-center justify-end gap-3 border-t border-slate-800 bg-slate-950/95 px-5 py-4">
                         <x-ui.button type="button" variant="ghost" x-on:click="closeCreateClient()">Cancelar</x-ui.button>
                         <x-ui.button type="submit"
                                      variant="success"
