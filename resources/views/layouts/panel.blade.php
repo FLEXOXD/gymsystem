@@ -263,7 +263,7 @@
 
                 <div class="flex w-full items-center justify-end gap-2 sm:w-auto">
                     @if (!$isSuperAdmin)
-                        <form method="GET" action="{{ route('clients.index') }}" class="hidden items-center gap-2 md:flex">
+                        <form method="GET" action="{{ route('clients.index', $gymRouteParams) }}" class="hidden items-center gap-2 md:flex">
                             <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('ui.search_client') }}"
                                    class="ui-input w-52">
                             <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold">{{ __('ui.search') }}</button>
@@ -339,7 +339,7 @@
                 $activePatterns = explode('|', $item['active']);
                 $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
             @endphp
-            <a href="{{ route($item['route']) }}"
+            <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                class="min-w-[84px] shrink-0 rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
                 {{ $item['label'] }}
             </a>
