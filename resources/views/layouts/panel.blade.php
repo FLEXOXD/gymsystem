@@ -165,7 +165,9 @@
            class="theme-divider relative z-50 flex cursor-pointer items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
            style="pointer-events:auto;">
             <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
-                @if ($gymLogo)
+                @if ($isSuperAdmin && $userPhotoUrl)
+                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover">
+                @elseif ($gymLogo)
                     <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain" style="transform: scale(1.55); transform-origin: center;">
                 @else
                     {{ $gymInitials }}
