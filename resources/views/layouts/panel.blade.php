@@ -195,15 +195,22 @@
            data-home-url="{{ $brandHomeUrl }}"
            class="theme-divider relative z-50 flex cursor-pointer items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
            style="pointer-events:auto;">
-            <div id="brand-logo-badge" class="theme-logo-badge flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
+            @php
+                $hasBrandImage = ($isSuperAdmin && !empty($userPhotoUrl)) || (!$isSuperAdmin && !empty($gymLogo));
+            @endphp
+            <div id="brand-logo-badge" @class([
+                'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black',
+                'theme-logo-badge' => ! $hasBrandImage,
+                'bg-transparent shadow-none' => $hasBrandImage,
+            ])>
                 @if ($isSuperAdmin && $userPhotoUrl)
                     <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
                 @elseif ($gymLogo)
                     <img src="{{ $gymLogo }}"
                          alt="Logo"
-                         class="h-full w-full object-contain object-center p-1.5"
+                         class="h-full w-full object-contain object-center"
                          data-fallback-src="{{ (!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : '' }}"
-                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain','p-1.5'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
+                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
                     <span data-logo-fallback class="hidden text-lg font-black uppercase">{{ $gymInitials }}</span>
                 @else
                     <span class="text-lg font-black uppercase">{{ $gymInitials }}</span>
@@ -323,7 +330,7 @@
                     <div id="user-menu-root" class="relative">
                         <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown">
                             @if ($userPhotoUrl)
-                                <span class="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">
+                                <span class="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full">
                                     <img id="user-avatar-image" src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
                                 </span>
                             @else
