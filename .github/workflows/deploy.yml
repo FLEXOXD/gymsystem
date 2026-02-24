@@ -133,6 +133,12 @@ jobs:
 
             ln -sfn "$NEW_RELEASE" "$BASE/current"
 
+            sudo -u "$WEB_USER" php "$BASE/current/artisan" queue:restart || true
+            if systemctl list-units --type=service --all | grep -q laravel-worker.service; then
+              sudo systemctl restart laravel-worker
+              echo "Restarted laravel-worker"
+            fi
+
             if systemctl list-units --type=service --all | grep -q apache2.service; then
               sudo systemctl restart apache2
               echo "Restarted apache2"
