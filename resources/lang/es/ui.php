@@ -45,7 +45,7 @@ return [
         'card_title' => 'Ver perfil',
         'card_subtitle' => 'Cuenta personal del usuario.',
         'personal_info' => 'Información personal',
-        'personal_info_hint' => 'Foto de perfil (máximo 15MB), género, nacimiento, identificación y teléfono con código internacional.',
+        'personal_info_hint' => '',
         'profile_photo' => 'Foto de perfil',
         'profile_photo_hint' => 'Solo para esta sección. Máximo 15MB.',
         'name' => 'Nombre',
