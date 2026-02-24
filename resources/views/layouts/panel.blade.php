@@ -144,16 +144,26 @@
                 width: min(92vw, 20rem);
             }
         }
+        #panel-sidebar {
+            position: relative;
+            z-index: 40;
+        }
+        #brand-home-link,
+        #brand-home-link * {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
     </style>
     @stack('styles')
 </head>
 <body class="theme-body h-full ui-text">
 <div class="min-h-screen overflow-x-clip lg:flex">
-    <aside id="panel-sidebar" class="theme-sidebar hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
+    <aside id="panel-sidebar" class="theme-sidebar relative z-40 hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
         <a id="brand-home-link"
            href="{{ $brandHomeUrl }}"
            data-home-url="{{ $brandHomeUrl }}"
-           class="theme-divider relative z-10 flex items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
+           class="theme-divider relative z-50 flex cursor-pointer items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+           style="pointer-events:auto;">
             <div class="theme-logo-badge flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black">
                 @if ($gymLogo)
                     <img src="{{ $gymLogo }}" alt="Logo" class="h-full w-full object-contain" style="transform: scale(1.55); transform-origin: center;">
