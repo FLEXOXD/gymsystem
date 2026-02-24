@@ -189,3 +189,7 @@ Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
 
     });
 });
+Route::get('{gym}/__cache_test', function () {
+    return response('cache=ok', 200)
+        ->header('Cache-Control', 'no-store');
+})->where('gym', '[a-z0-9-]+');
