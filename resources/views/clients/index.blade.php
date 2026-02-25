@@ -255,15 +255,32 @@
                     </header>
 
                     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+                        @if ($errors->any())
+                            <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                                <p class="font-semibold">Corrige los siguientes campos antes de guardar:</p>
+                                <ul class="mt-1 list-disc space-y-1 pl-5 text-xs">
+                                    @foreach ($errors->all() as $message)
+                                        <li>{{ $message }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Nombre</span>
                                 <input type="text" name="first_name" x-model="form.first_name" x-on:blur="normalizeNameField('first_name')" required class="ui-input" x-ref="firstNameInput">
+                                @error('first_name')
+                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Apellido</span>
                                 <input type="text" name="last_name" x-model="form.last_name" x-on:blur="normalizeNameField('last_name')" required class="ui-input">
+                                @error('last_name')
+                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
@@ -275,6 +292,9 @@
                                        required
                                        class="ui-input"
                                        placeholder="Cedula, DNI o pasaporte">
+                                @error('document_number')
+                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
                                 <div x-cloak x-show="documentState === 'checking'" class="text-xs text-slate-400">Validando documento...</div>
                                 <div x-cloak x-show="documentState === 'exists'" class="rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-200">
                                     <p>Este documento ya existe en este gimnasio.</p>
@@ -289,6 +309,9 @@
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Teléfono</span>
                                 <input type="text" name="phone" x-model="form.phone" class="ui-input" placeholder="Opcional">
+                                @error('phone')
+                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -298,6 +321,9 @@
                                     <option value="female">Mujer</option>
                                     <option value="neutral">Neutral</option>
                                 </select>
+                                @error('gender')
+                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
                             </label>
 
                             <div class="space-y-2 md:col-span-2">
@@ -306,6 +332,9 @@
                                     <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input"
                                            x-on:change="onPhotoSelected($event)">
                                 </label>
+                                @error('photo')
+                                    <span class="block text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                @enderror
 
                                 <div class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                                     <template x-if="photoPreview">
@@ -343,16 +372,25 @@
                                             <option value="{{ $plan->id }}">{{ $plan->name }} ({{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }})</option>
                                         @endforeach
                                     </select>
+                                    @error('plan_id')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Fecha inicio</span>
                                     <input type="date" name="membership_starts_at" x-model="form.membership_starts_at" x-on:input="recalculateMembershipEnd()" x-bind:disabled="!form.start_membership" class="ui-input">
+                                    @error('membership_starts_at')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Precio</span>
                                     <input type="number" name="membership_price" x-model="form.membership_price" min="0" step="0.01" x-bind:disabled="!form.start_membership" class="ui-input">
+                                    @error('membership_price')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -363,6 +401,9 @@
                                             <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
                                         </template>
                                     </select>
+                                    @error('promotion_id')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -372,11 +413,17 @@
                                         <option value="transfer">Transferencia</option>
                                         <option value="card">Tarjeta</option>
                                     </select>
+                                    @error('payment_method')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Monto pagado</span>
                                     <input type="number" name="amount_paid" x-model="form.amount_paid" min="0" step="0.01" x-bind:disabled="!form.start_membership" class="ui-input">
+                                    @error('amount_paid')
+                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                    @enderror
                                 </label>
 
                                 <div class="space-y-2 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
@@ -392,6 +439,9 @@
                             <p x-cloak x-show="form.start_membership && plans.length === 0" class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
                                 No hay planes activos. Crea un plan antes de iniciar membresías desde este modal.
                             </p>
+                            @error('cash')
+                                <p class="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-xs font-semibold text-rose-200">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 

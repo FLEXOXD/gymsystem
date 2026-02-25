@@ -79,6 +79,7 @@
             ->where('gym_id', (int) $user->gym_id)
             ->value('status');
     }
+    $suppressGlobalValidationToast = request()->routeIs('clients.index') && (bool) old('_open_create_modal', false);
 
     $navItems = $isSuperAdmin
         ? [
@@ -183,6 +184,26 @@
         #brand-home-link * {
             pointer-events: auto !important;
             cursor: pointer !important;
+        }
+        .panel-toast-stack {
+            position: fixed;
+            top: calc(5rem + env(safe-area-inset-top));
+            right: max(1rem, env(safe-area-inset-right));
+            z-index: 90;
+            width: min(92vw, 30rem);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .panel-toast-stack [data-toast] {
+            pointer-events: auto;
+            box-shadow: 0 14px 36px rgb(2 6 23 / 0.35);
+        }
+        @media (max-width: 768px) {
+            .panel-toast-stack {
+                top: calc(4.5rem + env(safe-area-inset-top));
+            }
         }
     </style>
     @stack('styles')
@@ -365,6 +386,7 @@
         </header>
 
         <main class="panel-view mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
+            <div class="panel-toast-stack" aria-live="polite" aria-atomic="true">
             @if (!empty($subscription_grace))
                 <x-toast type="warning" :autohide="false">{{ __('ui.toast.grace_subscription', ['days' => (int) ($subscription_grace_days ?? 3)]) }}</x-toast>
             @endif
@@ -373,12 +395,13 @@
                 <x-toast type="success">{{ session('status') }}</x-toast>
             @endif
             @if (session('error'))
-                <x-toast type="danger">{{ session('error') }}</x-toast>
+                <x-toast type="danger" :autohide="false">{{ session('error') }}</x-toast>
             @endif
 
-            @if ($errors->any())
-                <x-toast type="danger">{{ $errors->first() }}</x-toast>
+            @if ($errors->any() && ! $suppressGlobalValidationToast)
+                <x-toast type="danger" :autohide="false">{{ $errors->first() }}</x-toast>
             @endif
+            </div>
 
             @yield('content')
         </main>
