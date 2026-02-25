@@ -9,6 +9,11 @@
         $gymLogoUrl = null;
         $gymAvatarUrls = ['male' => null, 'female' => null, 'neutral' => null];
         $gymTimezone = 'UTC';
+        $isGymContextRoute = request()->routeIs('gym.settings.*');
+        $themeUpdateUrl = route('settings.theme.update');
+        $gymProfileUpdateUrl = route('settings.gym-profile.update');
+        $gymLogoUpdateUrl = route('settings.gym-logo.update');
+        $gymAvatarsUpdateUrl = route('settings.gym-avatars.update');
         $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
         $gymLanguageCode = old('language_code', $gym->language_code ?? 'es');
         $gymAddressCountry = '-';
@@ -22,6 +27,14 @@
         ];
         $isSuperAdmin = auth()->user()?->gym_id === null;
         if ($gym) {
+            if ($isGymContextRoute && trim((string) ($gym->slug ?? '')) !== '') {
+                $contextRouteParams = ['contextGym' => $gym->slug];
+                $themeUpdateUrl = route('gym.settings.theme.update', $contextRouteParams);
+                $gymProfileUpdateUrl = route('gym.settings.gym-profile.update', $contextRouteParams);
+                $gymLogoUpdateUrl = route('gym.settings.gym-logo.update', $contextRouteParams);
+                $gymAvatarsUpdateUrl = route('gym.settings.gym-avatars.update', $contextRouteParams);
+            }
+
             $resolveMediaUrl = function (?string $path): ?string {
                 $rawPath = trim((string) $path);
                 if ($rawPath === '') {
@@ -105,7 +118,7 @@
     <div id="theme-selector"
          class="space-y-6"
          data-current-theme="{{ $currentTheme }}"
-         data-update-url="{{ route('settings.theme.update', [], false) }}"
+         data-update-url="{{ $themeUpdateUrl }}"
          data-csrf="{{ csrf_token() }}">
         <x-card title="Selector de tema"
                 subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantaneo y se guarda en tu cuenta.">
@@ -178,7 +191,7 @@
                     </div>
 
                     <form method="POST"
-                          action="{{ route('settings.gym-logo.update') }}"
+                          action="{{ $gymLogoUpdateUrl }}"
                           enctype="multipart/form-data"
                           class="mt-4 space-y-3">
                         @csrf
@@ -194,7 +207,7 @@
                     <h3 class="ui-heading text-base">Datos del Gym</h3>
                     <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial y telefono. Ubicacion definida por SuperAdmin (solo lectura).</p>
 
-                    <form method="POST" action="{{ route('settings.gym-profile.update') }}" class="mt-4 space-y-3">
+                    <form method="POST" action="{{ $gymProfileUpdateUrl }}" class="mt-4 space-y-3">
                         @csrf
                         <div>
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Nombre comercial</label>
@@ -296,7 +309,7 @@
                 </p>
 
                 <form method="POST"
-                      action="{{ route('settings.gym-avatars.update') }}"
+                      action="{{ $gymAvatarsUpdateUrl }}"
                       enctype="multipart/form-data"
                       class="mt-4 space-y-4">
                     @csrf
@@ -373,9 +386,15 @@
 
             const root = document.documentElement;
             const csrf = container.dataset.csrf;
-            const rawUpdateUrl = container.dataset.updateUrl || '/config/theme';
-            const normalizedUrl = new URL(rawUpdateUrl, window.location.origin);
-            const updateUrl = normalizedUrl.pathname + normalizedUrl.search;
+            const rawUpdateUrl = String(container.dataset.updateUrl || '').trim();
+            const fallbackThemeUrl = (() => {
+                const path = String(window.location.pathname || '').replace(/\/+$/, '');
+                if (path.endsWith('/config')) {
+                    return `${path}/theme`;
+                }
+                return '/config/theme';
+            })();
+            const updateUrl = rawUpdateUrl !== '' ? rawUpdateUrl : fallbackThemeUrl;
             const darkThemes = new Set(['iron_dark', 'power_red', 'energy_green', 'gold_elite']);
             let currentTheme = container.dataset.currentTheme || 'iron_dark';
             let requestInFlight = false;
@@ -654,17 +673,28 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrf,
                     },
                     body: JSON.stringify({ theme }),
                 });
 
                 if (!response.ok) {
-                    let reason = 'No fue posible guardar el tema.';
+                    let reason = `No fue posible guardar el tema (HTTP ${response.status}).`;
+                    const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+
                     try {
-                        const payload = await response.json();
-                        reason = payload?.message || payload?.errors?.theme?.[0] || reason;
+                        if (contentType.includes('application/json')) {
+                            const payload = await response.json();
+                            reason = payload?.message || payload?.errors?.theme?.[0] || reason;
+                        } else {
+                            const responseText = await response.text();
+                            if (/csrf|token/i.test(responseText)) {
+                                reason = 'Sesion expirada. Recarga la pagina e intenta otra vez.';
+                            }
+                        }
                     } catch (error) {}
+
                     throw new Error(reason);
                 }
 

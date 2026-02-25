@@ -230,10 +230,10 @@
         <div x-cloak
              x-show="modalOpen"
              x-transition.opacity
-             class="ui-modal-backdrop"
+             class="ui-modal-backdrop items-start"
              x-on:click.self="closeCreateClient()"
              x-on:keydown.escape.window="closeCreateClient()">
-            <div class="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl"
+            <div class="ui-modal-shell mt-2 max-w-3xl"
                  x-transition.scale.origin.top
                  role="dialog"
                  aria-modal="true">
@@ -254,7 +254,7 @@
                         </button>
                     </header>
 
-                    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+                    <div class="ui-modal-scroll-body space-y-5 px-5 py-5">
                         @if ($errors->any())
                             <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                                 <p class="font-semibold">Corrige los siguientes campos antes de guardar:</p>
@@ -445,7 +445,7 @@
                         </div>
                     </div>
 
-                    <footer class="flex shrink-0 items-center justify-end gap-3 border-t border-slate-800 bg-slate-950/95 px-5 py-4">
+                    <footer class="ui-modal-sticky-footer flex items-center justify-end gap-3 px-5 py-4">
                         <x-ui.button type="button" variant="ghost" x-on:click="closeCreateClient()">Cancelar</x-ui.button>
                         <x-ui.button type="submit"
                                      variant="success"

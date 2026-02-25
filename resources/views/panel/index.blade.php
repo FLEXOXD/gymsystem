@@ -95,7 +95,7 @@
                     @php
                         $barWidth = min(100, max(6, ($row['income'] / $monthlyBarsMax) * 100));
                     @endphp
-                    <div class="grid grid-cols-[84px_1fr_120px] items-center gap-2 text-xs">
+                    <div class="grid grid-cols-[68px_1fr_88px] items-center gap-2 text-xs sm:grid-cols-[84px_1fr_120px]">
                         <span class="font-semibold text-slate-600 dark:text-slate-300">{{ $row['label'] }}</span>
                         <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
                             <div class="h-2 rounded-full bg-cyan-500 dark:bg-cyan-400" style="width: {{ number_format($barWidth, 2, '.', '') }}%;"></div>

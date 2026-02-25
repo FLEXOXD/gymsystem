@@ -4,8 +4,8 @@
      class="ui-modal-backdrop"
      x-on:click.self="closeMembershipModal()"
      x-on:keydown.escape.window="closeMembershipModal()">
-    <div class="w-full max-w-4xl rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl" x-transition.scale.origin.top>
-        <form method="POST" action="{{ route('memberships.store') }}" class="space-y-0">
+    <div class="ui-modal-shell max-w-4xl" x-transition.scale.origin.top>
+        <form method="POST" action="{{ route('memberships.store') }}" class="flex min-h-0 flex-1 flex-col space-y-0">
             @csrf
             <input type="hidden" name="client_id" value="{{ $client->id }}">
 
@@ -17,7 +17,7 @@
                 <x-ui.button type="button" variant="ghost" size="sm" x-on:click="closeMembershipModal()">Cerrar</x-ui.button>
             </header>
 
-            <div class="space-y-5 px-6 py-5">
+            <div class="ui-modal-scroll-body space-y-5 px-6 py-5">
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
                         <span>Plan</span>
@@ -93,7 +93,7 @@
                 @endif
             </div>
 
-            <footer class="flex justify-end gap-3 border-t border-slate-800 px-6 py-4">
+            <footer class="ui-modal-sticky-footer flex justify-end gap-3 px-6 py-4">
                 <x-ui.button type="button" variant="ghost" x-on:click="closeMembershipModal()">Cancelar</x-ui.button>
                 <x-ui.button type="submit" variant="success" :disabled="$plans->isEmpty()">Cobrar y guardar</x-ui.button>
             </footer>

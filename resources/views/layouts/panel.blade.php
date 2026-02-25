@@ -185,6 +185,144 @@
             pointer-events: auto !important;
             cursor: pointer !important;
         }
+        #brand-home-link {
+            min-height: 6rem;
+        }
+        #brand-logo-badge {
+            width: clamp(3.5rem, 5.5vw, 5.25rem);
+            height: clamp(3.5rem, 5.5vw, 5.25rem);
+            min-width: clamp(3.5rem, 5.5vw, 5.25rem);
+            min-height: clamp(3.5rem, 5.5vw, 5.25rem);
+        }
+        #brand-logo-badge > img.brand-logo-media {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-position: center;
+        }
+        #brand-logo-badge > img.brand-logo-media.brand-logo-media-cover {
+            object-fit: cover;
+        }
+        #brand-logo-badge > img.brand-logo-media.brand-logo-media-contain {
+            object-fit: contain;
+        }
+        #panel-sidebar.sidebar-collapsed #brand-home-link {
+            justify-content: center;
+            gap: 0;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+            min-height: 6.5rem;
+        }
+        #panel-sidebar.sidebar-collapsed #brand-logo-badge {
+            width: 4.85rem;
+            height: 4.85rem;
+            min-width: 4.85rem;
+            min-height: 4.85rem;
+        }
+        #panel-sidebar.sidebar-collapsed #brand-logo-badge > img.brand-logo-media {
+            transform: scale(1.28);
+            transform-origin: center;
+        }
+        #panel-sidebar.sidebar-collapsed #brand-logo-badge > img.brand-logo-media.brand-logo-media-contain {
+            transform: scale(1.52);
+        }
+        #mobile-brand-logo {
+            width: 3rem;
+            height: 3rem;
+            min-width: 3rem;
+            min-height: 3rem;
+            border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        }
+        #mobile-brand-logo > img.brand-logo-media {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-position: center;
+            object-fit: cover;
+            transform: scale(1.08);
+            transform-origin: center;
+        }
+        #mobile-brand-logo > img.brand-logo-media.brand-logo-media-contain {
+            object-fit: contain;
+            transform: scale(1.4);
+        }
+        #panel-header-shell {
+            align-items: center;
+        }
+        #panel-header-left {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+        .panel-menu-trigger {
+            min-height: 2.75rem;
+            padding-left: 0.85rem;
+            padding-right: 0.85rem;
+            border-radius: 0.85rem;
+            border-color: color-mix(in srgb, var(--border) 78%, transparent);
+            background: color-mix(in srgb, var(--card) 90%, transparent);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+        }
+        .panel-menu-trigger:hover {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+        }
+        .panel-header-title-stack {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.16rem;
+        }
+        .panel-header-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--muted) 92%, #ffffff);
+        }
+        .panel-header-kicker::before {
+            content: '';
+            width: 0.44rem;
+            height: 0.44rem;
+            border-radius: 9999px;
+            background: linear-gradient(140deg, var(--accent), var(--primary));
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+            flex: 0 0 auto;
+        }
+        .panel-header-main {
+            margin: 0;
+            line-height: 1.08;
+            letter-spacing: -0.012em;
+            font-size: clamp(1.4rem, 1.08rem + 0.46vw, 1.85rem);
+            text-wrap: balance;
+        }
+        #panel-header-title {
+            min-width: 0;
+            line-height: 1.15;
+        }
+        #panel-header-right {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        #user-menu-button {
+            min-height: 2.85rem;
+            border-radius: 0.85rem;
+        }
+        #user-menu-button .panel-user-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            min-width: 2.5rem;
+            min-height: 2.5rem;
+        }
         .panel-toast-stack {
             position: fixed;
             top: calc(5rem + env(safe-area-inset-top));
@@ -203,6 +341,53 @@
         @media (max-width: 768px) {
             .panel-toast-stack {
                 top: calc(4.5rem + env(safe-area-inset-top));
+            }
+
+            #panel-header-shell {
+                gap: 0.55rem;
+                padding-top: 0.65rem;
+                padding-bottom: 0.65rem;
+            }
+
+            #panel-header-left {
+                gap: 0.5rem;
+            }
+
+            .panel-menu-trigger {
+                min-height: 2.6rem;
+                padding-left: 0.7rem;
+                padding-right: 0.7rem;
+            }
+
+            .panel-header-kicker {
+                font-size: 0.64rem;
+                letter-spacing: 0.12em;
+            }
+
+            .panel-header-main {
+                font-size: clamp(1.24rem, 1rem + 0.55vw, 1.5rem);
+            }
+
+            #user-menu-button {
+                max-width: min(76vw, 15.5rem);
+                min-height: 2.7rem;
+                padding-left: 0.45rem;
+                padding-right: 0.45rem;
+            }
+
+            #user-menu-button .panel-user-avatar {
+                width: 2.3rem;
+                height: 2.3rem;
+                min-width: 2.3rem;
+                min-height: 2.3rem;
+            }
+        }
+        @media (max-width: 640px) {
+            #mobile-brand-logo {
+                width: 2.75rem;
+                height: 2.75rem;
+                min-width: 2.75rem;
+                min-height: 2.75rem;
             }
         }
     </style>
@@ -225,13 +410,13 @@
                 'bg-transparent shadow-none' => $hasBrandImage,
             ])>
                 @if ($isSuperAdmin && $userPhotoUrl)
-                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
+                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="brand-logo-media brand-logo-media-cover">
                 @elseif ($gymLogo)
                     <img src="{{ $gymLogo }}"
                          alt="Logo"
-                         class="h-full w-full scale-125 object-contain object-center"
+                         class="brand-logo-media brand-logo-media-contain"
                          data-fallback-src="{{ (!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : '' }}"
-                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('object-contain','scale-125'); this.classList.add('object-cover','object-center'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
+                         onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('brand-logo-media-contain'); this.classList.add('brand-logo-media-cover'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
                     <span data-logo-fallback class="hidden text-lg font-black uppercase">{{ $gymInitials }}</span>
                 @else
                     <span class="text-lg font-black uppercase">{{ $gymInitials }}</span>
@@ -323,21 +508,40 @@
 
     <div class="flex-1 pb-16 lg:pb-0">
         <header class="theme-header theme-divider sticky top-0 z-20 border-b backdrop-blur">
-            <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6 lg:px-8">
-                <div class="flex min-w-0 items-center gap-2">
+            <div id="panel-header-shell" class="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:px-6 lg:px-8">
+                <div id="panel-header-left">
                     <button id="sidebar-toggle" type="button"
-                            class="hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex">
+                            class="panel-menu-trigger hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex">
                         {{ __('ui.menu') }}
                     </button>
-                    <div>
-                        <p class="ui-muted text-xs font-bold uppercase tracking-widest">{{ __('ui.panel_operativo') }}</p>
-                        <h1 class="ui-heading truncate text-lg md:text-xl">@yield('page-title', $pageTitle)</h1>
+                    @php
+                        $mobileBrandImage = $isSuperAdmin ? $userPhotoUrl : $gymLogo;
+                        $mobileBrandImageClass = $isSuperAdmin ? 'brand-logo-media brand-logo-media-cover' : 'brand-logo-media brand-logo-media-contain';
+                    @endphp
+                    <span id="mobile-brand-logo" @class([
+                        'mt-0.5 inline-flex items-center justify-center overflow-hidden rounded-xl text-xs font-black uppercase lg:hidden',
+                        'theme-logo-badge' => empty($mobileBrandImage),
+                        'bg-transparent shadow-none' => !empty($mobileBrandImage),
+                    ])>
+                        @if (!empty($mobileBrandImage))
+                            <img src="{{ $mobileBrandImage }}"
+                                 alt="Logo"
+                                 class="{{ $mobileBrandImageClass }}"
+                                 onerror="this.style.display='none'; var fallback=this.parentNode.querySelector('[data-mobile-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
+                            <span data-mobile-logo-fallback class="hidden">{{ $gymInitials }}</span>
+                        @else
+                            {{ $gymInitials }}
+                        @endif
+                    </span>
+                    <div id="panel-header-title" class="panel-header-title-stack">
+                        <p class="panel-header-kicker">{{ __('ui.panel_operativo') }}</p>
+                        <h1 class="panel-header-main ui-heading truncate">@yield('page-title', $pageTitle)</h1>
                     </div>
                 </div>
 
-                <div class="flex w-full items-center justify-end gap-2 sm:w-auto">
+                <div id="panel-header-right">
                     @if (!$isSuperAdmin)
-                        <form method="GET" action="{{ route('clients.index', $gymRouteParams) }}" class="hidden items-center gap-2 md:flex">
+                        <form method="GET" action="{{ route('clients.index', $gymRouteParams) }}" class="hidden items-center gap-2 lg:flex">
                             <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('ui.search_client') }}"
                                    class="ui-input w-52">
                             <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold">{{ __('ui.search') }}</button>
@@ -351,13 +555,13 @@
                     <div id="user-menu-root" class="relative">
                         <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown">
                             @if ($userPhotoUrl)
-                                <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full">
+                                <span class="panel-user-avatar inline-flex items-center justify-center overflow-hidden rounded-full">
                                     <img id="user-avatar-image" src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
                                 </span>
                             @else
-                                <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
+                                <span class="panel-user-avatar inline-flex items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
                             @endif
-                            <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 md:inline">{{ $userName }}</span>
+                            <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 lg:inline">{{ $userName }}</span>
                             <svg class="h-4 w-4 text-slate-600 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
                             </svg>
@@ -597,7 +801,7 @@
                 const img = document.createElement('img');
                 img.src = topAvatarSrc;
                 img.alt = topAvatarImage?.getAttribute('alt') || 'SuperAdmin';
-                img.className = 'h-full w-full object-cover';
+                img.className = 'brand-logo-media brand-logo-media-cover';
                 brandLogoBadge.appendChild(img);
             }
         }
