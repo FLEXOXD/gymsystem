@@ -185,12 +185,55 @@ Route::middleware(['auth', 'gym.timezone'])->group(function (): void {
                 Route::post('/config/gym-avatars', [ThemeController::class, 'updateGymAvatars'])->name('gym.settings.gym-avatars.update');
             });
 
-        Route::get('/profile', [ThemeController::class, 'profile'])->name('profile.index');
-        Route::get('/contact', [ThemeController::class, 'contact'])->name('contact.index');
+        $redirectGymUserToContextRoute = function (Request $request, string $routeName, array $params = []) {
+            $user = $request->user();
+            if (! $user || ! $user->gym_id) {
+                return null;
+            }
+
+            $gymSlug = trim((string) ($user->gym?->slug ?? ''));
+            if ($gymSlug === '') {
+                return redirect()->route('panel.legacy');
+            }
+
+            return redirect()->route($routeName, array_merge(['contextGym' => $gymSlug], $params));
+        };
+
+        Route::get('/profile', function (Request $request) use ($redirectGymUserToContextRoute) {
+            $redirect = $redirectGymUserToContextRoute($request, 'gym.profile.index');
+            if ($redirect) {
+                return $redirect;
+            }
+
+            return app(ThemeController::class)->profile($request);
+        })->name('profile.index');
+        Route::get('/contact', function (Request $request) use ($redirectGymUserToContextRoute) {
+            $redirect = $redirectGymUserToContextRoute($request, 'gym.contact.index');
+            if ($redirect) {
+                return $redirect;
+            }
+
+            return app(ThemeController::class)->contact($request);
+        })->name('contact.index');
         Route::post('/contact/suggestions', [ContactSuggestionController::class, 'store'])->name('contact.suggestions.store');
-        Route::get('/profile/membership-invoices/{subscription}/pdf', [ThemeController::class, 'membershipInvoicePdf'])
-            ->name('profile.membership-invoice.pdf');
-        Route::get('/config', [ThemeController::class, 'index'])->name('settings.index');
+        Route::get('/profile/membership-invoices/{subscription}/pdf', function (Request $request, int $subscription) use ($redirectGymUserToContextRoute) {
+            $redirect = $redirectGymUserToContextRoute($request, 'gym.profile.membership-invoice.pdf', [
+                'subscription' => $subscription,
+            ]);
+            if ($redirect) {
+                return $redirect;
+            }
+
+            return app(ThemeController::class)->membershipInvoicePdf($request, $subscription);
+        })->name('profile.membership-invoice.pdf');
+        Route::get('/config', function (Request $request) use ($redirectGymUserToContextRoute) {
+            $redirect = $redirectGymUserToContextRoute($request, 'gym.settings.index');
+            if ($redirect) {
+                return $redirect;
+            }
+
+            return app(ThemeController::class)->index($request);
+        })->name('settings.index');
         Route::post('/config/theme', [ThemeController::class, 'update'])->name('settings.theme.update');
         Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->name('settings.profile.update');
         Route::post('/config/superadmin-contact', [ThemeController::class, 'updateSuperAdminContact'])->name('settings.superadmin-contact.update');

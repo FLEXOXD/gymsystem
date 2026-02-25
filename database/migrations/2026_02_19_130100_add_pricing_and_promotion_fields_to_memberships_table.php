@@ -23,10 +23,12 @@ return new class extends Migration
         });
 
         DB::statement('
-            UPDATE memberships m
-            LEFT JOIN plans p ON p.id = m.plan_id
-            SET m.price = COALESCE(p.price, 0)
-            WHERE m.price = 0
+            UPDATE memberships
+            SET price = COALESCE(
+                (SELECT price FROM plans WHERE plans.id = memberships.plan_id),
+                0
+            )
+            WHERE price = 0
         ');
     }
 
@@ -48,4 +50,3 @@ return new class extends Migration
         });
     }
 };
-
