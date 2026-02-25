@@ -258,6 +258,7 @@
             gap: 0.65rem;
         }
         .panel-menu-trigger {
+            display: none;
             min-height: 2.75rem;
             padding-left: 0.85rem;
             padding-right: 0.85rem;
@@ -265,10 +266,31 @@
             border-color: color-mix(in srgb, var(--border) 78%, transparent);
             background: color-mix(in srgb, var(--card) 90%, transparent);
             box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+            align-items: center;
+            gap: 0.55rem;
         }
         .panel-menu-trigger:hover {
             transform: translateY(-1px);
             border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+        }
+        .panel-menu-trigger-icon {
+            width: 1.55rem;
+            height: 1.55rem;
+            border-radius: 0.48rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 28%, transparent), color-mix(in srgb, var(--primary) 42%, transparent));
+            border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+            color: color-mix(in srgb, var(--text) 90%, #fff);
+            flex: 0 0 auto;
+        }
+        .panel-menu-trigger-label {
+            font-size: 0.73rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
         .panel-header-title-stack {
             min-width: 0;
@@ -337,6 +359,11 @@
         .panel-toast-stack [data-toast] {
             pointer-events: auto;
             box-shadow: 0 14px 36px rgb(2 6 23 / 0.35);
+        }
+        @media (min-width: 1024px) {
+            .panel-menu-trigger {
+                display: inline-flex;
+            }
         }
         @media (max-width: 768px) {
             .panel-toast-stack {
@@ -511,8 +538,15 @@
             <div id="panel-header-shell" class="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:px-6 lg:px-8">
                 <div id="panel-header-left">
                     <button id="sidebar-toggle" type="button"
-                            class="panel-menu-trigger hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex">
-                        {{ __('ui.menu') }}
+                            class="panel-menu-trigger hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex"
+                            aria-label="Ocultar barra lateral"
+                            title="Ocultar barra lateral">
+                        <span class="panel-menu-trigger-icon" aria-hidden="true">
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                                <path d="M4 6h16M4 12h10M4 18h16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="panel-menu-trigger-label">Ocultar menú</span>
                     </button>
                     @php
                         $mobileBrandImage = $isSuperAdmin ? $userPhotoUrl : $gymLogo;
@@ -631,6 +665,18 @@
     (function () {
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebar = document.getElementById('panel-sidebar');
+        const sidebarToggleLabel = sidebarToggle?.querySelector('.panel-menu-trigger-label');
+
+        function syncSidebarToggleUi(collapsed) {
+            if (!sidebarToggle) return;
+            const label = collapsed ? 'Abrir menú' : 'Ocultar menú';
+            const ariaLabel = collapsed ? 'Abrir barra lateral' : 'Ocultar barra lateral';
+            if (sidebarToggleLabel) {
+                sidebarToggleLabel.textContent = label;
+            }
+            sidebarToggle.setAttribute('aria-label', ariaLabel);
+            sidebarToggle.setAttribute('title', ariaLabel);
+        }
 
         sidebarToggle?.addEventListener('click', function () {
             if (!sidebar) return;
@@ -641,11 +687,13 @@
                 element.classList.toggle('hidden', collapsed);
             });
             localStorage.setItem('panel.sidebar_collapsed', collapsed ? '1' : '0');
+            syncSidebarToggleUi(collapsed);
         });
 
         if (sidebar && localStorage.getItem('panel.sidebar_collapsed') === '1') {
             sidebarToggle?.click();
         }
+        syncSidebarToggleUi(sidebar?.classList.contains('sidebar-collapsed') ?? false);
 
         const userMenuRoot = document.getElementById('user-menu-root');
         const userMenuButton = document.getElementById('user-menu-button');
