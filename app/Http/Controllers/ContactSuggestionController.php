@@ -45,6 +45,7 @@ class ContactSuggestionController extends Controller
 
         $query = ContactSuggestion::query()
             ->with(['gym:id,name', 'sender:id,name,email', 'reviewedBy:id,name'])
+            ->whereHas('gym', fn ($gymQuery) => $gymQuery->withoutDemoSessions())
             ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
             ->orderByDesc('created_at');
 
@@ -74,7 +75,7 @@ class ContactSuggestionController extends Controller
 
         return view('superadmin.suggestions.index', [
             'suggestions' => $query->paginate(20)->withQueryString(),
-            'gyms' => Gym::query()->orderBy('name')->get(['id', 'name']),
+            'gyms' => Gym::query()->withoutDemoSessions()->orderBy('name')->get(['id', 'name']),
             'filters' => [
                 'status' => $status,
                 'gym_id' => isset($filters['gym_id']) ? (int) $filters['gym_id'] : null,

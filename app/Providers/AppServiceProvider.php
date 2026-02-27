@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\TestingFilesystem;
 use App\Support\Currency;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -18,7 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if ($this->app->runningUnitTests()) {
+            $this->app->singleton('files', static fn () => new TestingFilesystem());
+        }
     }
 
     /**
@@ -83,6 +86,26 @@ class AppServiceProvider extends ServiceProvider
                         'method' => null,
                         'client' => null,
                     ], 429);
+                });
+        });
+
+        RateLimiter::for('demo-request', function (Request $request) {
+            $fingerprint = hash(
+                'sha256',
+                strtolower((string) $request->ip()).'|'.substr(strtolower((string) $request->userAgent()), 0, 180)
+            );
+
+            return Limit::perHour(3)
+                ->by($fingerprint)
+                ->response(function (Request $request, array $headers) {
+                    $retryAfter = max(1, (int) ($headers['Retry-After'] ?? 3600));
+
+                    return redirect()
+                        ->route('landing')
+                        ->with('error', 'Alcanzaste el maximo de 3 intentos de demo. Espera para volver a intentarlo.')
+                        ->with('demo_limit_modal', [
+                            'retry_after_seconds' => $retryAfter,
+                        ]);
                 });
         });
 

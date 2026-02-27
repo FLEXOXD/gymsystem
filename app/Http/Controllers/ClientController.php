@@ -11,7 +11,9 @@ use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\Promotion;
 use App\Services\CashSessionService;
+use App\Services\PlanAccessService;
 use App\Services\PromotionService;
+use App\Support\ActiveGymContext;
 use App\Support\PlanDuration;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -29,6 +31,7 @@ class ClientController extends Controller
 {
     public function __construct(
         private readonly CashSessionService $cashSessionService,
+        private readonly PlanAccessService $planAccessService,
         private readonly PromotionService $promotionService
     ) {
     }
@@ -39,6 +42,8 @@ class ClientController extends Controller
     public function index(Request $request): View
     {
         $gymId = $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
         $search = trim((string) $request->query('q', ''));
         $quickFilter = (string) $request->query('filter', 'all');
         if (! in_array($quickFilter, ['all', 'active', 'expiring', 'expired', 'attended_today'], true)) {
@@ -62,7 +67,7 @@ class ClientController extends Controller
                 'm.ends_at',
                 'm.status as membership_status',
             ])
-            ->where('m.gym_id', $gymId)
+            ->forGyms($gymIds)
             ->whereRaw('m.id = (
                 SELECT m2.id
                 FROM memberships as m2
@@ -74,14 +79,15 @@ class ClientController extends Controller
 
         $clientsQuery = Client::query()
             ->from('clients')
-            ->where('clients.gym_id', $gymId)
+            ->whereIn('clients.gym_id', $gymIds)
             ->search($search)
+            ->leftJoin('gyms as g', 'g.id', '=', 'clients.gym_id')
             ->leftJoinSub($latestMembershipSub, 'lm', function ($join): void {
                 $join->on('lm.client_id', '=', 'clients.id');
             })
-            ->leftJoin('plans as lp', function ($join) use ($gymId): void {
+            ->leftJoin('plans as lp', function ($join): void {
                 $join->on('lp.id', '=', 'lm.plan_id')
-                    ->where('lp.gym_id', '=', $gymId);
+                    ->on('lp.gym_id', '=', 'clients.gym_id');
             })
             ->select([
                 'clients.id',
@@ -91,6 +97,7 @@ class ClientController extends Controller
                 'clients.document_number',
                 'clients.photo_path',
                 'clients.status',
+                'g.name as gym_name',
                 'lm.latest_membership_id',
                 'lm.starts_at as membership_starts_at',
                 'lm.ends_at as membership_ends_at',
@@ -101,7 +108,8 @@ class ClientController extends Controller
             ])
             ->selectSub(
                 Attendance::query()
-                    ->where('attendances.gym_id', $gymId)
+                    ->whereIn('attendances.gym_id', $gymIds)
+                    ->whereColumn('attendances.gym_id', 'clients.gym_id')
                     ->whereColumn('attendances.client_id', 'clients.id')
                     ->orderByDesc('attendances.date')
                     ->orderByDesc('attendances.time')
@@ -111,7 +119,8 @@ class ClientController extends Controller
             )
             ->selectSub(
                 Attendance::query()
-                    ->where('attendances.gym_id', $gymId)
+                    ->whereIn('attendances.gym_id', $gymIds)
+                    ->whereColumn('attendances.gym_id', 'clients.gym_id')
                     ->whereColumn('attendances.client_id', 'clients.id')
                     ->orderByDesc('attendances.date')
                     ->orderByDesc('attendances.time')
@@ -120,7 +129,7 @@ class ClientController extends Controller
                 'last_attendance_time'
             );
 
-        $this->applyQuickFilter($clientsQuery, $quickFilter, $todayDate, $expiringLimitDate, $gymId);
+        $this->applyQuickFilter($clientsQuery, $quickFilter, $todayDate, $expiringLimitDate, $gymIds);
 
         $stats = $this->buildStats(clone $clientsQuery, $todayDate, $expiringLimitDate);
 
@@ -129,7 +138,7 @@ class ClientController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $paymentsByMembership = $this->resolveMembershipPayments($gymId, $clients);
+        $paymentsByMembership = $this->resolveMembershipPayments($gymIds, $clients);
         $clients->setCollection(
             $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now): array {
                 return $this->buildClientCardRow($client, $paymentsByMembership, $now);
@@ -137,29 +146,32 @@ class ClientController extends Controller
         );
 
         $plans = Plan::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->active()
             ->select(['id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price'])
             ->orderBy('name')
             ->get();
 
-        $promotions = Promotion::query()
-            ->forGym($gymId)
-            ->active()
-            ->applicableOn($todayDate)
-            ->select([
-                'id',
-                'plan_id',
-                'name',
-                'type',
-                'value',
-                'starts_at',
-                'ends_at',
-                'max_uses',
-                'times_used',
-            ])
-            ->orderByDesc('id')
-            ->get();
+        $promotions = collect();
+        if ($canManagePromotions) {
+            $promotions = Promotion::query()
+                ->forGyms($gymIds)
+                ->active()
+                ->applicableOn($todayDate)
+                ->select([
+                    'id',
+                    'plan_id',
+                    'name',
+                    'type',
+                    'value',
+                    'starts_at',
+                    'ends_at',
+                    'max_uses',
+                    'times_used',
+                ])
+                ->orderByDesc('id')
+                ->get();
+        }
 
         $errorBag = $request->session()->get('errors');
         $hasFormErrors = $errorBag && $errorBag->isNotEmpty();
@@ -172,6 +184,7 @@ class ClientController extends Controller
             'stats' => $stats,
             'plans' => $plans,
             'promotions' => $promotions,
+            'canManagePromotions' => $canManagePromotions,
             'openCreateModal' => $openCreateModal,
         ]);
     }
@@ -181,7 +194,14 @@ class ClientController extends Controller
      */
     public function store(StoreClientRequest $request): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['clients' => 'Selecciona una sucursal especifica para crear clientes.']);
+        }
+
         $gymId = $this->resolveGymId($request);
+        $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
         $data = $request->validated();
         $startsMembership = (bool) ($data['start_membership'] ?? false);
 
@@ -192,13 +212,20 @@ class ClientController extends Controller
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
+        if ($startsMembership && ! $canManagePromotions && ! empty($data['promotion_id'])) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['promotion_id' => 'Tu plan actual no incluye promociones.'])
+                ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
+        }
+
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('clients', 'public');
         }
 
         try {
-            $client = DB::transaction(function () use ($data, $gymId, $request, $photoPath, $startsMembership): Client {
+            $client = DB::transaction(function () use ($data, $gymId, $request, $photoPath, $startsMembership, $canManagePromotions): Client {
                 $client = Client::query()->create([
                     'gym_id' => $gymId,
                     'first_name' => $data['first_name'],
@@ -223,7 +250,7 @@ class ClientController extends Controller
                 $pricing = $this->promotionService->resolveForSale(
                     gymId: $gymId,
                     plan: $plan,
-                    promotionId: $data['promotion_id'] ?? null,
+                    promotionId: $canManagePromotions ? ($data['promotion_id'] ?? null) : null,
                     date: $data['membership_starts_at'] ?? now()->toDateString()
                 );
 
@@ -301,7 +328,8 @@ class ClientController extends Controller
 
     public function checkDocument(Request $request): JsonResponse
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         $document = Client::normalizeDocumentNumber((string) $request->query('document_number', ''));
         $canonical = Client::canonicalDocumentNumber($document);
 
@@ -312,7 +340,7 @@ class ClientController extends Controller
         }
 
         $client = Client::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select(['id', 'first_name', 'last_name', 'document_number'])
             ->whereRaw("REPLACE(REPLACE(UPPER(document_number), '-', ''), ' ', '') = ?", [$canonical])
             ->first();
@@ -328,7 +356,7 @@ class ClientController extends Controller
             'id' => (int) $client->id,
             'full_name' => $client->full_name,
             'document_number' => (string) $client->document_number,
-            'show_url' => route('clients.show', $client->id),
+            'show_url' => route('clients.show', ['client' => $client->id] + (ActiveGymContext::isGlobal($request) ? ['scope' => 'global'] : [])),
         ]);
     }
 
@@ -338,10 +366,11 @@ class ClientController extends Controller
     public function show(Request $request, string $contextGym, int $client): View
     {
         $gymId = $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         $todayDate = now()->toDateString();
 
         $clientModel = Client::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select([
                 'id',
                 'gym_id',
@@ -387,32 +416,38 @@ class ClientController extends Controller
             ])
             ->findOrFail($client);
 
+        $clientGymId = (int) $clientModel->gym_id;
+        $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
+
         $plans = Plan::query()
-            ->forGym($gymId)
+            ->forGym($clientGymId)
             ->active()
             ->select(['id', 'gym_id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'status'])
             ->orderBy('name')
             ->get();
 
-        $promotions = Promotion::query()
-            ->forGym($gymId)
-            ->active()
-            ->applicableOn($todayDate)
-            ->select([
-                'id',
-                'gym_id',
-                'plan_id',
-                'name',
-                'type',
-                'value',
-                'starts_at',
-                'ends_at',
-                'max_uses',
-                'times_used',
-            ])
-            ->with(['plan:id,name'])
-            ->orderByDesc('id')
-            ->get();
+        $promotions = collect();
+        if ($canManagePromotions) {
+            $promotions = Promotion::query()
+                ->forGym($clientGymId)
+                ->active()
+                ->applicableOn($todayDate)
+                ->select([
+                    'id',
+                    'gym_id',
+                    'plan_id',
+                    'name',
+                    'type',
+                    'value',
+                    'starts_at',
+                    'ends_at',
+                    'max_uses',
+                    'times_used',
+                ])
+                ->with(['plan:id,name'])
+                ->orderByDesc('id')
+                ->get();
+        }
 
         $activeQrCredential = $clientModel->credentials
             ->where('type', 'qr')
@@ -442,7 +477,7 @@ class ClientController extends Controller
         $membershipIds = $clientModel->memberships->pluck('id')->filter()->values();
         if ($membershipIds->isNotEmpty()) {
             $recentMembershipPayments = CashMovement::query()
-                ->forGym($gymId)
+                ->forGym($clientGymId)
                 ->whereIn('membership_id', $membershipIds)
                 ->where('type', 'income')
                 ->select([
@@ -475,14 +510,22 @@ class ClientController extends Controller
             'membershipState' => $membershipState,
             'recentMembershipPayments' => $recentMembershipPayments,
             'promotions' => $promotions,
+            'canManagePromotions' => $canManagePromotions,
         ]);
     }
 
     public function updatePhoto(UpdateClientPhotoRequest $request, string $contextGym, int $client): RedirectResponse
     {
-        $gymId = $this->resolveGymId($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['clients' => 'Selecciona una sucursal especifica para editar clientes.']);
+        }
+
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         $clientModel = Client::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select(['id', 'photo_path'])
             ->findOrFail($client);
 
@@ -502,7 +545,7 @@ class ClientController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
@@ -527,7 +570,7 @@ class ClientController extends Controller
         string $quickFilter,
         string $todayDate,
         string $expiringLimitDate,
-        int $gymId
+        array $gymIds
     ): void {
         if ($quickFilter === 'active') {
             $this->applyActiveMembershipConstraint($query, $todayDate);
@@ -549,10 +592,11 @@ class ClientController extends Controller
         }
 
         if ($quickFilter === 'attended_today') {
-            $query->whereExists(function ($subQuery) use ($todayDate, $gymId): void {
+            $query->whereExists(function ($subQuery) use ($todayDate, $gymIds): void {
                 $subQuery->selectRaw('1')
                     ->from('attendances as att')
-                    ->where('att.gym_id', $gymId)
+                    ->whereIn('att.gym_id', $gymIds)
+                    ->whereColumn('att.gym_id', 'clients.gym_id')
                     ->whereDate('att.date', $todayDate)
                     ->whereColumn('att.client_id', 'clients.id');
             });
@@ -607,7 +651,7 @@ class ClientController extends Controller
     /**
      * @return array<int, float>
      */
-    private function resolveMembershipPayments(int $gymId, LengthAwarePaginator $clients): array
+    private function resolveMembershipPayments(array $gymIds, LengthAwarePaginator $clients): array
     {
         $membershipIds = collect($clients->items())
             ->pluck('latest_membership_id')
@@ -621,7 +665,7 @@ class ClientController extends Controller
         }
 
         return CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->where('type', 'income')
             ->whereIn('membership_id', $membershipIds)
             ->selectRaw('membership_id, COALESCE(SUM(amount), 0) as total')
@@ -673,6 +717,7 @@ class ClientController extends Controller
             'document_number' => (string) $client->document_number,
             'photo_url' => $this->resolvePhotoUrl($client->photo_path),
             'initials' => $this->initialsOf($client->full_name),
+            'gym_name' => trim((string) ($client->gym_name ?? '')) !== '' ? (string) $client->gym_name : ('Sede #'.((int) ($client->gym_id ?? 0))),
             'plan_name' => trim((string) ($client->plan_name ?? '')) !== '' ? (string) $client->plan_name : 'Sin plan',
             'membership_ends_at' => $membershipEndsAtDate?->toDateString(),
             'membership_ends_at_human' => $membershipExpiresAt?->translatedFormat('d M Y H:i') ?? 'N/A',

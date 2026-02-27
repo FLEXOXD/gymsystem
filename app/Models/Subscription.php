@@ -18,6 +18,11 @@ class Subscription extends Model
      */
     protected $fillable = [
         'gym_id',
+        'billing_owner_gym_id',
+        'is_branch_managed',
+        'plan_key',
+        'plan_template_id',
+        'feature_version',
         'plan_name',
         'price',
         'starts_at',
@@ -35,6 +40,11 @@ class Subscription extends Model
     protected function casts(): array
     {
         return [
+            'plan_key' => 'string',
+            'plan_template_id' => 'integer',
+            'feature_version' => 'string',
+            'billing_owner_gym_id' => 'integer',
+            'is_branch_managed' => 'boolean',
             'price' => 'decimal:2',
             'starts_at' => 'date',
             'ends_at' => 'date',
@@ -48,6 +58,14 @@ class Subscription extends Model
     public function gym(): BelongsTo
     {
         return $this->belongsTo(Gym::class);
+    }
+
+    /**
+     * Gym that owns billing for this subscription (hub gym in multi-branch).
+     */
+    public function billingOwnerGym(): BelongsTo
+    {
+        return $this->belongsTo(Gym::class, 'billing_owner_gym_id');
     }
 
     /**

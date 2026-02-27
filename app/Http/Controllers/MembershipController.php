@@ -6,7 +6,9 @@ use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Services\CashSessionService;
+use App\Services\PlanAccessService;
 use App\Services\PromotionService;
+use App\Support\ActiveGymContext;
 use App\Support\PlanDuration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +21,7 @@ class MembershipController extends Controller
 {
     public function __construct(
         private readonly CashSessionService $cashSessionService,
+        private readonly PlanAccessService $planAccessService,
         private readonly PromotionService $promotionService
     ) {
     }
@@ -28,7 +31,16 @@ class MembershipController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors([
+                    'membership' => 'Selecciona una sucursal especifica para vender membresias.',
+                ]);
+        }
+
         $gymId = $this->resolveGymId($request);
+        $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
 
         $data = $request->validate([
             'client_id' => [
@@ -66,11 +78,21 @@ class MembershipController extends Controller
             ->select(['id', 'gym_id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'status'])
             ->findOrFail($data['plan_id']);
 
+        $promotionId = $data['promotion_id'] ?? null;
+        if (! $canManagePromotions && ! empty($promotionId)) {
+            return redirect()
+                ->route('clients.show', $data['client_id'])
+                ->withErrors([
+                    'promotion_id' => 'Tu plan actual no incluye promociones.',
+                ])
+                ->withInput();
+        }
+
         $startsAt = Carbon::parse($data['starts_at'])->startOfDay();
         $pricing = $this->promotionService->resolveForSale(
             gymId: $gymId,
             plan: $plan,
-            promotionId: $data['promotion_id'] ?? null,
+            promotionId: $canManagePromotions ? $promotionId : null,
             date: $startsAt
         );
 
@@ -176,7 +198,7 @@ class MembershipController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;

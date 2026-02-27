@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Support\Currency;
 use App\Support\GymLocationCatalog;
+use App\Support\SuperAdminPlanCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,6 +35,7 @@ class StoreGymRequest extends FormRequest
             'admin_identification_number' => ($idNumber = strtoupper($this->normalizeText($this->input('admin_identification_number')) ?? '')) !== '' ? $idNumber : null,
             'admin_phone_country_dial' => ($dial = trim((string) $this->input('admin_phone_country_dial'))) !== '' ? $dial : null,
             'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
+            'subscription_plan_template_id' => ($templateId = trim((string) $this->input('subscription_plan_template_id'))) !== '' ? (int) $templateId : null,
         ]);
     }
 
@@ -84,6 +86,15 @@ class StoreGymRequest extends FormRequest
             'admin_phone_number' => ['nullable', 'string', 'min:6', 'max:15', 'regex:/^\d+$/'],
             'admin_profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'admin_password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
+            'subscription_plan_template_id' => [
+                'required',
+                'integer',
+                Rule::exists('superadmin_plan_templates', 'id')->where(function ($query): void {
+                    $query
+                        ->where('status', 'active')
+                        ->whereIn('plan_key', SuperAdminPlanCatalog::keys());
+                }),
+            ],
         ];
     }
 
@@ -101,7 +112,7 @@ class StoreGymRequest extends FormRequest
             'gym_address_city.required' => 'Selecciona la ciudad.',
             'gym_currency_code.in' => 'Selecciona una moneda valida.',
             'gym_language_code.in' => 'Selecciona un idioma valido.',
-            'admin_email.unique' => 'Ese correo ya esta registrado en otro usuario.',
+            'admin_email.unique' => 'Ese correo ya esta en uso, revisalo por favor.',
             'admin_gender.in' => 'Selecciona un genero valido.',
             'admin_birth_date.date' => 'Selecciona una fecha de nacimiento valida.',
             'admin_birth_date.before_or_equal' => 'La fecha de nacimiento no puede ser futura.',
@@ -114,6 +125,8 @@ class StoreGymRequest extends FormRequest
             'admin_profile_photo.max' => 'La foto del admin no puede superar 15MB.',
             'admin_password.confirmed' => 'La confirmacion de contrasena no coincide.',
             'admin_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
+            'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
+            'subscription_plan_template_id.exists' => 'El plan base seleccionado no esta disponible.',
         ];
     }
 

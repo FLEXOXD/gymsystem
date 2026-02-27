@@ -1,4 +1,4 @@
-@extends('layouts.panel')
+﻿@extends('layouts.panel')
 
 @section('title', 'Caja profesional')
 @section('page-title', 'Caja por turno')
@@ -239,7 +239,7 @@
                     </x-ui.card>
                 </section>
 
-                <x-ui.card title="Ultimos 10 movimientos">
+                <x-ui.card title="Últimos 10 movimientos">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
@@ -291,7 +291,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center text-sm text-slate-500 dark:text-slate-300">Aun no hay movimientos en este turno.</td>
+                                    <td colspan="9" class="text-center text-sm text-slate-500 dark:text-slate-300">Aún no hay movimientos en este turno.</td>
                                 </tr>
                             @endforelse
                             </tbody>

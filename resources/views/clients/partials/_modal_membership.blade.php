@@ -1,3 +1,7 @@
+﻿@php
+    $canManagePromotions = (bool) ($canManagePromotions ?? false);
+@endphp
+
 <div x-cloak
      x-show="membershipModalOpen"
      x-transition.opacity
@@ -18,6 +22,17 @@
             </header>
 
             <div class="ui-modal-scroll-body space-y-5 px-6 py-5">
+                @error('cash')
+                    <div class="rounded-xl border-2 border-rose-400/80 bg-rose-500/20 p-4 text-rose-100 shadow-lg">
+                        <p class="text-sm font-black uppercase tracking-wide">Debe abrir caja para cobrar</p>
+                        <p class="mt-1 text-sm font-semibold">{{ $message }}</p>
+                        <p class="mt-2 text-xs text-rose-100/90">Abre un turno en caja y vuelve a intentar el cobro de membresía.</p>
+                        <div class="mt-3">
+                            <x-ui.button :href="route('cash.index')" variant="secondary" size="sm">Ir a caja</x-ui.button>
+                        </div>
+                    </div>
+                @enderror
+
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
                         <span>Plan</span>
@@ -58,32 +73,41 @@
                         </select>
                     </label>
 
-                    <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2 xl:col-span-4">
-                        <span>Promoción (opcional)</span>
-                        <select name="promotion_id" class="ui-input">
-                            <option value="">Sin promoción</option>
-                            @foreach (($promotions ?? collect()) as $promotion)
-                                @php
-                                    $promoTypeLabel = match ($promotion->type) {
-                                        'percentage' => '-'.$promotion->value.'%',
-                                        'fixed' => '-'.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
-                                        'final_price' => 'Precio final '.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
-                                        'bonus_days' => '+'.(int) $promotion->value.' días',
-                                        'two_for_one' => '2x1',
-                                        'bring_friend' => 'Trae a un amigo',
-                                        default => (string) $promotion->type,
-                                    };
-                                    $planScopeLabel = $promotion->plan_id
-                                        ? ' - Plan '.($promotion->plan?->name ?? '#'.$promotion->plan_id)
-                                        : ' - Todos los planes';
-                                @endphp
-                                <option value="{{ $promotion->id }}" @selected((string) old('promotion_id') === (string) $promotion->id)>
-                                    {{ $promotion->name }} ({{ $promoTypeLabel }}{{ $planScopeLabel }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs text-slate-400">La promoción valida precio final y días extra automáticamente.</p>
-                    </label>
+                    @if ($canManagePromotions)
+                        <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2 xl:col-span-4">
+                            <span>Promoción (opcional)</span>
+                            <select name="promotion_id" class="ui-input">
+                                <option value="">Sin promoción</option>
+                                @foreach (($promotions ?? collect()) as $promotion)
+                                    @php
+                                        $promoTypeLabel = match ($promotion->type) {
+                                            'percentage' => '-'.$promotion->value.'%',
+                                            'fixed' => '-'.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
+                                            'final_price' => 'Precio final '.\App\Support\Currency::format((float) $promotion->value, $appCurrencyCode),
+                                            'bonus_days' => '+'.(int) $promotion->value.' días',
+                                            'two_for_one' => '2x1',
+                                            'bring_friend' => 'Trae a un amigo',
+                                            default => (string) $promotion->type,
+                                        };
+                                        $planScopeLabel = $promotion->plan_id
+                                            ? ' - Plan '.($promotion->plan?->name ?? '#'.$promotion->plan_id)
+                                            : ' - Todos los planes';
+                                    @endphp
+                                    <option value="{{ $promotion->id }}" @selected((string) old('promotion_id') === (string) $promotion->id)>
+                                        {{ $promotion->name }} ({{ $promoTypeLabel }}{{ $planScopeLabel }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-slate-400">La promoción valida precio final y días extra automáticamente.</p>
+                        </label>
+                    @else
+                        <div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200 md:col-span-2 xl:col-span-4">
+                            Promociones no disponibles en tu plan actual.
+                            @error('promotion_id')
+                                <p class="mt-1 font-semibold text-rose-200">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
                 </div>
 
                 @if ($plans->isEmpty())

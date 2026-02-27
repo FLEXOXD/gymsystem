@@ -34,6 +34,7 @@ class SuperAdminNotificationsController extends Controller
 
         $notifications = SubscriptionNotification::query()
             ->with(['gym:id,name', 'subscription:id,gym_id,plan_name,ends_at'])
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
             ->whereDate('scheduled_for', $selectedDate)
             ->where('status', 'pending')
             ->orderBy('type')
@@ -59,6 +60,7 @@ class SuperAdminNotificationsController extends Controller
 
         $query = SubscriptionNotification::query()
             ->with(['gym:id,name', 'subscription:id,plan_name,ends_at', 'createdBy:id,name'])
+            ->whereHas('gym', fn ($builder) => $builder->withoutDemoSessions())
             ->whereIn('status', ['sent', 'skipped'])
             ->orderByDesc('updated_at');
 
@@ -76,7 +78,7 @@ class SuperAdminNotificationsController extends Controller
 
         return view('superadmin.notifications.history', [
             'notifications' => $query->paginate(25)->withQueryString(),
-            'gyms' => Gym::query()->orderBy('name')->get(['id', 'name']),
+            'gyms' => Gym::query()->withoutDemoSessions()->orderBy('name')->get(['id', 'name']),
             'filters' => [
                 'date_from' => $data['date_from'] ?? '',
                 'date_to' => $data['date_to'] ?? '',

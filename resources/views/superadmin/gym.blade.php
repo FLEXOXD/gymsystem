@@ -18,6 +18,8 @@
         $defaultAdminIdentificationNumber = old('admin_identification_number', '');
         $defaultAdminPhoneCountryDial = old('admin_phone_country_dial', '+593');
         $defaultAdminPhoneNumber = old('admin_phone_number', '');
+        $planTemplates = $planTemplates ?? collect();
+        $defaultPlanTemplateId = old('subscription_plan_template_id', (string) optional($planTemplates->first())->id);
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
         $gymsWithAdmins = $gymsWithAdmins ?? collect();
@@ -169,6 +171,32 @@
                     @enderror
                 </div>
 
+                <div class="lg:col-span-3 rounded-xl border border-[var(--border)] bg-[var(--card-muted)] p-3">
+                    <label class="ui-muted mb-2 block text-xs font-bold uppercase tracking-wide">Plan inicial del gimnasio</label>
+                    <div class="grid gap-2 md:grid-cols-2">
+                        @forelse ($planTemplates as $template)
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] p-2.5">
+                                <input type="radio" name="subscription_plan_template_id" value="{{ $template->id }}" class="mt-0.5" @checked((string) $defaultPlanTemplateId === (string) $template->id) required>
+                                <span class="block">
+                                    <span class="block text-sm font-black">{{ $template->name }}</span>
+                                    <span class="ui-muted block text-xs">
+                                        {{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}
+                                        - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode ?? 'USD') }}
+                                        @if ($template->discount_price !== null)
+                                            | Desc. {{ \App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode ?? 'USD') }}
+                                        @endif
+                                    </span>
+                                </span>
+                            </label>
+                        @empty
+                            <p class="ui-muted text-xs">No hay planes base activos disponibles.</p>
+                        @endforelse
+                    </div>
+                    @error('subscription_plan_template_id')
+                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div>
                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Nombre del admin</label>
                     <input type="text" name="admin_name" value="{{ old('admin_name') }}" class="ui-input" placeholder="Ej: Carlos Perez" required>
@@ -229,7 +257,7 @@
                 </div>
 
                 <div>
-                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Codigo telefono del admin</label>
+                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Código de teléfono del admin</label>
                     <input type="text" name="admin_phone_country_dial" value="{{ $defaultAdminPhoneCountryDial }}" class="ui-input" placeholder="+593">
                     @error('admin_phone_country_dial')
                         <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
@@ -275,7 +303,7 @@
 
         <x-ui.card title="Usuarios de gimnasios" subtitle="Edita datos del usuario administrador por gimnasio o elimina el gimnasio completo.">
             <p class="mb-3 text-xs font-semibold text-rose-700 dark:text-rose-300">
-                Eliminar gimnasio borrara todo: clientes, planes, membresias, caja, reportes y usuario del gimnasio.
+                Eliminar gimnasio borrará todo: clientes, planes, membresías, caja, reportes y usuario del gimnasio.
             </p>
             @if ($adminEditHasErrors)
                 <div class="mb-3 rounded-xl border border-rose-300/60 bg-rose-100/60 px-3 py-2 text-sm font-semibold text-rose-800 dark:border-rose-300/40 dark:bg-rose-300/10 dark:text-rose-200">
@@ -358,15 +386,15 @@
                 </table>
             </div>
 
-            <div id="admin-edit-modal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
+            <div id="admin-edit-modal" class="fixed inset-0 z-[80] hidden items-center justify-center overflow-y-auto p-4">
                 <div class="absolute inset-0 bg-black/60" data-admin-modal-close></div>
-                <div class="relative z-[81] w-full max-w-5xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl">
+                <div class="relative z-[81] flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl">
                     <div class="mb-3 flex items-center justify-between">
                         <h3 class="ui-heading text-lg">Editar usuario del gimnasio</h3>
                         <button type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold" data-admin-modal-close>Cerrar</button>
                     </div>
 
-                    <form id="admin-edit-form" method="POST" action="#" enctype="multipart/form-data" class="grid gap-3 md:grid-cols-3">
+                    <form id="admin-edit-form" method="POST" action="#" enctype="multipart/form-data" class="grid gap-3 overflow-y-auto pr-1 md:grid-cols-3">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" id="modal-admin-user-id" name="admin_user_id" value="{{ (int) old('admin_user_id', 0) }}">
@@ -443,7 +471,7 @@
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Codigo telefono
+                            Código de teléfono
                             <input id="modal-admin-phone-country-dial" type="text" name="admin_phone_country_dial" class="ui-input" value="{{ old('admin_phone_country_dial') }}" placeholder="+593">
                         </label>
 

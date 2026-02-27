@@ -1,4 +1,4 @@
-@extends('layouts.panel')
+﻿@extends('layouts.panel')
 
 @section('title', 'Caja profesional')
 @section('page-title', 'Caja por turno')
@@ -35,29 +35,40 @@
 
         $isCurrentCashView = array_key_exists('openSession', get_defined_vars());
         $openSession = $openSession ?? null;
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $cashWriteBlocked = (bool) ($cashWriteBlocked ?? false);
+        $cashWriteBlockedReason = trim((string) ($cashWriteBlockedReason ?? ''));
     @endphp
 
     <div class="cash-page space-y-4">
         @if ($isCurrentCashView)
             @if (! $openSession)
-                <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresías o registrar movimientos.">
-                    <form method="POST" action="{{ route('cash.open') }}" class="space-y-4">
-                        @csrf
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <label class="space-y-1 text-sm font-semibold ui-muted">
-                                <span>Monto inicial (obligatorio)</span>
-                                <input type="number" name="opening_balance" step="0.01" min="0" value="{{ old('opening_balance') }}" required class="ui-input">
-                            </label>
+                @if ($cashWriteBlocked)
+                    <x-ui.card title="Caja en solo lectura" subtitle="Operacion administrada desde sede principal.">
+                        <p class="ui-alert ui-alert-warning">
+                            {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'No tienes permisos para abrir o cerrar caja en esta sucursal.' }}
+                        </p>
+                    </x-ui.card>
+                @else
+                    <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresías o registrar movimientos.">
+                        <form method="POST" action="{{ route('cash.open') }}" class="space-y-4">
+                            @csrf
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <label class="space-y-1 text-sm font-semibold ui-muted">
+                                    <span>Monto inicial (obligatorio)</span>
+                                    <input type="number" name="opening_balance" step="0.01" min="0" value="{{ old('opening_balance') }}" required class="ui-input">
+                                </label>
 
-                            <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
-                                <span>Notas</span>
-                                <textarea name="notes" rows="3" class="ui-input">{{ old('notes') }}</textarea>
-                            </label>
-                        </div>
+                                <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
+                                    <span>Notas</span>
+                                    <textarea name="notes" rows="3" class="ui-input">{{ old('notes') }}</textarea>
+                                </label>
+                            </div>
 
-                        <x-ui.button type="submit" variant="success" size="lg">Abrir turno</x-ui.button>
-                    </form>
-                </x-ui.card>
+                            <x-ui.button type="submit" variant="success" size="lg">Abrir turno</x-ui.button>
+                        </form>
+                    </x-ui.card>
+                @endif
             @else
                 @php
                     $activeSummary = $summary ?? ['income_total' => 0, 'expense_total' => 0, 'expected_balance' => 0, 'movements_count' => 0];
@@ -121,76 +132,83 @@
                 </x-ui.card>
 
                 <section class="grid gap-4 xl:grid-cols-3">
-                    <x-ui.card title="Registrar movimiento" class="xl:col-span-2">
-                        <form id="cash-movement-form" method="POST" action="{{ route('cash.movements.store') }}" class="space-y-4" data-high-threshold="100">
-                            @csrf
-                            <input type="hidden" id="movement-high-confirmed" name="high_amount_confirmed" value="0">
+                    @if ($cashWriteBlocked)
+                        <x-ui.card title="Operaciones de caja bloqueadas" class="xl:col-span-3">
+                            <p class="ui-alert ui-alert-warning">
+                                {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'Esta sucursal opera con caja controlada por sede principal.' }}
+                            </p>
+                        </x-ui.card>
+                    @else
+                        <x-ui.card title="Registrar movimiento" class="xl:col-span-2">
+                            <form id="cash-movement-form" method="POST" action="{{ route('cash.movements.store') }}" class="space-y-4" data-high-threshold="100">
+                                @csrf
+                                <input type="hidden" id="movement-high-confirmed" name="high_amount_confirmed" value="0">
 
-                            <div id="movement-guard-alert" class="hidden ui-alert ui-alert-warning"></div>
+                                <div id="movement-guard-alert" class="hidden ui-alert ui-alert-warning"></div>
 
-                            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                                <label class="space-y-1 text-sm font-semibold ui-muted">
-                                    <span>Tipo</span>
-                                    <select id="movement-type" name="type" required class="ui-input" aria-label="Tipo de movimiento">
-                                        <option value="">Seleccione</option>
-                                        <option value="income" @selected(old('type') === 'income')>Ingreso</option>
-                                        <option value="expense" @selected(old('type') === 'expense')>Egreso</option>
-                                    </select>
-                                </label>
+                                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                                        <span>Tipo</span>
+                                        <select id="movement-type" name="type" required class="ui-input" aria-label="Tipo de movimiento">
+                                            <option value="">Seleccione</option>
+                                            <option value="income" @selected(old('type') === 'income')>Ingreso</option>
+                                            <option value="expense" @selected(old('type') === 'expense')>Egreso</option>
+                                        </select>
+                                    </label>
 
-                                <label class="space-y-1 text-sm font-semibold ui-muted">
-                                    <span>Método</span>
-                                    <select name="method" required class="ui-input" aria-label="Método de pago">
-                                        <option value="">Seleccione</option>
-                                        <option value="cash" @selected(old('method') === 'cash')>Efectivo</option>
-                                        <option value="card" @selected(old('method') === 'card')>Tarjeta</option>
-                                        <option value="transfer" @selected(old('method') === 'transfer')>Transferencia</option>
-                                    </select>
-                                </label>
+                                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                                        <span>Método</span>
+                                        <select name="method" required class="ui-input" aria-label="Método de pago">
+                                            <option value="">Seleccione</option>
+                                            <option value="cash" @selected(old('method') === 'cash')>Efectivo</option>
+                                            <option value="card" @selected(old('method') === 'card')>Tarjeta</option>
+                                            <option value="transfer" @selected(old('method') === 'transfer')>Transferencia</option>
+                                        </select>
+                                    </label>
 
-                                <label class="space-y-1 text-sm font-semibold ui-muted">
-                                    <span>Monto</span>
-                                    <input id="movement-amount" type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount') }}" required class="ui-input" aria-label="Monto">
-                                </label>
+                                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                                        <span>Monto</span>
+                                        <input id="movement-amount" type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount') }}" required class="ui-input" aria-label="Monto">
+                                    </label>
 
-                                <label id="movement-expense-category-wrap" class="hidden space-y-1 text-sm font-semibold ui-muted">
-                                    <span>Categoria egreso (opcional)</span>
-                                    <select id="movement-expense-category" name="expense_category" class="ui-input" aria-label="Categoria de egreso">
-                                        <option value="">Sin categoria</option>
-                                        <option value="insumos" @selected(old('expense_category') === 'insumos')>Insumos</option>
-                                        <option value="servicios" @selected(old('expense_category') === 'servicios')>Servicios</option>
-                                        <option value="mantenimiento" @selected(old('expense_category') === 'mantenimiento')>Mantenimiento</option>
-                                        <option value="nomina" @selected(old('expense_category') === 'nomina')>Nomina</option>
-                                        <option value="otros" @selected(old('expense_category') === 'otros')>Otros</option>
-                                    </select>
-                                </label>
+                                    <label id="movement-expense-category-wrap" class="hidden space-y-1 text-sm font-semibold ui-muted">
+                                        <span>Categoria egreso (opcional)</span>
+                                        <select id="movement-expense-category" name="expense_category" class="ui-input" aria-label="Categoria de egreso">
+                                            <option value="">Sin categoria</option>
+                                            <option value="insumos" @selected(old('expense_category') === 'insumos')>Insumos</option>
+                                            <option value="servicios" @selected(old('expense_category') === 'servicios')>Servicios</option>
+                                            <option value="mantenimiento" @selected(old('expense_category') === 'mantenimiento')>Mantenimiento</option>
+                                            <option value="nomina" @selected(old('expense_category') === 'nomina')>Nomina</option>
+                                            <option value="otros" @selected(old('expense_category') === 'otros')>Otros</option>
+                                        </select>
+                                    </label>
 
-                                <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2 xl:col-span-4">
-                                    <span id="movement-description-label">Descripción (obligatoria)</span>
-                                    <textarea id="movement-description" name="description" rows="2" required class="ui-input" aria-label="Descripción" placeholder="Ingresa descripción obligatoria.">{{ old('description') }}</textarea>
-                                </label>
+                                    <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2 xl:col-span-4">
+                                        <span id="movement-description-label">Descripción (obligatoria)</span>
+                                        <textarea id="movement-description" name="description" rows="2" required class="ui-input" aria-label="Descripción" placeholder="Ingresa descripción obligatoria.">{{ old('description') }}</textarea>
+                                    </label>
+                                </div>
+
+                                <x-ui.button id="movement-submit" type="submit" variant="success">Registrar ingreso</x-ui.button>
+                            </form>
+                        </x-ui.card>
+
+                        <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
+                            <div id="close-form-alert" class="hidden ui-alert ui-alert-warning"></div>
+
+                            <div class="space-y-2 text-sm">
+                                <p class="ui-muted">Esperado total: <strong>{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</strong></p>
+                                <p class="ui-muted">Estado de cierre: <strong id="close-status-text" data-tone="ok">CUADRA</strong></p>
                             </div>
 
-                            <x-ui.button id="movement-submit" type="submit" variant="success">Registrar ingreso</x-ui.button>
-                        </form>
-                    </x-ui.card>
-
-                    <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
-                        <div id="close-form-alert" class="hidden ui-alert ui-alert-warning"></div>
-
-                        <div class="space-y-2 text-sm">
-                            <p class="ui-muted">Esperado total: <strong>{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</strong></p>
-                            <p class="ui-muted">Estado de cierre: <strong id="close-status-text" data-tone="ok">CUADRA</strong></p>
-                        </div>
-
-                        <form id="cash-close-form" method="POST" action="{{ route('cash.close') }}" class="mt-4 space-y-4"
-                              data-expected-cash="{{ number_format($expectedCash, 2, '.', '') }}"
-                              data-expected-card="{{ number_format($expectedCard, 2, '.', '') }}"
-                              data-expected-transfer="{{ number_format($expectedTransfer, 2, '.', '') }}"
-                              data-can-approve-difference="{{ $canApproveDifference ? '1' : '0' }}">
-                            @csrf
-                            <input id="close-closing-balance" type="hidden" name="closing_balance" value="{{ old('closing_balance') }}">
-                            <input id="close-difference-approved" type="hidden" name="difference_approved" value="0">
+                            <form id="cash-close-form" method="POST" action="{{ route('cash.close') }}" class="mt-4 space-y-4"
+                                  data-expected-cash="{{ number_format($expectedCash, 2, '.', '') }}"
+                                  data-expected-card="{{ number_format($expectedCard, 2, '.', '') }}"
+                                  data-expected-transfer="{{ number_format($expectedTransfer, 2, '.', '') }}"
+                                  data-can-approve-difference="{{ $canApproveDifference ? '1' : '0' }}">
+                                @csrf
+                                <input id="close-closing-balance" type="hidden" name="closing_balance" value="{{ old('closing_balance') }}">
+                                <input id="close-difference-approved" type="hidden" name="difference_approved" value="0">
 
                             <div class="grid gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                                 <div class="grid grid-cols-4 gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
@@ -234,12 +252,13 @@
                                 <p class="ui-alert ui-alert-warning text-xs">Solo Admin puede confirmar cierre con diferencia.</p>
                             @endif
 
-                            <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center">Cerrar turno</x-ui.button>
-                        </form>
-                    </x-ui.card>
+                                <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center">Cerrar turno</x-ui.button>
+                            </form>
+                        </x-ui.card>
+                    @endif
                 </section>
 
-                <x-ui.card title="Ultimos 10 movimientos">
+                <x-ui.card title="Últimos 10 movimientos">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
@@ -291,7 +310,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center text-sm text-slate-500 dark:text-slate-300">Aun no hay movimientos en este turno.</td>
+                                    <td colspan="9" class="text-center text-sm text-slate-500 dark:text-slate-300">Aún no hay movimientos en este turno.</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -300,7 +319,7 @@
 
                     <div class="mt-4 flex flex-wrap gap-2">
                         <x-ui.button :href="route('clients.index')" variant="primary">Cobrar membresía</x-ui.button>
-                        <x-ui.button :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
+                        <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
                         <x-ui.button :href="route('reports.income')" variant="ghost">Ver reporte de ingresos</x-ui.button>
                     </div>
                 </x-ui.card>
@@ -364,11 +383,19 @@
             @endphp
 
             <x-ui.card title="Historial de caja" subtitle="Revision de cierres, diferencias y responsables.">
+                @if ($isGlobalScope)
+                    <p class="mb-4 ui-alert ui-alert-info">
+                        Modo global activo: historial consolidado de todas tus sedes en solo lectura.
+                    </p>
+                @endif
                 <div class="overflow-x-auto">
                     <table class="ui-table min-w-[1040px]">
                         <thead>
                         <tr>
                             <th>ID</th>
+                            @if ($isGlobalScope)
+                                <th>Sede</th>
+                            @endif
                             <th>Apertura</th>
                             <th>Cierre</th>
                             <th>Apertura por</th>
@@ -388,6 +415,9 @@
                             @endphp
                             <tr>
                                 <td>{{ $session->id }}</td>
+                                @if ($isGlobalScope)
+                                    <td>{{ $session->gym?->name ?? '-' }}</td>
+                                @endif
                                 <td>{{ $session->opened_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 <td>{{ $session->closed_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 <td>{{ $session->openedBy?->name ?? '-' }}</td>
@@ -405,7 +435,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay sesiones registradas.</td>
+                                <td colspan="{{ $isGlobalScope ? 11 : 10 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay sesiones registradas.</td>
                             </tr>
                         @endforelse
                         </tbody>

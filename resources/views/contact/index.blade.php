@@ -59,14 +59,14 @@
         $suggestionMessage = old('message', '');
     @endphp
 
-    <x-card title="Canales de contacto" subtitle="Informacion publica definida por SuperAdmin.">
+    <x-card title="Canales de contacto" subtitle="Información pública definida por SuperAdmin.">
         <div class="relative space-y-4 pb-28 md:pb-36">
             <div class="rounded-xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-[220px] flex-1">
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $label !== '' ? $label : 'Soporte' }}</p>
                         <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                            {{ $message !== '' ? $message : 'Escribenos y te ayudamos con tu consulta.' }}
+                            {{ $message !== '' ? $message : 'Escríbenos y te ayudamos con tu consulta.' }}
                         </p>
                     </div>
 
@@ -107,7 +107,7 @@
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M7.5 4.5h3l1.5 4-2.2 1.3a14 14 0 0 0 4.4 4.4l1.3-2.2 4 1.5v3a2 2 0 0 1-2 2A14.5 14.5 0 0 1 5.5 6.5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" />
                                 </svg>
-                                Telefono
+                                Teléfono
                             </p>
                             <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $phone }}</p>
                             <a class="mt-3 inline-flex ui-button ui-button-ghost px-3 py-2 text-xs font-bold" href="tel:{{ preg_replace('/\s+/', '', $phone) }}">Llamar</a>
@@ -145,7 +145,7 @@
                 </div>
             @else
                 <div class="rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-slate-600 dark:text-slate-300">
-                    Aun no hay canales de contacto configurados por SuperAdmin.
+                    Aún no hay canales de contacto configurados por SuperAdmin.
                 </div>
             @endif
 
@@ -153,7 +153,7 @@
                 <div class="rounded-xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
                     <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Caja de sugerencias</p>
                     <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">
-                        Envia mejoras para el sistema. Tu sugerencia llegara al SuperAdmin con los datos de tu gimnasio.
+                        Envía mejoras para el sistema. Tu sugerencia llegará al SuperAdmin con los datos de tu gimnasio.
                     </p>
 
                     <form method="POST" action="{{ route('contact.suggestions.store') }}" class="mt-4 space-y-3">
@@ -194,7 +194,7 @@
             @if ($isSuperAdminViewer)
                 <div class="rounded-xl border border-sky-300/40 bg-sky-50/70 p-4 dark:border-sky-700/40 dark:bg-sky-900/20">
                     <p class="text-sm font-semibold text-sky-800 dark:text-sky-200">Eres SuperAdmin</p>
-                    <p class="mt-1 text-sm text-sky-700 dark:text-sky-300">Puedes editar estos datos desde tu perfil en la seccion "Contacto para clientes".</p>
+                    <p class="mt-1 text-sm text-sky-700 dark:text-sky-300">Puedes editar estos datos desde tu perfil en la sección "Contacto para clientes".</p>
                     <a href="{{ route('profile.index') }}" class="mt-3 inline-flex ui-button ui-button-primary px-3 py-2 text-xs font-bold">Ir a mi perfil</a>
                 </div>
             @endif

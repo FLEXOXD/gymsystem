@@ -7,7 +7,9 @@ use App\Http\Requests\CloseCashSessionRequest;
 use App\Http\Requests\OpenCashSessionRequest;
 use App\Models\CashMovement;
 use App\Models\CashSession;
+use App\Models\GymBranchLink;
 use App\Services\CashSessionService;
+use App\Support\ActiveGymContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,36 @@ class CashController extends Controller
     public function index(Request $request): View
     {
         $gymId = $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $cashGuard = $this->resolveCashGuard($request, $gymId);
+
+        if ($isGlobalScope) {
+            $sessions = CashSession::query()
+                ->forGyms($gymIds)
+                ->select([
+                    'id',
+                    'gym_id',
+                    'opened_by',
+                    'closed_by',
+                    'opened_at',
+                    'closed_at',
+                    'opening_balance',
+                    'closing_balance',
+                    'expected_balance',
+                    'difference',
+                    'status',
+                ])
+                ->with(['gym:id,name,slug', 'openedBy:id,name', 'closedBy:id,name'])
+                ->orderByDesc('opened_at')
+                ->paginate(20)
+                ->withQueryString();
+
+            return view('cash.index', [
+                'sessions' => $sessions,
+            ]);
+        }
+
         $openSession = $this->cashSessionService->getOpenSession($gymId);
 
         $summary = [
@@ -72,6 +104,8 @@ class CashController extends Controller
             'summary' => $summary,
             'methodTotals' => $methodTotals,
             'latestMovements' => $latestMovements,
+            'cashWriteBlocked' => (bool) ($cashGuard['blocked'] ?? false),
+            'cashWriteBlockedReason' => (string) ($cashGuard['reason'] ?? ''),
         ]);
     }
 
@@ -80,10 +114,11 @@ class CashController extends Controller
      */
     public function open(OpenCashSessionRequest $request): RedirectResponse
     {
-        $gymId = $this->resolveGymId($request);
-        $data = $request->validated();
-
         try {
+            $gymId = $this->resolveGymId($request);
+            $this->assertCashWriteAccess($request, $gymId);
+            $data = $request->validated();
+
             $this->cashSessionService->openSession(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
@@ -107,10 +142,11 @@ class CashController extends Controller
      */
     public function addMovement(AddCashMovementRequest $request): RedirectResponse
     {
-        $gymId = $this->resolveGymId($request);
-        $data = $request->validated();
-
         try {
+            $gymId = $this->resolveGymId($request);
+            $this->assertCashWriteAccess($request, $gymId);
+            $data = $request->validated();
+
             $this->cashSessionService->addMovement(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
@@ -137,10 +173,11 @@ class CashController extends Controller
      */
     public function close(CloseCashSessionRequest $request): RedirectResponse
     {
-        $gymId = $this->resolveGymId($request);
-        $data = $request->validated();
-
         try {
+            $gymId = $this->resolveGymId($request);
+            $this->assertCashWriteAccess($request, $gymId);
+            $data = $request->validated();
+
             $session = $this->cashSessionService->closeSession(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
@@ -164,10 +201,11 @@ class CashController extends Controller
      */
     public function sessions(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
 
         $sessions = CashSession::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select([
                 'id',
                 'gym_id',
@@ -181,7 +219,7 @@ class CashController extends Controller
                 'difference',
                 'status',
             ])
-            ->with(['openedBy:id,name', 'closedBy:id,name'])
+            ->with(['gym:id,name,slug', 'openedBy:id,name', 'closedBy:id,name'])
             ->orderByDesc('opened_at')
             ->paginate(20);
 
@@ -195,10 +233,11 @@ class CashController extends Controller
      */
     public function show(Request $request, string $contextGym, int $session): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
 
         $sessionModel = CashSession::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select([
                 'id',
                 'gym_id',
@@ -238,8 +277,8 @@ class CashController extends Controller
             ])
             ->findOrFail($session);
 
-        $summary = $this->buildSessionSummary($gymId, $sessionModel->id, (float) $sessionModel->opening_balance);
-        $methodTotals = $this->buildMethodTotals($gymId, $sessionModel->id);
+        $summary = $this->buildSessionSummary((int) $sessionModel->gym_id, $sessionModel->id, (float) $sessionModel->opening_balance);
+        $methodTotals = $this->buildMethodTotals((int) $sessionModel->gym_id, $sessionModel->id);
 
         return view('cash.show', [
             'session' => $sessionModel,
@@ -297,9 +336,62 @@ class CashController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
+    }
+
+    /**
+     * @return array{blocked:bool,reason:string}
+     */
+    private function resolveCashGuard(Request $request, int $activeGymId): array
+    {
+        if (ActiveGymContext::isGlobal($request)) {
+            return [
+                'blocked' => true,
+                'reason' => 'Selecciona una sucursal especifica para operar caja.',
+            ];
+        }
+
+        if ((bool) $request->attributes->get('gym_context_is_branch', false)) {
+            return [
+                'blocked' => true,
+                'reason' => 'La caja de esta sucursal la gestiona la sede principal.',
+            ];
+        }
+
+        $link = GymBranchLink::query()
+            ->where('branch_gym_id', $activeGymId)
+            ->where('status', 'active')
+            ->first(['id', 'hub_gym_id', 'cash_managed_by_hub']);
+
+        if (! $link || ! (bool) $link->cash_managed_by_hub) {
+            return [
+                'blocked' => false,
+                'reason' => '',
+            ];
+        }
+
+        $operatorGymId = (int) ($request->user()?->gym_id ?? 0);
+        if ($operatorGymId === (int) $link->hub_gym_id) {
+            return [
+                'blocked' => false,
+                'reason' => '',
+            ];
+        }
+
+        return [
+            'blocked' => true,
+            'reason' => 'La caja de esta sucursal la gestiona la sede principal.',
+        ];
+    }
+
+    private function assertCashWriteAccess(Request $request, int $activeGymId): void
+    {
+        $guard = $this->resolveCashGuard($request, $activeGymId);
+        if ((bool) ($guard['blocked'] ?? false)) {
+            throw new RuntimeException((string) ($guard['reason'] ?? 'No autorizado para operar caja en esta sucursal.'));
+        }
     }
 }

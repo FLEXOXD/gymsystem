@@ -4,102 +4,123 @@
 @section('page-title', 'Planes base y promociones')
 
 @section('content')
-    <div class="space-y-5">
-        <x-ui.card title="Planes base para control de suscripciones" subtitle="Estos planes se usan en SuperAdmin para renovaciones. No se copian automaticamente al catalogo interno de cada gimnasio.">
-            <form method="POST" action="{{ route('superadmin.plan-templates.store') }}" class="grid gap-3 lg:grid-cols-5">
-                @csrf
-                <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
-                    Nombre del plan
-                    <input type="text" name="name" class="ui-input" placeholder="Ej: Premium 90 dias" required>
-                </label>
-                <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                    Unidad
-                    <select id="template-duration-unit" name="duration_unit" class="ui-input">
-                        <option value="days">Dias</option>
-                        <option value="months">Meses</option>
-                    </select>
-                </label>
-                <label id="template-duration-days-wrap" class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                    Duracion (dias)
-                    <input id="template-duration-days" type="number" name="duration_days" min="1" max="3650" class="ui-input" value="30">
-                </label>
-                <label id="template-duration-months-wrap" class="hidden space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                    Duracion (meses)
-                    <input id="template-duration-months" type="number" name="duration_months" min="1" max="120" class="ui-input" value="1">
-                </label>
-                <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                    Precio
-                    <input type="number" step="0.01" min="0" name="price" class="ui-input" placeholder="90.00" required>
-                </label>
-                <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                    Estado
-                    <select name="status" class="ui-input">
-                        <option value="active">Activo</option>
-                        <option value="inactive">Inactivo</option>
-                    </select>
-                </label>
-                <div class="flex items-end lg:col-span-5">
-                    <x-ui.button type="submit">Crear plan base</x-ui.button>
-                </div>
-            </form>
+    @php
+        $planPresentation = is_array($planPresentation ?? null) ? $planPresentation : [];
+        $schemaReady = (bool) ($schemaReady ?? true);
+        $money = static fn (float $amount): string => number_format($amount, 2, ',', '.');
+    @endphp
 
-            <div class="mt-4 overflow-x-auto">
-                <table class="ui-table min-w-[860px]">
-                    <thead>
-                        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            <th class="px-3 py-3">Plan</th>
-                            <th class="px-3 py-3">Duracion</th>
-                            <th class="px-3 py-3">Precio</th>
-                            <th class="px-3 py-3">Estado</th>
-                            <th class="px-3 py-3">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($plans as $plan)
-                            @php
-                                $isActive = (string) ($plan->status ?? '') === 'active';
-                            @endphp
-                            <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
-                                <td class="px-3 py-3 font-semibold text-slate-800 dark:text-slate-100">{{ $plan->name }}</td>
-                                <td class="px-3 py-3 dark:text-slate-200">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</td>
-                                <td class="px-3 py-3 dark:text-slate-200">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode ?? 'USD') }}</td>
-                                <td class="px-3 py-3">
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
-                                        {{ $isActive ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </td>
-                                <td class="px-3 py-3">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <form method="POST" action="{{ route('superadmin.plan-templates.toggle', $plan->id) }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="{{ $isActive ? 'inactive' : 'active' }}">
-                                            <x-ui.button type="submit" size="sm" variant="ghost">{{ $isActive ? 'Desactivar' : 'Activar' }}</x-ui.button>
-                                        </form>
-                                        <form method="POST" action="{{ route('superadmin.plan-templates.destroy', $plan->id) }}" onsubmit="return confirm('Eliminar este plan base?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <x-ui.button type="submit" size="sm" variant="danger">Eliminar</x-ui.button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay planes base creados.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    <div class="space-y-5">
+        <x-ui.card title="Planes base conectados con la landing" subtitle="Lo que edites aqui se refleja en la seccion publica de precios.">
+            @if (! $schemaReady)
+                <div class="ui-alert ui-alert-danger mb-4 text-xs font-semibold">
+                    Falta migracion de planes base. Ejecuta: <code>php artisan migrate</code>.
+                </div>
+            @else
+                <div class="ui-alert ui-alert-success mb-4 text-xs font-semibold">
+                    Catalogo fijo: basico, profesional, premium y sucursales. Solo editas precio, descuento y estado.
+                </div>
+            @endif
+
+            <div class="grid gap-4 md:grid-cols-2">
+                @foreach ($plans as $plan)
+                    @php
+                        $planKey = (string) ($plan->plan_key ?? '');
+                        $meta = (array) ($planPresentation[$planKey] ?? []);
+                        $features = array_values(array_filter((array) ($meta['features'] ?? []), fn ($value) => is_string($value) && trim($value) !== ''));
+                        $summary = (string) ($meta['summary'] ?? 'Plan base disponible para tu operacion.');
+                        $isFeatured = (bool) ($meta['featured'] ?? false);
+                        $isContactMode = (bool) ($meta['contact_mode'] ?? false);
+                        $price = (float) ($plan->price ?? 0);
+                        $discountPrice = $plan->discount_price !== null ? (float) $plan->discount_price : null;
+                        $discountPercent = ($discountPrice !== null && $price > 0 && $discountPrice < $price)
+                            ? (int) round((($price - $discountPrice) / $price) * 100)
+                            : null;
+                        $isActive = (string) ($plan->status ?? '') === 'active';
+                    @endphp
+
+                    <article class="plan-admin-card relative overflow-hidden rounded-2xl border p-4">
+                        @if ($isFeatured)
+                            <span class="plan-admin-badge">Plan destacado</span>
+                        @endif
+
+                        <div class="mb-3">
+                            <p class="text-lg font-black text-slate-900 dark:text-slate-100">{{ $plan->name }}</p>
+                            <p class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</p>
+                        </div>
+
+                        @if ($isContactMode)
+                            <div class="mb-2 text-3xl font-black leading-none text-slate-900 dark:text-slate-100">Personalizado <span class="text-base font-bold text-slate-700 dark:text-slate-300">/Contacto</span></div>
+                            <p class="text-sm text-slate-700 dark:text-slate-200">
+                                Primer mes con descuento:
+                                @if ($discountPercent !== null)
+                                    <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
+                                @elseif ($discountPrice !== null)
+                                    <strong>${{ $money($discountPrice) }}</strong> de referencia.
+                                @else
+                                    <strong>segun cotizacion</strong>.
+                                @endif
+                            </p>
+                        @else
+                            <div class="mb-2 text-5xl font-black leading-none text-slate-900 dark:text-slate-100">${{ $money($price) }}<span class="ml-1 text-2xl font-bold text-slate-700 dark:text-slate-300">/Mes</span></div>
+                            <p class="text-sm text-slate-700 dark:text-slate-200">
+                                Primer mes con descuento:
+                                @if ($discountPrice !== null && $discountPrice < $price)
+                                    <span class="line-through opacity-70">${{ $money($price) }}</span>
+                                    <strong>${{ $money($discountPrice) }}</strong>
+                                @else
+                                    <strong>sin descuento configurado</strong>
+                                @endif
+                            </p>
+                        @endif
+
+                        <p class="mt-3 text-sm text-slate-700 dark:text-slate-200">{{ $summary }}</p>
+                        <ul class="mt-3 grid gap-1.5 text-sm text-slate-700 dark:text-slate-200">
+                            @foreach ($features as $feature)
+                                <li class="flex items-start gap-2">
+                                    <span class="mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                                    <span>{{ $feature }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.pricing.update', $plan->id) : '#' }}" class="mt-4 grid gap-2">
+                            @csrf
+                            @method('PATCH')
+
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                    Precio
+                                    <input type="number" step="0.01" min="0" name="price" class="ui-input" value="{{ number_format((float) $plan->price, 2, '.', '') }}" required>
+                                </label>
+                                <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                    Precio con descuento
+                                    <input type="number" step="0.01" min="0" name="discount_price" class="ui-input" value="{{ $plan->discount_price !== null ? number_format((float) $plan->discount_price, 2, '.', '') : '' }}">
+                                </label>
+                            </div>
+
+                            <div class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                                <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                    Estado
+                                    <select name="status" class="ui-input">
+                                        <option value="active" @selected($isActive)>Activo</option>
+                                        <option value="inactive" @selected(! $isActive)>Inactivo</option>
+                                    </select>
+                                </label>
+                                <x-ui.button type="submit" size="sm" class="sm:min-w-[140px]" :disabled="!$schemaReady">Guardar</x-ui.button>
+                            </div>
+                        </form>
+                    </article>
+                @endforeach
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Promociones base" subtitle="Estas promociones son referencias administrativas de SuperAdmin y no se copian automaticamente al panel del gimnasio.">
+        <x-ui.card title="Promociones base" subtitle="Promociones globales para aplicar reglas comerciales por plan.">
             <form method="POST" action="{{ route('superadmin.plan-templates.promotions.store') }}" class="grid gap-3 lg:grid-cols-4">
                 @csrf
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                     Nombre promocion
-                    <input type="text" name="name" class="ui-input" placeholder="Ej: Promo lanzamiento" required>
+                    <input type="text" name="name" class="ui-input" placeholder="Ej: Trae un gym amigo" required>
                 </label>
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                     Plan asociado
@@ -123,11 +144,11 @@
                 </label>
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                     Valor
-                    <input type="number" step="0.01" min="0" name="value" class="ui-input" placeholder="10">
+                    <input type="number" step="0.01" min="0" name="value" class="ui-input" placeholder="25">
                 </label>
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
                     Descripcion
-                    <input type="text" name="description" class="ui-input" placeholder="Texto breve de la promocion">
+                    <input type="text" name="description" class="ui-input" placeholder="Ej: 25% por 4 meses para gimnasios referidos">
                 </label>
                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                     Inicio
@@ -148,13 +169,17 @@
                     Maximo usos
                     <input type="number" min="1" name="max_uses" class="ui-input" placeholder="Opcional">
                 </label>
+                <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                    Duracion (meses)
+                    <input type="number" min="1" max="60" name="duration_months" class="ui-input" placeholder="Ej: 4">
+                </label>
                 <div class="flex items-end lg:col-span-4">
                     <x-ui.button type="submit">Crear promocion base</x-ui.button>
                 </div>
             </form>
 
             <div class="mt-4 overflow-x-auto">
-                <table class="ui-table min-w-[980px]">
+                <table class="ui-table min-w-[1080px]">
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             <th class="px-3 py-3">Promocion</th>
@@ -162,6 +187,7 @@
                             <th class="px-3 py-3">Tipo</th>
                             <th class="px-3 py-3">Valor</th>
                             <th class="px-3 py-3">Vigencia</th>
+                            <th class="px-3 py-3">Duracion</th>
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Acciones</th>
                         </tr>
@@ -182,6 +208,7 @@
                                 <td class="px-3 py-3 dark:text-slate-200">{{ $promotion->type }}</td>
                                 <td class="px-3 py-3 dark:text-slate-200">{{ $valueLabel }}</td>
                                 <td class="px-3 py-3 dark:text-slate-200">{{ $rangeLabel }}</td>
+                                <td class="px-3 py-3 dark:text-slate-200">{{ $promotion->duration_months ? $promotion->duration_months.' meses' : '-' }}</td>
                                 <td class="px-3 py-3">
                                     <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
                                         {{ $isActive ? 'Activa' : 'Inactiva' }}
@@ -205,7 +232,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay promociones base creadas.</td>
+                                <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay promociones base creadas.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -215,29 +242,38 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-    (function () {
-        const durationUnit = document.getElementById('template-duration-unit');
-        const daysWrap = document.getElementById('template-duration-days-wrap');
-        const monthsWrap = document.getElementById('template-duration-months-wrap');
-        const daysInput = document.getElementById('template-duration-days');
-        const monthsInput = document.getElementById('template-duration-months');
-
-        if (!durationUnit || !daysWrap || !monthsWrap || !daysInput || !monthsInput) return;
-
-        function syncDurationMode() {
-            const isMonths = String(durationUnit.value || '') === 'months';
-
-            daysWrap.classList.toggle('hidden', isMonths);
-            monthsWrap.classList.toggle('hidden', !isMonths);
-
-            daysInput.required = !isMonths;
-            monthsInput.required = isMonths;
-        }
-
-        durationUnit.addEventListener('change', syncDurationMode);
-        syncDurationMode();
-    })();
-</script>
+@push('styles')
+<style>
+    .plan-admin-card {
+        border-color: rgb(148 163 184 / 0.45);
+        background:
+            radial-gradient(circle at 90% 4%, rgba(34, 197, 94, 0.16), transparent 32%),
+            linear-gradient(170deg, rgba(255,255,255,.96) 0%, rgba(241,245,249,.96) 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+    .theme-dark .plan-admin-card {
+        border-color: rgb(51 65 85 / 0.9);
+        background:
+            radial-gradient(circle at 90% 4%, rgba(74, 222, 128, 0.2), transparent 34%),
+            linear-gradient(165deg, rgba(2,6,23,.95) 0%, rgba(15,23,42,.96) 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 16px 34px rgba(2, 6, 23, 0.45);
+    }
+    .plan-admin-badge {
+        position: absolute;
+        right: 0.9rem;
+        top: 0.9rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(34, 197, 94, 0.52);
+        background: linear-gradient(120deg, #22c55e, #16a34a);
+        color: #ecfdf3;
+        padding: 0.22rem 0.65rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .theme-light .plan-admin-badge {
+        color: #052e16;
+    }
+</style>
 @endpush

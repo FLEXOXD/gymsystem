@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -46,6 +47,8 @@ class User extends Authenticatable
         'support_contact_logo_light_path',
         'support_contact_logo_dark_path',
         'theme',
+        'legal_accepted_at',
+        'legal_accepted_version',
         'password',
     ];
 
@@ -70,6 +73,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_login_at' => 'datetime',
+            'legal_accepted_at' => 'datetime',
             'birth_date' => 'date',
         ];
     }
@@ -136,5 +140,21 @@ class User extends Authenticatable
     public function reviewedContactSuggestions(): HasMany
     {
         return $this->hasMany(ContactSuggestion::class, 'reviewed_by');
+    }
+
+    /**
+     * Active demo session assigned to this user (if any).
+     */
+    public function demoSession(): HasOne
+    {
+        return $this->hasOne(DemoSession::class);
+    }
+
+    /**
+     * Legal acceptance records linked to this user.
+     */
+    public function legalAcceptances(): HasMany
+    {
+        return $this->hasMany(LegalAcceptance::class, 'user_id');
     }
 }

@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', __('ui.settings'))
 @section('page-title', __('ui.settings'))
@@ -121,7 +121,7 @@
          data-update-url="{{ $themeUpdateUrl }}"
          data-csrf="{{ csrf_token() }}">
         <x-card title="Selector de tema"
-                subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantaneo y se guarda en tu cuenta.">
+                subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantáneo y se guarda en tu cuenta.">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($themes as $themeKey => $theme)
                     <button type="button"
@@ -186,11 +186,12 @@
                         </div>
                         <div class="ui-muted text-xs">
                             <p>Formatos: JPG, PNG, WEBP</p>
-                            <p>Peso maximo: 2MB</p>
+                            <p>Peso máximo: 2MB</p>
                         </div>
                     </div>
 
-                    <form method="POST"
+                    <form id="gym-logo-form"
+                          method="POST"
                           action="{{ $gymLogoUpdateUrl }}"
                           enctype="multipart/form-data"
                           class="mt-4 space-y-3">
@@ -205,9 +206,9 @@
 
                 <section class="ui-card">
                     <h3 class="ui-heading text-base">Datos del Gym</h3>
-                    <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial y telefono. Ubicacion definida por SuperAdmin (solo lectura).</p>
+                    <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial y teléfono. Ubicación definida por SuperAdmin (solo lectura).</p>
 
-                    <form method="POST" action="{{ $gymProfileUpdateUrl }}" class="mt-4 space-y-3">
+                    <form id="gym-profile-form" method="POST" action="{{ $gymProfileUpdateUrl }}" class="mt-4 space-y-3">
                         @csrf
                         <div>
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Nombre comercial</label>
@@ -218,7 +219,7 @@
                         </div>
 
                         <div>
-                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Telefono</label>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Teléfono</label>
                             <input type="text" name="phone" value="{{ old('phone', $gym->phone) }}" class="ui-input">
                             @error('phone')
                                 <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
@@ -226,7 +227,7 @@
                         </div>
                         <div class="grid gap-3 md:grid-cols-2">
                             <div>
-                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Pais (solo lectura)</label>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">País (solo lectura)</label>
                                 <input type="text" class="ui-input" value="{{ $gymAddressCountry }}" readonly>
                             </div>
                             <div>
@@ -238,7 +239,7 @@
                                 <input type="text" class="ui-input" value="{{ $gymAddressCity }}" readonly>
                             </div>
                             <div>
-                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Direccion linea (solo lectura)</label>
+                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Dirección línea (solo lectura)</label>
                                 <input type="text" class="ui-input" value="{{ $gymAddressLine }}" readonly>
                             </div>
                         </div>
@@ -276,7 +277,7 @@
                                     <input id="timezone-search"
                                            type="text"
                                            class="ui-input min-w-[220px] flex-1"
-                                           placeholder="Buscar por pais, ciudad o zona (ej: ecuador, bogota, mexico)">
+                                           placeholder="Buscar por país, ciudad o zona (ej: ecuador, bogotá, méxico)">
                                     <button id="timezone-detect-btn" type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold">
                                         Usar navegador
                                     </button>
@@ -303,12 +304,13 @@
             </div>
 
             <section class="ui-card">
-                <h3 class="ui-heading text-base">Avatares de recepcion (fallback)</h3>
+                <h3 class="ui-heading text-base">Avatares de recepción (fallback)</h3>
                 <p class="ui-muted mt-1 text-sm">
                     Se usan cuando el cliente no tiene foto propia. Puedes subir PNG/JPG/WEBP en formato vertical.
                 </p>
 
-                <form method="POST"
+                <form id="gym-avatars-form"
+                      method="POST"
                       action="{{ $gymAvatarsUpdateUrl }}"
                       enctype="multipart/form-data"
                       class="mt-4 space-y-4">
@@ -349,7 +351,7 @@
 
                     <div class="ui-muted text-xs">
                         <p>Recomendado: 900x1200 px o similar (formato vertical).</p>
-                        <p>Peso maximo por archivo: 4MB.</p>
+                        <p>Peso máximo por archivo: 4MB.</p>
                     </div>
 
                     <button type="submit" class="ui-button ui-button-primary">Guardar avatares</button>
@@ -358,9 +360,9 @@
         @else
             @if ($isSuperAdmin)
                 <section class="ui-card">
-                    <h3 class="ui-heading text-base">Configuracion SuperAdmin</h3>
+                    <h3 class="ui-heading text-base">Configuración SuperAdmin</h3>
                     <p class="ui-muted mt-1 text-sm">
-                        Como SuperAdmin gestionas multiples gimnasios. El logo, telefono y direccion se administran por cada gym.
+                        Como SuperAdmin gestionas múltiples gimnasios. El logo, teléfono y dirección se administran por cada gym.
                     </p>
                     <a href="{{ route('superadmin.gyms.index') }}" class="ui-button ui-button-primary mt-4">
                         Ir a Gimnasios
@@ -368,7 +370,7 @@
                 </section>
             @else
                 <section class="ui-card">
-                    <h3 class="ui-heading text-base">Configuracion del Gym</h3>
+                    <h3 class="ui-heading text-base">Configuración del Gym</h3>
                     <p class="ui-muted mt-1 text-sm">Este usuario no tiene un gym asignado actualmente.</p>
                 </section>
             @endif
@@ -690,7 +692,7 @@
                         } else {
                             const responseText = await response.text();
                             if (/csrf|token/i.test(responseText)) {
-                                reason = 'Sesion expirada. Recarga la pagina e intenta otra vez.';
+                                reason = 'Sesión expirada. Recarga la página e intenta otra vez.';
                             }
                         }
                     } catch (error) {}

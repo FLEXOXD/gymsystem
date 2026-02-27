@@ -6,9 +6,21 @@
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
+        $planAccessService = app(\App\Services\PlanAccessService::class);
+        $isBranchContext = (bool) request()->attributes->get('gym_context_is_branch', false);
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $canExportReports = ! $isBranchContext
+            && $activeGymId > 0
+            && $planAccessService->canForGym($activeGymId, 'reports_export');
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
     @endphp
+    @if ($isGlobalScope)
+        <div class="mb-4 ui-alert ui-alert-info">
+            Reporte global activo: los datos mostrados suman todas las sedes vinculadas.
+        </div>
+    @endif
     <x-ui.card title="Panel de reportes" subtitle="Resumen financiero y operativo del rango seleccionado.">
-        <form method="GET" action="{{ route('reports.index') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
+        <form id="reports-filter-form" method="GET" action="{{ route('reports.index') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
             <label class="space-y-1 text-sm font-semibold ui-muted">
                 <span>Desde</span>
                 <input type="date" name="from" value="{{ $from->toDateString() }}" class="ui-input">
@@ -22,8 +34,18 @@
             <x-ui.button type="submit" variant="secondary">Aplicar filtro</x-ui.button>
 
             <div class="flex flex-wrap gap-2">
-                <x-ui.button :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
-                             target="_blank" rel="noopener" variant="ghost" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
+                @if ($canExportReports)
+                    <x-ui.button id="reports-export-pdf"
+                                 :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 target="_blank" rel="noopener" variant="ghost" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
+                    <x-ui.button id="reports-export-csv"
+                                 :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 variant="ghost">Exportar CSV</x-ui.button>
+                @else
+                    <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                        {{ $isBranchContext ? 'Sucursal secundaria: exportacion bloqueada (solo lectura).' : 'Exportacion disponible en plan Premium o Sucursales.' }}
+                    </p>
+                @endif
             </div>
         </form>
     </x-ui.card>
@@ -70,7 +92,7 @@
 
     <x-ui.card title="Navegación rapida de reportes">
         <div class="flex flex-wrap gap-2">
-            <x-ui.button :href="route('reports.income', request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
+            <x-ui.button id="reports-go-income" :href="route('reports.income', request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
             <x-ui.button :href="route('reports.attendance', request()->query())" variant="ghost">Detalle asistencias</x-ui.button>
             <x-ui.button :href="route('reports.memberships')" variant="ghost">Estado membresías</x-ui.button>
         </div>

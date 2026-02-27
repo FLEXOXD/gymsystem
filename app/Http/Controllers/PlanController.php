@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePlanRequest;
 use App\Http\Requests\UpdatePromotionRequest;
 use App\Models\Plan;
 use App\Models\Promotion;
+use App\Support\ActiveGymContext;
 use App\Support\PlanDuration;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,16 +22,18 @@ class PlanController extends Controller
      */
     public function index(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
 
         $plans = Plan::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select(['id', 'gym_id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'status'])
+            ->with(['gym:id,name'])
             ->orderByDesc('id')
             ->get();
 
         $promotions = Promotion::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select([
                 'id',
                 'gym_id',
@@ -45,7 +48,7 @@ class PlanController extends Controller
                 'max_uses',
                 'times_used',
             ])
-            ->with(['plan:id,name'])
+            ->with(['plan:id,name', 'gym:id,name'])
             ->orderByDesc('id')
             ->get();
 
@@ -60,6 +63,11 @@ class PlanController extends Controller
      */
     public function store(StorePlanRequest $request): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $data = $request->validated();
         $data = PlanDuration::normalizeForPersistence($data);
@@ -78,6 +86,11 @@ class PlanController extends Controller
      */
     public function update(UpdatePlanRequest $request, string $contextGym, int $plan): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $planModel = Plan::query()->forGym($gymId)->findOrFail($plan);
         $data = PlanDuration::normalizeForPersistence($request->validated());
@@ -93,6 +106,11 @@ class PlanController extends Controller
      */
     public function toggle(Request $request, string $contextGym, int $plan): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $planModel = Plan::query()->forGym($gymId)->findOrFail($plan);
 
@@ -114,6 +132,11 @@ class PlanController extends Controller
      */
     public function destroy(Request $request, string $contextGym, int $plan): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $planModel = Plan::query()
             ->forGym($gymId)
@@ -140,6 +163,11 @@ class PlanController extends Controller
      */
     public function storePromotion(StorePromotionRequest $request): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $data = $request->validated();
         $data['gym_id'] = $gymId;
@@ -158,6 +186,11 @@ class PlanController extends Controller
      */
     public function updatePromotion(UpdatePromotionRequest $request, string $contextGym, int $promotion): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $promotionModel = Promotion::query()->forGym($gymId)->findOrFail($promotion);
 
@@ -176,6 +209,11 @@ class PlanController extends Controller
      */
     public function togglePromotion(Request $request, string $contextGym, int $promotion): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $promotionModel = Promotion::query()->forGym($gymId)->findOrFail($promotion);
 
@@ -197,6 +235,11 @@ class PlanController extends Controller
      */
     public function destroyPromotion(Request $request, string $contextGym, int $promotion): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()->route('plans.index')
+                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $promotionModel = Promotion::query()->forGym($gymId)->findOrFail($promotion);
 
@@ -214,7 +257,7 @@ class PlanController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;

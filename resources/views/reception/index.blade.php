@@ -90,12 +90,12 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Ultimos 10 ingresos">
+    <x-ui.card title="Últimos 10 ingresos">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p class="text-xs text-slate-500 dark:text-slate-300">
                 Historial detallado disponible para los ultimos 2 meses.
             </p>
-            <button type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
+            <button id="reception-open-history" type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
                 Ver asistencias (2 meses)
             </button>
         </div>
@@ -756,7 +756,7 @@
                     return;
                 }
 
-                // Error: doble tono mas notorio.
+                // Error: doble tono más notorio.
                 playPulse(context, {
                     freq: 260,
                     gain: 0.23,

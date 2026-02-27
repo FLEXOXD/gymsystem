@@ -40,13 +40,13 @@ class UpdateSuperAdminContactRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'support_contact_phone.regex' => 'El formato del telefono no es valido.',
-            'support_contact_whatsapp.regex' => 'El formato del WhatsApp no es valido.',
-            'support_contact_link.url' => 'El enlace debe ser una URL valida.',
-            'support_contact_logo_light.image' => 'El logo para tema claro debe ser una imagen valida.',
+            'support_contact_phone.regex' => 'El formato del teléfono no es válido.',
+            'support_contact_whatsapp.regex' => 'El formato del WhatsApp no es válido.',
+            'support_contact_link.url' => 'El enlace debe ser una URL válida.',
+            'support_contact_logo_light.image' => 'El logo para tema claro debe ser una imagen válida.',
             'support_contact_logo_light.mimes' => 'El logo para tema claro debe ser JPG, PNG o WEBP.',
             'support_contact_logo_light.max' => 'El logo para tema claro no puede superar 4MB.',
-            'support_contact_logo_dark.image' => 'El logo para tema oscuro debe ser una imagen valida.',
+            'support_contact_logo_dark.image' => 'El logo para tema oscuro debe ser una imagen válida.',
             'support_contact_logo_dark.mimes' => 'El logo para tema oscuro debe ser JPG, PNG o WEBP.',
             'support_contact_logo_dark.max' => 'El logo para tema oscuro no puede superar 4MB.',
         ];

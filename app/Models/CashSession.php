@@ -89,6 +89,26 @@ class CashSession extends Model
     }
 
     /**
+     * Scope records for multiple gyms.
+     *
+     * @param  array<int, int>  $gymIds
+     */
+    public function scopeForGyms(Builder $query, array $gymIds): Builder
+    {
+        $ids = collect($gymIds)
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('gym_id', $ids);
+    }
+
+    /**
      * Scope only open sessions.
      */
     public function scopeOpen(Builder $query): Builder

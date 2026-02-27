@@ -11,6 +11,7 @@ use App\Services\SubscriptionService;
 use App\Services\SuperAdminDashboardService;
 use App\Support\Currency;
 use App\Support\GymLocationCatalog;
+use App\Support\SuperAdminPlanCatalog;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Contracts\View\View;
@@ -23,7 +24,8 @@ use Illuminate\Support\Str;
 class SuperAdminDashboardController extends Controller
 {
     public function __construct(
-        private readonly SuperAdminDashboardService $dashboardService
+        private readonly SuperAdminDashboardService $dashboardService,
+        private readonly SubscriptionService $subscriptionService
     ) {
     }
 
@@ -42,13 +44,16 @@ class SuperAdminDashboardController extends Controller
      */
     public function gyms(): View
     {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
         return view('superadmin.gyms', [
             'gyms' => $this->dashboardService->getGymsTable(),
             'paymentMethods' => SubscriptionService::PAYMENT_METHODS,
             'planTemplates' => SuperAdminPlanTemplate::query()
+                ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
                 ->where('status', 'active')
-                ->select(['id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price'])
-                ->orderBy('name')
+                ->select(['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'])
+                ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
                 ->get(),
         ]);
     }
@@ -60,6 +65,7 @@ class SuperAdminDashboardController extends Controller
     {
         $viewData = $this->gymFormViewData();
         $viewData['gymsWithAdmins'] = Gym::query()
+            ->withoutDemoSessions()
             ->with(['users' => static function ($query): void {
                 $query->orderBy('id');
             }])
@@ -75,6 +81,12 @@ class SuperAdminDashboardController extends Controller
     public function storeGym(StoreGymRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $selectedPlanTemplate = SuperAdminPlanTemplate::query()
+            ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
+            ->where('status', 'active')
+            ->findOrFail((int) ($data['subscription_plan_template_id'] ?? 0));
         $profilePhotoPath = $request->hasFile('admin_profile_photo')
             ? $request->file('admin_profile_photo')->store('users/profiles', 'public')
             : null;
@@ -126,6 +138,21 @@ class SuperAdminDashboardController extends Controller
             return $gym;
         });
 
+        $this->subscriptionService->applyPlanTemplate(
+            gymId: (int) $gym->id,
+            planTemplate: [
+                'template_id' => (int) $selectedPlanTemplate->id,
+                'plan_key' => (string) ($selectedPlanTemplate->plan_key ?? ''),
+                'feature_version' => (string) config('plan_features.default_feature_version', 'v1'),
+                'name' => (string) $selectedPlanTemplate->name,
+                'price' => (float) $selectedPlanTemplate->price,
+                'duration_unit' => (string) ($selectedPlanTemplate->duration_unit ?? 'days'),
+                'duration_days' => (int) $selectedPlanTemplate->duration_days,
+                'duration_months' => $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null,
+            ],
+            paymentMethod: null
+        );
+
         return redirect()
             ->route('superadmin.gyms.index')
             ->with('status', __('messages.gym_created', [
@@ -141,7 +168,9 @@ class SuperAdminDashboardController extends Controller
     {
         $data = $request->validated();
 
-        $gymModel = Gym::query()->findOrFail($gym);
+        $gymModel = Gym::query()
+            ->withoutDemoSessions()
+            ->findOrFail($gym);
         $adminUserId = (int) $data['admin_user_id'];
 
         $adminUser = User::query()
@@ -199,7 +228,9 @@ class SuperAdminDashboardController extends Controller
      */
     public function destroyGym(int $gym): RedirectResponse
     {
-        $gymModel = Gym::query()->findOrFail($gym);
+        $gymModel = Gym::query()
+            ->withoutDemoSessions()
+            ->findOrFail($gym);
 
         $gymUserIds = User::query()
             ->where('gym_id', (int) $gymModel->id)
@@ -270,6 +301,8 @@ class SuperAdminDashboardController extends Controller
      */
     private function gymFormViewData(): array
     {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
         return [
             'currencyOptions' => Currency::options(),
             'languageOptions' => [
@@ -280,6 +313,12 @@ class SuperAdminDashboardController extends Controller
             'timezoneOptions' => $this->timezoneOptions(),
             'locationCatalog' => GymLocationCatalog::catalog(),
             'defaultTimezone' => 'America/Guayaquil',
+            'planTemplates' => SuperAdminPlanTemplate::query()
+                ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
+                ->where('status', 'active')
+                ->select(['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'])
+                ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
+                ->get(),
         ];
     }
 

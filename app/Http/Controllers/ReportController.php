@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CashMovement;
 use App\Services\ReportService;
+use App\Support\ActiveGymContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -24,13 +25,14 @@ class ReportController extends Controller
      */
     public function index(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
-        $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
-        $incomeByMethod = $this->reportService->getIncomeByMethod($gymId, $from, $to);
-        $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
-        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
+        $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
+        $incomeByMethod = $this->reportService->getIncomeByMethod($gymIds, $from, $to);
+        $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
+        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
 
         $methodLabels = $incomeByMethod
             ->pluck('method')
@@ -71,12 +73,13 @@ class ReportController extends Controller
      */
     public function income(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
-        $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
+        $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
 
-        $movements = $this->movementsBaseQuery($gymId, $from, $to)
+        $movements = $this->movementsBaseQuery($gymIds, $from, $to)
             ->select([
                 'id',
                 'gym_id',
@@ -111,16 +114,17 @@ class ReportController extends Controller
      */
     public function attendance(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
-        $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
+        $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
         $attendanceByDay = collect($attendanceSummary['by_day']);
         $rangeDays = max(1, $from->copy()->startOfDay()->diffInDays($to->copy()->startOfDay()) + 1);
 
         $previousTo = $from->copy()->subDay()->endOfDay();
         $previousFrom = $previousTo->copy()->subDays($rangeDays - 1)->startOfDay();
-        $previousAttendanceSummary = $this->reportService->getAttendanceSummary($gymId, $previousFrom, $previousTo);
+        $previousAttendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $previousFrom, $previousTo);
         $previousByDay = collect($previousAttendanceSummary['by_day']);
 
         $currentTotal = (int) $attendanceSummary['total_attendances'];
@@ -171,10 +175,11 @@ class ReportController extends Controller
      */
     public function memberships(Request $request): View
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
 
-        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
-        $membershipLists = $this->reportService->getMembershipClientLists($gymId);
+        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
+        $membershipLists = $this->reportService->getMembershipClientLists($gymIds);
 
         return view('reports.memberships', [
             'membershipSummary' => $membershipSummary,
@@ -188,19 +193,20 @@ class ReportController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
-        $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
-        $incomeByMethod = $this->reportService->getIncomeByMethod($gymId, $from, $to);
-        $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
+        $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
+        $incomeByMethod = $this->reportService->getIncomeByMethod($gymIds, $from, $to);
+        $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
         $attendanceByDay = collect($attendanceSummary['by_day']);
-        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
+        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
 
         $filename = 'reports_'.$from->format('Ymd').'_to_'.$to->format('Ymd').'.csv';
 
         return response()->streamDownload(function () use (
-            $gymId,
+            $gymIds,
             $from,
             $to,
             $incomeSummary,
@@ -262,7 +268,7 @@ class ReportController extends Controller
             fputcsv($handle, ['DETALLE MOVIMIENTOS']);
             fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Usuario', 'Descripción']);
             $movementsQuery = CashMovement::query()
-                ->forGym($gymId)
+                ->forGyms($gymIds)
                 ->betweenOccurredAt($from, $to)
                 ->leftJoin('users as users', 'users.id', '=', 'cash_movements.created_by')
                 ->leftJoin('memberships as memberships', 'memberships.id', '=', 'cash_movements.membership_id')
@@ -320,16 +326,17 @@ class ReportController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $gymId = $this->resolveGymId($request);
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
-        $incomeSummary = $this->reportService->getIncomeSummary($gymId, $from, $to);
-        $incomeByMethod = $this->reportService->getIncomeByMethod($gymId, $from, $to);
-        $attendanceSummary = $this->reportService->getAttendanceSummary($gymId, $from, $to);
+        $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
+        $incomeByMethod = $this->reportService->getIncomeByMethod($gymIds, $from, $to);
+        $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
         $attendanceByDay = collect($attendanceSummary['by_day']);
-        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymId);
+        $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
 
-        $movementsQuery = $this->movementsBaseQuery($gymId, $from, $to);
+        $movementsQuery = $this->movementsBaseQuery($gymIds, $from, $to);
         $movementsCount = (clone $movementsQuery)->count();
         $isPdfDetailTruncated = $movementsCount > self::PDF_MAX_DETAIL_ROWS;
 
@@ -404,16 +411,16 @@ class ReportController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
     }
 
-    private function movementsBaseQuery(int $gymId, Carbon $from, Carbon $to)
+    private function movementsBaseQuery(array $gymIds, Carbon $from, Carbon $to)
     {
         return CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($from, $to);
     }
 }

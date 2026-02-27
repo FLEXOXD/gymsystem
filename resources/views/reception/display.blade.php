@@ -74,7 +74,7 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card class="border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Ultimos 10 ingresos">
+        <x-ui.card class="border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Últimos 10 ingresos">
             <div class="overflow-x-auto">
                 <table class="ui-table min-w-[620px]">
                     <thead>

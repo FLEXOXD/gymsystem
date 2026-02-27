@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\DemoSession;
+use App\Models\GymBranchLink;
 use App\Models\User;
+use App\Services\DemoSessionService;
+use App\Services\PlanAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +21,11 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    public function __construct(
+        private readonly PlanAccessService $planAccessService
+    ) {
+    }
+
     /**
      * Show login form.
      */
@@ -60,23 +69,67 @@ class AuthenticatedSessionController extends Controller
                 'email' => 'Tu usuario no tiene un gimnasio valido asignado.',
             ]);
         }
+        $gymId = (int) ($user?->gym_id ?? 0);
+        $isBranchGym = $gymId > 0
+            ? GymBranchLink::query()->where('branch_gym_id', $gymId)->exists()
+            : false;
+        $hasLinkedBranches = $gymId > 0
+            ? GymBranchLink::query()->where('hub_gym_id', $gymId)->exists()
+            : false;
+        $shouldUseGlobalContext = $gymId > 0
+            && ! $isBranchGym
+            && $hasLinkedBranches
+            && $this->planAccessService->can($user, 'multi_branch');
+        $isStandalonePwaMode = strtolower(trim((string) $request->input('pwa_mode', ''))) === 'standalone';
 
         if (Route::has('panel.index')) {
-            return redirect()->route('panel.index', ['contextGym' => $gymSlug]);
+            return redirect()->route('panel.index', [
+                'contextGym' => $gymSlug,
+            ] + ($shouldUseGlobalContext ? ['scope' => 'global'] : []) + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : []));
         }
 
-        return redirect('/'.$gymSlug.'/panel');
+        $query = [];
+        if ($shouldUseGlobalContext) {
+            $query['scope'] = 'global';
+        }
+        if ($isStandalonePwaMode) {
+            $query['pwa_mode'] = 'standalone';
+        }
+
+        return redirect('/'.$gymSlug.'/panel'.(empty($query) ? '' : '?'.http_build_query($query)));
     }
 
     /**
      * Handle logout.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, DemoSessionService $demoSessionService): RedirectResponse
     {
+        $userId = (int) ($request->user()?->id ?? 0);
+        $demoSession = null;
+        if ($userId > 0) {
+            $demoSession = DemoSession::query()
+                ->where('user_id', $userId)
+                ->first();
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($demoSession) {
+            try {
+                $demoSessionService->terminateSession($demoSession);
+            } catch (\Throwable $exception) {
+                Log::warning('No se pudo cerrar completamente la sesión demo en logout.', [
+                    'user_id' => $userId,
+                    'demo_session_id' => $demoSession->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+
+            return redirect()->route('landing');
+        }
 
         return redirect()->route('login');
     }

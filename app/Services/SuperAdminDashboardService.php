@@ -27,18 +27,37 @@ class SuperAdminDashboardService
         $limitDate = $today->copy()->addDays(7)->toDateString();
 
         return [
-            'total_gyms' => Gym::query()->count(),
-            'active_gyms' => Subscription::query()->where('status', 'active')->count(),
-            'grace_gyms' => Subscription::query()->where('status', 'grace')->count(),
-            'suspended_gyms' => Subscription::query()->where('status', 'suspended')->count(),
+            'total_gyms' => Gym::query()->withoutDemoSessions()->count(),
+            'active_gyms' => Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                ->where('status', 'active')
+                ->count(),
+            'grace_gyms' => Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                ->where('status', 'grace')
+                ->count(),
+            'suspended_gyms' => Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                ->where('status', 'suspended')
+                ->count(),
             'mrr_estimated' => (float) Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
                 ->whereIn('status', ['active', 'grace'])
+                ->where(function ($query): void {
+                    $query
+                        ->where('is_branch_managed', false)
+                        ->orWhereNull('is_branch_managed');
+                })
                 ->sum('price'),
             'vencen_en_7_dias' => Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
                 ->where('status', '<>', 'suspended')
                 ->whereDate('ends_at', '<=', $limitDate)
                 ->count(),
-            'en_gracia_hoy' => Subscription::query()->where('status', 'grace')->count(),
+            'en_gracia_hoy' => Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                ->where('status', 'grace')
+                ->count(),
         ];
     }
 
@@ -52,7 +71,9 @@ class SuperAdminDashboardService
         $today = Carbon::today();
 
         return Gym::query()
+            ->withoutDemoSessions()
             ->join('subscriptions', 'subscriptions.gym_id', '=', 'gyms.id')
+            ->leftJoin('gyms as billing_owner_gyms', 'billing_owner_gyms.id', '=', 'subscriptions.billing_owner_gym_id')
             ->select([
                 'gyms.id as gym_id',
                 'gyms.name as gym_name',
@@ -62,12 +83,17 @@ class SuperAdminDashboardService
                 'subscriptions.status',
                 'subscriptions.last_payment_method',
                 'subscriptions.grace_days',
+                'subscriptions.billing_owner_gym_id',
+                'subscriptions.is_branch_managed',
+                'billing_owner_gyms.name as billing_owner_gym_name',
             ])
+            ->orderBy('subscriptions.is_branch_managed')
             ->orderByRaw("CASE subscriptions.status WHEN 'grace' THEN 0 WHEN 'active' THEN 1 WHEN 'suspended' THEN 2 ELSE 3 END")
             ->orderBy('subscriptions.ends_at')
             ->get()
             ->map(function (object $row) use ($today): object {
                 $endsAt = Carbon::parse($row->ends_at)->startOfDay();
+                $row->is_branch_managed = (bool) ($row->is_branch_managed ?? false);
                 $row->days_left = null;
                 $row->grace_left = null;
 
@@ -90,6 +116,7 @@ class SuperAdminDashboardService
     private function syncSubscriptionData(): void
     {
         Gym::query()
+            ->withoutDemoSessions()
             ->select('id')
             ->orderBy('id')
             ->chunkById(100, function ($gyms): void {

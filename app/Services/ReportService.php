@@ -13,14 +13,28 @@ use Illuminate\Support\Collection;
 class ReportService
 {
     /**
+     * @param  int|array<int, int>  $gymIdOrIds
+     * @return array<int, int>
+     */
+    private function normalizeGymIds(int|array $gymIdOrIds): array
+    {
+        return collect(is_array($gymIdOrIds) ? $gymIdOrIds : [$gymIdOrIds])
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->values()
+            ->all();
+    }
+
+    /**
      * Get income and expense summary for a date range.
      *
      * @return array<string, float|int>
      */
-    public function getIncomeSummary(int $gymId, Carbon $from, Carbon $to): array
+    public function getIncomeSummary(int|array $gymIdOrIds, Carbon $from, Carbon $to): array
     {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
         $totals = CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($from, $to)
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income")
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense")
@@ -41,10 +55,11 @@ class ReportService
     /**
      * Get totals grouped by payment method.
      */
-    public function getIncomeByMethod(int $gymId, Carbon $from, Carbon $to): Collection
+    public function getIncomeByMethod(int|array $gymIdOrIds, Carbon $from, Carbon $to): Collection
     {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
         return CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($from, $to)
             ->selectRaw('method')
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
@@ -61,10 +76,11 @@ class ReportService
      *
      * @return array<string, int|Collection>
      */
-    public function getAttendanceSummary(int $gymId, Carbon $from, Carbon $to): array
+    public function getAttendanceSummary(int|array $gymIdOrIds, Carbon $from, Carbon $to): array
     {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
         $rawByDay = Attendance::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->selectRaw('date')
             ->selectRaw('COUNT(*) as attendances_count')
@@ -73,7 +89,7 @@ class ReportService
             ->get();
 
         $archivedByDay = AttendanceDailySummary::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->select(['date', 'attendances_count'])
             ->orderBy('date')
@@ -111,19 +127,20 @@ class ReportService
      *
      * @return array<string, int>
      */
-    public function getMembershipStatusSummary(int $gymId): array
+    public function getMembershipStatusSummary(int|array $gymIdOrIds): array
     {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
         $today = Carbon::today()->toDateString();
 
         $activeClientIds = Membership::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->status('active')
             ->whereDate('ends_at', '>=', $today)
             ->distinct()
             ->pluck('client_id');
 
         $expiredClientIds = Membership::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->where(function ($query) use ($today): void {
                 $query
                     ->where('status', 'expired')
@@ -136,7 +153,7 @@ class ReportService
         return [
             'active' => $activeClientIds->count(),
             'expired' => $expiredClientIds->count(),
-            'total_clients' => Client::query()->forGym($gymId)->count(),
+            'total_clients' => Client::query()->forGyms($gymIds)->count(),
         ];
     }
 
@@ -145,16 +162,17 @@ class ReportService
      *
      * @return array<string, Collection>
      */
-    public function getMembershipClientLists(int $gymId): array
+    public function getMembershipClientLists(int|array $gymIdOrIds): array
     {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
         $today = Carbon::today()->toDateString();
 
         $clients = Client::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select(['id', 'gym_id', 'first_name', 'last_name', 'document_number'])
             ->with([
                 'memberships' => fn ($query) => $query
-                    ->forGym($gymId)
+                    ->forGyms($gymIds)
                     ->select(['id', 'gym_id', 'client_id', 'plan_id', 'starts_at', 'ends_at', 'status'])
                     ->orderByDesc('ends_at')
                     ->orderByDesc('id'),

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +23,7 @@ class StorePlanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $gymId = $this->user()?->gym_id;
+        $gymId = ActiveGymContext::id($this);
         $durationUnit = strtolower((string) $this->input('duration_unit', 'days'));
 
         if (! $gymId) {

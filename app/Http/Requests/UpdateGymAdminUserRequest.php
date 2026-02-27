@@ -77,35 +77,35 @@ class UpdateGymAdminUserRequest extends FormRequest
             $identificationType = (string) ($this->input('admin_identification_type') ?? '');
             $identificationNumber = (string) ($this->input('admin_identification_number') ?? '');
             if ($identificationType !== '' && $identificationNumber === '') {
-                $validator->errors()->add('admin_identification_number', 'Ingresa el numero de identificacion.');
+                $validator->errors()->add('admin_identification_number', 'Ingresa el número de identificación.');
             }
             if ($identificationType === '' && $identificationNumber !== '') {
-                $validator->errors()->add('admin_identification_type', 'Selecciona el tipo de identificacion.');
+                $validator->errors()->add('admin_identification_type', 'Selecciona el tipo de identificación.');
             }
 
             $phoneDial = (string) ($this->input('admin_phone_country_dial') ?? '');
             $phoneNumber = (string) ($this->input('admin_phone_number') ?? '');
             if ($phoneDial !== '' && $phoneNumber === '') {
-                $validator->errors()->add('admin_phone_number', 'Ingresa el telefono.');
+                $validator->errors()->add('admin_phone_number', 'Ingresa el teléfono.');
             }
             if ($phoneDial === '' && $phoneNumber !== '') {
-                $validator->errors()->add('admin_phone_country_dial', 'Ingresa el codigo de telefono.');
+                $validator->errors()->add('admin_phone_country_dial', 'Ingresa el código de teléfono.');
             }
 
             $countryIso = strtolower((string) ($this->input('admin_country_iso') ?? ''));
             $state = (string) ($this->input('admin_address_state') ?? '');
             $city = (string) ($this->input('admin_address_city') ?? '');
             if ($countryIso === '' && ($state !== '' || $city !== '')) {
-                $validator->errors()->add('admin_country_iso', 'Selecciona pais para la ubicacion.');
+                $validator->errors()->add('admin_country_iso', 'Selecciona país para la ubicación.');
             }
             if ($countryIso !== '' && $state !== '' && GymLocationCatalog::resolveState($countryIso, $state) === null) {
-                $validator->errors()->add('admin_address_state', 'Selecciona una provincia/estado valido.');
+                $validator->errors()->add('admin_address_state', 'Selecciona una provincia/estado válido.');
             }
             if ($state === '' && $city !== '') {
                 $validator->errors()->add('admin_address_state', 'Selecciona provincia/estado.');
             }
             if ($countryIso !== '' && $state !== '' && $city !== '' && GymLocationCatalog::resolveCity($countryIso, $state, $city) === null) {
-                $validator->errors()->add('admin_address_city', 'Selecciona una ciudad valida para la provincia/estado.');
+                $validator->errors()->add('admin_address_city', 'Selecciona una ciudad válida para la provincia/estado.');
             }
         });
     }

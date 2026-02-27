@@ -204,11 +204,11 @@
     }
 
     .ui-modal-backdrop {
-        @apply fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/50 px-4;
-        padding-top: max(1rem, env(safe-area-inset-top));
-        padding-right: max(1rem, env(safe-area-inset-right));
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
-        padding-left: max(1rem, env(safe-area-inset-left));
+        @apply fixed inset-0 z-[110] flex items-start justify-center bg-slate-950/50 px-4;
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+        padding-left: max(0.75rem, env(safe-area-inset-left));
         overflow-y: auto;
         overscroll-behavior: contain;
     }
@@ -222,7 +222,8 @@
     .ui-modal-shell {
         @apply flex w-full flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl;
         min-height: 0;
-        max-height: calc(100dvh - 2rem);
+        max-height: calc(100dvh - 1.5rem);
+        scrollbar-gutter: stable both-edges;
     }
 
     @supports not (height: 100dvh) {
@@ -233,8 +234,10 @@
 
     .ui-modal-scroll-body {
         @apply min-h-0 flex-1 overflow-y-auto;
+        max-height: 100%;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+        scrollbar-gutter: stable both-edges;
     }
 
     .ui-modal-sticky-footer {
@@ -309,19 +312,15 @@
             padding-right: 0.85rem;
         }
 
-        .ui-modal-backdrop {
-            align-items: flex-start;
-        }
-
         .ui-modal-panel {
-            max-height: calc(100dvh - 2rem);
+            max-height: calc(100dvh - 1rem);
             overflow-y: auto;
             border-radius: 1rem;
             padding: 1rem;
         }
 
         .ui-modal-shell {
-            max-height: calc(100dvh - 1rem);
+            max-height: calc(100dvh - 0.5rem);
             border-radius: 1rem;
         }
 

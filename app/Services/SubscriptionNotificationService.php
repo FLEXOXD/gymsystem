@@ -55,6 +55,7 @@ class SubscriptionNotificationService
 
         Subscription::query()
             ->with('gym')
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
             ->orderBy('id')
             ->chunkById(200, function (Collection $subscriptions) use ($targetDate, &$created): void {
                 foreach ($subscriptions as $subscription) {

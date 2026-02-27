@@ -187,6 +187,13 @@
 
 @section('content')
 @php
+    $planAccessService = app(\App\Services\PlanAccessService::class);
+    $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+    $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+    $isBranchContext = (bool) request()->attributes->get('gym_context_is_branch', false);
+    $isReadOnlyScope = $isGlobalScope || $isBranchContext;
+    $canManagePromotions = $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'promotions');
+    $canViewPromotions = $canManagePromotions || $isReadOnlyScope;
     $routeHasUpdate = \Illuminate\Support\Facades\Route::has('plans.update');
     $routeHasDestroy = \Illuminate\Support\Facades\Route::has('plans.destroy');
     $routeHasToggle = \Illuminate\Support\Facades\Route::has('plans.toggle');
@@ -201,7 +208,11 @@
         'two_for_one' => '2x1',
         'bring_friend' => 'Trae a un amigo',
     ];
-    $openPromotionModal = (string) old('promotion_form', '0') === '1';
+    $openPromotionModal = ! $isReadOnlyScope && $canManagePromotions && (string) old('promotion_form', '0') === '1';
+    $readOnlyMessage = $isGlobalScope
+        ? 'Modo global activo: planes y promociones en solo lectura. Selecciona una sede especifica para crear, editar o eliminar.'
+        : 'Modo sucursal secundaria: planes y promociones en solo lectura. La sede principal administra estos cambios.';
+    $readOnlyActionLabel = $isGlobalScope ? 'Solo lectura global' : 'Solo lectura sucursal';
     $defaultStatus = old('status', 'active');
     $defaultDurationUnit = \App\Support\PlanDuration::normalizeUnit((string) old('duration_unit', 'days'));
     $defaultDurationDays = max(1, (int) old('duration_days', 30));
@@ -217,8 +228,14 @@
         @if ($errors->any())
             <div class="ui-alert ui-alert-danger">{{ $errors->first() }}</div>
         @endif
+        @if ($isReadOnlyScope)
+            <div class="ui-alert ui-alert-warning">
+                {{ $readOnlyMessage }}
+            </div>
+        @endif
     </div>
 
+    @if (! $isReadOnlyScope)
     <x-ui.card>
         <div class="space-y-4">
             <div>
@@ -345,6 +362,15 @@
             </form>
         </div>
     </x-ui.card>
+    @else
+    <x-ui.card title="Crear plan" subtitle="Modo de solo lectura.">
+        <p class="ui-muted text-sm">
+            {{ $isGlobalScope
+                ? 'Para crear o editar planes, cambia el selector de sucursal arriba y entra en una sede especifica.'
+                : 'La sede secundaria no puede crear ni editar planes. Esta gestion se realiza desde la sede principal.' }}
+        </p>
+    </x-ui.card>
+    @endif
 
     <x-ui.card>
             <div class="space-y-4">
@@ -377,6 +403,9 @@
                         <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
                             <th class="px-4 py-3">ID</th>
                             <th class="px-4 py-3">Nombre</th>
+                            @if ($isGlobalScope)
+                                <th class="px-4 py-3">Sede</th>
+                            @endif
                             <th class="px-4 py-3">Duración</th>
                             <th class="px-4 py-3">Precio</th>
                             <th class="px-4 py-3">Estado</th>
@@ -396,23 +425,32 @@
                                 class="border-b border-slate-200/30 align-middle">
                                 <td class="ui-text px-4 py-3 font-black">{{ $plan->id }}</td>
                                 <td class="ui-text px-4 py-3 font-semibold">{{ $plan->name }}</td>
+                                @if ($isGlobalScope)
+                                    <td class="px-4 py-3">
+                                        <x-ui.badge variant="info">{{ $plan->gym?->name ?? '-' }}</x-ui.badge>
+                                    </td>
+                                @endif
                                 <td class="ui-text px-4 py-3">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</td>
                                 <td class="ui-text px-4 py-3">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }}</td>
                                 <td class="px-4 py-3">
                                     <x-ui.badge :variant="$plan->status === 'active' ? 'success' : 'muted'">{{ $plan->status === 'active' ? 'Activo' : 'Oculto' }}</x-ui.badge>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex justify-end gap-1.5">
-                                        <button type="button" class="mini-action js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">Editar</button>
-                                        <button type="button" class="mini-action js-duplicate-plan" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">Duplicar</button>
-                                        <button type="button" class="mini-action js-toggle-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</button>
-                                        <button type="button" class="mini-action danger js-delete-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">Eliminar</button>
-                                    </div>
+                                    @if ($isReadOnlyScope)
+                                        <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
+                                    @else
+                                        <div class="flex justify-end gap-1.5">
+                                            <button type="button" class="mini-action js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">Editar</button>
+                                            <button type="button" class="mini-action js-duplicate-plan" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">Duplicar</button>
+                                            <button type="button" class="mini-action js-toggle-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</button>
+                                            <button type="button" class="mini-action danger js-delete-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">Eliminar</button>
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
+                                <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -421,17 +459,22 @@
         </div>
     </x-ui.card>
 
+    @if ($canViewPromotions)
     <x-ui.card>
         <div class="space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 class="ui-heading text-lg font-black">Promociones comerciales</h2>
-                    <p class="ui-muted text-sm">Crea promociones faciles para fechas especiales: San Valentin, 2x1, trae a un amigo y mas.</p>
+                    <p class="ui-muted text-sm">Crea promociones fáciles para fechas especiales: San Valentín, 2x1, trae a un amigo y más.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" id="open-promotion-modal-btn" class="ui-button ui-button-primary px-3 py-1.5 text-xs font-black">
-                        + Nueva promoción
-                    </button>
+                    @if (! $isReadOnlyScope && $canManagePromotions)
+                        <button type="button" id="open-promotion-modal-btn" class="ui-button ui-button-primary px-3 py-1.5 text-xs font-black">
+                            + Nueva promoción
+                        </button>
+                    @else
+                        <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
+                    @endif
                     <span class="ui-text inline-flex rounded-full border border-slate-300/35 px-3 py-1 text-xs font-bold">{{ ($promotions ?? collect())->count() }} promociones</span>
                 </div>
             </div>
@@ -441,6 +484,9 @@
                     <thead>
                     <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
                         <th class="px-4 py-3">Promo</th>
+                        @if ($isGlobalScope)
+                            <th class="px-4 py-3">Sede</th>
+                        @endif
                         <th class="px-4 py-3">Tipo</th>
                         <th class="px-4 py-3">Valor</th>
                         <th class="px-4 py-3">Vigencia</th>
@@ -454,6 +500,11 @@
                     @forelse (($promotions ?? collect()) as $promotion)
                         <tr class="border-b border-slate-200/30 align-middle">
                             <td class="ui-text px-4 py-3 font-semibold">{{ $promotion->name }}</td>
+                            @if ($isGlobalScope)
+                                <td class="px-4 py-3">
+                                    <x-ui.badge variant="info">{{ $promotion->gym?->name ?? '-' }}</x-ui.badge>
+                                </td>
+                            @endif
                             <td class="ui-text px-4 py-3">{{ $promotionTypeLabels[$promotion->type] ?? $promotion->type }}</td>
                             <td class="ui-text px-4 py-3">
                                 @if ($promotion->type === 'percentage')
@@ -479,26 +530,30 @@
                                 <x-ui.badge :variant="$promotion->status === 'active' ? 'success' : 'muted'">{{ $promotion->status === 'active' ? 'Activo' : 'Inactivo' }}</x-ui.badge>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex justify-end gap-1.5">
-                                    <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="{{ $promotion->status === 'active' ? 'inactive' : 'active' }}">
-                                        <button type="submit" class="mini-action">
-                                            {{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="mini-action danger">Eliminar</button>
-                                    </form>
-                                </div>
+                                @if ($isReadOnlyScope)
+                                    <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
+                                @else
+                                    <div class="flex justify-end gap-1.5">
+                                        <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="{{ $promotion->status === 'active' ? 'inactive' : 'active' }}">
+                                            <button type="submit" class="mini-action">
+                                                {{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="mini-action danger">Eliminar</button>
+                                        </form>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay promociones creadas.</td>
+                            <td colspan="{{ $isGlobalScope ? 9 : 8 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay promociones creadas.</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -507,6 +562,7 @@
         </div>
     </x-ui.card>
 
+    @if (! $isReadOnlyScope && $canManagePromotions)
     <div id="promotion-create-modal" class="modal-shell" aria-hidden="true" aria-labelledby="promotion-create-title">
         <div class="modal-card">
             <div class="flex items-center justify-between border-b border-slate-300/25 px-4 py-3">
@@ -628,6 +684,17 @@
             </form>
         </div>
     </div>
+    @endif
+    @else
+    <x-ui.card>
+        <div class="space-y-3">
+            <h2 class="ui-heading text-lg font-black">Promociones comerciales</h2>
+            <p class="ui-muted text-sm">
+                Este modulo no esta disponible en tu plan actual. Para habilitar promociones cambia al Plan profesional o superior.
+            </p>
+        </div>
+    </x-ui.card>
+    @endif
 
     <div id="plan-edit-modal" class="modal-shell" aria-hidden="true" aria-labelledby="plan-edit-title">
         <div class="modal-card">
@@ -1143,3 +1210,4 @@
 })();
 </script>
 @endpush
+

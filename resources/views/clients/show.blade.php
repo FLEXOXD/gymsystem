@@ -186,6 +186,7 @@
             'client' => $client,
             'plans' => $plans,
             'promotions' => $promotions,
+            'canManagePromotions' => $canManagePromotions ?? false,
         ])
 
         @include('clients.partials._modal_rfid', [

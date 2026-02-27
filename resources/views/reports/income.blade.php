@@ -21,6 +21,12 @@
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
+        $planAccessService = app(\App\Services\PlanAccessService::class);
+        $isBranchContext = (bool) request()->attributes->get('gym_context_is_branch', false);
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $canExportReports = ! $isBranchContext
+            && $activeGymId > 0
+            && $planAccessService->canForGym($activeGymId, 'reports_export');
         $methodLabels = [
             'cash' => 'Efectivo',
             'card' => 'Tarjeta',
@@ -43,8 +49,16 @@
             <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
 
             <div class="flex gap-2">
-                <x-ui.button :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
-                             target="_blank" rel="noopener" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
+                @if ($canExportReports)
+                    <x-ui.button id="reports-income-export-pdf" :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 target="_blank" rel="noopener" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
+                    <x-ui.button id="reports-income-export-csv" :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 variant="secondary">Exportar CSV</x-ui.button>
+                @else
+                    <p class="text-xs font-semibold text-amber-700 dark:text-amber-300 self-center">
+                        {{ $isBranchContext ? 'Sucursal secundaria: exportacion bloqueada (solo lectura).' : 'Exportacion disponible en plan Premium o Sucursales.' }}
+                    </p>
+                @endif
                 <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver al panel</x-ui.button>
             </div>
         </form>
@@ -86,7 +100,7 @@
             </label>
 
             <p class="text-sm text-slate-600 dark:text-slate-300 md:text-right">
-                Mostrando <strong id="movement-visible-count">{{ $movements->count() }}</strong> de <strong>{{ $movements->count() }}</strong> en esta pagina
+                Mostrando <strong id="movement-visible-count">{{ $movements->count() }}</strong> de <strong>{{ $movements->count() }}</strong> en esta página
             </p>
         </div>
 

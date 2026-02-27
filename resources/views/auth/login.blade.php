@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Iniciar sesion</title>
+    <meta name="theme-color" content="#0f3cc9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    <title>Iniciar sesión</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
@@ -346,6 +350,40 @@
             min-height: 100%;
         }
 
+        .auth-home-link {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 3;
+            min-height: 40px;
+            padding: 8px 12px;
+            border-radius: 11px;
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            background: rgba(7, 16, 30, 0.68);
+            color: #d8ecff;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .16s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease;
+        }
+
+        .auth-home-link:hover {
+            transform: translateY(-1px);
+            border-color: rgba(57, 255, 20, 0.55);
+            box-shadow: 0 10px 22px rgba(57, 255, 20, 0.15);
+            color: #effff5;
+        }
+
+        .auth-home-link:focus-visible {
+            outline: 2px solid rgba(57, 255, 20, 0.6);
+            outline-offset: 2px;
+        }
+
         .auth-logo-wrap {
             display: flex;
             justify-content: center;
@@ -523,7 +561,6 @@
             outline: 2px solid rgba(0, 212, 255, 0.7);
             outline-offset: 2px;
         }
-
         @media (max-width: 1040px) {
             .layout {
                 grid-template-columns: 1fr;
@@ -550,6 +587,14 @@
 
             .auth h1 {
                 font-size: clamp(34px, 12vw, 44px);
+            }
+
+            .auth-home-link {
+                top: 12px;
+                right: 12px;
+                min-height: 38px;
+                padding: 7px 11px;
+                font-size: 10px;
             }
         }
 
@@ -585,7 +630,7 @@
 
                 <h2 class="hero-title"><span class="cyan">Modo</span> <span class="solid">Operativo</span></h2>
 
-                <p class="hero-subtitle">Gestiona asistencia, membresias, caja y rendimiento del gimnasio desde un centro operativo rapido, seguro y en tiempo real.</p>
+                <p class="hero-subtitle">Gestiona asistencia, membresías, caja y rendimiento del gimnasio desde un centro operativo rápido, seguro y en tiempo real.</p>
 
                 <div class="hero-modules" aria-label="Modulos principales">
                     <button class="module-chip" type="button">
@@ -611,13 +656,14 @@
         </section>
 
         <section class="panel auth" aria-label="Panel de ingreso">
+            <a href="{{ route('landing') }}" class="auth-home-link">Ir a página principal</a>
             @if ($logoUrl !== '')
                 <div class="auth-logo-wrap">
                     <img src="{{ $logoUrl }}" alt="Logo FlexjoK" class="auth-logo">
                 </div>
             @endif
             <h1>Ingreso</h1>
-            <p>Accede con tu cuenta de recepcion.</p>
+            <p>Accede con tu cuenta de recepción.</p>
 
             @if ($errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
@@ -625,6 +671,7 @@
 
             <form method="POST" action="{{ route('login') }}" class="form" novalidate>
                 @csrf
+                <input type="hidden" name="pwa_mode" id="login-pwa-mode" value="browser">
 
                 <div class="field">
                     <label for="email">Email</label>
@@ -683,6 +730,15 @@
 
 <script>
     (function () {
+        const pwaModeInput = document.getElementById('login-pwa-mode');
+        if (pwaModeInput) {
+            const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                || (window.navigator && window.navigator.standalone === true);
+            const mode = isStandalone ? 'standalone' : 'browser';
+            pwaModeInput.value = mode;
+            document.cookie = `gym_pwa_mode=${mode}; path=/; max-age=2592000; SameSite=Lax`;
+        }
+
         const toggle = document.getElementById('toggle-password-visibility');
         const input = document.getElementById('password');
         const eyeOpen = document.getElementById('password-eye-open');

@@ -47,7 +47,7 @@
                         <path d="M3 10h18"/>
                     </svg>
                 </div>
-                <p class="font-semibold">Este cliente aun no tiene membresías.</p>
+                <p class="font-semibold">Este cliente aún no tiene membresías.</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Haz clic en "Cobrar / Renovar" para crear su primera membresía.</p>
                 <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Crear membresía</x-ui.button>
             </div>

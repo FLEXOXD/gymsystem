@@ -8,6 +8,7 @@ use App\Models\CashSession;
 use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Support\ActiveGymContext;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -19,7 +20,9 @@ class GymPanelController extends Controller
      */
     public function index(Request $request): View
     {
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $todayDate = now();
@@ -36,7 +39,7 @@ class GymPanelController extends Controller
                 'm.ends_at',
                 'm.status as membership_status',
             ])
-            ->where('m.gym_id', $gymId)
+            ->forGyms($gymIds)
             ->whereRaw('m.id = (
                 SELECT m2.id
                 FROM memberships as m2
@@ -48,7 +51,7 @@ class GymPanelController extends Controller
 
         $clientsWithLatestMembership = Client::query()
             ->from('clients')
-            ->where('clients.gym_id', $gymId)
+            ->whereIn('clients.gym_id', $gymIds)
             ->leftJoinSub($latestMembershipSub, 'lm', function ($join): void {
                 $join->on('lm.client_id', '=', 'clients.id');
             });
@@ -86,23 +89,23 @@ class GymPanelController extends Controller
         $expiredMemberships = (clone $expiredClientsBase)->count('clients.id');
 
         $activePlans = Plan::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->where('status', 'active')
             ->count();
 
         $checkinsToday = Attendance::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereDate('date', $today)
             ->count();
 
         $incomeToday = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereDate('occurred_at', $today)
             ->where('type', 'income')
             ->sum('amount');
 
         $expenseToday = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereDate('occurred_at', $today)
             ->where('type', 'expense')
             ->sum('amount');
@@ -110,13 +113,13 @@ class GymPanelController extends Controller
         $todayBalance = round($incomeToday - $expenseToday, 2);
 
         $incomeYearToDate = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($currentYearStart, $currentYearEnd)
             ->where('type', 'income')
             ->sum('amount');
 
         $expenseYearToDate = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($currentYearStart, $currentYearEnd)
             ->where('type', 'expense')
             ->sum('amount');
@@ -124,13 +127,13 @@ class GymPanelController extends Controller
         $netYearToDate = round($incomeYearToDate - $expenseYearToDate, 2);
 
         $incomeCurrentMonth = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($currentMonthStart, $currentMonthEnd)
             ->where('type', 'income')
             ->sum('amount');
 
         $incomePreviousMonth = (float) CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->betweenOccurredAt($previousMonthStart, $previousMonthEnd)
             ->where('type', 'income')
             ->sum('amount');
@@ -141,12 +144,12 @@ class GymPanelController extends Controller
             $monthlyIncomePct = round(($monthlyIncomeDiff / $incomePreviousMonth) * 100, 1);
         }
 
-        $incomeLast6Months = collect(range(5, 1))->map(function (int $monthsBack) use ($gymId, $todayDate) {
+        $incomeLast6Months = collect(range(5, 1))->map(function (int $monthsBack) use ($gymIds, $todayDate) {
             $monthDate = $todayDate->copy()->subMonthsNoOverflow($monthsBack);
             $start = $monthDate->copy()->startOfMonth();
             $end = $monthDate->copy()->endOfMonth();
             $income = (float) CashMovement::query()
-                ->forGym($gymId)
+                ->forGyms($gymIds)
                 ->betweenOccurredAt($start, $end)
                 ->where('type', 'income')
                 ->sum('amount');
@@ -161,28 +164,31 @@ class GymPanelController extends Controller
         ]);
 
         $movementsTodayCount = CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereDate('occurred_at', $today)
             ->count();
 
-        $openSession = CashSession::query()
-            ->forGym($gymId)
-            ->open()
-            ->select(['id', 'gym_id', 'opened_by', 'opened_at', 'opening_balance'])
-            ->with('openedBy:id,name')
-            ->latest('opened_at')
-            ->first();
+        $openSession = null;
+        if (! $isGlobalScope) {
+            $openSession = CashSession::query()
+                ->forGym($gymId)
+                ->open()
+                ->select(['id', 'gym_id', 'opened_by', 'opened_at', 'opening_balance'])
+                ->with('openedBy:id,name')
+                ->latest('opened_at')
+                ->first();
+        }
 
         $openSessionExpected = null;
         if ($openSession) {
             $sessionIncome = (float) CashMovement::query()
-                ->forGym($gymId)
+                ->forGym((int) $openSession->gym_id)
                 ->where('cash_session_id', $openSession->id)
                 ->where('type', 'income')
                 ->sum('amount');
 
             $sessionExpense = (float) CashMovement::query()
-                ->forGym($gymId)
+                ->forGym((int) $openSession->gym_id)
                 ->where('cash_session_id', $openSession->id)
                 ->where('type', 'expense')
                 ->sum('amount');
@@ -191,59 +197,71 @@ class GymPanelController extends Controller
         }
 
         $upcomingRenewals = (clone $activeClientsBase)
-            ->leftJoin('plans as lp', function ($join) use ($gymId): void {
+            ->leftJoin('plans as lp', function ($join): void {
                 $join->on('lp.id', '=', 'lm.plan_id')
-                    ->where('lp.gym_id', '=', $gymId);
+                    ->on('lp.gym_id', '=', 'clients.gym_id');
             })
+            ->leftJoin('gyms as gg', 'gg.id', '=', 'clients.gym_id')
             ->whereDate('lm.ends_at', '<=', $twoDaysLater)
             ->orderBy('lm.ends_at')
             ->limit(8)
             ->get([
                 'clients.id as client_id',
+                'clients.gym_id',
                 'clients.first_name',
                 'clients.last_name',
                 'lm.latest_membership_id',
                 'lm.ends_at',
                 'lp.name as plan_name',
+                'gg.name as gym_name',
             ])
             ->map(function ($row) use ($todayDate) {
                 $clientName = trim(((string) ($row->first_name ?? '')).' '.((string) ($row->last_name ?? '')));
                 $endsAt = $row->ends_at ? Carbon::parse((string) $row->ends_at) : null;
                 $daysLeft = $endsAt ? (int) $todayDate->copy()->startOfDay()->diffInDays($endsAt->copy()->startOfDay(), false) : null;
+                $gymName = trim((string) ($row->gym_name ?? ''));
+                $gymId = (int) ($row->gym_id ?? 0);
 
                 return (object) [
                     'client_id' => (int) $row->client_id,
                     'client_name' => $clientName !== '' ? $clientName : '-',
                     'plan_name' => (string) ($row->plan_name ?? '-'),
+                    'gym_name' => $gymName !== '' ? $gymName : ('Sede #'.$gymId),
                     'ends_at' => $endsAt,
                     'days_left' => $daysLeft,
                 ];
             });
 
         $expiredRenewalCandidates = (clone $expiredClientsBase)
-            ->leftJoin('plans as lp', function ($join) use ($gymId): void {
+            ->leftJoin('plans as lp', function ($join): void {
                 $join->on('lp.id', '=', 'lm.plan_id')
-                    ->where('lp.gym_id', '=', $gymId);
+                    ->on('lp.gym_id', '=', 'clients.gym_id');
             })
+            ->leftJoin('gyms as gg', 'gg.id', '=', 'clients.gym_id')
             ->orderByDesc('lm.ends_at')
             ->limit(8)
             ->get([
                 'clients.id as client_id',
+                'clients.gym_id',
                 'clients.first_name',
                 'clients.last_name',
                 'lm.ends_at',
                 'lm.membership_status',
                 'lp.name as plan_name',
+                'gg.name as gym_name',
             ])
             ->map(function ($row) use ($todayDate) {
                 $clientName = trim(((string) ($row->first_name ?? '')).' '.((string) ($row->last_name ?? '')));
                 $endsAt = $row->ends_at ? Carbon::parse((string) $row->ends_at) : null;
                 $daysExpired = $endsAt ? (int) $endsAt->copy()->startOfDay()->diffInDays($todayDate->copy()->startOfDay(), false) : null;
+                $gymName = trim((string) ($row->gym_name ?? ''));
+                $gymId = (int) ($row->gym_id ?? 0);
 
                 return (object) [
                     'client_id' => (int) $row->client_id,
                     'client_name' => $clientName !== '' ? $clientName : '-',
                     'plan_name' => (string) ($row->plan_name ?? '-'),
+                    'gym_name' => $gymName !== '' ? $gymName : ('Sede #'.$gymId),
                     'ends_at' => $endsAt,
                     'days_expired' => $daysExpired,
                     'membership_status' => (string) ($row->membership_status ?? ''),
@@ -251,17 +269,17 @@ class GymPanelController extends Controller
             });
 
         $todayAttendances = Attendance::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->whereDate('date', $today)
             ->orderByDesc('time')
             ->limit(8)
-            ->with('client:id,first_name,last_name')
+            ->with(['client:id,first_name,last_name', 'gym:id,name'])
             ->get(['id', 'gym_id', 'client_id', 'date', 'time']);
 
         $recentCashMovements = CashMovement::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select(['id', 'gym_id', 'type', 'amount', 'method', 'description', 'created_by', 'occurred_at'])
-            ->with('createdBy:id,name')
+            ->with(['createdBy:id,name', 'gym:id,name'])
             ->orderByDesc('occurred_at')
             ->limit(8)
             ->get();

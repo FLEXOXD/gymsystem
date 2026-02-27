@@ -25,6 +25,7 @@ class SuperAdminPromotionTemplate extends Model
         'ends_at',
         'status',
         'max_uses',
+        'duration_months',
     ];
 
     /**
@@ -37,6 +38,7 @@ class SuperAdminPromotionTemplate extends Model
             'starts_at' => 'date',
             'ends_at' => 'date',
             'max_uses' => 'integer',
+            'duration_months' => 'integer',
         ];
     }
 

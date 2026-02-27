@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Suscripcion suspendida</title>
+    <title>Suscripción suspendida</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -181,7 +181,7 @@
     $supportLabel = (string) ($contactData['label'] ?? 'Soporte');
     $supportEmail = trim((string) ($contactData['email'] ?? ''));
     $supportPhone = trim((string) ($contactData['phone'] ?? ''));
-    $supportMessage = trim((string) ($contactData['message'] ?? 'Escribenos para activar tu servicio.'));
+    $supportMessage = trim((string) ($contactData['message'] ?? 'Escríbenos para activar tu servicio.'));
     $supportLink = trim((string) ($contactData['link'] ?? ''));
 @endphp
 <div class="wrap">
@@ -194,14 +194,14 @@
                 <div class="brand-meta">
                     <p><strong>{{ $supportLabel }}</strong></p>
                     <p>{{ $gymName ?? 'Gym' }}</p>
-                    <p>Ultima validacion: {{ $nowLabel ?? now()->format('Y-m-d H:i') }}</p>
+                    <p>Última validación: {{ $nowLabel ?? now()->format('Y-m-d H:i') }}</p>
                 </div>
             </div>
             <span class="badge">Pago pendiente</span>
         </div>
 
-        <h1 class="title">Suscripcion suspendida</h1>
-        <p class="msg">Tu acceso al panel esta temporalmente bloqueado por falta de pago. Regulariza tu suscripcion y pulsa "Actualizar" para reingresar.</p>
+        <h1 class="title">Suscripción suspendida</h1>
+        <p class="msg">Tu acceso al panel está temporalmente bloqueado por falta de pago. Regulariza tu suscripción y pulsa "Actualizar" para reingresar.</p>
 
         <div class="grid">
             <section class="box">
@@ -211,19 +211,19 @@
                     <p class="line"><strong>Correo:</strong> {{ $supportEmail }}</p>
                 @endif
                 @if ($supportPhone !== '')
-                    <p class="line"><strong>Telefono:</strong> {{ $supportPhone }}</p>
+                    <p class="line"><strong>Teléfono:</strong> {{ $supportPhone }}</p>
                 @endif
             </section>
             <section class="box">
-                <h3>Que hacer ahora</h3>
+                <h3>Qué hacer ahora</h3>
                 <p class="line">1) Contacta al soporte para confirmar pago.</p>
-                <p class="line">2) Espera la reactivacion.</p>
+                <p class="line">2) Espera la reactivación.</p>
                 <p class="line">3) Pulsa "Actualizar" para volver al panel.</p>
             </section>
         </div>
 
         <div class="actions">
-            <a class="btn" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+            <a class="btn" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
             <a class="btn btn-ghost" href="{{ $updateUrl ?? route('login') }}">Actualizar</a>
             @if ($supportEmail !== '')
                 <a class="btn btn-email" href="mailto:{{ $supportEmail }}">Enviar correo</a>

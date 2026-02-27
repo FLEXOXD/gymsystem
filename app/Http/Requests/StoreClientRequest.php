@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Client;
+use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,7 +33,7 @@ class StoreClientRequest extends FormRequest
      */
     public function rules(): array
     {
-        $gymId = $this->user()?->gym_id;
+        $gymId = ActiveGymContext::id($this);
         $startsMembership = $this->boolean('start_membership');
 
         if (! $gymId) {

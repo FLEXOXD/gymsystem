@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Support\ActiveGymContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
@@ -50,11 +51,12 @@ class ClientCardController extends Controller
      */
     private function resolveCardData(Request $request, int $client): array|RedirectResponse
     {
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        $gymIds = ActiveGymContext::ids($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $clientModel = Client::query()
-            ->forGym($gymId)
+            ->forGyms($gymIds)
             ->select([
                 'id',
                 'gym_id',

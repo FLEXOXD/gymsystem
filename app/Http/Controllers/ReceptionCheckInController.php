@@ -7,6 +7,7 @@ use App\Models\Gym;
 use App\Models\Membership;
 use App\Http\Requests\ReceptionCheckInRequest;
 use App\Services\AttendanceCheckinService;
+use App\Support\ActiveGymContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,10 +25,61 @@ class ReceptionCheckInController extends Controller
      */
     public function index(Request $request): View
     {
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
-        $gym = $request->user()?->gym;
+        $gym = $request->attributes->get('active_gym');
+        if (! $gym instanceof Gym) {
+            $gym = $request->user()?->gym;
+        }
         $gymName = trim((string) ($gym?->name ?? 'Gym'));
+
+        if ($isGlobalScope) {
+            $hubGymId = (int) ($request->attributes->get('hub_gym_id') ?? $request->user()?->gym_id ?? 0);
+            $scopeBranchCount = collect($gymIds)
+                ->map(static fn ($id): int => (int) $id)
+                ->filter(static fn (int $id): bool => $id > 0 && $id !== $hubGymId)
+                ->unique()
+                ->count();
+
+            $recentAttendances = Attendance::query()
+                ->forGyms($gymIds)
+                ->select(['id', 'gym_id', 'client_id', 'credential_id', 'date', 'time'])
+                ->with(['gym:id,name,slug', 'client:id,first_name,last_name,photo_path', 'credential:id,type'])
+                ->orderByDesc('date')
+                ->orderByDesc('time')
+                ->orderByDesc('id')
+                ->limit(20)
+                ->get();
+
+            $attendanceHistoryStart = now()->subMonthsNoOverflow(2)->toDateString();
+            $attendanceHistoryBaseQuery = Attendance::query()
+                ->forGyms($gymIds)
+                ->whereDate('date', '>=', $attendanceHistoryStart);
+            $attendanceHistoryTotal = (clone $attendanceHistoryBaseQuery)->count();
+            $attendanceHistoryLimit = 3000;
+            $attendanceHistory = (clone $attendanceHistoryBaseQuery)
+                ->select(['id', 'gym_id', 'client_id', 'credential_id', 'date', 'time', 'created_by'])
+                ->with(['gym:id,name,slug', 'client:id,first_name,last_name', 'credential:id,type', 'createdBy:id,name'])
+                ->orderByDesc('date')
+                ->orderByDesc('time')
+                ->orderByDesc('id')
+                ->limit($attendanceHistoryLimit)
+                ->get();
+
+            return view('reception.global', [
+                'recentAttendances' => $recentAttendances,
+                'attendanceHistory' => $attendanceHistory,
+                'attendanceHistoryStart' => $attendanceHistoryStart,
+                'attendanceHistoryTotal' => $attendanceHistoryTotal,
+                'attendanceHistoryTruncated' => $attendanceHistoryTotal > $attendanceHistoryLimit,
+                'scopeGymIds' => $gymIds,
+                'scopeGymCount' => count($gymIds),
+                'scopeBranchCount' => $scopeBranchCount,
+                'scopeGymName' => $gymName !== '' ? $gymName : 'Gym',
+            ]);
+        }
 
         $recentAttendances = $this->recentAttendancesForGym($gymId);
         $attendanceHistoryStart = now()->subMonthsNoOverflow(2)->toDateString();
@@ -62,9 +114,15 @@ class ReceptionCheckInController extends Controller
      */
     public function display(Request $request): View
     {
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return $this->index($request);
+        }
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
-        $gym = $request->user()?->gym;
+        $gym = $request->attributes->get('active_gym');
+        if (! $gym instanceof Gym) {
+            $gym = $request->user()?->gym;
+        }
         $gymName = trim((string) ($gym?->name ?? 'Gym'));
 
         $recentAttendances = $this->recentAttendancesForGym($gymId);
@@ -89,7 +147,10 @@ class ReceptionCheckInController extends Controller
      */
     public function syncLatest(Request $request): JsonResponse
     {
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return response()->json(['event' => null]);
+        }
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $after = (int) $request->integer('after', 0);
@@ -115,7 +176,14 @@ class ReceptionCheckInController extends Controller
         AttendanceCheckinService $attendanceService
     ): JsonResponse {
         $userId = (int) $request->user()->id;
-        $gymId = (int) ($request->user()?->gym_id ?? 0);
+        $gymId = ActiveGymContext::id($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return response()->json([
+                'ok' => false,
+                'reason' => 'global_scope_blocked',
+                'message' => 'Selecciona una sucursal especifica para registrar check-in.',
+            ], 409);
+        }
 
         if (! $gymId) {
             $payload = [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +23,7 @@ class AddCashMovementRequest extends FormRequest
      */
     public function rules(): array
     {
-        $gymId = $this->user()?->gym_id;
+        $gymId = ActiveGymContext::id($this);
 
         if (! $gymId) {
             return [

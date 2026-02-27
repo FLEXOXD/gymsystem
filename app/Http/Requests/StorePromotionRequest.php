@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,7 +31,13 @@ class StorePromotionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $gymId = $this->user()?->gym_id;
+        $gymId = ActiveGymContext::id($this);
+
+        if (! $gymId) {
+            return [
+                'gym_context' => ['required'],
+            ];
+        }
 
         return [
             'name' => ['required', 'string', 'max:120'],
@@ -50,5 +57,14 @@ class StorePromotionRequest extends FormRequest
             'max_uses' => ['nullable', 'integer', 'min:1', 'max:1000000'],
         ];
     }
-}
 
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'gym_context.required' => 'El usuario autenticado no tiene gym_id asignado.',
+        ];
+    }
+}

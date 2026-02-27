@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\SubscriptionService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -103,6 +104,14 @@ class Gym extends Model
     }
 
     /**
+     * Subscriptions billed under this gym as owner.
+     */
+    public function billedSubscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'billing_owner_gym_id');
+    }
+
+    /**
      * Get subscription notifications for this gym.
      */
     public function subscriptionNotifications(): HasMany
@@ -124,5 +133,37 @@ class Gym extends Model
     public function latestSubscription(): HasOne
     {
         return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    /**
+     * Demo session linked to this gym (if it is a temporary demo tenant).
+     */
+    public function demoSession(): HasOne
+    {
+        return $this->hasOne(DemoSession::class);
+    }
+
+    /**
+     * Links where this gym acts as multi-branch hub.
+     */
+    public function branchLinks(): HasMany
+    {
+        return $this->hasMany(GymBranchLink::class, 'hub_gym_id');
+    }
+
+    /**
+     * Links where this gym acts as linked branch.
+     */
+    public function parentHubLinks(): HasMany
+    {
+        return $this->hasMany(GymBranchLink::class, 'branch_gym_id');
+    }
+
+    /**
+     * Scope only persistent gyms (exclude temporary demo gyms).
+     */
+    public function scopeWithoutDemoSessions(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('demoSession');
     }
 }

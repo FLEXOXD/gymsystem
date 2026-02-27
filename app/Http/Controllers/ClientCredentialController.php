@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRfidCredentialRequest;
 use App\Models\Client;
 use App\Models\ClientCredential;
+use App\Support\ActiveGymContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,12 @@ class ClientCredentialController extends Controller
      */
     public function storeRfid(StoreRfidCredentialRequest $request, string $contextGym, int $client): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['rfid' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
             ->forGym($gymId)
@@ -55,6 +62,12 @@ class ClientCredentialController extends Controller
      */
     public function generateQr(Request $request, string $contextGym, int $client): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['qr' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+        }
+
         $gymId = $this->resolveGymId($request);
         $clientModel = Client::query()
             ->forGym($gymId)
@@ -82,6 +95,12 @@ class ClientCredentialController extends Controller
      */
     public function deactivate(Request $request, string $contextGym, int $credential): RedirectResponse
     {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['credential' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+        }
+
         $gymId = $this->resolveGymId($request);
 
         $credentialModel = ClientCredential::query()
@@ -121,7 +140,7 @@ class ClientCredentialController extends Controller
 
     private function resolveGymId(Request $request): int
     {
-        $gymId = $request->user()?->gym_id;
+        $gymId = ActiveGymContext::id($request);
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;

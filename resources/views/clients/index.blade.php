@@ -1,4 +1,4 @@
-@extends('layouts.panel')
+﻿@extends('layouts.panel')
 
 @section('title', 'Clientes')
 @section('page-title', 'Clientes')
@@ -13,6 +13,8 @@
 
 @section('content')
     @php
+        $canManagePromotions = (bool) ($canManagePromotions ?? false);
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $filters = [
             'all' => 'Todos',
             'active' => 'Activos',
@@ -58,7 +60,7 @@
             'plan_id' => old('plan_id') !== null ? (string) old('plan_id') : '',
             'membership_starts_at' => (string) old('membership_starts_at', now()->toDateString()),
             'membership_price' => old('membership_price') !== null ? (string) old('membership_price') : '',
-            'promotion_id' => old('promotion_id') !== null ? (string) old('promotion_id') : '',
+            'promotion_id' => $canManagePromotions && old('promotion_id') !== null ? (string) old('promotion_id') : '',
             'payment_method' => (string) old('payment_method', 'cash'),
             'amount_paid' => old('amount_paid') !== null ? (string) old('amount_paid') : '',
         ];
@@ -70,6 +72,7 @@
             promotions: @js($promotionCatalog),
             defaults: @js($formDefaults),
             documentCheckUrl: @js(route('clients.check-document')),
+            allowCreate: @js(! $isGlobalScope),
         })"
          x-init="init()"
          class="space-y-4">
@@ -97,12 +100,19 @@
             </article>
         </section>
 
+        @if ($isGlobalScope)
+            <div class="ui-alert ui-alert-warning">
+                Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal especifica.
+            </div>
+        @endif
+
         <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención.">
             <div class="space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
                         <input type="hidden" name="filter" value="{{ $quickFilter }}">
-                        <input type="text"
+                        <input id="clients-search"
+                               type="text"
                                name="q"
                                value="{{ $search }}"
                                placeholder="Buscar por nombre, apellido o documento..."
@@ -111,12 +121,18 @@
                         <x-ui.button :href="route('clients.index')" variant="ghost">Limpiar</x-ui.button>
                     </form>
 
-                    <x-ui.button type="button" variant="primary" x-on:click="openCreateClient()" class="whitespace-nowrap">
-                        + Nuevo cliente
+                    <x-ui.button id="clients-open-create"
+                                 type="button"
+                                 :variant="$isGlobalScope ? 'ghost' : 'primary'"
+                                 x-on:click="openCreateClient()"
+                                 class="whitespace-nowrap"
+                                 :disabled="$isGlobalScope"
+                                 title="{{ $isGlobalScope ? 'Selecciona una sede para crear clientes' : 'Crear cliente' }}">
+                        {{ $isGlobalScope ? 'Solo lectura global' : '+ Nuevo cliente' }}
                     </x-ui.button>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
+                <div id="clients-filter-chips" class="flex flex-wrap gap-2">
                     @foreach ($filters as $filterKey => $filterLabel)
                         @php
                             $isActiveFilter = $quickFilter === $filterKey;
@@ -130,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="mt-4 overflow-hidden rounded-2xl border border-slate-300/70 dark:border-white/10">
+            <div id="clients-table" class="mt-4 overflow-hidden rounded-2xl border border-slate-300/70 dark:border-white/10">
                 <div class="max-h-[560px] overflow-auto">
                     <table class="ui-table min-w-[1200px]">
                         <thead>
@@ -143,6 +159,9 @@
                             <th class="px-3 py-3">Pago</th>
                             <th class="px-3 py-3">Ultima asistencia</th>
                             <th class="px-3 py-3">Estado</th>
+                            @if ($isGlobalScope)
+                                <th class="px-3 py-3">Sede</th>
+                            @endif
                             <th class="px-3 py-3">Acción</th>
                         </tr>
                         </thead>
@@ -194,8 +213,15 @@
                                         {{ $client['status_badge']['label'] }}
                                     </x-ui.badge>
                                 </td>
+                                @if ($isGlobalScope)
+                                    <td class="px-3 py-3">
+                                        <x-ui.badge variant="info">
+                                            {{ $client['gym_name'] ?? '-' }}
+                                        </x-ui.badge>
+                                    </td>
+                                @endif
                                 <td class="px-3 py-3">
-                                    <a href="{{ route('clients.show', $client['id']) }}"
+                                    <a href="{{ route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])) }}"
                                        class="ui-button ui-button-secondary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
@@ -207,7 +233,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
+                                <td colspan="{{ $isGlobalScope ? 10 : 9 }}" class="px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
                                     No hay clientes para los filtros actuales.
                                 </td>
                             </tr>
@@ -233,11 +259,11 @@
              class="ui-modal-backdrop items-start"
              x-on:click.self="closeCreateClient()"
              x-on:keydown.escape.window="closeCreateClient()">
-            <div class="ui-modal-shell mt-2 max-w-3xl"
+            <div class="ui-modal-shell w-full max-w-3xl"
                  x-transition.scale.origin.top
                  role="dialog"
                  aria-modal="true">
-                <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" class="flex min-h-0 flex-1 flex-col space-y-0" x-on:submit="normalizeNameField('first_name'); normalizeNameField('last_name'); submitting = true">
+                <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" class="flex h-full min-h-0 flex-1 flex-col space-y-0" x-on:submit="normalizeNameField('first_name'); normalizeNameField('last_name'); submitting = true">
                     @csrf
                     <input type="hidden" name="_open_create_modal" value="1">
 
@@ -393,18 +419,27 @@
                                     @enderror
                                 </label>
 
-                                <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                    <span>Promoción (opcional)</span>
-                                    <select name="promotion_id" x-model="form.promotion_id" x-on:change="onPromotionChange()" x-bind:disabled="!form.start_membership" class="ui-input">
-                                        <option value="">Sin promoción</option>
-                                        <template x-for="promo in availablePromotions()" :key="promo.id">
-                                            <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
-                                        </template>
-                                    </select>
-                                    @error('promotion_id')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
-                                </label>
+                                @if ($canManagePromotions)
+                                    <label class="space-y-1 text-sm font-semibold text-slate-300">
+                                        <span>Promoción (opcional)</span>
+                                        <select name="promotion_id" x-model="form.promotion_id" x-on:change="onPromotionChange()" x-bind:disabled="!form.start_membership" class="ui-input">
+                                            <option value="">Sin promoción</option>
+                                            <template x-for="promo in availablePromotions()" :key="promo.id">
+                                                <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
+                                            </template>
+                                        </select>
+                                        @error('promotion_id')
+                                            <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                        @enderror
+                                    </label>
+                                @else
+                                    <div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200 md:col-span-2">
+                                        Promociones no disponibles en tu plan actual.
+                                        @error('promotion_id')
+                                            <p class="mt-1 font-semibold text-rose-200">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                @endif
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Método de pago</span>
@@ -440,7 +475,13 @@
                                 No hay planes activos. Crea un plan antes de iniciar membresías desde este modal.
                             </p>
                             @error('cash')
-                                <p class="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-xs font-semibold text-rose-200">{{ $message }}</p>
+                                <div class="mt-3 rounded-xl border-2 border-rose-400/80 bg-rose-500/20 p-3 text-rose-100 shadow-lg">
+                                    <p class="text-xs font-black uppercase tracking-wide">Debe abrir caja para cobrar</p>
+                                    <p class="mt-1 text-sm font-semibold">{{ $message }}</p>
+                                    <div class="mt-2">
+                                        <x-ui.button :href="route('cash.index')" variant="secondary" size="sm">Ir a caja</x-ui.button>
+                                    </div>
+                                </div>
                             @enderror
                         </div>
                     </div>
@@ -463,8 +504,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script>
         window.clientsIndexPage = function clientsIndexPage(config) {
+            const allowCreate = Boolean(config.allowCreate);
             return {
-                modalOpen: Boolean(config.openCreateModal),
+                allowCreate: allowCreate,
+                modalOpen: allowCreate && Boolean(config.openCreateModal),
                 submitting: false,
                 documentState: 'idle',
                 documentMatchUrl: null,
@@ -505,6 +548,9 @@
                 },
 
                 openCreateClient() {
+                    if (!this.allowCreate) {
+                        return;
+                    }
                     this.modalOpen = true;
                     this.$nextTick(() => this.$refs.firstNameInput?.focus());
                 },

@@ -16,11 +16,13 @@
         $monthCurrentLabel = now()->format('M Y');
         $monthPreviousLabel = now()->subMonthNoOverflow()->format('M Y');
         $monthlyBarsMax = max(1, (float) collect($incomeLast6Months)->max('income'));
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $clientShowUrl = static fn (int $clientId): string => route('clients.show', ['client' => $clientId] + ($isGlobalScope ? ['scope' => 'global'] : []));
     @endphp
 
     <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <div class="space-y-4">
-    <x-ui.card title="Resumen del día" subtitle="Indicadores clave para tomar decisiones rápidas.">
+    <x-ui.card id="tour-panel-summary" title="Resumen del día" subtitle="Indicadores clave para tomar decisiones rápidas.">
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                 <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-slate-500 dark:text-slate-300">Clientes</p>
@@ -35,7 +37,7 @@
             <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
                 <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-amber-700 dark:text-amber-200">Por vencer</p>
                 <p class="mt-1 text-2xl font-black leading-none text-amber-800 dark:text-amber-100">{{ $expiringSoonMemberships }}</p>
-                <p class="min-h-[16px] text-xs text-amber-700 dark:text-amber-200">Proximas 48 horas</p>
+                <p class="min-h-[16px] text-xs text-amber-700 dark:text-amber-200">Próximas 48 horas</p>
             </article>
             <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
                 <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-rose-700 dark:text-rose-200">Vencid@s</p>
@@ -56,7 +58,7 @@
 
         <div class="mt-4 flex flex-wrap gap-2">
             <x-ui.button :href="route('reception.index')" variant="primary">Ir a recepción</x-ui.button>
-            <x-ui.button :href="route('clients.index')" variant="secondary">Gestionar clientes</x-ui.button>
+            <x-ui.button id="tour-panel-go-clients" :href="route('clients.index')" variant="secondary">Gestionar clientes</x-ui.button>
             <x-ui.button :href="route('plans.index')" variant="ghost">Ver planes</x-ui.button>
             <x-ui.button :href="route('cash.index')" variant="ghost">Ir a caja</x-ui.button>
         </div>
@@ -129,8 +131,13 @@
         </x-ui.card>
     </section>
 
-    <x-ui.card title="Estado de caja actual" subtitle="Control rapido del turno activo.">
-        @if ($openSession)
+    <x-ui.card title="Estado de caja actual" subtitle="Control rápido del turno activo.">
+        @if ($isGlobalScope)
+            <p class="ui-alert ui-alert-info">Modo global activo: esta vista consolida sedes y no permite abrir o cerrar turnos desde el panel.</p>
+            <div class="mt-3">
+                <x-ui.button :href="route('cash.index')" variant="secondary">Ver consolidado de caja</x-ui.button>
+            </div>
+        @elseif ($openSession)
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
@@ -166,7 +173,7 @@
     </div>
 
     <div class="space-y-4">
-        <x-ui.card title="Centro de seguimiento" subtitle="Abre detalle en modal para evitar saturar la pantalla.">
+        <x-ui.card id="tour-panel-tracking" title="Centro de seguimiento" subtitle="Abre detalle en modal para evitar saturar la pantalla.">
             <div class="grid gap-3">
                 <article class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
                     <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200">Renovaciones 48h</p>
@@ -203,9 +210,12 @@
                         <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 p-2 dark:border-slate-700 dark:bg-slate-900/70">
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $expiredClient->client_name }}</p>
+                                @if ($isGlobalScope)
+                                    <p class="mt-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300">{{ $expiredClient->gym_name ?? '-' }}</p>
+                                @endif
                                 <p class="truncate text-xs text-slate-600 dark:text-slate-300">{{ $expiredClient->plan_name }} · {{ $expiredLabel }}</p>
                             </div>
-                            <x-ui.button :href="route('clients.show', $expiredClient->client_id)" size="sm" variant="secondary">Renovar</x-ui.button>
+                            <x-ui.button :href="$clientShowUrl((int) $expiredClient->client_id)" size="sm" variant="{{ $isGlobalScope ? 'ghost' : 'secondary' }}">{{ $isGlobalScope ? 'Ver' : 'Renovar' }}</x-ui.button>
                         </div>
                     @endforeach
                 </div>
@@ -226,7 +236,7 @@
     <div id="modal-renewals" class="ui-modal-backdrop hidden panel-modal" role="dialog" aria-modal="true" aria-labelledby="modalRenewalsTitle">
         <div class="ui-modal-panel max-w-5xl">
             <div class="mb-3 flex items-center justify-between gap-2">
-                <h3 id="modalRenewalsTitle" class="ui-heading text-lg">Proximas renovaciones (48 horas)</h3>
+                <h3 id="modalRenewalsTitle" class="ui-heading text-lg">Próximas renovaciones (48 horas)</h3>
                 <button type="button" class="ui-button ui-button-ghost px-3 py-1 text-xs" data-close-modal>Cerrar</button>
             </div>
             <div class="overflow-x-auto">
@@ -234,6 +244,9 @@
                     <thead>
                     <tr>
                         <th>Cliente</th>
+                        @if ($isGlobalScope)
+                            <th>Sede</th>
+                        @endif
                         <th>Plan</th>
                         <th>Vence</th>
                         <th>Días</th>
@@ -248,14 +261,17 @@
                         @endphp
                         <tr>
                             <td>{{ $membership->client_name }}</td>
+                            @if ($isGlobalScope)
+                                <td>{{ $membership->gym_name ?? '-' }}</td>
+                            @endif
                             <td>{{ $membership->plan_name }}</td>
                             <td>{{ $membership->ends_at?->format('Y-m-d') ?? '-' }}</td>
                             <td><x-ui.badge :variant="$daysLeft <= 0 ? 'danger' : ($daysLeft <= 1 ? 'warning' : 'info')">{{ $daysLabel }}</x-ui.badge></td>
-                            <td class="text-right"><x-ui.button :href="route('clients.show', $membership->client_id)" size="sm" variant="ghost">Ver cliente</x-ui.button></td>
+                            <td class="text-right"><x-ui.button :href="$clientShowUrl((int) $membership->client_id)" size="sm" variant="ghost">Ver cliente</x-ui.button></td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-sm text-slate-500 dark:text-slate-300">Sin renovaciones en las proximas 48 horas.</td>
+                            <td colspan="{{ $isGlobalScope ? 6 : 5 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">Sin renovaciones en las próximas 48 horas.</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -275,6 +291,9 @@
                     <thead>
                     <tr>
                         <th>Cliente</th>
+                        @if ($isGlobalScope)
+                            <th>Sede</th>
+                        @endif
                         <th>Plan</th>
                         <th>Vencio</th>
                         <th>Estado</th>
@@ -290,6 +309,9 @@
                         @endphp
                         <tr>
                             <td>{{ $expiredClient->client_name }}</td>
+                            @if ($isGlobalScope)
+                                <td>{{ $expiredClient->gym_name ?? '-' }}</td>
+                            @endif
                             <td>{{ $expiredClient->plan_name }}</td>
                             <td>{{ $expiredClient->ends_at?->format('Y-m-d') ?? '-' }}</td>
                             <td>
@@ -298,12 +320,12 @@
                                 </x-ui.badge>
                             </td>
                             <td class="text-right">
-                                <x-ui.button :href="route('clients.show', $expiredClient->client_id)" size="sm" variant="secondary">Renovar</x-ui.button>
+                                <x-ui.button :href="$clientShowUrl((int) $expiredClient->client_id)" size="sm" variant="{{ $isGlobalScope ? 'ghost' : 'secondary' }}">{{ $isGlobalScope ? 'Ver' : 'Renovar' }}</x-ui.button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay clientes vencid@s para renovar.</td>
+                            <td colspan="{{ $isGlobalScope ? 6 : 5 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay clientes vencid@s para renovar.</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -327,6 +349,9 @@
                     <tr>
                         <th>Hora</th>
                         <th>Cliente</th>
+                        @if ($isGlobalScope)
+                            <th>Sede</th>
+                        @endif
                         <th class="text-right">Acción</th>
                     </tr>
                     </thead>
@@ -335,11 +360,14 @@
                         <tr>
                             <td>{{ $attendance->time }}</td>
                             <td>{{ $attendance->client?->full_name ?? '-' }}</td>
-                            <td class="text-right"><x-ui.button :href="route('clients.show', $attendance->client_id)" size="sm" variant="ghost">Perfil</x-ui.button></td>
+                            @if ($isGlobalScope)
+                                <td>{{ $attendance->gym?->name ?? '-' }}</td>
+                            @endif
+                            <td class="text-right"><x-ui.button :href="$clientShowUrl((int) $attendance->client_id)" size="sm" variant="ghost">Perfil</x-ui.button></td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center text-sm text-slate-500 dark:text-slate-300">Aun no hay check-ins hoy.</td>
+                            <td colspan="{{ $isGlobalScope ? 4 : 3 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">Aún no hay check-ins hoy.</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -351,7 +379,7 @@
     <div id="modal-movements" class="ui-modal-backdrop hidden panel-modal" role="dialog" aria-modal="true" aria-labelledby="modalMovementsTitle">
         <div class="ui-modal-panel max-w-6xl">
             <div class="mb-3 flex items-center justify-between gap-2">
-                <h3 id="modalMovementsTitle" class="ui-heading text-lg">Ultimos movimientos de caja</h3>
+                <h3 id="modalMovementsTitle" class="ui-heading text-lg">Últimos movimientos de caja</h3>
                 <button type="button" class="ui-button ui-button-ghost px-3 py-1 text-xs" data-close-modal>Cerrar</button>
             </div>
             <div class="overflow-x-auto">
@@ -362,6 +390,9 @@
                         <th>Tipo</th>
                         <th>Método</th>
                         <th>Monto</th>
+                        @if ($isGlobalScope)
+                            <th>Sede</th>
+                        @endif
                         <th>Usuario</th>
                         <th>Descripción</th>
                     </tr>
@@ -379,12 +410,15 @@
                             <td class="{{ $movement->type === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }} font-semibold">
                                 {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
                             </td>
+                            @if ($isGlobalScope)
+                                <td>{{ $movement->gym?->name ?? '-' }}</td>
+                            @endif
                             <td>{{ $movement->createdBy?->name ?? '-' }}</td>
                             <td class="max-w-[340px] truncate" title="{{ $movement->description ?: '-' }}">{{ $movement->description ?: '-' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay movimientos registrados aun.</td>
+                            <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay movimientos registrados aún.</td>
                         </tr>
                     @endforelse
                     </tbody>

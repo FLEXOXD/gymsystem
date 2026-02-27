@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CloseCashSessionRequest extends FormRequest
@@ -21,7 +22,7 @@ class CloseCashSessionRequest extends FormRequest
      */
     public function rules(): array
     {
-        if (! $this->user()?->gym_id) {
+        if (! ActiveGymContext::id($this)) {
             return [
                 'gym_context' => ['required'],
             ];

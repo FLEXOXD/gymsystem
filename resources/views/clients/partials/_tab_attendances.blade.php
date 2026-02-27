@@ -1,4 +1,4 @@
-<x-ui.card title="Asistencias recientes" subtitle="Ultimos ingresos del cliente.">
+<x-ui.card title="Asistencias recientes" subtitle="Últimos ingresos del cliente.">
     @if ($client->attendances->isNotEmpty())
         <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-white/10">
             <table class="ui-table min-w-[760px]">

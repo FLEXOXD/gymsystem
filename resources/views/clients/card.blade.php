@@ -129,10 +129,14 @@
     </style>
 </head>
 <body>
+    @php
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $backToClientUrl = route('clients.show', ['client' => $client->id] + ($isGlobalScope ? ['scope' => 'global'] : []));
+    @endphp
     <div class="toolbar">
         <button class="btn" type="button" onclick="window.print()">Imprimir</button>
         <a href="{{ route('clients.card.pdf', $client->id) }}" class="btn">Exportar PDF</a>
-        <a href="{{ route('clients.show', $client->id) }}" class="btn btn-secondary">Volver al cliente</a>
+        <a href="{{ $backToClientUrl }}" class="btn btn-secondary">Volver al cliente</a>
     </div>
 
     <div class="card-wrap">

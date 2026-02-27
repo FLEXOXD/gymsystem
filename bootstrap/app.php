@@ -13,9 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'check.subscription' => \App\Http\Middleware\CheckSubscriptionMiddleware::class,
+            'plan.feature' => \App\Http\Middleware\EnsurePlanFeatureMiddleware::class,
+            'not.branch' => \App\Http\Middleware\EnsureNotBranchUserMiddleware::class,
             'superadmin' => \App\Http\Middleware\EnsureSuperAdminMiddleware::class,
+            'demo.session' => \App\Http\Middleware\EnsureDemoSessionMiddleware::class,
             'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
             'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,
+            'pwa.standalone.access' => \App\Http\Middleware\EnsurePwaStandaloneAccessMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

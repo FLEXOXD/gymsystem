@@ -162,7 +162,7 @@
                 @empty
                     <tr>
                         <td colspan="4" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
-                            Aun no hay eventos de auditoría para este turno.
+                            Aún no hay eventos de auditoría para este turno.
                         </td>
                     </tr>
                 @endforelse
