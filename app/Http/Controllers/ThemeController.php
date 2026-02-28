@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateThemeRequest;
 use App\Http\Requests\UpdateUserProfileRequest;
 use App\Http\Requests\UpdateUserPasswordRequest;
 use App\Http\Requests\LogoutOtherDevicesRequest;
+use App\Models\Gym;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Support\Currency;
@@ -102,6 +103,7 @@ class ThemeController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $gym = $this->resolveGymForContext($request);
         $themes = $this->themes();
         $currentTheme = $user?->theme;
 
@@ -113,7 +115,7 @@ class ThemeController extends Controller
             'themes' => $themes,
             'currentTheme' => $currentTheme,
             'languageOptions' => $this->languageOptions(),
-            'gym' => $user?->gym,
+            'gym' => $gym,
             'currencyOptions' => Currency::options(),
             'timezoneOptions' => $this->timezoneOptions(),
         ]);
@@ -199,8 +201,7 @@ class ThemeController extends Controller
      */
     public function updateGymProfile(UpdateGymProfileRequest $request): RedirectResponse
     {
-        $user = $request->user();
-        $gym = $user?->gym;
+        $gym = $this->resolveGymForContext($request);
 
         abort_if(! $gym, 403, __('messages.user_without_gym'));
 
@@ -363,8 +364,7 @@ class ThemeController extends Controller
      */
     public function updateGymLogo(UpdateGymLogoRequest $request): RedirectResponse
     {
-        $user = $request->user();
-        $gym = $user?->gym;
+        $gym = $this->resolveGymForContext($request);
 
         abort_if(! $gym, 403, __('messages.user_without_gym'));
 
@@ -386,8 +386,7 @@ class ThemeController extends Controller
      */
     public function updateGymAvatars(UpdateGymAvatarsRequest $request): RedirectResponse
     {
-        $user = $request->user();
-        $gym = $user?->gym;
+        $gym = $this->resolveGymForContext($request);
 
         abort_if(! $gym, 403, __('messages.user_without_gym'));
 
@@ -413,6 +412,16 @@ class ThemeController extends Controller
         }
 
         return back()->with('status', __('messages.avatars_updated'));
+    }
+
+    private function resolveGymForContext(Request $request): ?Gym
+    {
+        $activeGym = $request->attributes->get('active_gym');
+        if ($activeGym instanceof Gym) {
+            return $activeGym;
+        }
+
+        return $request->user()?->gym;
     }
 
     private function deletePublicAssetIfLocal(?string $path): void

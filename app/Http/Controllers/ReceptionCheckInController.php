@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Gym;
+use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Http\Requests\ReceptionCheckInRequest;
 use App\Services\AttendanceCheckinService;
@@ -13,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use DateTimeInterface;
 use Throwable;
@@ -105,7 +105,7 @@ class ReceptionCheckInController extends Controller
             'attendanceHistoryTruncated' => $attendanceHistoryTotal > $attendanceHistoryLimit,
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
-            'gymAvatarUrls' => $this->gymAvatarUrls($gym),
+            'gymAvatarUrls' => $this->gymAvatarUrls($request, $gym),
         ]);
     }
 
@@ -138,7 +138,7 @@ class ReceptionCheckInController extends Controller
             'latestSyncEventPublishedAt' => (int) ($latestSyncEvent['published_at_ms'] ?? 0),
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
-            'gymAvatarUrls' => $this->gymAvatarUrls($gym),
+            'gymAvatarUrls' => $this->gymAvatarUrls($request, $gym),
         ]);
     }
 
@@ -367,23 +367,105 @@ class ReceptionCheckInController extends Controller
             return $path;
         }
 
-        if (Str::startsWith($path, ['storage/', '/storage/'])) {
-            return url('/'.ltrim($path, '/'));
+        if (preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1) {
+            return null;
         }
 
-        return Storage::url($path);
+        $normalized = str_replace('\\', '/', ltrim($path, '/'));
+
+        $publicStorageMarker = '/storage/app/public/';
+        $markerPos = strpos($normalized, $publicStorageMarker);
+        if ($markerPos !== false) {
+            $normalized = substr($normalized, $markerPos + strlen($publicStorageMarker));
+        }
+
+        if (Str::startsWith($normalized, 'public/')) {
+            $normalized = substr($normalized, strlen('public/'));
+        }
+
+        if (Str::startsWith($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+
+        $normalized = ltrim($normalized, '/');
+        if ($normalized === '' || str_contains($normalized, '..')) {
+            return null;
+        }
+
+        return asset('storage/'.$normalized);
     }
 
     /**
      * @return array{male:?string,female:?string,neutral:?string}
      */
-    private function gymAvatarUrls(?Gym $gym): array
+    private function gymAvatarUrls(Request $request, ?Gym $gym): array
     {
-        return [
+        $avatarUrls = [
             'male' => $this->resolvePhotoUrl($gym?->avatar_male_path),
             'female' => $this->resolvePhotoUrl($gym?->avatar_female_path),
             'neutral' => $this->resolvePhotoUrl($gym?->avatar_neutral_path),
         ];
+
+        $missingKeys = array_filter(
+            ['male', 'female', 'neutral'],
+            static fn (string $key): bool => trim((string) ($avatarUrls[$key] ?? '')) === ''
+        );
+
+        if ($missingKeys === []) {
+            return $avatarUrls;
+        }
+
+        $activeGymId = (int) ($gym?->id ?? ActiveGymContext::id($request));
+        if ($activeGymId <= 0) {
+            return $avatarUrls;
+        }
+
+        $hubGymId = 0;
+        $hubFromContext = (int) ($request->attributes->get('hub_gym_id') ?? 0);
+        if ($hubFromContext > 0 && $hubFromContext !== $activeGymId) {
+            $isLinkedToHub = GymBranchLink::query()
+                ->where('hub_gym_id', $hubFromContext)
+                ->where('branch_gym_id', $activeGymId)
+                ->where('status', 'active')
+                ->exists();
+
+            if ($isLinkedToHub) {
+                $hubGymId = $hubFromContext;
+            }
+        }
+
+        if ($hubGymId <= 0) {
+            $hubGymId = (int) GymBranchLink::query()
+                ->where('branch_gym_id', $activeGymId)
+                ->where('status', 'active')
+                ->value('hub_gym_id');
+        }
+
+        if ($hubGymId <= 0 || $hubGymId === $activeGymId) {
+            return $avatarUrls;
+        }
+
+        $hubGym = Gym::query()
+            ->select(['id', 'avatar_male_path', 'avatar_female_path', 'avatar_neutral_path'])
+            ->find($hubGymId);
+
+        if (! $hubGym) {
+            return $avatarUrls;
+        }
+
+        $hubAvatarUrls = [
+            'male' => $this->resolvePhotoUrl($hubGym->avatar_male_path),
+            'female' => $this->resolvePhotoUrl($hubGym->avatar_female_path),
+            'neutral' => $this->resolvePhotoUrl($hubGym->avatar_neutral_path),
+        ];
+
+        foreach ($missingKeys as $missingKey) {
+            if (trim((string) ($hubAvatarUrls[$missingKey] ?? '')) !== '') {
+                $avatarUrls[$missingKey] = $hubAvatarUrls[$missingKey];
+            }
+        }
+
+        return $avatarUrls;
     }
 
     private function normalizeMembershipEndsAt(mixed $value): ?string

@@ -80,12 +80,12 @@
         ],
         [
             'index' => '2',
-            'title' => trim((string) ($content['section_2_title'] ?? 'Datos separados por gimnasio para evitar cruces')),
-            'text' => trim((string) ($content['section_2_text'] ?? 'Aislamiento de datos y seguridad multi-tenant real.')),
+            'title' => trim((string) ($content['section_2_title'] ?? 'Mas control, menos caos operativo')),
+            'text' => trim((string) ($content['section_2_text'] ?? 'Convierte tu operacion diaria en procesos claros, medibles y faciles de ejecutar.')),
             'items' => [
-                trim((string) ($content['section_2_item_1'] ?? 'Rutas con contexto de gimnasio y control de acceso')),
-                trim((string) ($content['section_2_item_2'] ?? 'Filtros por gym_id en operaciones críticas')),
-                trim((string) ($content['section_2_item_3'] ?? 'Auditoría y pruebas de aislamiento multi-tenant')),
+                trim((string) ($content['section_2_item_1'] ?? 'Flujo de recepcion optimizado')),
+                trim((string) ($content['section_2_item_2'] ?? 'Caja por turnos con control real')),
+                trim((string) ($content['section_2_item_3'] ?? 'Panel simple para ver ingresos, vencimientos y clientes activos')),
             ],
         ],
         [

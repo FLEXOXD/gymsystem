@@ -12,7 +12,9 @@ use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -1297,6 +1299,88 @@ it('allows hub owner to open cash in linked branch when cash is managed by hub',
         'opened_by' => $hubUser->id,
         'status' => 'open',
     ]);
+});
+
+it('updates gym avatars for the active context gym route', function () {
+    Storage::fake('public');
+
+    $hubGym = makeGym('hub-context-avatar-update');
+    $branchGym = makeGym('branch-context-avatar-update');
+    $hubUser = makeGymUser($hubGym, 'hub-context-avatar-update@example.test', User::ROLE_OWNER);
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'created_by' => $hubUser->id,
+    ]);
+
+    $this->actingAs($hubUser)
+        ->post(route('gym.settings.gym-avatars.update', [
+            'contextGym' => $branchGym->slug,
+        ]), [
+            'avatar_male' => UploadedFile::fake()->image('branch-male.png', 900, 1200),
+        ])
+        ->assertRedirect();
+
+    $hubGym->refresh();
+    $branchGym->refresh();
+
+    expect((string) ($hubGym->avatar_male_path ?? ''))->toBe('');
+    expect((string) ($branchGym->avatar_male_path ?? ''))->not->toBe('');
+    Storage::disk('public')->assertExists((string) $branchGym->avatar_male_path);
+});
+
+it('uses hub fallback avatars in branch reception when branch avatars are missing', function () {
+    $hubGym = makeGym('hub-avatar-fallback');
+    $branchGym = makeGym('branch-avatar-fallback');
+    $hubUser = makeGymUser($hubGym, 'hub-avatar-fallback@example.test', User::ROLE_OWNER);
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'created_by' => $hubUser->id,
+    ]);
+
+    $hubGym->update([
+        'avatar_male_path' => 'gyms/avatars/hub-male-fallback.png',
+        'avatar_female_path' => 'gyms/avatars/hub-female-fallback.png',
+        'avatar_neutral_path' => 'gyms/avatars/hub-neutral-fallback.png',
+    ]);
+
+    $branchGym->update([
+        'avatar_male_path' => null,
+        'avatar_female_path' => null,
+        'avatar_neutral_path' => null,
+    ]);
+
+    $this->actingAs($hubUser)
+        ->get(route('reception.index', [
+            'contextGym' => $branchGym->slug,
+        ]))
+        ->assertOk()
+        ->assertSee('hub-male-fallback.png')
+        ->assertSee('hub-female-fallback.png')
+        ->assertSee('hub-neutral-fallback.png');
 });
 
 it('blocks cash opening for a branch user even when branch link allows local cash', function () {

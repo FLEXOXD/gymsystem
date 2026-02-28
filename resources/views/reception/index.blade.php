@@ -447,17 +447,31 @@
             const directPhoto = client && client.photo_url ? String(client.photo_url) : '';
             const avatarPhoto = customAvatarByGender(client ? client.gender : 'neutral')
                 || generatedAvatarDataUrl(client ? client.gender : 'neutral', fullName);
-            const source = directPhoto !== '' ? directPhoto : avatarPhoto;
+            const candidates = Array.from(new Set([directPhoto, avatarPhoto].filter(function (value) {
+                return typeof value === 'string' && value.trim() !== '';
+            })));
+            let index = 0;
+
+            const loadNextCandidate = function () {
+                if (index >= candidates.length) {
+                    photo.classList.add('hidden');
+                    photoPlaceholder.classList.remove('hidden');
+                    return;
+                }
+
+                photo.src = candidates[index];
+                index += 1;
+            };
 
             photo.onerror = function () {
-                photo.classList.add('hidden');
-                photoPlaceholder.classList.remove('hidden');
+                loadNextCandidate();
             };
             photo.onload = function () {
                 photo.classList.remove('hidden');
                 photoPlaceholder.classList.add('hidden');
             };
-            photo.src = source;
+
+            loadNextCandidate();
         }
 
         function formatDateDisplay(dateValue) {

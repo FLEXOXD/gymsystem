@@ -18,24 +18,24 @@ class MarketingContent
             'brand_kicker' => 'Sistema Operativo',
             'brand_name' => 'GymSystem',
             'brand_logo_path' => '',
-            'login_button_label' => 'Iniciar sesión',
+            'login_button_label' => 'Iniciar sesiÃ³n',
             'hero_kicker' => 'Software para gimnasios',
-            'hero_title' => 'Administra tu gimnasio en un solo sistema, rápido y sin problemas.',
-            'hero_subtitle' => 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil. Ideal para gimnasios individuales o multisucursal.',
+            'hero_title' => 'Administra tu gimnasio en un solo sistema, rÃ¡pido y sin problemas.',
+            'hero_subtitle' => 'Gestiona recepciÃ³n, clientes, membresÃ­as, caja y reportes desde una plataforma estable para escritorio y mÃ³vil. Ideal para gimnasios individuales o multisucursal.',
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => '593991066303',
-            'whatsapp_message' => 'Hola, quiero más información de GymSystem para controlar mi gimnasio.',
+            'whatsapp_message' => 'Hola, quiero mÃ¡s informaciÃ³n de GymSystem para controlar mi gimnasio.',
             'whatsapp_message_plan_basico' => 'Hola, quiero informacion del Plan basico de GymSystem.',
             'whatsapp_message_plan_profesional' => 'Hola, quiero informacion del Plan profesional de GymSystem.',
             'whatsapp_message_plan_premium' => 'Hola, quiero informacion del Plan premium de GymSystem.',
             'whatsapp_message_plan_sucursales' => 'Hola, quiero informacion del Plan sucursales de GymSystem para multi-sede.',
-            'final_cta_title' => 'Convierte tu operación diaria en un flujo simple y medible.',
+            'final_cta_title' => 'Convierte tu operaciÃ³n diaria en un flujo simple y medible.',
             'final_cta_text' => 'Solicita una demo temporal y prueba el sistema real con datos de ejemplo que luego se eliminan.',
             'final_cta_image_path' => '',
             'footer_text' => 'GymSystem {year} | Control operativo para gimnasios',
             'footer_contact_email' => 'soporte@gymsystem.local',
             'hero_panel_left_title' => 'Panel operativo en vivo',
-            'hero_panel_right_title' => 'Modo recepción',
+            'hero_panel_right_title' => 'Modo recepciÃ³n',
             'hero_metric_1_label' => 'Clientes',
             'hero_metric_1_value' => '124',
             'hero_metric_2_label' => 'Activos',
@@ -45,13 +45,13 @@ class MarketingContent
             'hero_metric_4_label' => 'Caja hoy',
             'hero_metric_4_value' => '$ 1,430',
             'hero_media_tag' => 'Marca - Web - Crecimiento',
-            'hero_media_note' => 'Carrusel visual en vivo de tu operación',
+            'hero_media_note' => 'Carrusel visual en vivo de tu operaciÃ³n',
             'hero_slide_1_path' => '',
             'hero_slide_2_path' => '',
             'hero_slide_3_path' => '',
-            'section_1_title' => 'Operación diaria clara para recepción y administración',
-            'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista: alta rápida de cliente, cobro inmediato, renovación de membresía y control de caja por turno.',
-            'section_1_item_1' => 'Cobros de membresía con control de método de pago',
+            'section_1_title' => 'OperaciÃ³n diaria clara para recepciÃ³n y administraciÃ³n',
+            'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista: alta rÃ¡pida de cliente, cobro inmediato, renovaciÃ³n de membresÃ­a y control de caja por turno.',
+            'section_1_item_1' => 'Cobros de membresÃ­a con control de mÃ©todo de pago',
             'section_1_item_2' => 'Alertas de vencimiento y seguimiento de clientes',
             'section_1_item_3' => 'Reportes de ingresos y asistencia en tiempo real',
             'section_1_image_path' => '',
@@ -63,11 +63,11 @@ class MarketingContent
             'section_1_metric_3_value' => '$ 320',
             'section_1_metric_4_label' => 'Check-ins',
             'section_1_metric_4_value' => '54',
-            'section_2_title' => 'Datos separados por gimnasio para evitar cruces',
-            'section_2_text' => 'GymSystem trabaja con contexto de gimnasio en cada modulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
-            'section_2_item_1' => 'Rutas con contexto de gimnasio y control de acceso',
-            'section_2_item_2' => 'Filtros por gym_id en operaciones críticas',
-            'section_2_item_3' => 'Auditoría y pruebas de aislamiento multi-tenant',
+            'section_2_title' => 'Mas control, menos caos operativo',
+            'section_2_text' => 'Convierte tu operacion diaria en procesos claros, medibles y faciles de ejecutar.',
+            'section_2_item_1' => 'Flujo de recepcion optimizado',
+            'section_2_item_2' => 'Caja por turnos con control real',
+            'section_2_item_3' => 'Panel simple para ver ingresos, vencimientos y clientes activos',
             'section_2_image_path' => '',
             'section_2_metric_1_label' => 'Control tenant',
             'section_2_metric_1_value' => 'Activo',
@@ -77,10 +77,10 @@ class MarketingContent
             'section_2_metric_3_value' => 'Por rol',
             'section_2_metric_4_label' => 'Escalabilidad',
             'section_2_metric_4_value' => 'Lista',
-            'section_3_title' => 'Experiencia móvil tipo app (PWA) para operar desde cualquier dispositivo',
-            'section_3_text' => 'Instalable en celular y escritorio, con interfaz operativa adaptada para recepción y administración diaria.',
-            'section_3_item_1' => 'Pantalla de inicio tipo aplicación',
-            'section_3_item_2' => 'Caché de assets para carga rápida',
+            'section_3_title' => 'Experiencia mÃ³vil tipo app (PWA) para operar desde cualquier dispositivo',
+            'section_3_text' => 'Instalable en celular y escritorio, con interfaz operativa adaptada para recepciÃ³n y administraciÃ³n diaria.',
+            'section_3_item_1' => 'Pantalla de inicio tipo aplicaciÃ³n',
+            'section_3_item_2' => 'CachÃ© de assets para carga rÃ¡pida',
             'section_3_item_3' => 'Base lista para notificaciones y recordatorios',
             'section_3_image_path' => '',
             'section_3_metric_1_label' => 'PWA',
@@ -153,6 +153,8 @@ class MarketingContent
                 $defaults['whatsapp_message'] = $legacyMessage;
             }
         }
+
+        $defaults = self::replaceLegacySectionTwoCopy($defaults);
 
         return self::withComputed($defaults);
     }
@@ -283,4 +285,51 @@ class MarketingContent
 
         return $initials !== '' ? $initials : 'GS';
     }
+
+    /**
+     * @param array<string, string> $content
+     * @return array<string, string>
+     */
+    private static function replaceLegacySectionTwoCopy(array $content): array
+    {
+        $legacyMap = [
+            'section_2_title' => [
+                'Datos separados por gimnasio para evitar cruces',
+            ],
+            'section_2_text' => [
+                'GymSystem trabaja con contexto de gimnasio en cada modulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
+                'Aislamiento de datos y seguridad multi-tenant real.',
+            ],
+            'section_2_item_1' => [
+                'Rutas con contexto de gimnasio y control de acceso',
+            ],
+            'section_2_item_2' => [
+                'Filtros por gym_id en operaciones criticas',
+                'Filtros por gym_id en operaciones crÃ­ticas',
+            ],
+            'section_2_item_3' => [
+                'Auditoria y pruebas de aislamiento multi-tenant',
+                'AuditorÃ­a y pruebas de aislamiento multi-tenant',
+            ],
+        ];
+
+        $defaults = self::defaults();
+
+        foreach ($legacyMap as $key => $legacyValues) {
+            $current = trim((string) ($content[$key] ?? ''));
+            if ($current === '') {
+                continue;
+            }
+
+            foreach ($legacyValues as $legacyValue) {
+                if (mb_strtolower($current) === mb_strtolower(trim($legacyValue))) {
+                    $content[$key] = (string) ($defaults[$key] ?? $current);
+                    break;
+                }
+            }
+        }
+
+        return $content;
+    }
 }
+
