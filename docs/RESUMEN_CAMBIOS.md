@@ -1,0 +1,97 @@
+# Resumen de Cambios
+
+Fecha: 2026-02-27
+
+## Resultado general
+Se aplicó una modernización incremental sin romper rutas ni contratos, enfocada en:
+- Modularización inicial (`Clients` y `Cash`).
+- DDD Light en dominio `Clientes`.
+- Cirugía frontend en vistas grandes (extracción de JS/partials).
+- Hardening básico de contexto multi-gym.
+- Corrección mínima de compatibilidad para `BranchProvisioningService` (tests verdes).
+
+## Archivos modificados
+- `app/Http/Controllers/ClientController.php`
+  - `store()` ahora delega en Action modular (`RegisterClientAction`).
+- `app/Http/Controllers/CashController.php`
+  - Open/Add/Close delegan en Actions del módulo Cash.
+  - Lecturas de resumen/totales delegadas a `CashSessionReadService`.
+- `app/Http/Middleware/EnsureGymRouteContextMiddleware.php`
+  - Validación estricta de slug y logging de intentos inválidos/no autorizados.
+- `app/Http/Requests/StoreClientRequest.php`
+  - Normalización de textos con encoding corrupto.
+- `app/Services/BranchProvisioningService.php`
+  - Compatibilidad con parámetro nombrado `branchAdminEmail` y validación de correo custom.
+- `resources/js/app.js`
+  - Registro del módulo `cash-index`.
+- `resources/views/cash/index.blade.php`
+  - Extracción de script inline y modales a partial/module.
+- `resources/views/layouts/panel.blade.php`
+  - Extracción de bloque de script gigante a partial.
+
+## Archivos nuevos
+- `app/Modules/Clients/Actions/RegisterClientAction.php`
+- `app/Modules/Clients/Services/ClientMembershipDomainService.php`
+- `app/Modules/Cash/Actions/OpenCashSessionAction.php`
+- `app/Modules/Cash/Actions/AddCashMovementAction.php`
+- `app/Modules/Cash/Actions/CloseCashSessionAction.php`
+- `app/Modules/Cash/Services/CashSessionReadService.php`
+- `resources/js/modules/cash-index.js`
+- `resources/views/cash/partials/session-modals.blade.php`
+- `resources/views/layouts/partials/panel-inline-scripts.blade.php`
+- `docs/ARQUITECTURA_IDEAL.md`
+- `docs/ESTRUCTURA_MODULAR.md`
+- `docs/ROADMAP_SAAS_EMPRESARIAL.md`
+- `docs/DDD_LIGHT_MAPA_DOMINIOS.md`
+- `docs/AUDITORIA_FINAL.md`
+- `docs/RESUMEN_CAMBIOS.md`
+- `docs/CANDIDATOS_A_ELIMINAR.md`
+
+## Verificación obligatoria
+
+### 1) composer dump-autoload
+- Estado: OK
+- Nota: en sandbox fallaba por acceso denegado en `bootstrap/cache/packages.php`; se ejecutó con permisos elevados y completó `package:discover`.
+
+### 2) php artisan optimize:clear
+- Estado: OK
+
+### 3) php artisan test
+- Estado: OK
+- Resultado: `54 passed (220 assertions)`.
+
+### 4) npm run build
+- Estado: OK
+- Vite build completado correctamente.
+
+## Compatibilidad
+- Rutas públicas: sin cambios.
+- Contratos JSON: sin cambios intencionales.
+- Tablas/columnas: sin renombres.
+- Models existentes: sin renombres.
+
+## Pendientes técnicos recomendados
+1. Continuar extracción de JS inline restante (marketing, plans, reception, superadmin).
+2. Dividir `resources/views/marketing/home.blade.php` (2343 líneas) en partials/componentes.
+3. Añadir Policies por dominio para reducir dependencia en `authorize(): true` genérico.
+---
+
+## Actualizacion: descuento 50% primer ciclo (sucursales)
+
+Se completo el flujo para aplicar 50% solo en el primer ciclo de `sucursales` y volver automaticamente al precio base en la siguiente renovacion.
+
+### Cambios aplicados
+- `resources/views/superadmin/gym.blade.php`
+  - El check `subscription_apply_intro_50` queda habilitado solo cuando el plan seleccionado es `sucursales`.
+- `resources/views/superadmin/gyms.blade.php`
+  - Se agrego check `apply_intro_50` en renovacion.
+  - Se habilita solo cuando el plan seleccionado en la fila es `sucursales`.
+- `tests/Feature/BusinessRulesTest.php`
+  - Nueva prueba: aplica 50% en primer ciclo de `sucursales` y restaura precio completo en la renovacion siguiente.
+
+### Verificacion ejecutada
+1. `composer dump-autoload` -> OK
+2. `php artisan optimize:clear` -> OK
+3. `php artisan test tests/Feature/BusinessRulesTest.php --filter "sucursales|superadmin"` -> OK (7 passed)
+4. `npm run build` -> OK
+- Migracion aplicada localmente: `php artisan migrate --force` -> OK (`2026_02_27_130000_add_sucursales_intro_discount_fields_to_subscriptions_table`).

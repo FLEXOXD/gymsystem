@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AddCashMovementRequest;
 use App\Http\Requests\CloseCashSessionRequest;
 use App\Http\Requests\OpenCashSessionRequest;
-use App\Models\CashMovement;
+use App\Modules\Cash\Actions\AddCashMovementAction;
+use App\Modules\Cash\Actions\CloseCashSessionAction;
+use App\Modules\Cash\Actions\OpenCashSessionAction;
+use App\Modules\Cash\Services\CashSessionReadService;
 use App\Models\CashSession;
 use App\Models\GymBranchLink;
 use App\Services\CashSessionService;
@@ -18,7 +21,11 @@ use RuntimeException;
 class CashController extends Controller
 {
     public function __construct(
-        private readonly CashSessionService $cashSessionService
+        private readonly CashSessionService $cashSessionService,
+        private readonly CashSessionReadService $cashSessionReadService,
+        private readonly OpenCashSessionAction $openCashSessionAction,
+        private readonly AddCashMovementAction $addCashMovementAction,
+        private readonly CloseCashSessionAction $closeCashSessionAction
     ) {
     }
 
@@ -59,6 +66,10 @@ class CashController extends Controller
         }
 
         $openSession = $this->cashSessionService->getOpenSession($gymId);
+        $user = $request->user();
+        $canOpenCash = (bool) ($user?->canOpenCashBox());
+        $canCloseCash = (bool) ($user?->canCloseCashBox());
+        $canManageMovements = (bool) ($user?->canManageCashMovements());
 
         $summary = [
             'income_total' => 0.0,
@@ -72,31 +83,9 @@ class CashController extends Controller
         $latestMovements = collect();
 
         if ($openSession) {
-            $summary = $this->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance);
-            $methodTotals = $this->buildMethodTotals($gymId, $openSession->id);
-            $latestMovements = CashMovement::query()
-                ->forGym($gymId)
-                ->where('cash_session_id', $openSession->id)
-                ->select([
-                    'id',
-                    'gym_id',
-                    'cash_session_id',
-                    'type',
-                    'amount',
-                    'method',
-                    'membership_id',
-                    'created_by',
-                    'description',
-                    'occurred_at',
-                ])
-                ->with([
-                    'createdBy:id,name',
-                    'membership:id,client_id',
-                    'membership.client:id,first_name,last_name',
-                ])
-                ->orderByDesc('occurred_at')
-                ->limit(10)
-                ->get();
+            $summary = $this->cashSessionReadService->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance);
+            $methodTotals = $this->cashSessionReadService->buildMethodTotals($gymId, $openSession->id);
+            $latestMovements = $this->cashSessionReadService->latestMovements($gymId, $openSession->id);
         }
 
         return view('cash.index', [
@@ -106,6 +95,9 @@ class CashController extends Controller
             'latestMovements' => $latestMovements,
             'cashWriteBlocked' => (bool) ($cashGuard['blocked'] ?? false),
             'cashWriteBlockedReason' => (string) ($cashGuard['reason'] ?? ''),
+            'canOpenCash' => $canOpenCash,
+            'canCloseCash' => $canCloseCash,
+            'canManageMovements' => $canManageMovements,
         ]);
     }
 
@@ -119,11 +111,10 @@ class CashController extends Controller
             $this->assertCashWriteAccess($request, $gymId);
             $data = $request->validated();
 
-            $this->cashSessionService->openSession(
+            $this->openCashSessionAction->execute(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
-                openingBalance: (float) $data['opening_balance'],
-                notes: $data['notes'] ?? null
+                data: $data
             );
         } catch (RuntimeException $exception) {
             return redirect()
@@ -147,14 +138,10 @@ class CashController extends Controller
             $this->assertCashWriteAccess($request, $gymId);
             $data = $request->validated();
 
-            $this->cashSessionService->addMovement(
+            $this->addCashMovementAction->execute(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
-                type: $data['type'],
-                amount: (float) $data['amount'],
-                method: $data['method'],
-                membershipId: isset($data['membership_id']) ? (int) $data['membership_id'] : null,
-                description: $data['description'] ?? null
+                data: $data
             );
         } catch (RuntimeException $exception) {
             return redirect()
@@ -178,11 +165,10 @@ class CashController extends Controller
             $this->assertCashWriteAccess($request, $gymId);
             $data = $request->validated();
 
-            $session = $this->cashSessionService->closeSession(
+            $session = $this->closeCashSessionAction->execute(
                 gymId: $gymId,
                 userId: (int) $request->user()->id,
-                closingBalance: (float) $data['closing_balance'],
-                notes: $data['notes'] ?? null
+                data: $data
             );
         } catch (RuntimeException $exception) {
             return redirect()
@@ -277,61 +263,14 @@ class CashController extends Controller
             ])
             ->findOrFail($session);
 
-        $summary = $this->buildSessionSummary((int) $sessionModel->gym_id, $sessionModel->id, (float) $sessionModel->opening_balance);
-        $methodTotals = $this->buildMethodTotals((int) $sessionModel->gym_id, $sessionModel->id);
+        $summary = $this->cashSessionReadService->buildSessionSummary((int) $sessionModel->gym_id, $sessionModel->id, (float) $sessionModel->opening_balance);
+        $methodTotals = $this->cashSessionReadService->buildMethodTotals((int) $sessionModel->gym_id, $sessionModel->id);
 
         return view('cash.show', [
             'session' => $sessionModel,
             'summary' => $summary,
             'methodTotals' => $methodTotals,
         ]);
-    }
-
-    /**
-     * Build totals for one session.
-     *
-     * @return array<string, float|int>
-     */
-    private function buildSessionSummary(int $gymId, int $sessionId, float $openingBalance): array
-    {
-        $totals = CashMovement::query()
-            ->forGym($gymId)
-            ->where('cash_session_id', $sessionId)
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
-            ->selectRaw('COUNT(*) as movements_count')
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN 1 ELSE 0 END), 0) as income_count")
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN 1 ELSE 0 END), 0) as expense_count")
-            ->first();
-
-        $incomeTotal = (float) ($totals->income_total ?? 0);
-        $expenseTotal = (float) ($totals->expense_total ?? 0);
-
-        return [
-            'income_total' => $incomeTotal,
-            'expense_total' => $expenseTotal,
-            'expected_balance' => round($openingBalance + $incomeTotal - $expenseTotal, 2),
-            'movements_count' => (int) ($totals->movements_count ?? 0),
-            'income_count' => (int) ($totals->income_count ?? 0),
-            'expense_count' => (int) ($totals->expense_count ?? 0),
-        ];
-    }
-
-    /**
-     * Build totals grouped by method.
-     */
-    private function buildMethodTotals(int $gymId, int $sessionId)
-    {
-        return CashMovement::query()
-            ->forGym($gymId)
-            ->where('cash_session_id', $sessionId)
-            ->selectRaw('method')
-            ->selectRaw('COUNT(*) as movements_count')
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
-            ->groupBy('method')
-            ->orderBy('method')
-            ->get();
     }
 
     private function resolveGymId(Request $request): int

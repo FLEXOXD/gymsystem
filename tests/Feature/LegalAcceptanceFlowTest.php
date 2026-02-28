@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Gym;
+use App\Models\GymBranchLink;
 use App\Models\LegalAcceptance;
 use App\Models\User;
 use App\Support\LegalTerms;
@@ -84,3 +85,83 @@ it('shows superadmin legal acceptances screen and streams contract pdf', functio
         ->assertHeader('content-type', 'application/pdf');
 });
 
+it('blocks cashier legal modal acceptance because only principal owner can accept', function () {
+    $gym = Gym::query()->create([
+        'name' => 'Gym Cajero',
+        'slug' => 'gym-cajero',
+        'phone' => null,
+        'address' => null,
+        'logo_path' => null,
+    ]);
+
+    User::factory()->create([
+        'gym_id' => $gym->id,
+        'role' => User::ROLE_OWNER,
+    ]);
+
+    $cashier = User::factory()->create([
+        'gym_id' => $gym->id,
+        'role' => User::ROLE_CASHIER,
+    ]);
+
+    $this->actingAs($cashier)
+        ->from(route('panel.legacy'))
+        ->post(route('legal.modal-acceptance.store'), [
+            'accepted' => '1',
+            'terms_version' => LegalTerms::VERSION,
+            'location_permission' => 'skipped',
+        ])
+        ->assertRedirect(route('panel.legacy'))
+        ->assertSessionHas('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
+
+    expect(LegalAcceptance::query()->count())->toBe(0);
+});
+
+it('blocks branch owner legal acceptance because only principal gym can accept', function () {
+    $hubGym = Gym::query()->create([
+        'name' => 'Gym Principal',
+        'slug' => 'gym-principal',
+        'phone' => null,
+        'address' => null,
+        'logo_path' => null,
+    ]);
+
+    $branchGym = Gym::query()->create([
+        'name' => 'Gym Sucursal',
+        'slug' => 'gym-sucursal',
+        'phone' => null,
+        'address' => null,
+        'logo_path' => null,
+    ]);
+
+    $hubOwner = User::factory()->create([
+        'gym_id' => $hubGym->id,
+        'role' => User::ROLE_OWNER,
+    ]);
+
+    $branchOwner = User::factory()->create([
+        'gym_id' => $branchGym->id,
+        'role' => User::ROLE_OWNER,
+    ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'branch_plan_key' => 'premium',
+        'cash_managed_by_hub' => true,
+        'status' => 'active',
+        'created_by' => $hubOwner->id,
+    ]);
+
+    $this->actingAs($branchOwner)
+        ->from(route('panel.legacy'))
+        ->post(route('legal.modal-acceptance.store'), [
+            'accepted' => '1',
+            'terms_version' => LegalTerms::VERSION,
+            'location_permission' => 'skipped',
+        ])
+        ->assertRedirect(route('panel.legacy'))
+        ->assertSessionHas('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
+
+    expect(LegalAcceptance::query()->count())->toBe(0);
+});

@@ -1,4 +1,74 @@
 <x-ui.card title="Credenciales" subtitle="Gestion de QR y RFID con acciones directas.">
+    @php
+        $clientPhoneRaw = trim((string) ($client->phone ?? ''));
+        $gymCountryCode = strtolower(trim((string) ($client->gym?->address_country_code ?? '')));
+        $countryDialByIso = [
+            'ec' => '593',
+            'co' => '57',
+            'pe' => '51',
+            'mx' => '52',
+            'cl' => '56',
+            'ar' => '54',
+            'bo' => '591',
+            'us' => '1',
+        ];
+        $countryDial = (string) ($countryDialByIso[$gymCountryCode] ?? '');
+
+        $normalizeWhatsappPhone = function (string $rawPhone, string $dialPrefix): string {
+            $digits = preg_replace('/\D+/', '', $rawPhone) ?? '';
+            if ($digits === '') {
+                return '';
+            }
+
+            while (str_starts_with($digits, '00')) {
+                $digits = substr($digits, 2);
+            }
+
+            if ($digits === '') {
+                return '';
+            }
+
+            if ($dialPrefix !== '' && str_starts_with($digits, $dialPrefix)) {
+                return $digits;
+            }
+
+            if (str_starts_with($digits, '0')) {
+                $local = ltrim($digits, '0');
+                if ($local === '') {
+                    return '';
+                }
+
+                $fallbackDial = $dialPrefix !== '' ? $dialPrefix : '593';
+                return $fallbackDial.$local;
+            }
+
+            if ($dialPrefix !== '' && strlen($digits) >= 7 && strlen($digits) <= 10) {
+                return $dialPrefix.$digits;
+            }
+
+            return $digits;
+        };
+
+        $whatsappDigits = $normalizeWhatsappPhone($clientPhoneRaw, $countryDial);
+        $hasWhatsappPhone = strlen($whatsappDigits) >= 8;
+
+        $whatsappQrMessage = '';
+        $whatsappQrUrl = '';
+        $publicCardUrl = '';
+        $publicQrImageUrl = '';
+        $publicQrDownloadUrl = '';
+        if ($activeQrCredential && $hasWhatsappPhone) {
+            $publicCardUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public', ['client' => $client->id]);
+            $publicQrImageUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public-qr-image', ['client' => $client->id]);
+            $publicQrDownloadUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public-download', ['client' => $client->id]);
+            $whatsappQrMessage = implode("\n", [
+                'Hola '.$client->full_name.'.',
+                'Descarga tu QR aqui: '.$publicQrDownloadUrl,
+            ]);
+            $whatsappQrUrl = 'https://wa.me/'.$whatsappDigits.'?text='.rawurlencode($whatsappQrMessage);
+        }
+    @endphp
+
     <div class="mb-4 flex flex-wrap gap-2">
         <x-ui.button type="button" size="sm" x-on:click="openRfidModal()">Asignar RFID</x-ui.button>
         <form method="POST" action="{{ route('client-credentials.generate-qr', $client->id) }}">
@@ -25,8 +95,30 @@
                     <x-ui.button type="button" variant="muted" size="sm" x-on:click="copyQr(@js($activeQrCredential->value))">Copiar valor</x-ui.button>
                     <x-ui.button :href="route('clients.card', $client->id)" target="_blank" rel="noopener" variant="ghost" size="sm">Imprimir tarjeta</x-ui.button>
                     <x-ui.button :href="route('clients.card.pdf', $client->id)" target="_blank" rel="noopener" variant="secondary" size="sm">Exportar PDF</x-ui.button>
+                    @if ($publicCardUrl !== '')
+                        <x-ui.button :href="$publicCardUrl" target="_blank" rel="noopener" variant="ghost" size="sm">Ver tarjeta pública</x-ui.button>
+                    @endif
+                    @if ($whatsappQrUrl !== '')
+                        <x-ui.button :href="$whatsappQrUrl" target="_blank" rel="noopener" variant="success" size="sm">
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M20.52 3.48A11.82 11.82 0 0 0 12.08 0C5.5 0 .13 5.37.13 11.94c0 2.1.55 4.14 1.58 5.94L0 24l6.28-1.64a11.84 11.84 0 0 0 5.8 1.49h.01c6.57 0 11.94-5.37 11.94-11.94a11.8 11.8 0 0 0-3.51-8.43ZM12.09 21.8h-.01a9.8 9.8 0 0 1-4.98-1.36l-.36-.21-3.73.98 1-3.63-.24-.37a9.82 9.82 0 0 1-1.5-5.26c0-5.42 4.41-9.83 9.84-9.83 2.62 0 5.08 1.02 6.93 2.87a9.75 9.75 0 0 1 2.88 6.95c0 5.42-4.42 9.83-9.83 9.83Zm5.39-7.34c-.3-.15-1.78-.88-2.06-.98-.27-.1-.47-.15-.67.15-.2.3-.77.98-.95 1.18-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.41-1.47a9.02 9.02 0 0 1-1.67-2.07c-.17-.3-.02-.45.13-.6.14-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.62-.91-2.21-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.08-.8.37-.27.3-1.03 1.01-1.03 2.46s1.06 2.86 1.21 3.06c.15.2 2.08 3.18 5.04 4.45.7.3 1.25.48 1.68.62.7.22 1.34.19 1.84.12.56-.08 1.78-.73 2.03-1.43.25-.7.25-1.3.17-1.43-.07-.13-.27-.2-.57-.35Z"/>
+                                </svg>
+                                <span>Enviar por WhatsApp</span>
+                            </span>
+                        </x-ui.button>
+                        <x-ui.button type="button" variant="ghost" size="sm" x-on:click="copyWhatsappMessage(@js($whatsappQrMessage))">Copiar mensaje WA</x-ui.button>
+                    @else
+                        <x-ui.button type="button" variant="ghost" size="sm" disabled title="Registra un telefono valido para enviar por WhatsApp.">WhatsApp no disponible</x-ui.button>
+                    @endif
                 </div>
                 <p class="text-xs text-cyan-700 dark:text-cyan-300" x-text="qrCopyFeedback"></p>
+                <p class="text-xs text-emerald-700 dark:text-emerald-300" x-text="whatsappCopyFeedback"></p>
+                @if (! $hasWhatsappPhone)
+                    <p class="text-xs text-amber-700 dark:text-amber-300">
+                        Este cliente no tiene telefono valido para WhatsApp. Guarda el numero con codigo de pais (ej: 593...).
+                    </p>
+                @endif
             </div>
         </div>
     @endif

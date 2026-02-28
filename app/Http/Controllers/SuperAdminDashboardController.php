@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGymRequest;
+use App\Http\Requests\UpdateGymAdminPasswordRequest;
 use App\Http\Requests\UpdateGymAdminUserRequest;
 use App\Models\Gym;
 use App\Models\SuperAdminPlanTemplate;
@@ -87,6 +88,14 @@ class SuperAdminDashboardController extends Controller
             ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
             ->where('status', 'active')
             ->findOrFail((int) ($data['subscription_plan_template_id'] ?? 0));
+        $customPrice = array_key_exists('subscription_custom_price', $data) && $data['subscription_custom_price'] !== null
+            ? (float) $data['subscription_custom_price']
+            : null;
+        $applyIntroDiscount50 = (bool) ($data['subscription_apply_intro_50'] ?? false);
+        $resolvedTemplatePrice = (float) $selectedPlanTemplate->price;
+        if ((string) ($selectedPlanTemplate->plan_key ?? '') === 'sucursales' && $customPrice !== null) {
+            $resolvedTemplatePrice = $customPrice;
+        }
         $profilePhotoPath = $request->hasFile('admin_profile_photo')
             ? $request->file('admin_profile_photo')->store('users/profiles', 'public')
             : null;
@@ -132,6 +141,7 @@ class SuperAdminDashboardController extends Controller
                 'identification_type' => $data['admin_identification_type'] ?? null,
                 'identification_number' => $data['admin_identification_number'] ?? null,
                 'profile_photo_path' => $profilePhotoPath,
+                'role' => User::ROLE_OWNER,
                 'password' => Hash::make((string) $data['admin_password']),
             ]);
 
@@ -145,10 +155,12 @@ class SuperAdminDashboardController extends Controller
                 'plan_key' => (string) ($selectedPlanTemplate->plan_key ?? ''),
                 'feature_version' => (string) config('plan_features.default_feature_version', 'v1'),
                 'name' => (string) $selectedPlanTemplate->name,
-                'price' => (float) $selectedPlanTemplate->price,
+                'price' => $resolvedTemplatePrice,
                 'duration_unit' => (string) ($selectedPlanTemplate->duration_unit ?? 'days'),
                 'duration_days' => (int) $selectedPlanTemplate->duration_days,
                 'duration_months' => $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null,
+                'intro_discount_first_cycle' => (string) ($selectedPlanTemplate->plan_key ?? '') === 'sucursales' && $applyIntroDiscount50,
+                'intro_discount_percent' => 50,
             ],
             paymentMethod: null
         );
@@ -221,6 +233,31 @@ class SuperAdminDashboardController extends Controller
         ])->save();
 
         return back()->with('status', 'Usuario del gimnasio actualizado correctamente.');
+    }
+
+    /**
+     * Reset gym admin password from SuperAdmin.
+     */
+    public function updateGymAdminPassword(UpdateGymAdminPasswordRequest $request, int $gym): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $gymModel = Gym::query()
+            ->withoutDemoSessions()
+            ->findOrFail($gym);
+        $adminUserId = (int) $data['reset_password_user_id'];
+
+        $adminUser = User::query()
+            ->where('id', $adminUserId)
+            ->where('gym_id', (int) $gymModel->id)
+            ->firstOrFail();
+
+        $adminUser->forceFill([
+            'password' => Hash::make((string) $data['reset_password']),
+            'remember_token' => null,
+        ])->save();
+
+        return back()->with('status', 'Contrasena del admin actualizada correctamente.');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLegalModalAcceptanceRequest;
 use App\Models\LegalAcceptance;
 use App\Models\User;
+use App\Services\LegalAcceptanceEligibilityService;
 use App\Support\LegalTerms;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Schema;
 
 class LegalAcceptanceController extends Controller
 {
-    public function storeModal(StoreLegalModalAcceptanceRequest $request): RedirectResponse
+    public function storeModal(
+        StoreLegalModalAcceptanceRequest $request,
+        LegalAcceptanceEligibilityService $eligibilityService
+    ): RedirectResponse
     {
         $user = $request->user();
         abort_if(! $user, 403, __('messages.user_not_authenticated'));
@@ -25,6 +29,9 @@ class LegalAcceptanceController extends Controller
         }
         if ($user->demoSession()->active()->exists()) {
             return back();
+        }
+        if (! $eligibilityService->canUserAccept($user)) {
+            return back()->with('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
         }
         if (! Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version'])) {
             return back()->with('error', 'Falta actualizar base de datos. Ejecuta: php artisan migrate');

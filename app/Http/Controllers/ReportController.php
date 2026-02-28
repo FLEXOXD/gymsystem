@@ -8,8 +8,8 @@ use App\Support\ActiveGymContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
@@ -191,7 +191,7 @@ class ReportController extends Controller
     /**
      * Export reports data to CSV.
      */
-    public function exportCsv(Request $request): StreamedResponse
+    public function exportCsv(Request $request): Response
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
@@ -204,120 +204,121 @@ class ReportController extends Controller
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
 
         $filename = 'reports_'.$from->format('Ymd').'_to_'.$to->format('Ymd').'.csv';
+        $handle = fopen('php://temp', 'w+');
+        if ($handle === false) {
+            abort(500, 'No se pudo generar el archivo CSV.');
+        }
 
-        return response()->streamDownload(function () use (
-            $gymIds,
-            $from,
-            $to,
-            $incomeSummary,
-            $incomeByMethod,
-            $attendanceSummary,
-            $attendanceByDay,
-            $membershipSummary
-        ): void {
-            $handle = fopen('php://output', 'w');
-            if ($handle === false) {
-                return;
-            }
+        fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+        fputcsv($handle, ['Reportes Profesionales - Gimnasio']);
+        fputcsv($handle, ['Desde', $from->toDateString(), 'Hasta', $to->toDateString()]);
+        fputcsv($handle, []);
 
-            fputcsv($handle, ['Reportes Profesionales - Gimnasio']);
-            fputcsv($handle, ['Desde', $from->toDateString(), 'Hasta', $to->toDateString()]);
-            fputcsv($handle, []);
+        fputcsv($handle, ['RESUMEN INGRESOS']);
+        fputcsv($handle, ['Total ingresos', number_format((float) $incomeSummary['total_income'], 2, '.', '')]);
+        fputcsv($handle, ['Total egresos', number_format((float) $incomeSummary['total_expense'], 2, '.', '')]);
+        fputcsv($handle, ['Balance', number_format((float) $incomeSummary['balance'], 2, '.', '')]);
+        fputcsv($handle, ['Total movimientos', (int) $incomeSummary['total_movements']]);
+        fputcsv($handle, []);
 
-            fputcsv($handle, ['RESUMEN INGRESOS']);
-            fputcsv($handle, ['Total ingresos', number_format((float) $incomeSummary['total_income'], 2, '.', '')]);
-            fputcsv($handle, ['Total egresos', number_format((float) $incomeSummary['total_expense'], 2, '.', '')]);
-            fputcsv($handle, ['Balance', number_format((float) $incomeSummary['balance'], 2, '.', '')]);
-            fputcsv($handle, ['Total movimientos', (int) $incomeSummary['total_movements']]);
-            fputcsv($handle, []);
+        fputcsv($handle, ['INGRESOS POR METODO']);
+        fputcsv($handle, ['Metodo', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
+        foreach ($incomeByMethod as $row) {
+            fputcsv($handle, [
+                match ($row->method) {
+                    'cash' => 'Efectivo',
+                    'card' => 'Tarjeta',
+                    'transfer' => 'Transferencia',
+                    default => $row->method,
+                },
+                number_format((float) $row->income_total, 2, '.', ''),
+                number_format((float) $row->expense_total, 2, '.', ''),
+                number_format((float) $row->balance, 2, '.', ''),
+                (int) $row->movements_count,
+            ]);
+        }
+        fputcsv($handle, []);
 
-            fputcsv($handle, ['INGRESOS POR METODO']);
-            fputcsv($handle, ['Método', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
-            foreach ($incomeByMethod as $row) {
+        fputcsv($handle, ['ASISTENCIAS']);
+        fputcsv($handle, ['Total asistencias', (int) $attendanceSummary['total_attendances']]);
+        fputcsv($handle, ['Fecha', 'Cantidad']);
+        foreach ($attendanceByDay as $row) {
+            fputcsv($handle, [$row->date, (int) $row->attendances_count]);
+        }
+        fputcsv($handle, []);
+
+        fputcsv($handle, ['MEMBRESIAS']);
+        fputcsv($handle, ['Activos', (int) $membershipSummary['active']]);
+        fputcsv($handle, ['Vencidos', (int) $membershipSummary['expired']]);
+        fputcsv($handle, ['Total clientes', (int) $membershipSummary['total_clients']]);
+        fputcsv($handle, []);
+
+        fputcsv($handle, ['DETALLE MOVIMIENTOS']);
+        fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
+        $resolvedGymIds = collect($gymIds)
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->values()
+            ->all();
+
+        $movementsQuery = CashMovement::query()
+            ->whereIn('cash_movements.gym_id', $resolvedGymIds)
+            ->whereBetween('cash_movements.occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->leftJoin('users as users', 'users.id', '=', 'cash_movements.created_by')
+            ->leftJoin('memberships as memberships', 'memberships.id', '=', 'cash_movements.membership_id')
+            ->leftJoin('clients as clients', function ($join): void {
+                $join->on('clients.id', '=', 'memberships.client_id')
+                    ->on('clients.gym_id', '=', 'cash_movements.gym_id');
+            })
+            ->select([
+                'cash_movements.id as movement_id',
+                'cash_movements.occurred_at',
+                'cash_movements.type',
+                'cash_movements.method',
+                'cash_movements.amount',
+                'cash_movements.description',
+                'users.name as user_name',
+                'clients.first_name as client_first_name',
+                'clients.last_name as client_last_name',
+            ])
+            ->orderBy('cash_movements.id');
+
+        $movementsQuery->chunkById(1000, function ($rows) use ($handle): void {
+            foreach ($rows as $row) {
+                $clientName = trim(((string) ($row->client_first_name ?? '')).' '.((string) ($row->client_last_name ?? '')));
+
                 fputcsv($handle, [
+                    $row->movement_id,
+                    $row->occurred_at,
+                    match ($row->type) {
+                        'income' => 'Ingreso',
+                        'expense' => 'Egreso',
+                        default => $row->type,
+                    },
                     match ($row->method) {
                         'cash' => 'Efectivo',
                         'card' => 'Tarjeta',
                         'transfer' => 'Transferencia',
                         default => $row->method,
                     },
-                    number_format((float) $row->income_total, 2, '.', ''),
-                    number_format((float) $row->expense_total, 2, '.', ''),
-                    number_format((float) $row->balance, 2, '.', ''),
-                    (int) $row->movements_count,
+                    number_format((float) $row->amount, 2, '.', ''),
+                    $clientName,
+                    (string) ($row->user_name ?? ''),
+                    (string) ($row->description ?? ''),
                 ]);
             }
-            fputcsv($handle, []);
+        }, 'cash_movements.id', 'movement_id');
 
-            fputcsv($handle, ['ASISTENCIAS']);
-            fputcsv($handle, ['Total asistencias', (int) $attendanceSummary['total_attendances']]);
-            fputcsv($handle, ['Fecha', 'Cantidad']);
-            foreach ($attendanceByDay as $row) {
-                fputcsv($handle, [$row->date, (int) $row->attendances_count]);
-            }
-            fputcsv($handle, []);
+        rewind($handle);
+        $csvContent = stream_get_contents($handle);
+        fclose($handle);
 
-            fputcsv($handle, ['MEMBRESIAS']);
-            fputcsv($handle, ['Activos', (int) $membershipSummary['active']]);
-            fputcsv($handle, ['Vencidos', (int) $membershipSummary['expired']]);
-            fputcsv($handle, ['Total clientes', (int) $membershipSummary['total_clients']]);
-            fputcsv($handle, []);
-
-            fputcsv($handle, ['DETALLE MOVIMIENTOS']);
-            fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Usuario', 'Descripción']);
-            $movementsQuery = CashMovement::query()
-                ->forGyms($gymIds)
-                ->betweenOccurredAt($from, $to)
-                ->leftJoin('users as users', 'users.id', '=', 'cash_movements.created_by')
-                ->leftJoin('memberships as memberships', 'memberships.id', '=', 'cash_movements.membership_id')
-                ->leftJoin('clients as clients', function ($join): void {
-                    $join->on('clients.id', '=', 'memberships.client_id')
-                        ->on('clients.gym_id', '=', 'cash_movements.gym_id');
-                })
-                ->select([
-                    'cash_movements.id as movement_id',
-                    'cash_movements.occurred_at',
-                    'cash_movements.type',
-                    'cash_movements.method',
-                    'cash_movements.amount',
-                    'cash_movements.description',
-                    'users.name as user_name',
-                    'clients.first_name as client_first_name',
-                    'clients.last_name as client_last_name',
-                ])
-                ->orderBy('cash_movements.id');
-
-            $movementsQuery->chunkById(1000, function ($rows) use ($handle): void {
-                foreach ($rows as $row) {
-                    $clientName = trim(((string) ($row->client_first_name ?? '')).' '.((string) ($row->client_last_name ?? '')));
-
-                    fputcsv($handle, [
-                        $row->movement_id,
-                        $row->occurred_at,
-                        match ($row->type) {
-                            'income' => 'Ingreso',
-                            'expense' => 'Egreso',
-                            default => $row->type,
-                        },
-                        match ($row->method) {
-                            'cash' => 'Efectivo',
-                            'card' => 'Tarjeta',
-                            'transfer' => 'Transferencia',
-                            default => $row->method,
-                        },
-                        number_format((float) $row->amount, 2, '.', ''),
-                        $clientName,
-                        (string) ($row->user_name ?? ''),
-                        (string) ($row->description ?? ''),
-                    ]);
-                }
-            }, 'cash_movements.id', 'movement_id');
-
-            fclose($handle);
-        }, $filename, [
+        return response($csvContent !== false ? $csvContent : '', 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -376,7 +377,7 @@ class ReportController extends Controller
             'movements' => $movements,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('reports_'.$from->format('Ymd').'_to_'.$to->format('Ymd').'.pdf');
+        return $pdf->download('reports_'.$from->format('Ymd').'_to_'.$to->format('Ymd').'.pdf');
     }
 
     /**
@@ -424,3 +425,4 @@ class ReportController extends Controller
             ->betweenOccurredAt($from, $to);
     }
 }
+

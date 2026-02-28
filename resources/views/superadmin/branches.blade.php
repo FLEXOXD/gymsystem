@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'SuperAdmin Sucursales')
-@section('page-title', 'Gesti&oacute;n multisucursal')
+@section('page-title', 'Gestión multisucursal')
 @push('styles')
 <style>
     .sa-branch-pill {
@@ -66,7 +66,7 @@
     @endphp
 
     <div class="space-y-4">
-        <x-ui.card title="Resumen de enlaces" subtitle="Gesti&oacute;n centralizada de sedes para clientes con plan sucursales.">
+        <x-ui.card title="Resumen de enlaces" subtitle="Gestión centralizada de sedes para clientes con plan sucursales.">
             <div class="grid gap-3 sm:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
                     <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Enlaces activos</p>
@@ -83,7 +83,7 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Crear nueva sucursal" subtitle="Crea sede aislada con usuario propio y v&iacute;nculo directo a una sede principal multisucursal.">
+        <x-ui.card title="Crear nueva sucursal" subtitle="Crea sede aislada con usuario propio y vínculo directo a una sede principal multisucursal.">
             <form method="POST" action="{{ route('superadmin.branches.store') }}" class="space-y-4">
                 @csrf
 
@@ -129,7 +129,7 @@
                     </label>
 
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        Tel&eacute;fono de sucursal
+                        Teléfono de sucursal
                         <input type="text" name="branch_phone" value="{{ old('branch_phone') }}" class="ui-input" placeholder="Opcional">
                         @error('branch_phone')
                             <span class="text-[11px] font-semibold text-rose-500">{{ $message }}</span>
@@ -139,7 +139,7 @@
 
                 <div class="grid gap-3 lg:grid-cols-4">
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        Pa&iacute;s
+                        País
                         <select id="branch-country" name="branch_country" class="ui-input" required>
                             @foreach ($locationCatalog as $countryCode => $countryMeta)
                                 <option value="{{ $countryCode }}" @selected($defaultBranchCountry === $countryCode)>
@@ -179,7 +179,7 @@
                     </label>
 
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        Direcci&oacute;n (l&iacute;nea)
+                        Dirección (línea)
                         <input type="text" name="branch_address_line" value="{{ old('branch_address_line') }}" class="ui-input" placeholder="Barrio, avenida, referencia">
                         @error('branch_address_line')
                             <span class="text-[11px] font-semibold text-rose-500">{{ $message }}</span>
@@ -209,16 +209,16 @@
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                            Contrase&ntilde;a
-                            <input type="password" name="branch_admin_password" class="ui-input" placeholder="M&iacute;nimo 8 caracteres" required>
+                            Contraseña
+                            <input type="password" name="branch_admin_password" class="ui-input" placeholder="Mínimo 8 caracteres" required>
                             @error('branch_admin_password')
                                 <span class="text-[11px] font-semibold text-rose-500">{{ $message }}</span>
                             @enderror
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                            Confirmar contrase&ntilde;a
-                            <input type="password" name="branch_admin_password_confirmation" class="ui-input" placeholder="Repite la contrase&ntilde;a" required>
+                            Confirmar contraseña
+                            <input type="password" name="branch_admin_password_confirmation" class="ui-input" placeholder="Repite la contraseña" required>
                         </label>
                     </div>
                 </div>
@@ -233,7 +233,7 @@
             </form>
         </x-ui.card>
 
-        <x-ui.card title="V&iacute;nculos actuales" subtitle="Sucursales aisladas por sede. La gesti&oacute;n se define desde Admin global y SuperAdmin.">
+        <x-ui.card title="Vínculos actuales" subtitle="Sucursales aisladas por sede. La gestión se define desde Admin global y SuperAdmin.">
             <div class="overflow-x-auto">
                 <table class="ui-table min-w-[1160px]">
                     <thead>
@@ -245,7 +245,7 @@
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Creado por</th>
                             <th class="px-3 py-3">Fecha</th>
-                            <th class="px-3 py-3">Acci&oacute;n</th>
+                            <th class="px-3 py-3">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -293,7 +293,7 @@
                                     {{ optional($link->created_at)->format('Y-m-d H:i') }}
                                 </td>
                                 <td class="px-3 py-3">
-                                    <form method="POST" action="{{ route('superadmin.branches.destroy', (int) $link->id) }}" onsubmit="return confirm('&iquest;Desvincular esta sucursal?');">
+                                    <form method="POST" action="{{ route('superadmin.branches.destroy', (int) $link->id) }}" onsubmit="return confirm('¿Desvincular esta sucursal?');">
                                         @csrf
                                         @method('DELETE')
                                         <x-ui.button type="submit" size="sm" variant="danger">Desvincular</x-ui.button>
@@ -303,7 +303,7 @@
                         @empty
                             <tr>
                                 <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
-                                    A&uacute;n no hay v&iacute;nculos configurados.
+                                    Aún no hay vínculos configurados.
                                 </td>
                             </tr>
                         @endforelse

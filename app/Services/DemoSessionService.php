@@ -48,6 +48,7 @@ class DemoSessionService
                 'phone_country_iso' => 'EC',
                 'phone_country_dial' => '+593',
                 'phone_number' => '000000000',
+                'role' => User::ROLE_OWNER,
                 'theme' => 'iron_dark',
             ]);
 

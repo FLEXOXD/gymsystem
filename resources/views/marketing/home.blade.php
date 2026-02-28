@@ -112,6 +112,16 @@
         $amount = (float) $value;
         return number_format($amount, 0, '.', '');
     };
+    $resolvePlanWhatsappUrl = static function (string $planKey) use ($content): string {
+        $normalized = strtolower(trim($planKey));
+        return match ($normalized) {
+            'basico' => (string) ($content['whatsapp_url_plan_basico'] ?? ($content['whatsapp_url'] ?? '#')),
+            'profesional' => (string) ($content['whatsapp_url_plan_profesional'] ?? ($content['whatsapp_url'] ?? '#')),
+            'premium' => (string) ($content['whatsapp_url_plan_premium'] ?? ($content['whatsapp_url'] ?? '#')),
+            'sucursales' => (string) ($content['whatsapp_url_plan_sucursales'] ?? ($content['whatsapp_url'] ?? '#')),
+            default => (string) ($content['whatsapp_url'] ?? '#'),
+        };
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -139,185 +149,42 @@
         body {
             font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
             color: var(--text);
-            background:
-                radial-gradient(circle at 92% 0%, rgba(71, 255, 111, 0.22), transparent 34%),
-                radial-gradient(circle at 0% 35%, rgba(71, 255, 111, 0.12), transparent 48%),
-                linear-gradient(180deg, #020403 0%, #050b07 58%, #030604 100%);
+            background: linear-gradient(180deg, #020905 0%, #03110a 55%, #020a06 100%);
             overflow-x: hidden;
             position: relative;
+            isolation: isolate;
         }
         .shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; }
-        .global-fx {
+        body::before,
+        body::after {
+            content: "";
             position: fixed;
-            inset: 0;
+            inset: -10%;
             pointer-events: none;
             z-index: 0;
-            overflow: hidden;
         }
-        .fx-stars {
-            position: absolute;
-            inset: -20% -10%;
-            background-image:
-                radial-gradient(circle, rgba(181, 255, 215, .9) 0 1px, transparent 1.2px),
-                radial-gradient(circle, rgba(107, 255, 173, .7) 0 1px, transparent 1.2px),
-                radial-gradient(circle, rgba(226, 255, 238, .9) 0 1px, transparent 1.2px);
-            background-size: 130px 130px, 190px 190px, 250px 250px;
-            background-position: 0 0, 40px 80px, 20px 30px;
-            opacity: .24;
-            animation: fxStarsDrift 120s linear infinite;
-        }
-        .fx-stars.layer-b {
-            background-size: 180px 180px, 260px 260px, 320px 320px;
-            background-position: 20px 40px, 60px 10px, 90px 120px;
-            opacity: .14;
-            animation-duration: 170s;
-            animation-direction: reverse;
-        }
-        .fx-nebula {
-            position: absolute;
-            width: min(54vw, 760px);
-            aspect-ratio: 1 / 1;
-            border-radius: 50%;
-            filter: blur(36px);
-            opacity: .24;
+        body::before {
             background:
-                radial-gradient(circle at 35% 40%, rgba(78, 255, 152, .34), transparent 52%),
-                radial-gradient(circle at 66% 52%, rgba(45, 236, 131, .26), transparent 58%),
-                radial-gradient(circle at 48% 66%, rgba(36, 187, 104, .2), transparent 62%);
+                radial-gradient(42% 34% at 22% 18%, rgba(57, 255, 141, .24), transparent 72%),
+                radial-gradient(36% 30% at 78% 72%, rgba(29, 214, 116, .18), transparent 74%);
+            filter: blur(14px);
             will-change: transform, opacity;
-            animation: fxNebulaPulse 22s ease-in-out infinite alternate;
+            animation: neonBreath 10s ease-in-out infinite alternate;
         }
-        .fx-nebula.n1 {
-            left: -16%;
-            top: -10%;
-            animation-duration: 24s;
-        }
-        .fx-nebula.n2 {
-            right: -20%;
-            top: 18%;
-            animation-duration: 28s;
-            animation-direction: alternate-reverse;
-        }
-        .fx-nebula.n3 {
-            left: 28%;
-            bottom: -28%;
-            width: min(50vw, 680px);
-            animation-duration: 26s;
-        }
-        .fx-constellation {
-            position: absolute;
-            left: var(--x, 10%);
-            top: var(--y, 18%);
-            width: var(--w, 260px);
-            height: var(--h, 160px);
-            opacity: .62;
-            will-change: transform, opacity;
-            animation: fxConstellationOrbit var(--dur, 20s) ease-in-out infinite alternate;
-        }
-        .fx-constellation .c-node {
-            position: absolute;
-            width: var(--size, 7px);
-            height: var(--size, 7px);
-            border-radius: 999px;
-            background: rgba(166, 255, 207, .9);
-            box-shadow: 0 0 12px rgba(166, 255, 207, .72);
-            animation: fxNodeTwinkle var(--tw, 5.2s) ease-in-out infinite;
-            animation-delay: var(--delay, 0s);
-        }
-        .fx-constellation .c-line {
-            position: absolute;
-            left: var(--x1, 0);
-            top: var(--y1, 0);
-            width: var(--len, 90px);
-            height: 1px;
-            transform-origin: left center;
-            transform: rotate(var(--rot, 0deg));
-            background: linear-gradient(90deg, rgba(84, 255, 167, .04), rgba(84, 255, 167, .54), rgba(84, 255, 167, .04));
-            opacity: .46;
-            animation: fxLineBreathe var(--lb, 6.4s) ease-in-out infinite;
-            animation-delay: var(--delay, 0s);
-        }
-        .global-fx::before {
-            content: "";
-            position: absolute;
-            inset: -18%;
+        body::after {
             background:
-                radial-gradient(circle at 18% 16%, rgba(65, 255, 150, .18) 0, rgba(65, 255, 150, 0) 34%),
-                radial-gradient(circle at 82% 64%, rgba(65, 255, 150, .13) 0, rgba(65, 255, 150, 0) 42%),
-                radial-gradient(circle at 58% 28%, rgba(65, 255, 150, .10) 0, rgba(65, 255, 150, 0) 44%);
-            animation: fxFogDrift 24s linear infinite alternate;
-            will-change: transform;
-        }
-        .global-fx::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(60, 255, 145, .09) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(60, 255, 145, .09) 1px, transparent 1px);
-            background-size: 150px 150px;
-            opacity: .2;
-            mask-image: radial-gradient(circle at 50% 30%, #000 24%, transparent 82%);
-            animation: fxGridShift 28s linear infinite;
-        }
-        .fx-dot {
-            position: absolute;
-            width: var(--size, 8px);
-            height: var(--size, 8px);
-            border-radius: 999px;
-            background: rgba(88, 255, 154, .66);
-            box-shadow: 0 0 18px rgba(88, 255, 154, .55);
-            animation: fxDotFloat var(--dur, 9s) ease-in-out infinite;
-            animation-delay: var(--delay, 0s);
+                radial-gradient(30% 26% at 50% 40%, rgba(90, 255, 170, .12), transparent 76%);
+            filter: blur(24px);
             will-change: transform, opacity;
+            animation: neonDrift 16s ease-in-out infinite alternate;
         }
-        .fx-link {
-            position: absolute;
-            width: var(--len, 180px);
-            height: 1px;
-            transform: rotate(var(--rot, 0deg));
-            transform-origin: left center;
-            background: linear-gradient(90deg, rgba(88, 255, 154, 0), rgba(88, 255, 154, .34), rgba(88, 255, 154, 0));
-            opacity: .45;
-            animation: fxLinkPulse var(--dur, 7s) ease-in-out infinite;
-            animation-delay: var(--delay, 0s);
-            will-change: opacity;
+        @keyframes neonBreath {
+            0% { opacity: .55; transform: scale(1) translate3d(0, 0, 0); }
+            100% { opacity: .9; transform: scale(1.04) translate3d(0, -8px, 0); }
         }
-        @keyframes fxFogDrift {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(0, -18px, 0); }
-        }
-        @keyframes fxStarsDrift {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-140px, -90px, 0); }
-        }
-        @keyframes fxGridShift {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-40px, -20px, 0); }
-        }
-        @keyframes fxNebulaPulse {
-            0% { transform: translate3d(0, 0, 0) scale(1); opacity: .18; }
-            100% { transform: translate3d(0, -26px, 0) scale(1.08); opacity: .3; }
-        }
-        @keyframes fxConstellationOrbit {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(14px, -12px, 0); }
-        }
-        @keyframes fxDotFloat {
-            0%, 100% { transform: translate3d(0, 0, 0); opacity: .45; }
-            50% { transform: translate3d(0, -10px, 0); opacity: 1; }
-        }
-        @keyframes fxNodeTwinkle {
-            0%, 100% { opacity: .56; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.25); }
-        }
-        @keyframes fxLinkPulse {
-            0%, 100% { opacity: .22; }
-            50% { opacity: .65; }
-        }
-        @keyframes fxLineBreathe {
-            0%, 100% { opacity: .28; }
-            50% { opacity: .7; }
+        @keyframes neonDrift {
+            0% { opacity: .35; transform: translate3d(-10px, 0, 0); }
+            100% { opacity: .6; transform: translate3d(12px, -6px, 0); }
         }
 
         .top-wrap {
@@ -370,6 +237,12 @@
             padding: .45rem .95rem; border-radius: 999px; transition: .2s ease;
         }
         .menu-links a:hover { color: #fff; background: rgba(60, 255, 60, .12); }
+        .menu-links a.is-active {
+            color: #f8fffb;
+            background: linear-gradient(140deg, rgba(68, 255, 125, 0.28), rgba(34, 180, 88, 0.22));
+            border: 1px solid rgba(79, 255, 137, 0.55);
+            box-shadow: 0 0 0 1px rgba(79, 255, 137, 0.2), 0 10px 20px rgba(4, 18, 10, 0.35);
+        }
 
         .nav-actions { display: inline-flex; align-items: center; gap: .55rem; }
         .mobile-menu-toggle {
@@ -422,6 +295,12 @@
             border-radius: .72rem;
             padding: .62rem .78rem;
             background: rgba(10, 18, 13, .74);
+        }
+        .mobile-nav-links a.is-active {
+            color: #f8fffb;
+            border-color: rgba(79, 255, 137, 0.62);
+            background: linear-gradient(140deg, rgba(68, 255, 125, 0.24), rgba(34, 180, 88, 0.16));
+            box-shadow: 0 0 0 1px rgba(79, 255, 137, 0.22);
         }
         .mobile-nav-actions {
             margin-top: .7rem;
@@ -841,20 +720,40 @@
             margin-top: .34rem;
             flex: 0 0 .5rem;
         }
+        .plan li.plan-highlight {
+            margin-top: .3rem;
+            border: 1px solid rgba(34, 197, 94, .45);
+            border-radius: .62rem;
+            background: linear-gradient(145deg, rgba(20, 83, 45, .42), rgba(6, 78, 59, .36));
+            padding: .5rem .58rem;
+            color: #bbf7d0;
+            font-weight: 700;
+        }
+        .plan li.plan-highlight::before {
+            width: .56rem;
+            height: .56rem;
+            margin-top: .27rem;
+            background: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, .85), 0 0 22px rgba(16, 185, 129, .45);
+        }
+        .plan .plan-cta {
+            margin-top: auto;
+            padding-top: .9rem;
+        }
         .plan .inline-form {
             width: 100%;
             display: block;
-            margin-top: auto;
+            margin-top: 0;
         }
         .plan .inline-form .btn {
             width: 100%;
             justify-content: center;
             margin-top: 0;
         }
-        .plan > a.btn {
-            margin-top: auto;
+        .plan .plan-cta > a.btn {
             width: 100%;
             justify-content: center;
+            margin-top: 0;
         }
 
         .faq-list { width: min(880px, 100%); margin: 1.2rem auto 0; display: grid; gap: .65rem; }
@@ -1179,9 +1078,6 @@
         body.perf-lite .hero-fx-node {
             display: none !important;
         }
-        body.perf-lite .global-fx {
-            display: none !important;
-        }
         body.perf-lite .brands-track {
             animation-duration: 64s;
         }
@@ -1209,9 +1105,6 @@
             .brands-track {
                 animation: none !important;
                 transform: translate3d(0, 0, 0) !important;
-            }
-            .global-fx {
-                display: none !important;
             }
             .footer-neon-title {
                 animation: none !important;
@@ -1427,68 +1320,6 @@
     </style>
 </head>
 <body>
-    <div class="global-fx" aria-hidden="true">
-        <span class="fx-stars"></span>
-        <span class="fx-stars layer-b"></span>
-        <span class="fx-nebula n1"></span>
-        <span class="fx-nebula n2"></span>
-        <span class="fx-nebula n3"></span>
-
-        <div class="fx-constellation" style="--x: 8%; --y: 14%; --w: 290px; --h: 180px; --dur: 23s;">
-            <span class="c-line" style="--x1: 20px; --y1: 18px; --len: 92px; --rot: 18deg; --lb: 6.2s;"></span>
-            <span class="c-line" style="--x1: 108px; --y1: 46px; --len: 78px; --rot: 44deg; --lb: 7.1s;"></span>
-            <span class="c-line" style="--x1: 162px; --y1: 102px; --len: 95px; --rot: -12deg; --lb: 6.8s;"></span>
-            <span class="c-line" style="--x1: 106px; --y1: 48px; --len: 106px; --rot: -8deg; --lb: 7.4s;"></span>
-            <span class="c-node" style="left: 18px; top: 14px; --size: 7px; --tw: 4.6s;"></span>
-            <span class="c-node" style="left: 106px; top: 44px; --size: 8px; --tw: 5.2s; --delay: .6s;"></span>
-            <span class="c-node" style="left: 160px; top: 100px; --size: 7px; --tw: 4.8s; --delay: 1.2s;"></span>
-            <span class="c-node" style="left: 252px; top: 78px; --size: 6px; --tw: 5.6s; --delay: .9s;"></span>
-        </div>
-
-        <div class="fx-constellation" style="--x: 62%; --y: 22%; --w: 280px; --h: 190px; --dur: 26s;">
-            <span class="c-line" style="--x1: 26px; --y1: 90px; --len: 88px; --rot: -24deg; --lb: 6.7s;"></span>
-            <span class="c-line" style="--x1: 106px; --y1: 56px; --len: 96px; --rot: 12deg; --lb: 7.5s;"></span>
-            <span class="c-line" style="--x1: 198px; --y1: 76px; --len: 74px; --rot: 34deg; --lb: 6.5s;"></span>
-            <span class="c-line" style="--x1: 104px; --y1: 56px; --len: 118px; --rot: -32deg; --lb: 6.9s;"></span>
-            <span class="c-node" style="left: 24px; top: 88px; --size: 6px; --tw: 5.1s;"></span>
-            <span class="c-node" style="left: 102px; top: 54px; --size: 8px; --tw: 4.9s; --delay: .5s;"></span>
-            <span class="c-node" style="left: 196px; top: 74px; --size: 7px; --tw: 5.5s; --delay: 1.1s;"></span>
-            <span class="c-node" style="left: 256px; top: 120px; --size: 7px; --tw: 5.3s; --delay: .8s;"></span>
-        </div>
-
-        <div class="fx-constellation" style="--x: 36%; --y: 70%; --w: 320px; --h: 170px; --dur: 24s;">
-            <span class="c-line" style="--x1: 16px; --y1: 92px; --len: 94px; --rot: -16deg; --lb: 6.1s;"></span>
-            <span class="c-line" style="--x1: 104px; --y1: 66px; --len: 102px; --rot: 18deg; --lb: 7.2s;"></span>
-            <span class="c-line" style="--x1: 202px; --y1: 98px; --len: 88px; --rot: -22deg; --lb: 6.6s;"></span>
-            <span class="c-line" style="--x1: 104px; --y1: 66px; --len: 120px; --rot: -40deg; --lb: 7.6s;"></span>
-            <span class="c-node" style="left: 14px; top: 90px; --size: 7px; --tw: 5s;"></span>
-            <span class="c-node" style="left: 102px; top: 64px; --size: 8px; --tw: 4.7s; --delay: .7s;"></span>
-            <span class="c-node" style="left: 200px; top: 96px; --size: 7px; --tw: 5.4s; --delay: 1.2s;"></span>
-            <span class="c-node" style="left: 284px; top: 62px; --size: 6px; --tw: 5.8s; --delay: .9s;"></span>
-        </div>
-
-        <span class="fx-dot" style="left: 6%; top: 18%; --size: 7px; --dur: 8.8s; --delay: .3s;"></span>
-        <span class="fx-dot" style="left: 14%; top: 42%; --size: 6px; --dur: 10.2s; --delay: 1.1s;"></span>
-        <span class="fx-dot" style="left: 24%; top: 72%; --size: 9px; --dur: 9.4s; --delay: .7s;"></span>
-        <span class="fx-dot" style="left: 36%; top: 24%; --size: 8px; --dur: 10.8s; --delay: 1.8s;"></span>
-        <span class="fx-dot" style="left: 44%; top: 56%; --size: 7px; --dur: 9.8s; --delay: .5s;"></span>
-        <span class="fx-dot" style="left: 52%; top: 80%; --size: 8px; --dur: 11.2s; --delay: 1.4s;"></span>
-        <span class="fx-dot" style="left: 63%; top: 20%; --size: 9px; --dur: 8.9s; --delay: .9s;"></span>
-        <span class="fx-dot" style="left: 72%; top: 48%; --size: 7px; --dur: 10.5s; --delay: 1.7s;"></span>
-        <span class="fx-dot" style="left: 82%; top: 30%; --size: 8px; --dur: 9.6s; --delay: .4s;"></span>
-        <span class="fx-dot" style="left: 88%; top: 68%; --size: 7px; --dur: 10.1s; --delay: 1.2s;"></span>
-        <span class="fx-dot" style="left: 94%; top: 86%; --size: 6px; --dur: 11.1s; --delay: .8s;"></span>
-        <span class="fx-dot" style="left: 30%; top: 90%; --size: 8px; --dur: 10.9s; --delay: 1.5s;"></span>
-
-        <span class="fx-link" style="left: 8%; top: 22%; --len: 180px; --rot: 16deg; --dur: 6.9s; --delay: .2s;"></span>
-        <span class="fx-link" style="left: 18%; top: 46%; --len: 220px; --rot: -18deg; --dur: 7.6s; --delay: .9s;"></span>
-        <span class="fx-link" style="left: 33%; top: 30%; --len: 150px; --rot: 24deg; --dur: 7.1s; --delay: 1.3s;"></span>
-        <span class="fx-link" style="left: 47%; top: 58%; --len: 200px; --rot: -14deg; --dur: 8.1s; --delay: .7s;"></span>
-        <span class="fx-link" style="left: 59%; top: 24%; --len: 160px; --rot: 20deg; --dur: 7.4s; --delay: 1.5s;"></span>
-        <span class="fx-link" style="left: 70%; top: 52%; --len: 210px; --rot: -10deg; --dur: 7.8s; --delay: .4s;"></span>
-        <span class="fx-link" style="left: 80%; top: 34%; --len: 140px; --rot: 28deg; --dur: 8.3s; --delay: 1.1s;"></span>
-        <span class="fx-link" style="left: 62%; top: 82%; --len: 240px; --rot: 8deg; --dur: 8.8s; --delay: .6s;"></span>
-    </div>
 
     <header class="top-wrap">
         <div class="shell">
@@ -1709,6 +1540,7 @@
             <div class="pricing-grid">
                 @foreach ($publicPlanCards as $planCard)
                     @php
+                        $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
                         $isFeatured = (bool) ($planCard['featured'] ?? false);
                         $isContactMode = (bool) ($planCard['contact_mode'] ?? false);
                         $price = (float) ($planCard['price'] ?? 0);
@@ -1716,6 +1548,8 @@
                         $discountPrice = $discountPriceRaw !== null ? (float) $discountPriceRaw : null;
                         $discountPercent = isset($planCard['discount_percent']) ? (int) $planCard['discount_percent'] : null;
                         $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
+                        $planWhatsappUrl = $resolvePlanWhatsappUrl($planKey);
+                        $planCtaLabel = 'HABLAR POR WHATSAPP';
                     @endphp
                     <article class="plan reveal {{ $isFeatured ? 'popular' : '' }}">
                         @if ($isFeatured)
@@ -1749,17 +1583,24 @@
                         <p>{{ $planCard['summary'] }}</p>
                         <ul>
                             @foreach ($planFeatures as $feature)
-                                <li>{{ $feature }}</li>
+                                @php
+                                    $isHighlightedFeature = str_contains(mb_strtolower((string) $feature), 'muy pronto');
+                                @endphp
+                                <li class="{{ $isHighlightedFeature ? 'plan-highlight' : '' }}">{{ $feature }}</li>
                             @endforeach
                         </ul>
-                        @if ($isContactMode)
-                            <a class="btn btn-wa" href="{{ $content['whatsapp_url'] }}" target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
-                        @else
-                            <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                                @csrf
-                                <button class="btn {{ $isFeatured ? 'btn-demo' : 'btn-outline' }}" type="submit">{{ $demoCtaLabel }}</button>
-                            </form>
-                        @endif
+                        <div class="plan-cta">
+                            <a class="btn {{ $isContactMode ? 'btn-wa' : ($isFeatured ? 'btn-demo' : 'btn-outline') }}"
+                               href="{{ $planWhatsappUrl }}"
+                               target="_blank"
+                               rel="noreferrer"
+                               data-plan-cta-key="{{ $planKey }}">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12.04 2C6.57 2 2.12 6.45 2.12 11.92c0 1.75.46 3.46 1.33 4.96L2 22l5.28-1.38a9.86 9.86 0 0 0 4.76 1.21h.01c5.47 0 9.92-4.45 9.92-9.92C21.96 6.45 17.51 2 12.04 2Zm0 18.16h-.01a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.13.82.84-3.05-.2-.31a8.17 8.17 0 0 1-1.26-4.37c0-4.53 3.69-8.22 8.23-8.22 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.82c0 4.53-3.69 8.22-8.23 8.22Zm4.5-6.17c-.25-.12-1.49-.74-1.72-.82-.23-.09-.4-.13-.57.12-.17.25-.65.82-.8.99-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.25-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.88-.21-.49-.43-.42-.57-.42h-.49c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.09 0 1.23.9 2.42 1.03 2.58.12.17 1.77 2.7 4.28 3.78.6.26 1.07.41 1.43.52.6.19 1.14.16 1.57.1.48-.07 1.49-.61 1.7-1.2.21-.59.21-1.09.15-1.2-.06-.11-.23-.17-.48-.29Z"/>
+                                </svg>
+                                <span>{{ $planCtaLabel }}</span>
+                            </a>
+                        </div>
                     </article>
                 @endforeach
             </div>
@@ -2198,6 +2039,192 @@
                         observer.observe(item);
                     });
                 }
+            }
+
+            const navLinks = Array.from(document.querySelectorAll('.menu-links a, .mobile-nav-links a'));
+            if (navLinks.length > 0) {
+                const activeStorageKey = 'landing.nav.active';
+                const homePathname = @json(parse_url(route('landing'), PHP_URL_PATH) ?: '/');
+
+                const normalizePath = function (value) {
+                    const normalized = String(value || '').replace(/\/+$/, '');
+                    return normalized === '' ? '/' : normalized;
+                };
+
+                const normalizeHash = function (value) {
+                    const hash = String(value || '').trim();
+                    if (hash === '' || hash === '#') {
+                        return '';
+                    }
+                    return hash.startsWith('#') ? hash.toLowerCase() : ('#' + hash.toLowerCase());
+                };
+
+                const currentPath = function () {
+                    return normalizePath(window.location.pathname);
+                };
+
+                const sectionCandidates = [];
+                const linkMap = new Map();
+
+                navLinks.forEach(function (link) {
+                    const href = link.getAttribute('href') || '';
+                    if (href.trim() === '') {
+                        return;
+                    }
+
+                    let url;
+                    try {
+                        url = new URL(href, window.location.origin);
+                    } catch (_error) {
+                        return;
+                    }
+
+                    const key = normalizePath(url.pathname) + normalizeHash(url.hash);
+                    const info = {
+                        key: key,
+                        path: normalizePath(url.pathname),
+                        hash: normalizeHash(url.hash),
+                        element: link,
+                    };
+
+                    if (!linkMap.has(key)) {
+                        linkMap.set(key, []);
+                    }
+                    linkMap.get(key).push(info);
+
+                    if (info.path === normalizePath(homePathname) && info.hash !== '') {
+                        const sectionEl = document.querySelector(info.hash);
+                        if (sectionEl) {
+                            sectionCandidates.push({
+                                key: key,
+                                section: sectionEl,
+                            });
+                        }
+                    }
+
+                    link.addEventListener('click', function () {
+                        try {
+                            window.localStorage.setItem(activeStorageKey, key);
+                        } catch (_error) {
+                            // Keep silent if storage is unavailable.
+                        }
+                        setActiveByKey(key);
+                    });
+                });
+
+                const setActiveByKey = function (key) {
+                    const activeKey = String(key || '');
+                    navLinks.forEach(function (link) {
+                        let linkKey = '';
+                        try {
+                            const url = new URL(link.getAttribute('href') || '', window.location.origin);
+                            linkKey = normalizePath(url.pathname) + normalizeHash(url.hash);
+                        } catch (_error) {
+                            linkKey = '';
+                        }
+                        const isActive = activeKey !== '' && linkKey === activeKey;
+                        link.classList.toggle('is-active', isActive);
+                        if (isActive) {
+                            link.setAttribute('aria-current', 'page');
+                        } else {
+                            link.removeAttribute('aria-current');
+                        }
+                    });
+                };
+
+                const keyFromLocation = function () {
+                    const path = currentPath();
+                    const hash = normalizeHash(window.location.hash);
+                    const exactKey = path + hash;
+                    if (hash !== '' && linkMap.has(exactKey)) {
+                        return exactKey;
+                    }
+
+                    const pathOnlyMatch = Array.from(linkMap.keys()).find(function (key) {
+                        return key === path;
+                    });
+                    if (pathOnlyMatch) {
+                        return pathOnlyMatch;
+                    }
+
+                    return '';
+                };
+
+                const keyFromVisibleSection = function () {
+                    if (currentPath() !== normalizePath(homePathname) || sectionCandidates.length === 0) {
+                        return '';
+                    }
+
+                    const topOffset = Math.max(120, Math.floor(window.innerHeight * 0.18));
+                    let active = '';
+                    let bestDistance = Number.POSITIVE_INFINITY;
+
+                    sectionCandidates.forEach(function (candidate) {
+                        const rect = candidate.section.getBoundingClientRect();
+                        const isInRange = rect.top <= topOffset && rect.bottom >= (topOffset * 0.35);
+                        if (isInRange) {
+                            const distance = Math.abs(rect.top - topOffset);
+                            if (distance < bestDistance) {
+                                bestDistance = distance;
+                                active = candidate.key;
+                            }
+                        }
+                    });
+
+                    if (active !== '') {
+                        return active;
+                    }
+
+                    if (window.scrollY < 64) {
+                        return normalizePath(homePathname) + '#inicio';
+                    }
+
+                    return '';
+                };
+
+                const syncActiveNav = function () {
+                    const sectionKey = keyFromVisibleSection();
+                    if (sectionKey !== '') {
+                        setActiveByKey(sectionKey);
+                        try {
+                            window.localStorage.setItem(activeStorageKey, sectionKey);
+                        } catch (_error) {
+                            // Keep silent if storage is unavailable.
+                        }
+                        return;
+                    }
+
+                    const locationKey = keyFromLocation();
+                    if (locationKey !== '') {
+                        setActiveByKey(locationKey);
+                        return;
+                    }
+
+                    try {
+                        const storedKey = window.localStorage.getItem(activeStorageKey) || '';
+                        if (storedKey !== '' && linkMap.has(storedKey)) {
+                            setActiveByKey(storedKey);
+                        }
+                    } catch (_error) {
+                        // no-op
+                    }
+                };
+
+                let pendingSync = 0;
+                const requestSync = function () {
+                    if (pendingSync) {
+                        return;
+                    }
+                    pendingSync = window.requestAnimationFrame(function () {
+                        pendingSync = 0;
+                        syncActiveNav();
+                    });
+                };
+
+                syncActiveNav();
+                window.addEventListener('hashchange', syncActiveNav);
+                window.addEventListener('scroll', requestSync, { passive: true });
+                window.addEventListener('resize', requestSync);
             }
 
             const mobileMenuToggle = document.querySelector('[data-mobile-menu-toggle]');

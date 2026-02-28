@@ -109,6 +109,61 @@
         @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/30;
     }
 
+    .ui-password-field {
+        position: relative;
+        display: block;
+        width: 100%;
+    }
+
+    .ui-password-field .ui-password-input {
+        padding-right: 2.8rem;
+    }
+
+    .ui-password-toggle-button {
+        position: absolute;
+        right: 0.55rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: rgb(100 116 139);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 0.45rem;
+        cursor: pointer;
+        transition: color .2s ease, background-color .2s ease;
+    }
+
+    .ui-password-toggle-button:hover,
+    .ui-password-toggle-button:focus-visible {
+        color: rgb(15 23 42);
+        background: rgb(148 163 184 / 0.15);
+        outline: none;
+    }
+
+    .dark .ui-password-toggle-button {
+        color: rgb(148 163 184);
+    }
+
+    .dark .ui-password-toggle-button:hover,
+    .dark .ui-password-toggle-button:focus-visible {
+        color: rgb(226 232 240);
+        background: rgb(148 163 184 / 0.2);
+    }
+
+    .ui-password-icon {
+        width: 1.18rem;
+        height: 1.18rem;
+        display: inline-flex;
+    }
+
+    .ui-password-icon.is-hidden {
+        display: none;
+    }
+
     .ui-button {
         @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900;
         min-height: 2.5rem;

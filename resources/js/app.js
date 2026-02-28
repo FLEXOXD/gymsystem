@@ -1,4 +1,6 @@
 import './bootstrap';
+import { initCashIndexModule } from './modules/cash-index';
+import { initPasswordVisibilityModule } from './modules/password-visibility';
 
 const canRegisterSw = import.meta.env.PROD || ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const pwaMeta = document.querySelector('meta[name="pwa-install-enabled"]');
@@ -54,3 +56,6 @@ if (hasPwaAccessMeta && pwaInstallEnabled && canRegisterSw && 'serviceWorker' in
         });
     });
 }
+
+initCashIndexModule();
+initPasswordVisibilityModule();

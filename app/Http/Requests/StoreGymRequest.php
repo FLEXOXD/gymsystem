@@ -36,6 +36,8 @@ class StoreGymRequest extends FormRequest
             'admin_phone_country_dial' => ($dial = trim((string) $this->input('admin_phone_country_dial'))) !== '' ? $dial : null,
             'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
             'subscription_plan_template_id' => ($templateId = trim((string) $this->input('subscription_plan_template_id'))) !== '' ? (int) $templateId : null,
+            'subscription_custom_price' => ($customPrice = trim((string) $this->input('subscription_custom_price'))) !== '' ? (float) $customPrice : null,
+            'subscription_apply_intro_50' => filter_var($this->input('subscription_apply_intro_50'), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -95,6 +97,8 @@ class StoreGymRequest extends FormRequest
                         ->whereIn('plan_key', SuperAdminPlanCatalog::keys());
                 }),
             ],
+            'subscription_custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'subscription_apply_intro_50' => ['nullable', 'boolean'],
         ];
     }
 
@@ -127,6 +131,10 @@ class StoreGymRequest extends FormRequest
             'admin_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
             'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
             'subscription_plan_template_id.exists' => 'El plan base seleccionado no esta disponible.',
+            'subscription_custom_price.numeric' => 'El precio personalizado debe ser numerico.',
+            'subscription_custom_price.min' => 'El precio personalizado no puede ser negativo.',
+            'subscription_custom_price.max' => 'El precio personalizado supera el limite permitido.',
+            'subscription_apply_intro_50.boolean' => 'El indicador de descuento de introduccion no es valido.',
         ];
     }
 

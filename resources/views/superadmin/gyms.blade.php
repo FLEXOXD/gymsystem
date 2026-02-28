@@ -61,6 +61,11 @@
                 {{ $errors->first('subscription') }}
             </div>
         @endif
+        @if ($errors->has('custom_price'))
+            <div class="mb-4 rounded-xl border border-amber-300/70 bg-amber-100/70 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-300/40 dark:bg-amber-900/25 dark:text-amber-200">
+                {{ $errors->first('custom_price') }}
+            </div>
+        @endif
 
         <div class="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
@@ -200,16 +205,32 @@
                         <td class="px-3 py-3 dark:text-slate-200">{{ $lastPaymentLabel }}</td>
                         <td class="px-3 py-3">
                             <div class="space-y-2">
-                                <form method="POST" action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}" class="grid gap-2 lg:grid-cols-[220px_140px_110px_auto] lg:items-center">
+                                <form method="POST" action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}" class="grid gap-2 lg:grid-cols-[220px_165px_180px_140px_110px_auto] lg:items-center">
                                     @csrf
                                     <select name="plan_template_id" class="ui-input px-2 py-1.5 text-xs js-plan-template-select">
                                         <option value="">Mantener plan actual</option>
                                         @foreach (($planTemplates ?? collect()) as $template)
-                                            <option value="{{ $template->id }}">
+                                            <option value="{{ $template->id }}" data-plan-key="{{ (string) ($template->plan_key ?? '') }}">
                                                 {{ $template->name }} ({{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}) - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode) }}{{ $template->discount_price !== null ? ' | Desc. '.\App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode) : '' }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    <input type="number"
+                                           name="custom_price"
+                                           step="0.01"
+                                           min="0"
+                                           class="ui-input px-2 py-1.5 text-xs js-custom-price-input"
+                                           placeholder="Precio sucursales"
+                                           title="Disponible cuando eliges plan sucursales."
+                                           disabled>
+                                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-300/80 px-2.5 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                        <input type="checkbox"
+                                               name="apply_intro_50"
+                                               value="1"
+                                               class="js-intro-50-checkbox"
+                                               disabled>
+                                        50% primer mes
+                                    </label>
                                     <select name="payment_method" class="ui-input px-2 py-1.5 text-xs" required>
                                         @foreach ($paymentMethods as $method)
                                             <option value="{{ $method }}">{{ match ($method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', 'transferencia' => 'Transferencia', default => $method } }}</option>
@@ -373,6 +394,8 @@
         document.querySelectorAll('form[action*=\"/subscriptions/\"]').forEach(function (form) {
             const planSelect = form.querySelector('.js-plan-template-select');
             const monthsSelect = form.querySelector('.js-months-select');
+            const customPriceInput = form.querySelector('.js-custom-price-input');
+            const introDiscountCheckbox = form.querySelector('.js-intro-50-checkbox');
             if (!planSelect || !monthsSelect) return;
 
             const syncMode = function () {
@@ -381,6 +404,31 @@
                 monthsSelect.classList.toggle('opacity-60', hasTemplate);
                 monthsSelect.classList.toggle('cursor-not-allowed', hasTemplate);
                 monthsSelect.title = hasTemplate ? 'Se ignora cuando eliges un plan base.' : '';
+
+                if (!customPriceInput) {
+                    return;
+                }
+
+                const selectedOption = planSelect.options[planSelect.selectedIndex] || null;
+                const selectedPlanKey = String(selectedOption?.getAttribute('data-plan-key') || '').toLowerCase();
+                const canUseCustomPrice = hasTemplate && selectedPlanKey === 'sucursales';
+                customPriceInput.disabled = !canUseCustomPrice;
+                customPriceInput.required = false;
+                customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
+                customPriceInput.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
+                customPriceInput.title = canUseCustomPrice
+                    ? 'Precio personalizado para este cliente con plan sucursales.'
+                    : 'Disponible cuando eliges plan sucursales.';
+                if (introDiscountCheckbox) {
+                    introDiscountCheckbox.disabled = !canUseCustomPrice;
+                    introDiscountCheckbox.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
+                    if (!canUseCustomPrice) {
+                        introDiscountCheckbox.checked = false;
+                    }
+                }
+                if (!canUseCustomPrice) {
+                    customPriceInput.value = '';
+                }
             };
 
             planSelect.addEventListener('change', syncMode);

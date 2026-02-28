@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\DemoSessionService;
 use App\Services\PlanAccessService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +54,16 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = $request->user();
+        if ($user && ! $user->isActiveAccount()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'Tu usuario esta desactivado. Contacta al administrador del gimnasio.',
+            ]);
+        }
+
         $this->touchLastLoginAt($user);
 
         if ($user?->gym_id === null) {
@@ -76,7 +87,9 @@ class AuthenticatedSessionController extends Controller
         $hasLinkedBranches = $gymId > 0
             ? GymBranchLink::query()->where('hub_gym_id', $gymId)->exists()
             : false;
+        $isCashier = (bool) ($user?->isCashier());
         $shouldUseGlobalContext = $gymId > 0
+            && ! $isCashier
             && ! $isBranchGym
             && $hasLinkedBranches
             && $this->planAccessService->can($user, 'multi_branch');
@@ -135,6 +148,43 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * End active demo session immediately and clear demo data.
+     */
+    public function endDemo(Request $request, DemoSessionService $demoSessionService): RedirectResponse|JsonResponse
+    {
+        $userId = (int) ($request->user()?->id ?? 0);
+        $demoSession = $this->resolveDemoSessionForUser($userId);
+        $ended = false;
+
+        if ($demoSession) {
+            try {
+                $demoSessionService->terminateSession($demoSession);
+                $ended = true;
+            } catch (\Throwable $exception) {
+                Log::warning('No se pudo finalizar completamente la sesion demo.', [
+                    'user_id' => $userId,
+                    'demo_session_id' => $demoSession->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ended' => $ended,
+            ]);
+        }
+
+        return redirect()
+            ->route('landing')
+            ->with('status', 'Demo finalizada. Tus datos temporales fueron eliminados.');
+    }
+
+    /**
      * Update last login timestamp only when schema supports it.
      */
     private function touchLastLoginAt(?User $user): void
@@ -162,6 +212,17 @@ class AuthenticatedSessionController extends Controller
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function resolveDemoSessionForUser(int $userId): ?DemoSession
+    {
+        if ($userId <= 0) {
+            return null;
+        }
+
+        return DemoSession::query()
+            ->where('user_id', $userId)
+            ->first();
     }
 
     /**

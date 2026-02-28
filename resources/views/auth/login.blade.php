@@ -694,6 +694,7 @@
                             id="password"
                             name="password"
                             type="password"
+                            data-password-toggle-ignore="1"
                             required
                             autocomplete="current-password"
                             class="input password"

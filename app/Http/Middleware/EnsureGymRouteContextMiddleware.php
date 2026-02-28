@@ -7,6 +7,7 @@ use App\Models\GymBranchLink;
 use App\Services\PlanAccessService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureGymRouteContextMiddleware
@@ -34,8 +35,17 @@ class EnsureGymRouteContextMiddleware
             abort(403, 'No se pudo determinar el gimnasio de la ruta.');
         }
 
+        if (preg_match('/^[A-Za-z0-9\\-]+$/', $requestedGymSlug) !== 1) {
+            Log::warning('Gym context rejected by invalid slug format.', [
+                'user_id' => (int) $user->id,
+                'requested_slug' => $requestedGymSlug,
+                'path' => $request->path(),
+                'ip' => $request->ip(),
+            ]);
+            abort(404, 'No existe el gimnasio solicitado.');
+        }
+
         $requestedGym = Gym::query()
-            ->withoutDemoSessions()
             ->select([
                 'id',
                 'slug',
@@ -64,10 +74,21 @@ class EnsureGymRouteContextMiddleware
         $isBranchGym = GymBranchLink::query()
             ->where('branch_gym_id', $userGymId)
             ->exists();
-        $canUseMultiBranch = $this->planAccessService->can($user, 'multi_branch') && ! $isBranchGym;
+        $isCashier = method_exists($user, 'isCashier') ? $user->isCashier() : false;
+        $canUseMultiBranch = ! $isCashier
+            && $this->planAccessService->can($user, 'multi_branch')
+            && ! $isBranchGym;
 
         if (! $canAccessRequestedGym) {
             if (! $canUseMultiBranch) {
+                Log::warning('Gym context access denied: no multibranch permission.', [
+                    'user_id' => (int) $user->id,
+                    'user_gym_id' => $userGymId,
+                    'requested_gym_id' => $requestedGymId,
+                    'requested_slug' => $requestedGymSlug,
+                    'path' => $request->path(),
+                    'ip' => $request->ip(),
+                ]);
                 abort(403, 'No autorizado para acceder a otro gimnasio.');
             }
 
@@ -77,6 +98,14 @@ class EnsureGymRouteContextMiddleware
                 ->exists();
 
             if (! $isLinkedBranch) {
+                Log::warning('Gym context access denied: branch not linked to hub.', [
+                    'user_id' => (int) $user->id,
+                    'user_gym_id' => $userGymId,
+                    'requested_gym_id' => $requestedGymId,
+                    'requested_slug' => $requestedGymSlug,
+                    'path' => $request->path(),
+                    'ip' => $request->ip(),
+                ]);
                 abort(403, 'No autorizado para acceder a otro gimnasio.');
             }
         }

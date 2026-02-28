@@ -20,6 +20,8 @@
         $defaultAdminPhoneNumber = old('admin_phone_number', '');
         $planTemplates = $planTemplates ?? collect();
         $defaultPlanTemplateId = old('subscription_plan_template_id', (string) optional($planTemplates->first())->id);
+        $defaultSubscriptionCustomPrice = old('subscription_custom_price', '');
+        $defaultSubscriptionApplyIntro50 = in_array((string) old('subscription_apply_intro_50', ''), ['1', 'true', 'on'], true);
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
         $gymsWithAdmins = $gymsWithAdmins ?? collect();
@@ -58,6 +60,19 @@
             'addressLine' => (string) old('admin_address_line', ''),
             'phoneCountryDial' => (string) old('admin_phone_country_dial', ''),
             'phoneNumber' => (string) old('admin_phone_number', ''),
+        ];
+        $passwordResetErrorKeys = [
+            'reset_password_gym_id',
+            'reset_password_user_id',
+            'reset_password',
+            'reset_password_confirmation',
+        ];
+        $passwordResetHasErrors = $errors->hasAny($passwordResetErrorKeys);
+        $passwordResetRouteTemplate = route('superadmin.gyms.admin-user.password.update', ['gym' => '__GYM__']);
+        $passwordResetOldData = [
+            'hasErrors' => $passwordResetHasErrors,
+            'gymId' => (int) old('reset_password_gym_id', 0),
+            'userId' => (int) old('reset_password_user_id', 0),
         ];
     @endphp
 
@@ -176,7 +191,14 @@
                     <div class="grid gap-2 md:grid-cols-2">
                         @forelse ($planTemplates as $template)
                             <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] p-2.5">
-                                <input type="radio" name="subscription_plan_template_id" value="{{ $template->id }}" class="mt-0.5" @checked((string) $defaultPlanTemplateId === (string) $template->id) required>
+                                <input type="radio"
+                                       name="subscription_plan_template_id"
+                                       value="{{ $template->id }}"
+                                       class="mt-0.5"
+                                       data-plan-template-radio="1"
+                                       data-plan-key="{{ (string) ($template->plan_key ?? '') }}"
+                                       @checked((string) $defaultPlanTemplateId === (string) $template->id)
+                                       required>
                                 <span class="block">
                                     <span class="block text-sm font-black">{{ $template->name }}</span>
                                     <span class="ui-muted block text-xs">
@@ -195,6 +217,36 @@
                     @error('subscription_plan_template_id')
                         <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                     @enderror
+
+                    <div class="mt-3">
+                        <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">
+                            Precio personalizado (solo plan sucursales)
+                        </label>
+                        <input id="subscription-custom-price"
+                               type="number"
+                               name="subscription_custom_price"
+                               value="{{ $defaultSubscriptionCustomPrice }}"
+                               step="0.01"
+                               min="0"
+                               class="ui-input"
+                               placeholder="Ej: 149.99"
+                               title="Se aplica solo cuando seleccionas plan sucursales.">
+                        <p class="ui-muted mt-1 text-[11px]">Si eliges otro plan, este campo se ignora.</p>
+                        <label class="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            <input id="subscription-apply-intro-50"
+                                   type="checkbox"
+                                   name="subscription_apply_intro_50"
+                                   value="1"
+                                   @checked($defaultSubscriptionApplyIntro50)>
+                            Aplicar 50% de descuento solo el primer mes.
+                        </label>
+                        @error('subscription_custom_price')
+                            <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                        @enderror
+                        @error('subscription_apply_intro_50')
+                            <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <div>
@@ -365,6 +417,16 @@
                                         >
                                             Editar usuario
                                         </button>
+                                        <button
+                                            type="button"
+                                            class="ui-button ui-button-secondary px-3 py-2 text-xs font-bold"
+                                            data-reset-admin-password
+                                            data-gym-id="{{ (int) $gymRow->id }}"
+                                            data-user-id="{{ (int) $adminUser->id }}"
+                                            data-admin-name="{{ (string) $adminUser->name }}"
+                                        >
+                                            Restablecer contrasena
+                                        </button>
                                     @endif
 
                                     <form method="POST"
@@ -505,6 +567,54 @@
                     </form>
                 </div>
             </div>
+
+            <div id="admin-password-modal" class="fixed inset-0 z-[82] hidden items-center justify-center overflow-y-auto p-4">
+                <div class="absolute inset-0 bg-black/60" data-admin-password-modal-close></div>
+                <div class="relative z-[83] w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl">
+                    <div class="mb-3 flex items-center justify-between gap-2">
+                        <h3 class="ui-heading text-lg">Restablecer contrasena</h3>
+                        <button type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold" data-admin-password-modal-close>Cerrar</button>
+                    </div>
+
+                    <p id="admin-password-modal-label" class="ui-muted text-sm">
+                        Define una nueva contrasena para el admin del gimnasio.
+                    </p>
+
+                    <form id="admin-password-form" method="POST" action="#" class="mt-3 space-y-3">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" id="modal-reset-password-gym-id" name="reset_password_gym_id" value="{{ (int) old('reset_password_gym_id', 0) }}">
+                        <input type="hidden" id="modal-reset-password-user-id" name="reset_password_user_id" value="{{ (int) old('reset_password_user_id', 0) }}">
+
+                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                            Nueva contrasena
+                            <input id="modal-reset-password" type="password" name="reset_password" class="ui-input" placeholder="Minimo 8 caracteres" required autocomplete="new-password">
+                        </label>
+
+                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                            Confirmar nueva contrasena
+                            <input id="modal-reset-password-confirmation" type="password" name="reset_password_confirmation" class="ui-input" placeholder="Repite la contrasena" required autocomplete="new-password">
+                        </label>
+
+                        @if ($passwordResetHasErrors)
+                            <div class="rounded-xl border border-rose-300/60 bg-rose-100/60 px-3 py-2 text-xs font-semibold text-rose-800 dark:border-rose-300/40 dark:bg-rose-300/10 dark:text-rose-200">
+                                @foreach ($errors->getMessages() as $errorKey => $errorMessages)
+                                    @if (in_array($errorKey, $passwordResetErrorKeys, true))
+                                        @foreach ($errorMessages as $errorMessage)
+                                            <p>{{ $errorMessage }}</p>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="flex justify-end gap-2">
+                            <button type="button" class="ui-button ui-button-ghost" data-admin-password-modal-close>Cancelar</button>
+                            <x-ui.button type="submit">Guardar contrasena</x-ui.button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </x-ui.card>
     </div>
 @endsection
@@ -580,6 +690,39 @@
         });
 
         syncStates(selectedStateValue, selectedCityValue);
+
+        const planTemplateRadios = Array.from(document.querySelectorAll('input[data-plan-template-radio="1"]'));
+        const customPriceInput = document.getElementById('subscription-custom-price');
+        const introDiscountCheckbox = document.getElementById('subscription-apply-intro-50');
+        const syncCustomSubscriptionPriceState = function () {
+            if (!customPriceInput) return;
+            const selectedRadio = planTemplateRadios.find(function (radio) {
+                return radio.checked;
+            }) || null;
+            const selectedPlanKey = String(selectedRadio?.getAttribute('data-plan-key') || '').toLowerCase();
+            const canUseCustomPrice = selectedPlanKey === 'sucursales';
+            customPriceInput.disabled = !canUseCustomPrice;
+            customPriceInput.required = false;
+            customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
+            customPriceInput.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
+            customPriceInput.title = canUseCustomPrice
+                ? 'Precio personalizado para este cliente con plan sucursales.'
+                : 'Se habilita solo cuando eliges plan sucursales.';
+            if (introDiscountCheckbox) {
+                introDiscountCheckbox.disabled = !canUseCustomPrice;
+                introDiscountCheckbox.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
+                if (!canUseCustomPrice) {
+                    introDiscountCheckbox.checked = false;
+                }
+            }
+            if (!canUseCustomPrice) {
+                customPriceInput.value = '';
+            }
+        };
+        planTemplateRadios.forEach(function (radio) {
+            radio.addEventListener('change', syncCustomSubscriptionPriceState);
+        });
+        syncCustomSubscriptionPriceState();
 
         const timezoneSearch = document.getElementById('gym-timezone-search');
         const timezoneSelect = document.getElementById('gym-timezone-select');
@@ -668,6 +811,13 @@
         const adminModalCloseButtons = Array.from(document.querySelectorAll('[data-admin-modal-close]'));
         const adminUpdateRouteTemplate = @json($adminEditRouteTemplate);
         const adminEditOldData = @json($adminEditOldData);
+        const adminPasswordModal = document.getElementById('admin-password-modal');
+        const adminPasswordForm = document.getElementById('admin-password-form');
+        const adminPasswordButtons = Array.from(document.querySelectorAll('[data-reset-admin-password]'));
+        const adminPasswordModalCloseButtons = Array.from(document.querySelectorAll('[data-admin-password-modal-close]'));
+        const adminPasswordRouteTemplate = @json($passwordResetRouteTemplate);
+        const adminPasswordOldData = @json($passwordResetOldData);
+        const adminPasswordModalLabel = document.getElementById('admin-password-modal-label');
 
         const modalFields = {
             userId: document.getElementById('modal-admin-user-id'),
@@ -684,6 +834,12 @@
             addressLine: document.getElementById('modal-admin-address-line'),
             phoneCountryDial: document.getElementById('modal-admin-phone-country-dial'),
             phoneNumber: document.getElementById('modal-admin-phone-number'),
+        };
+        const passwordModalFields = {
+            gymId: document.getElementById('modal-reset-password-gym-id'),
+            userId: document.getElementById('modal-reset-password-user-id'),
+            password: document.getElementById('modal-reset-password'),
+            passwordConfirmation: document.getElementById('modal-reset-password-confirmation'),
         };
 
         function setModalValue(field, value) {
@@ -724,6 +880,39 @@
             document.body.classList.remove('overflow-hidden');
         }
 
+        function openPasswordModal(data) {
+            if (!adminPasswordModal || !adminPasswordForm) return;
+
+            const gymId = String(data.gymId || '').trim();
+            const userId = String(data.userId || '').trim();
+            if (gymId === '' || userId === '') return;
+
+            adminPasswordForm.action = adminPasswordRouteTemplate.replace('__GYM__', gymId);
+            setModalValue(passwordModalFields.gymId, gymId);
+            setModalValue(passwordModalFields.userId, userId);
+            setModalValue(passwordModalFields.password, '');
+            setModalValue(passwordModalFields.passwordConfirmation, '');
+
+            if (adminPasswordModalLabel) {
+                const adminName = String(data.adminName || '').trim();
+                adminPasswordModalLabel.textContent = adminName !== ''
+                    ? 'Define una nueva contrasena para ' + adminName + '.'
+                    : 'Define una nueva contrasena para el admin del gimnasio.';
+            }
+
+            adminPasswordModal.classList.remove('hidden');
+            adminPasswordModal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+            passwordModalFields.password?.focus();
+        }
+
+        function closePasswordModal() {
+            if (!adminPasswordModal) return;
+            adminPasswordModal.classList.add('hidden');
+            adminPasswordModal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
         adminEditButtons.forEach(function (button) {
             button.addEventListener('click', function () {
                 openAdminModal({
@@ -749,14 +938,32 @@
             button.addEventListener('click', closeAdminModal);
         });
 
+        adminPasswordButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                openPasswordModal({
+                    gymId: button.dataset.gymId || '',
+                    userId: button.dataset.userId || '',
+                    adminName: button.dataset.adminName || '',
+                });
+            });
+        });
+
+        adminPasswordModalCloseButtons.forEach(function (button) {
+            button.addEventListener('click', closePasswordModal);
+        });
+
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 closeAdminModal();
+                closePasswordModal();
             }
         });
 
         if (adminEditOldData.hasErrors && Number(adminEditOldData.gymId) > 0) {
             openAdminModal(adminEditOldData);
+        }
+        if (adminPasswordOldData.hasErrors && Number(adminPasswordOldData.gymId) > 0 && Number(adminPasswordOldData.userId) > 0) {
+            openPasswordModal(adminPasswordOldData);
         }
 
         function statesForCountry(countryCode) {

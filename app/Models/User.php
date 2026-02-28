@@ -15,6 +15,11 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    public const ROLE_SUPERADMIN = 'superadmin';
+    public const ROLE_OWNER = 'owner';
+    public const ROLE_CASHIER = 'cashier';
+    public const ROLE_EMPLOYEE = 'employee';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -46,6 +51,11 @@ class User extends Authenticatable
         'support_contact_logo_path',
         'support_contact_logo_light_path',
         'support_contact_logo_dark_path',
+        'role',
+        'is_active',
+        'can_open_cash',
+        'can_close_cash',
+        'can_manage_cash_movements',
         'theme',
         'legal_accepted_at',
         'legal_accepted_version',
@@ -75,6 +85,10 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'legal_accepted_at' => 'datetime',
             'birth_date' => 'date',
+            'is_active' => 'boolean',
+            'can_open_cash' => 'boolean',
+            'can_close_cash' => 'boolean',
+            'can_manage_cash_movements' => 'boolean',
         ];
     }
 
@@ -156,5 +170,91 @@ class User extends Authenticatable
     public function legalAcceptances(): HasMany
     {
         return $this->hasMany(LegalAcceptance::class, 'user_id');
+    }
+
+    public function roleKey(): string
+    {
+        if ($this->gym_id === null) {
+            return self::ROLE_SUPERADMIN;
+        }
+
+        $resolved = strtolower(trim((string) ($this->role ?? '')));
+        if ($resolved !== '') {
+            return $resolved;
+        }
+
+        return self::ROLE_OWNER;
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        $resolved = $this->roleKey();
+        $normalized = collect($roles)
+            ->map(static fn (string $role): string => strtolower(trim($role)))
+            ->filter(static fn (string $role): bool => $role !== '')
+            ->values()
+            ->all();
+
+        if ($normalized === []) {
+            return false;
+        }
+
+        return in_array($resolved, $normalized, true);
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->hasRole(self::ROLE_CASHIER);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->hasRole(self::ROLE_OWNER);
+    }
+
+    public function isActiveAccount(): bool
+    {
+        if (! array_key_exists('is_active', $this->attributes) && ! isset($this->is_active)) {
+            return true;
+        }
+
+        return (bool) ($this->is_active ?? true);
+    }
+
+    public function canOpenCashBox(): bool
+    {
+        if ($this->isOwner() || $this->hasRole(self::ROLE_SUPERADMIN)) {
+            return true;
+        }
+        if (! $this->isCashier()) {
+            return false;
+        }
+
+        return (bool) ($this->can_open_cash ?? false);
+    }
+
+    public function canCloseCashBox(): bool
+    {
+        if ($this->isOwner() || $this->hasRole(self::ROLE_SUPERADMIN)) {
+            return true;
+        }
+        if (! $this->isCashier()) {
+            return false;
+        }
+
+        return (bool) ($this->can_close_cash ?? false);
+    }
+
+    public function canManageCashMovements(): bool
+    {
+        if ($this->isOwner() || $this->hasRole(self::ROLE_SUPERADMIN)) {
+            return true;
+        }
+        if (! $this->isCashier()) {
+            return false;
+        }
+
+        // Backward-compatible default for legacy cashier rows.
+        return (bool) ($this->can_manage_cash_movements ?? true);
     }
 }

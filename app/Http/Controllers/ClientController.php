@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientPhotoRequest;
+use App\Modules\Clients\Actions\RegisterClientAction;
 use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\Client;
@@ -12,9 +13,7 @@ use App\Models\Plan;
 use App\Models\Promotion;
 use App\Services\CashSessionService;
 use App\Services\PlanAccessService;
-use App\Services\PromotionService;
 use App\Support\ActiveGymContext;
-use App\Support\PlanDuration;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,7 +21,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use RuntimeException;
@@ -32,7 +30,7 @@ class ClientController extends Controller
     public function __construct(
         private readonly CashSessionService $cashSessionService,
         private readonly PlanAccessService $planAccessService,
-        private readonly PromotionService $promotionService
+        private readonly RegisterClientAction $registerClientAction
     ) {
     }
 
@@ -225,95 +223,13 @@ class ClientController extends Controller
         }
 
         try {
-            $client = DB::transaction(function () use ($data, $gymId, $request, $photoPath, $startsMembership, $canManagePromotions): Client {
-                $client = Client::query()->create([
-                    'gym_id' => $gymId,
-                    'first_name' => $data['first_name'],
-                    'last_name' => $data['last_name'],
-                    'document_number' => $data['document_number'],
-                    'phone' => $data['phone'] ?? null,
-                    'photo_path' => $photoPath,
-                    'gender' => $data['gender'] ?? 'neutral',
-                    'status' => 'inactive',
-                ]);
-
-                if (! $startsMembership) {
-                    return $client;
-                }
-
-                $plan = Plan::query()
-                    ->forGym($gymId)
-                    ->active()
-                    ->select(['id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price'])
-                    ->findOrFail((int) $data['plan_id']);
-
-                $pricing = $this->promotionService->resolveForSale(
-                    gymId: $gymId,
-                    plan: $plan,
-                    promotionId: $canManagePromotions ? ($data['promotion_id'] ?? null) : null,
-                    date: $data['membership_starts_at'] ?? now()->toDateString()
-                );
-
-                if (! empty($data['promotion_id']) && ! $pricing['promotion']) {
-                    throw new RuntimeException('La promoción seleccionada no aplica para este plan, fecha o ya alcanzó su límite.');
-                }
-
-                $startsAt = Carbon::parse((string) $data['membership_starts_at'])->startOfDay();
-                $endsAt = PlanDuration::calculateEndsAt(
-                    startsAt: $startsAt,
-                    plan: $plan,
-                    bonusDays: (int) $pricing['bonus_days']
-                );
-                $membershipStatus = $endsAt->isBefore(now()->startOfDay()) ? 'expired' : 'active';
-
-                $membership = Membership::query()->create([
-                    'gym_id' => $gymId,
-                    'client_id' => $client->id,
-                    'plan_id' => $plan->id,
-                    'price' => $pricing['final_price'],
-                    'promotion_id' => $pricing['promotion']?->id,
-                    'promotion_name' => $pricing['promotion']?->name,
-                    'promotion_type' => $pricing['promotion']?->type,
-                    'promotion_value' => $pricing['promotion']?->value,
-                    'discount_amount' => $pricing['discount_amount'],
-                    'bonus_days' => $pricing['bonus_days'],
-                    'starts_at' => $startsAt->toDateString(),
-                    'ends_at' => $endsAt->toDateString(),
-                    'status' => $membershipStatus,
-                ]);
-
-                $membershipPrice = round((float) $pricing['final_price'], 2);
-                $amountPaid = round((float) $data['amount_paid'], 2);
-                $amountPaid = min($amountPaid, $membershipPrice);
-                if ($amountPaid > 0) {
-                    $description = 'Cobro membresía #'.$membership->id
-                        .' - Plan '.$plan->name
-                        .' (PVP '.number_format($pricing['base_price'], 2, '.', '').')';
-                    if ($pricing['promotion']) {
-                        $description .= ' - Promo '.$pricing['promotion']->name;
-                    }
-
-                    $this->cashSessionService->addMovement(
-                        gymId: $gymId,
-                        userId: (int) $request->user()->id,
-                        type: 'income',
-                        amount: $amountPaid,
-                        method: (string) $data['payment_method'],
-                        membershipId: $membership->id,
-                        description: $description
-                    );
-                }
-
-                if ($pricing['promotion']) {
-                    $pricing['promotion']->increment('times_used');
-                }
-
-                $client->update([
-                    'status' => $membershipStatus === 'active' ? 'active' : 'inactive',
-                ]);
-
-                return $client;
-            });
+            $this->registerClientAction->execute(
+                gymId: $gymId,
+                userId: (int) $request->user()->id,
+                data: $data,
+                canManagePromotions: $canManagePromotions,
+                photoPath: $photoPath
+            );
         } catch (RuntimeException $exception) {
             return redirect()
                 ->route('clients.index')
@@ -383,6 +299,7 @@ class ClientController extends Controller
                 'status',
             ])
             ->with([
+                'gym:id,address_country_code',
                 'credentials' => fn ($query) => $query
                     ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status', 'created_at'])
                     ->orderByDesc('id'),

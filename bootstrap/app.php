@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'plan.feature' => \App\Http\Middleware\EnsurePlanFeatureMiddleware::class,
             'not.branch' => \App\Http\Middleware\EnsureNotBranchUserMiddleware::class,
             'superadmin' => \App\Http\Middleware\EnsureSuperAdminMiddleware::class,
+            'role' => \App\Http\Middleware\EnsureUserRoleMiddleware::class,
             'demo.session' => \App\Http\Middleware\EnsureDemoSessionMiddleware::class,
             'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
             'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,

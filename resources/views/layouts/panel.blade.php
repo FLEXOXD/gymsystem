@@ -3,6 +3,7 @@
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
     use App\Models\Subscription;
+    use App\Services\LegalAcceptanceEligibilityService;
     use App\Services\PlanAccessService;
     use App\Support\LegalTerms;
 
@@ -47,6 +48,7 @@
     $isDarkTheme = in_array($activeTheme, $darkThemes, true);
     $themeClass = $isDarkTheme ? 'dark theme-dark' : 'theme-light';
     $isSuperAdmin = $user && $user->gym_id === null;
+    $isCashierMode = ! $isSuperAdmin && (bool) ($user?->isCashier());
     $gym = $user?->gym;
     $hubGymId = (int) ($user?->gym_id ?? 0);
     $hubGymSlug = trim((string) ($gym?->slug ?? ''));
@@ -55,6 +57,9 @@
         'active_gym_is_global',
         strtolower(trim((string) request()->query('scope', ''))) === 'global'
     );
+    if ($isCashierMode) {
+        $isGlobalScope = false;
+    }
     $isStandalonePwaMode = strtolower(trim((string) request()->query('pwa_mode', ''))) === 'standalone';
     $activeGym = null;
     if (! $isSuperAdmin) {
@@ -125,8 +130,13 @@
     $planAccessService = app(PlanAccessService::class);
     $canUseMultiBranchFromContext = (bool) request()->attributes->get('gym_context_can_use_multibranch', false);
     $canUseMultiBranch = $isSuperAdmin
-        || $canUseMultiBranchFromContext
-        || ($hubGymId > 0 && $planAccessService->canForGym($hubGymId, 'multi_branch') && ! GymBranchLink::query()->where('branch_gym_id', $hubGymId)->exists());
+        || (
+            ! $isCashierMode
+            && (
+                $canUseMultiBranchFromContext
+                || ($hubGymId > 0 && $planAccessService->canForGym($hubGymId, 'multi_branch') && ! GymBranchLink::query()->where('branch_gym_id', $hubGymId)->exists())
+            )
+        );
     if ($isGlobalScope && $canUseMultiBranch && $hubGymSlug !== '') {
         $gymRouteParams = [
             'contextGym' => $hubGymSlug,
@@ -145,7 +155,7 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index', 'staff.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
 
@@ -223,17 +233,27 @@
         ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : []))
         : '#';
 
-    $gymNavItems = [
-        ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
-        ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
-        ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
-        ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
-        ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
-    ];
-    if ($canViewBranches && \Illuminate\Support\Facades\Route::has('branches.index')) {
+    $gymNavItems = $isCashierMode
+        ? [
+            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
+            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
+            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
+            ['label' => 'Cobros', 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
+        ]
+        : [
+            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
+            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
+            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
+            ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
+            ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
+        ];
+    if (! $isCashierMode && \Illuminate\Support\Facades\Route::has('staff.index')) {
+        $gymNavItems[] = ['label' => 'Cajeros', 'route' => 'staff.index', 'params' => $gymRouteParams, 'active' => 'staff.*', 'icon' => 'staff'];
+    }
+    if (! $isCashierMode && $canViewBranches && \Illuminate\Support\Facades\Route::has('branches.index')) {
         $gymNavItems[] = ['label' => 'Sucursales', 'route' => 'branches.index', 'params' => $branchesRouteParams, 'active' => 'branches.*', 'icon' => 'branches'];
     }
-    if ($canViewReports) {
+    if (! $isCashierMode && $canViewReports) {
         $gymNavItems[] = ['label' => __('ui.nav.reports'), 'route' => 'reports.index', 'params' => $gymRouteParams, 'active' => 'reports.*', 'icon' => 'reports'];
     }
 
@@ -287,10 +307,12 @@
     $legalCurrentVersion = LegalTerms::VERSION;
     $acceptedVersion = trim((string) ($user?->legal_accepted_version ?? ''));
     $legalAcceptanceColumnsReady = \Illuminate\Support\Facades\Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version']);
+    $canAcceptLegalTerms = app(LegalAcceptanceEligibilityService::class)->canUserAccept($user);
     $legalAcceptanceRequired = (bool) $user
         && ! $isSuperAdmin
         && ! $isDemoMode
         && $legalAcceptanceColumnsReady
+        && $canAcceptLegalTerms
         && (
             $user?->legal_accepted_at === null
             || $acceptedVersion === ''
@@ -1085,6 +1107,14 @@
                                     <path d="M4 6a1 1 0 1 1 0 .01M4 12a1 1 0 1 1 0 .01M4 18a1 1 0 1 1 0 .01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
                                 @break
+                            @case('staff')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M7.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M4 18v-1a3.5 3.5 0 0 1 7 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M16.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M13 18v-1a3.5 3.5 0 0 1 7 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
                             @case('gyms')
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M4 20V8l8-4 8 4v12M9 20v-5h6v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1273,9 +1303,11 @@
                             </div>
 
                             <div class="p-2">
-                                <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
-                                <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
-                                <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
+                                @if (! $isCashierMode)
+                                    <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
+                                    <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
+                                    <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
+                                @endif
 
                                 <form method="POST" action="{{ route('logout') }}" class="mt-1">
                                     @csrf
@@ -1294,6 +1326,7 @@
                      class="hidden"
                      data-demo-expires-at="{{ $demoExpiresAtIso }}"
                      data-demo-server-now="{{ $demoServerNowIso }}"
+                     data-demo-end-url="{{ route('demo.end') }}"
                      data-demo-expired-url="{{ route('landing') }}"
                      data-demo-expiry-fallback="{{ $demoExpiresLabel }}">
                 </div>
@@ -1301,6 +1334,15 @@
 
             @if (! $isSuperAdmin)
                 <section id="pwa-access-alert" class="ui-alert ui-alert-warning hidden text-xs font-semibold"></section>
+            @endif
+
+            @if ($isCashierMode)
+                <section class="rounded-2xl border border-cyan-200 bg-cyan-50/90 px-4 py-3 text-sm text-cyan-900 shadow-sm dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
+                    <p class="font-bold uppercase tracking-wide">Modo Cajero</p>
+                    <p class="mt-1 text-xs">
+                        Acceso operativo habilitado para panel, recepcion, clientes, membresias y cobros.
+                    </p>
+                </section>
             @endif
 
             @if ($showBranchContextSwitcher)
@@ -1384,6 +1426,7 @@
                          data-demo-steps='@json($demoGuideSteps)'
                          data-demo-expires-at="{{ $demoExpiresAtIso }}"
                          data-demo-server-now="{{ $demoServerNowIso }}"
+                         data-demo-end-url="{{ route('demo.end') }}"
                          data-demo-expired-url="{{ route('landing') }}"
                          data-demo-expiry-fallback="{{ $demoExpiresLabel }}"
                          aria-live="polite"
@@ -1486,952 +1529,7 @@
     </section>
 @endif
 
-<script>
-    (function () {
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebar = document.getElementById('panel-sidebar');
-        const sidebarToggleLabel = sidebarToggle?.querySelector('.panel-menu-trigger-label');
-
-        function syncSidebarToggleUi(collapsed) {
-            if (!sidebarToggle) return;
-            const label = collapsed ? 'Abrir menu' : 'Ocultar menu';
-            const ariaLabel = collapsed ? 'Abrir menu' : 'Ocultar menu';
-            if (sidebarToggleLabel) {
-                sidebarToggleLabel.textContent = label;
-            }
-            sidebarToggle.setAttribute('aria-label', ariaLabel);
-            sidebarToggle.setAttribute('title', ariaLabel);
-        }
-
-        sidebarToggle?.addEventListener('click', function () {
-            if (!sidebar) return;
-            const collapsed = sidebar.classList.toggle('sidebar-collapsed');
-            sidebar.classList.toggle('lg:w-64', !collapsed);
-            sidebar.classList.toggle('lg:w-20', collapsed);
-            sidebar.querySelectorAll('.sidebar-label').forEach(function (element) {
-                element.classList.toggle('hidden', collapsed);
-            });
-            localStorage.setItem('panel.sidebar_collapsed', collapsed ? '1' : '0');
-            syncSidebarToggleUi(collapsed);
-        });
-
-        if (sidebar && localStorage.getItem('panel.sidebar_collapsed') === '1') {
-            sidebarToggle?.click();
-        }
-        syncSidebarToggleUi(sidebar?.classList.contains('sidebar-collapsed') ?? false);
-
-        const userMenuRoot = document.getElementById('user-menu-root');
-        const userMenuButton = document.getElementById('user-menu-button');
-        const userMenuDropdown = document.getElementById('user-menu-dropdown');
-        const headerBellRoot = document.getElementById('header-bell-root');
-        const headerBellButton = document.getElementById('header-bell-button');
-        const headerBellDropdown = document.getElementById('header-bell-dropdown');
-        const pwaInstallButton = document.getElementById('pwa-install-button');
-        const pwaAccessAlert = document.getElementById('pwa-access-alert');
-        const pwaInstallEnabled = pwaInstallButton?.getAttribute('data-pwa-enabled') === '1';
-        const pwaUpgradeMessage = @json($pwaUpgradeMessage);
-        let pwaInstallPromptEvent = null;
-        let pwaAlertTimeoutId = null;
-
-        function isStandaloneMode() {
-            const mediaMatch = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-            const iosStandalone = window.navigator && window.navigator.standalone === true;
-
-            return Boolean(mediaMatch || iosStandalone);
-        }
-
-        function showPwaAccessAlert(message, variant = 'warning') {
-            if (!pwaAccessAlert) return;
-            pwaAccessAlert.textContent = String(message || '').trim();
-            pwaAccessAlert.classList.remove('hidden', 'ui-alert-warning', 'ui-alert-danger', 'ui-alert-success');
-            pwaAccessAlert.classList.add(variant === 'danger' ? 'ui-alert-danger' : 'ui-alert-warning');
-            if (pwaAlertTimeoutId) {
-                window.clearTimeout(pwaAlertTimeoutId);
-            }
-            pwaAlertTimeoutId = window.setTimeout(function () {
-                pwaAccessAlert.classList.add('hidden');
-            }, 6500);
-        }
-
-        if (pwaInstallButton) {
-            if (!pwaInstallEnabled) {
-                pwaInstallButton.classList.add('border-amber-300/70', 'text-amber-200');
-            }
-
-            window.addEventListener('beforeinstallprompt', function (event) {
-                event.preventDefault();
-                if (!pwaInstallEnabled) {
-                    showPwaAccessAlert(pwaUpgradeMessage, 'warning');
-                    return;
-                }
-                pwaInstallPromptEvent = event;
-                pwaInstallButton.textContent = 'Instalar app';
-            });
-
-            window.addEventListener('appinstalled', function () {
-                pwaInstallPromptEvent = null;
-                pwaInstallButton.textContent = 'App instalada';
-                showPwaAccessAlert('Aplicacion instalada correctamente.', 'warning');
-            });
-
-            pwaInstallButton.addEventListener('click', async function () {
-                if (!pwaInstallEnabled) {
-                    showPwaAccessAlert(pwaUpgradeMessage, 'warning');
-                    return;
-                }
-
-                if (!pwaInstallPromptEvent) {
-                    showPwaAccessAlert('Tu navegador no habilito el instalador automatico. Usa "Agregar a pantalla de inicio".', 'warning');
-                    return;
-                }
-
-                pwaInstallPromptEvent.prompt();
-                try {
-                    await pwaInstallPromptEvent.userChoice;
-                } catch (_error) {
-                    // Keep silent.
-                }
-                pwaInstallPromptEvent = null;
-            });
-
-            if (!pwaInstallEnabled && isStandaloneMode()) {
-                showPwaAccessAlert(pwaUpgradeMessage, 'danger');
-            }
-        }
-
-        function closeUserMenu() {
-            if (!userMenuDropdown || !userMenuButton) return;
-            userMenuDropdown.classList.add('hidden');
-            userMenuButton.setAttribute('aria-expanded', 'false');
-        }
-
-        function openUserMenu() {
-            if (!userMenuDropdown || !userMenuButton) return;
-            userMenuDropdown.classList.remove('hidden');
-            userMenuButton.setAttribute('aria-expanded', 'true');
-        }
-        function closeBellMenu() {
-            if (!headerBellDropdown || !headerBellButton) return;
-            headerBellDropdown.classList.add('hidden');
-            headerBellButton.setAttribute('aria-expanded', 'false');
-        }
-
-        function openBellMenu() {
-            if (!headerBellDropdown || !headerBellButton) return;
-            headerBellDropdown.classList.remove('hidden');
-            headerBellButton.setAttribute('aria-expanded', 'true');
-        }
-
-        userMenuButton?.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            closeBellMenu();
-            if (userMenuDropdown?.classList.contains('hidden')) {
-                openUserMenu();
-            } else {
-                closeUserMenu();
-            }
-        });
-        headerBellButton?.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            closeUserMenu();
-            if (headerBellDropdown?.classList.contains('hidden')) {
-                openBellMenu();
-            } else {
-                closeBellMenu();
-            }
-        });
-
-        document.addEventListener('click', function (event) {
-            const target = event.target;
-            if (! (target instanceof Node)) {
-                closeUserMenu();
-                closeBellMenu();
-                return;
-            }
-
-            if (userMenuRoot && userMenuDropdown && userMenuRoot.contains(target)) {
-                return;
-            }
-            if (headerBellRoot && headerBellDropdown && headerBellRoot.contains(target)) {
-                return;
-            }
-            closeUserMenu();
-            closeBellMenu();
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closeUserMenu();
-                closeBellMenu();
-            }
-        });
-
-        document.querySelectorAll('[data-toast]').forEach(function (toast) {
-            const shouldHide = toast.getAttribute('data-autohide') === '1';
-            if (!shouldHide) return;
-
-            const delay = Number(toast.getAttribute('data-delay') || 4200);
-            setTimeout(function () {
-                toast.classList.add('opacity-0', 'translate-y-1', 'transition');
-                setTimeout(function () {
-                    toast.remove();
-                }, 250);
-            }, delay);
-        });
-
-        function normalizeText(value) {
-            return (value || '')
-                .toString()
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '');
-        }
-
-        function getBodyRows(table) {
-            const rows = table.querySelectorAll('tbody tr');
-            return Array.from(rows).filter(function (row) {
-                return row.querySelector('td') !== null;
-            });
-        }
-
-        function enhanceSmartList(table, index) {
-            if (table.hasAttribute('data-smart-list-manual')) return;
-            if (table.dataset.smartListReady === '1') return;
-
-            const rows = getBodyRows(table);
-            if (rows.length <= 10) return;
-
-            const wrapper = table.closest('.overflow-x-auto') || table.parentElement;
-            if (!wrapper) return;
-
-            table.dataset.smartListReady = '1';
-            wrapper.classList.add('smart-list-wrap');
-
-            const toolbar = document.createElement('div');
-            toolbar.className = 'smart-list-toolbar';
-            const smartListSearchLabel = @js(__('ui.smart_list.search_label'));
-            const smartListSearchPlaceholder = @js(__('ui.smart_list.search_placeholder'));
-            const smartListShowing = @js(__('ui.smart_list.showing'));
-            const smartListOf = @js(__('ui.smart_list.of'));
-            const smartListNoResults = @js(__('ui.smart_list.no_results'));
-            toolbar.innerHTML =
-                '<label class="space-y-1 text-sm font-semibold ui-muted">' +
-                    '<span>' + smartListSearchLabel + '</span>' +
-                    '<input type="text" class="ui-input js-smart-list-search" placeholder="' + smartListSearchPlaceholder + '" autocomplete="off">' +
-                '</label>' +
-                '<p class="smart-list-counter">' + smartListShowing + ' <strong class="js-smart-list-visible">' + rows.length + '</strong> ' + smartListOf + ' <strong>' + rows.length + '</strong></p>';
-
-            wrapper.parentNode.insertBefore(toolbar, wrapper);
-
-            const searchInput = toolbar.querySelector('.js-smart-list-search');
-            const visibleEl = toolbar.querySelector('.js-smart-list-visible');
-
-            const emptyRow = document.createElement('tr');
-            emptyRow.className = 'hidden';
-            emptyRow.innerHTML = '<td colspan="' + (table.querySelectorAll('thead th').length || 1) + '" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">' + smartListNoResults + '</td>';
-            table.querySelector('tbody')?.appendChild(emptyRow);
-
-            rows.forEach(function (row) {
-                row.dataset.smartSearch = normalizeText(row.textContent || '');
-                if (index % 2 === 0) {
-                    row.classList.add('odd:bg-slate-50/45', 'dark:odd:bg-slate-900/30');
-                }
-                row.classList.add('hover:bg-cyan-50/70', 'dark:hover:bg-cyan-500/10');
-            });
-
-            function applyFilter() {
-                const term = normalizeText(searchInput?.value || '');
-                let visible = 0;
-
-                rows.forEach(function (row) {
-                    const matches = term === '' || (row.dataset.smartSearch || '').includes(term);
-                    row.classList.toggle('hidden', !matches);
-                    if (matches) visible += 1;
-                });
-
-                if (visibleEl) visibleEl.textContent = String(visible);
-                emptyRow.classList.toggle('hidden', visible !== 0);
-            }
-
-            searchInput?.addEventListener('input', applyFilter);
-            applyFilter();
-        }
-
-        document.querySelectorAll('table.ui-table').forEach(function (table, index) {
-            enhanceSmartList(table, index);
-        });
-
-        const brandHomeLink = document.getElementById('brand-home-link');
-        brandHomeLink?.addEventListener('click', function (event) {
-            const targetUrl = brandHomeLink.getAttribute('data-home-url');
-            if (!targetUrl) return;
-            event.preventDefault();
-            window.location.href = targetUrl;
-        });
-
-        const demoCountdownSource = document.getElementById('demo-countdown-source');
-        let demoCountdownManagedExternally = false;
-        if (demoCountdownSource) {
-            const expiresAtRaw = (demoCountdownSource.getAttribute('data-demo-expires-at') || '').trim();
-            const serverNowRaw = (demoCountdownSource.getAttribute('data-demo-server-now') || '').trim();
-            const expiredRedirectUrl = (demoCountdownSource.getAttribute('data-demo-expired-url') || '').trim();
-            const expiryFallback = (demoCountdownSource.getAttribute('data-demo-expiry-fallback') || '').trim();
-            const countdownTargets = Array.from(document.querySelectorAll('[data-demo-countdown-target]'));
-            const expiresAtMs = Date.parse(expiresAtRaw);
-            const serverNowMs = Date.parse(serverNowRaw);
-            const serverOffsetMs = Number.isFinite(serverNowMs) ? (serverNowMs - Date.now()) : 0;
-            let demoCountdownTimer = null;
-            let expiredHandled = false;
-
-            demoCountdownManagedExternally = countdownTargets.length > 0;
-            countdownTargets.forEach(function (target) {
-                target.setAttribute('data-demo-countdown-managed', '1');
-            });
-
-            const formatRemaining = function (remainingMs) {
-                const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
-                const hours = Math.floor(totalSec / 3600);
-                const minutes = Math.floor((totalSec % 3600) / 60);
-                const seconds = totalSec % 60;
-                const pad = function (value) {
-                    return String(value).padStart(2, '0');
-                };
-                if (hours > 0) {
-                    return hours + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's';
-                }
-                return minutes + 'm ' + pad(seconds) + 's';
-            };
-
-            const setCountdownText = function (value) {
-                countdownTargets.forEach(function (target) {
-                    target.textContent = value;
-                });
-            };
-
-            const handleExpiredDemo = function () {
-                if (expiredHandled) return;
-                expiredHandled = true;
-                setCountdownText('Demo finalizada');
-                window.setTimeout(function () {
-                    if (expiredRedirectUrl !== '') {
-                        window.location.href = expiredRedirectUrl;
-                        return;
-                    }
-                    window.location.reload();
-                }, 350);
-            };
-
-            const updateDemoCountdown = function () {
-                if (!Number.isFinite(expiresAtMs)) {
-                    setCountdownText(expiryFallback !== '' ? expiryFallback : 'Sin hora de expiracion');
-                    return;
-                }
-
-                const nowAdjusted = Date.now() + serverOffsetMs;
-                const remainingMs = expiresAtMs - nowAdjusted;
-                if (remainingMs <= 0) {
-                    handleExpiredDemo();
-                    return;
-                }
-
-                setCountdownText(formatRemaining(remainingMs));
-            };
-
-            updateDemoCountdown();
-            demoCountdownTimer = window.setInterval(updateDemoCountdown, 1000);
-            window.addEventListener('beforeunload', function () {
-                if (demoCountdownTimer) {
-                    window.clearInterval(demoCountdownTimer);
-                }
-            });
-        }
-
-        const demoTourPopover = document.getElementById('demo-tour-popover');
-        const demoTourOverlay = document.getElementById('demo-tour-overlay');
-        if (demoTourPopover && demoTourOverlay) {
-            const titleEl = demoTourPopover.querySelector('[data-demo-tour-title]');
-            const textEl = demoTourPopover.querySelector('[data-demo-tour-text]');
-            const progressEl = demoTourPopover.querySelector('[data-demo-tour-progress]');
-            const countdownEl = demoTourPopover.querySelector('[data-demo-tour-countdown]');
-            const prevBtn = demoTourPopover.querySelector('[data-demo-tour-prev]');
-            const nextBtn = demoTourPopover.querySelector('[data-demo-tour-next]');
-            const openRouteBtn = demoTourPopover.querySelector('[data-demo-tour-open-route]');
-            const closeBtn = demoTourPopover.querySelector('[data-demo-tour-close]');
-            const countdownManagedExternally = demoCountdownManagedExternally || countdownEl?.getAttribute('data-demo-countdown-managed') === '1';
-            const token = (demoTourPopover.getAttribute('data-demo-token') || 'default').trim();
-            const storageKey = 'panel.demo_tour.' + token;
-            const expiryFallback = (demoTourPopover.getAttribute('data-demo-expiry-fallback') || '').trim();
-            const expiredRedirectUrl = (demoTourPopover.getAttribute('data-demo-expired-url') || '').trim();
-
-            let steps = [];
-            try {
-                steps = JSON.parse(demoTourPopover.getAttribute('data-demo-steps') || '[]');
-            } catch (_error) {
-                steps = [];
-            }
-            steps = Array.isArray(steps) ? steps.filter(function (step) {
-                return step && typeof step === 'object';
-            }) : [];
-
-            if (steps.length > 0) {
-                const state = {
-                    step: 0,
-                    dismissed: false,
-                    completed: false,
-                };
-
-                let highlightedEl = null;
-                let positionRaf = 0;
-                let positionTimer = 0;
-                let countdownTimer = null;
-                let expiredHandled = false;
-                let lastScrolledSignature = '';
-
-                const expiresAtRaw = (demoTourPopover.getAttribute('data-demo-expires-at') || '').trim();
-                const serverNowRaw = (demoTourPopover.getAttribute('data-demo-server-now') || '').trim();
-                const expiresAtMs = Date.parse(expiresAtRaw);
-                const serverNowMs = Date.parse(serverNowRaw);
-                const serverOffsetMs = Number.isFinite(serverNowMs) ? (serverNowMs - Date.now()) : 0;
-
-                try {
-                    const persisted = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                    if (persisted && typeof persisted === 'object') {
-                        state.step = Number.isFinite(Number(persisted.step)) ? Number(persisted.step) : 0;
-                        state.dismissed = Boolean(persisted.dismissed);
-                        state.completed = Boolean(persisted.completed);
-                    }
-                } catch (_error) {
-                    // no-op
-                }
-
-                function normalizePath(raw) {
-                    if (!raw) return '';
-                    try {
-                        const url = new URL(raw, window.location.origin);
-                        return url.pathname.replace(/\/+$/, '');
-                    } catch (_error) {
-                        return String(raw || '').replace(/\/+$/, '');
-                    }
-                }
-
-                function currentPath() {
-                    return normalizePath(window.location.href);
-                }
-
-                function stepPath(step) {
-                    return normalizePath(step && step.route ? step.route : '');
-                }
-
-                function routeMatches(step) {
-                    const stepRoutePath = stepPath(step);
-                    if (stepRoutePath === '') return true;
-                    return stepRoutePath === currentPath();
-                }
-
-                function clampStep() {
-                    if (state.step < 0) state.step = 0;
-                    if (state.step > steps.length - 1) state.step = steps.length - 1;
-                }
-
-                function persist() {
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify(state));
-                    } catch (_error) {
-                        // no-op
-                    }
-                }
-
-                function clearHighlight() {
-                    if (!highlightedEl) return;
-                    highlightedEl.removeAttribute('data-demo-tour-highlight');
-                    highlightedEl = null;
-                }
-
-                function elementIsVisible(el) {
-                    if (!(el instanceof HTMLElement)) return false;
-                    const style = window.getComputedStyle(el);
-                    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-                        return false;
-                    }
-                    const rect = el.getBoundingClientRect();
-                    return rect.width > 0 && rect.height > 0;
-                }
-
-                function findTarget(step) {
-                    if (!step || !step.selector || !routeMatches(step)) return null;
-                    const candidates = Array.from(document.querySelectorAll(step.selector));
-                    if (candidates.length === 0) return null;
-                    for (const candidate of candidates) {
-                        if (elementIsVisible(candidate)) {
-                            return candidate;
-                        }
-                    }
-                    return null;
-                }
-
-                function formatRemaining(remainingMs) {
-                    const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
-                    const hours = Math.floor(totalSec / 3600);
-                    const minutes = Math.floor((totalSec % 3600) / 60);
-                    const seconds = totalSec % 60;
-                    const pad = function (value) {
-                        return String(value).padStart(2, '0');
-                    };
-                    if (hours > 0) {
-                        return hours + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's';
-                    }
-                    return minutes + 'm ' + pad(seconds) + 's';
-                }
-
-                function hideTour() {
-                    demoTourOverlay.setAttribute('data-open', '0');
-                    demoTourOverlay.setAttribute('aria-hidden', 'true');
-                    demoTourPopover.setAttribute('data-open', '0');
-                    clearHighlight();
-                }
-
-                function showTour() {
-                    demoTourOverlay.setAttribute('data-open', '1');
-                    demoTourOverlay.setAttribute('aria-hidden', 'false');
-                    demoTourPopover.setAttribute('data-open', '1');
-                }
-
-                function handleExpiredDemo() {
-                    if (expiredHandled) return;
-                    expiredHandled = true;
-                    state.completed = true;
-                    persist();
-                    hideTour();
-                    window.setTimeout(function () {
-                        if (expiredRedirectUrl !== '') {
-                            window.location.href = expiredRedirectUrl;
-                            return;
-                        }
-                        window.location.reload();
-                    }, 350);
-                }
-
-                function updateCountdown() {
-                    if (countdownManagedExternally) {
-                        return;
-                    }
-                    if (!countdownEl) return;
-                    if (!Number.isFinite(expiresAtMs)) {
-                        countdownEl.textContent = expiryFallback !== '' ? expiryFallback : 'Sin hora de expiracion';
-                        return;
-                    }
-
-                    const nowAdjusted = Date.now() + serverOffsetMs;
-                    const remainingMs = expiresAtMs - nowAdjusted;
-                    if (remainingMs <= 0) {
-                        countdownEl.textContent = 'Demo finalizada';
-                        handleExpiredDemo();
-                        return;
-                    }
-
-                    countdownEl.textContent = formatRemaining(remainingMs);
-                }
-
-                function placementCandidates(preferred) {
-                    const normalized = String(preferred || 'bottom').toLowerCase();
-                    if (normalized === 'top') {
-                        return ['top', 'top-start', 'top-end', 'bottom', 'right', 'left', 'bottom-start', 'bottom-end'];
-                    }
-                    if (normalized === 'left') {
-                        return ['left', 'left-start', 'left-end', 'right', 'top', 'bottom', 'top-start', 'bottom-start'];
-                    }
-                    if (normalized === 'right') {
-                        return ['right', 'right-start', 'right-end', 'left', 'top', 'bottom', 'top-end', 'bottom-end'];
-                    }
-                    return ['bottom', 'bottom-start', 'bottom-end', 'top', 'right', 'left', 'top-start', 'top-end'];
-                }
-
-                function positionForPlacement(rect, popRect, placement, gap) {
-                    const horizontalCenter = rect.left + (rect.width / 2) - (popRect.width / 2);
-                    const verticalCenter = rect.top + (rect.height / 2) - (popRect.height / 2);
-                    switch (placement) {
-                        case 'top':
-                            return { top: rect.top - popRect.height - gap, left: horizontalCenter };
-                        case 'top-start':
-                            return { top: rect.top - popRect.height - gap, left: rect.left };
-                        case 'top-end':
-                            return { top: rect.top - popRect.height - gap, left: rect.right - popRect.width };
-                        case 'left':
-                            return { top: verticalCenter, left: rect.left - popRect.width - gap };
-                        case 'left-start':
-                            return { top: rect.top, left: rect.left - popRect.width - gap };
-                        case 'left-end':
-                            return { top: rect.bottom - popRect.height, left: rect.left - popRect.width - gap };
-                        case 'right':
-                            return { top: verticalCenter, left: rect.right + gap };
-                        case 'right-start':
-                            return { top: rect.top, left: rect.right + gap };
-                        case 'right-end':
-                            return { top: rect.bottom - popRect.height, left: rect.right + gap };
-                        case 'bottom-start':
-                            return { top: rect.bottom + gap, left: rect.left };
-                        case 'bottom-end':
-                            return { top: rect.bottom + gap, left: rect.right - popRect.width };
-                        case 'bottom':
-                        default:
-                            return { top: rect.bottom + gap, left: horizontalCenter };
-                    }
-                }
-
-                function overflowScore(position, popRect, viewportWidth, viewportHeight, margin) {
-                    const leftOverflow = Math.max(0, margin - position.left);
-                    const topOverflow = Math.max(0, margin - position.top);
-                    const rightOverflow = Math.max(0, (position.left + popRect.width + margin) - viewportWidth);
-                    const bottomOverflow = Math.max(0, (position.top + popRect.height + margin) - viewportHeight);
-                    const total = leftOverflow + rightOverflow + topOverflow + bottomOverflow;
-                    const fits = total <= 0.1;
-
-                    return {
-                        fits: fits,
-                        total: total,
-                    };
-                }
-
-                function clampPosition(position, popRect, viewportWidth, viewportHeight, margin) {
-                    return {
-                        top: Math.max(margin, Math.min(position.top, viewportHeight - popRect.height - margin)),
-                        left: Math.max(margin, Math.min(position.left, viewportWidth - popRect.width - margin)),
-                    };
-                }
-
-                function pickBestPosition(rect, popRect, preferred, viewportWidth, viewportHeight, margin, gap) {
-                    const candidates = placementCandidates(preferred);
-                    let best = null;
-                    let bestScore = Number.POSITIVE_INFINITY;
-
-                    for (const candidate of candidates) {
-                        const rawPos = positionForPlacement(rect, popRect, candidate, gap);
-                        const score = overflowScore(rawPos, popRect, viewportWidth, viewportHeight, margin);
-                        if (score.fits) {
-                            return rawPos;
-                        }
-                        if (score.total < bestScore) {
-                            bestScore = score.total;
-                            best = rawPos;
-                        }
-                    }
-
-                    if (!best) {
-                        best = positionForPlacement(rect, popRect, 'bottom', gap);
-                    }
-
-                    return best;
-                }
-
-                function placePopover(target, placement) {
-                    const margin = 14;
-                    const gap = 16;
-                    const popRect = demoTourPopover.getBoundingClientRect();
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
-
-                    let position = {
-                        top: viewportHeight - popRect.height - margin,
-                        left: viewportWidth - popRect.width - margin,
-                    };
-
-                    if (target) {
-                        const rect = target.getBoundingClientRect();
-                        position = pickBestPosition(
-                            rect,
-                            popRect,
-                            placement || 'bottom',
-                            viewportWidth,
-                            viewportHeight,
-                            margin,
-                            gap
-                        );
-                    }
-
-                    const clamped = clampPosition(position, popRect, viewportWidth, viewportHeight, margin);
-
-                    demoTourPopover.style.top = Math.round(clamped.top) + 'px';
-                    demoTourPopover.style.left = Math.round(clamped.left) + 'px';
-                }
-
-                function schedulePlacement() {
-                    if (state.dismissed || state.completed) return;
-                    if (positionRaf) {
-                        window.cancelAnimationFrame(positionRaf);
-                    }
-                    if (positionTimer) {
-                        window.clearTimeout(positionTimer);
-                    }
-
-                    const applyPlacement = function () {
-                        const currentStep = steps[state.step] || steps[0];
-                        const target = findTarget(currentStep);
-                        placePopover(target, currentStep && currentStep.placement ? currentStep.placement : 'bottom');
-                    };
-
-                    positionRaf = window.requestAnimationFrame(applyPlacement);
-                    positionTimer = window.setTimeout(applyPlacement, 220);
-                }
-
-                function renderTour() {
-                    clampStep();
-                    if (state.dismissed || state.completed) {
-                        hideTour();
-                        return;
-                    }
-
-                    const currentStep = steps[state.step] || steps[0];
-                    const stepNumber = state.step + 1;
-                    const stepTotal = steps.length;
-                    const target = findTarget(currentStep);
-                    const targetMissing = !target;
-                    const sameRoute = routeMatches(currentStep);
-                    const hasRoute = typeof currentStep.route === 'string' && currentStep.route.trim() !== '';
-                    const canAdvance = (sameRoute && !targetMissing) || !hasRoute;
-
-                    showTour();
-                    clearHighlight();
-
-                    if (target) {
-                        target.setAttribute('data-demo-tour-highlight', '1');
-                        highlightedEl = target;
-                    }
-
-                    if (titleEl) {
-                        titleEl.textContent = currentStep.title || ('Paso ' + stepNumber);
-                    }
-                    if (textEl) {
-                        textEl.textContent = currentStep.text || 'Sigue los pasos para recorrer el sistema.';
-                    }
-                    if (progressEl) {
-                        progressEl.textContent = 'Paso ' + stepNumber + ' de ' + stepTotal;
-                    }
-
-                    if (prevBtn) {
-                        prevBtn.disabled = state.step <= 0;
-                    }
-                    if (nextBtn) {
-                        nextBtn.textContent = stepNumber >= stepTotal ? 'Finalizar' : 'Siguiente';
-                        nextBtn.disabled = !canAdvance;
-                        nextBtn.classList.toggle('hidden', !canAdvance);
-                    }
-
-                    if (openRouteBtn) {
-                        openRouteBtn.disabled = !hasRoute;
-                        if (!hasRoute) {
-                            openRouteBtn.classList.add('hidden');
-                        } else {
-                            openRouteBtn.classList.toggle('hidden', canAdvance);
-                            openRouteBtn.textContent = sameRoute ? 'Ir al modulo' : 'Ir al paso';
-                        }
-                    }
-
-                    if (target && sameRoute) {
-                        const rect = target.getBoundingClientRect();
-                        const signature = stepNumber + '|' + currentPath();
-                        const outOfView = rect.top < 84 || rect.bottom > (window.innerHeight - 84);
-                        if (signature !== lastScrolledSignature && outOfView) {
-                            target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                        }
-                        lastScrolledSignature = signature;
-                    } else {
-                        lastScrolledSignature = '';
-                    }
-
-                    schedulePlacement();
-                    if (!countdownManagedExternally) {
-                        updateCountdown();
-                    }
-                }
-
-                prevBtn?.addEventListener('click', function () {
-                    if (state.step <= 0) return;
-                    state.step -= 1;
-                    persist();
-                    renderTour();
-                });
-
-                nextBtn?.addEventListener('click', function () {
-                    if (state.step >= steps.length - 1) {
-                        state.completed = true;
-                    } else {
-                        state.step += 1;
-                    }
-                    persist();
-                    renderTour();
-                });
-
-                openRouteBtn?.addEventListener('click', function () {
-                    const currentStep = steps[state.step] || steps[0];
-                    const route = String(currentStep.route || '').trim();
-                    if (route === '') return;
-                    window.location.href = route;
-                });
-
-                closeBtn?.addEventListener('click', function () {
-                    state.dismissed = true;
-                    persist();
-                    renderTour();
-                });
-
-                demoTourOverlay.addEventListener('click', function () {
-                    state.dismissed = true;
-                    persist();
-                    renderTour();
-                });
-
-                document.addEventListener('keydown', function (event) {
-                    if (event.key !== 'Escape') return;
-                    if (state.dismissed || state.completed) return;
-                    state.dismissed = true;
-                    persist();
-                    renderTour();
-                });
-
-                window.addEventListener('resize', schedulePlacement);
-                window.addEventListener('scroll', schedulePlacement, true);
-                if (!countdownManagedExternally) {
-                    countdownTimer = window.setInterval(updateCountdown, 1000);
-                }
-                window.addEventListener('beforeunload', function () {
-                    if (countdownTimer) {
-                        window.clearInterval(countdownTimer);
-                    }
-                    if (positionTimer) {
-                        window.clearTimeout(positionTimer);
-                    }
-                    if (positionRaf) {
-                        window.cancelAnimationFrame(positionRaf);
-                    }
-                });
-
-                renderTour();
-            }
-        }
-
-        // SuperAdmin-only visual sync:
-        // if top-right avatar exists, mirror it into the sidebar brand badge.
-        const isSuperAdminViewer = @json($isSuperAdmin);
-        if (isSuperAdminViewer) {
-            const brandLogoBadge = document.getElementById('brand-logo-badge');
-            const topAvatarImage = document.getElementById('user-avatar-image') || document.querySelector('#user-menu-button img');
-            const topAvatarSrc = topAvatarImage?.getAttribute('src') || '';
-            if (brandLogoBadge && topAvatarSrc !== '') {
-                brandLogoBadge.innerHTML = '';
-                const img = document.createElement('img');
-                img.src = topAvatarSrc;
-                img.alt = topAvatarImage?.getAttribute('alt') || 'SuperAdmin';
-                img.className = 'brand-logo-media brand-logo-media-cover';
-                brandLogoBadge.appendChild(img);
-            }
-        }
-
-        const legalOverlay = document.getElementById('legal-acceptance-overlay');
-        const legalForm = document.getElementById('legal-accept-form');
-        const legalCheckbox = document.getElementById('legal-accept-checkbox');
-        const legalSubmit = document.getElementById('legal-accept-submit');
-        if (legalOverlay && legalForm && legalCheckbox && legalSubmit) {
-            document.body.style.overflow = 'hidden';
-
-            const permissionField = document.getElementById('legal-location-permission');
-            const latitudeField = document.getElementById('legal-location-latitude');
-            const longitudeField = document.getElementById('legal-location-longitude');
-            const accuracyField = document.getElementById('legal-location-accuracy');
-            let submitting = false;
-
-            const setPermission = function (value) {
-                if (!permissionField) return;
-                permissionField.value = String(value || 'skipped');
-            };
-
-            const setCoordinates = function (latitude, longitude, accuracy) {
-                if (latitudeField) latitudeField.value = latitude;
-                if (longitudeField) longitudeField.value = longitude;
-                if (accuracyField) accuracyField.value = accuracy;
-            };
-
-            const applyButtonState = function () {
-                legalSubmit.disabled = !legalCheckbox.checked || submitting;
-            };
-
-            const finalizeSubmit = function () {
-                if (submitting) return;
-                submitting = true;
-                applyButtonState();
-                legalForm.submit();
-            };
-
-            legalCheckbox.addEventListener('change', applyButtonState);
-            applyButtonState();
-
-            legalForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-                if (!legalCheckbox.checked || submitting) {
-                    applyButtonState();
-                    return;
-                }
-
-                if (!('geolocation' in navigator)) {
-                    setPermission('unavailable');
-                    setCoordinates('', '', '');
-                    finalizeSubmit();
-                    return;
-                }
-
-                let settled = false;
-                const resolve = function (permission, position) {
-                    if (settled) return;
-                    settled = true;
-                    setPermission(permission);
-                    if (position && position.coords) {
-                        setCoordinates(
-                            String(position.coords.latitude ?? ''),
-                            String(position.coords.longitude ?? ''),
-                            String(position.coords.accuracy ?? '')
-                        );
-                    } else {
-                        setCoordinates('', '', '');
-                    }
-                    finalizeSubmit();
-                };
-
-                try {
-                    navigator.geolocation.getCurrentPosition(
-                        function (position) {
-                            resolve('granted', position);
-                        },
-                        function (error) {
-                            if (error && error.code === 1) {
-                                resolve('denied', null);
-                                return;
-                            }
-                            if (error && error.code === 2) {
-                                resolve('unavailable', null);
-                                return;
-                            }
-                            resolve('error', null);
-                        },
-                        {
-                            enableHighAccuracy: true,
-                            timeout: 5500,
-                            maximumAge: 0
-                        }
-                    );
-                } catch (_error) {
-                    resolve('error', null);
-                }
-
-                window.setTimeout(function () {
-                    if (!settled) {
-                        resolve('error', null);
-                    }
-                }, 6500);
-            });
-        }
-    })();
-</script>
+@include('layouts.partials.panel-inline-scripts')
 @stack('scripts')
 </body>
 </html>

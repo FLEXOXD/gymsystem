@@ -31,6 +31,7 @@ class InitialGymSeeder extends Seeder
                 'name' => 'Admin',
                 'password' => 'password',
                 'gym_id' => $gym->id,
+                'role' => User::ROLE_OWNER,
             ]
         );
 
@@ -54,6 +55,7 @@ class InitialGymSeeder extends Seeder
                 'name' => 'SuperAdmin',
                 'password' => 'password',
                 'gym_id' => null,
+                'role' => User::ROLE_SUPERADMIN,
             ]
         );
     }

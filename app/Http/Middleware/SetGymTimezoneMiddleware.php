@@ -28,8 +28,9 @@ class SetGymTimezoneMiddleware
         $isBranchGym = $userGymId > 0
             ? GymBranchLink::query()->where('branch_gym_id', $userGymId)->exists()
             : false;
+        $isCashier = $user ? (bool) $user->isCashier() : false;
         $canUseMultiBranch = $user && $userGymId > 0
-            ? $this->planAccessService->can($user, 'multi_branch') && ! $isBranchGym
+            ? ! $isCashier && $this->planAccessService->can($user, 'multi_branch') && ! $isBranchGym
             : false;
         $gym = $user?->gym;
         if ($user && $userGymId > 0 && $routeGymSlug !== '' && (! $isGlobalScope || ! $canUseMultiBranch)) {

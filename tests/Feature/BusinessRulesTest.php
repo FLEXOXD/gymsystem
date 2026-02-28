@@ -8,9 +8,11 @@ use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\Promotion;
 use App\Models\Subscription;
+use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
@@ -25,14 +27,20 @@ function makeGym(string $suffix = 'main'): Gym
     ]);
 }
 
-function makeGymUser(Gym $gym, string $email = 'gym@example.test'): User
+function makeGymUser(Gym $gym, string $email = 'gym@example.test', string $role = User::ROLE_OWNER): User
 {
     return User::query()->create([
         'name' => 'Gym User',
         'email' => $email,
         'password' => 'password',
         'gym_id' => $gym->id,
+        'role' => $role,
     ]);
+}
+
+function makeCashierUser(Gym $gym, string $email = 'cashier@example.test'): User
+{
+    return makeGymUser($gym, $email, User::ROLE_CASHIER);
 }
 
 it('does not allow check-in when membership is not active', function () {
@@ -150,6 +158,136 @@ it('does not allow membership sale when cash session is closed', function () {
     $this->assertDatabaseCount('memberships', 0);
 });
 
+it('allows cashier to sell membership and charge on owner-opened cash session', function () {
+    $gym = makeGym('cashier-membership-sale');
+    $owner = makeGymUser($gym, 'owner-cashier-membership-sale@example.test', User::ROLE_OWNER);
+    $cashier = makeCashierUser($gym, 'cashier-membership-sale@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Cajero',
+        'last_name' => 'Cliente',
+        'document_number' => 'CAJERO-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Plan Cajero',
+        'duration_days' => 30,
+        'price' => 35,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('cash.open', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'opening_balance' => '25.00',
+            'notes' => 'Apertura dueno QA',
+        ])
+        ->assertRedirect(route('cash.index', ['contextGym' => $gym->slug]));
+
+    $response = $this->actingAs($cashier)
+        ->post(route('memberships.store', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'client_id' => $client->id,
+            'plan_id' => $plan->id,
+            'starts_at' => Carbon::today()->toDateString(),
+            'status' => 'active',
+            'payment_method' => 'cash',
+        ]);
+
+    $response
+        ->assertRedirect(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+        ]))
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseHas('memberships', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+    ]);
+
+    $this->assertDatabaseHas('cash_movements', [
+        'gym_id' => $gym->id,
+        'type' => 'income',
+        'method' => 'cash',
+        'created_by' => $cashier->id,
+    ]);
+});
+
+it('blocks cashier from opening and closing cash by default', function () {
+    $gym = makeGym('cashier-open-close-blocked');
+    $cashier = makeCashierUser($gym, 'cashier-open-close-blocked@example.test');
+
+    $this->actingAs($cashier)
+        ->from(route('cash.index', ['contextGym' => $gym->slug]))
+        ->post(route('cash.open', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'opening_balance' => '30.00',
+            'notes' => 'Intento apertura cajero',
+        ])
+        ->assertRedirect(route('cash.index', ['contextGym' => $gym->slug]))
+        ->assertSessionHasErrors(['cash']);
+
+    $this->assertDatabaseCount('cash_sessions', 0);
+});
+
+it('blocks cashier from admin modules but allows operational modules', function () {
+    $gym = makeGym('cashier-permissions');
+    $cashier = makeCashierUser($gym, 'cashier-permissions@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(30)->toDateString(),
+        ]);
+
+    $this->actingAs($cashier)
+        ->get(route('panel.index', ['contextGym' => $gym->slug]))
+        ->assertOk();
+
+    $this->actingAs($cashier)
+        ->get(route('reception.index', ['contextGym' => $gym->slug]))
+        ->assertOk();
+
+    $this->actingAs($cashier)
+        ->get(route('clients.index', ['contextGym' => $gym->slug]))
+        ->assertOk();
+
+    $this->actingAs($cashier)
+        ->get(route('cash.index', ['contextGym' => $gym->slug]))
+        ->assertOk();
+
+    $this->actingAs($cashier)
+        ->get(route('plans.index', ['contextGym' => $gym->slug]))
+        ->assertForbidden();
+
+    $this->actingAs($cashier)
+        ->get(route('reports.index', ['contextGym' => $gym->slug]))
+        ->assertForbidden();
+
+    $this->actingAs($cashier)
+        ->get(route('branches.index', ['contextGym' => $gym->slug]))
+        ->assertForbidden();
+
+    $this->actingAs($cashier)
+        ->get(route('staff.index', ['contextGym' => $gym->slug]))
+        ->assertForbidden();
+});
+
 it('redirects gym users to subscription expired when subscription is suspended', function () {
     $gym = makeGym('suspended');
     $user = makeGymUser($gym, 'suspended@example.test');
@@ -189,6 +327,129 @@ it('enforces separation between superadmin and gym users', function () {
         ->assertStatus(403);
 });
 
+it('allows superadmin to reset gym admin password', function () {
+    $gym = makeGym('superadmin-password-reset');
+    $gymAdmin = makeGymUser($gym, 'owner-password-reset@example.test');
+
+    $superadmin = User::query()->create([
+        'name' => 'Super Admin Password',
+        'email' => 'superadmin-password-reset@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $this->actingAs($superadmin)
+        ->from(route('superadmin.gym.index'))
+        ->patch(route('superadmin.gyms.admin-user.password.update', ['gym' => $gym->id]), [
+            'reset_password_gym_id' => $gym->id,
+            'reset_password_user_id' => $gymAdmin->id,
+            'reset_password' => 'NuevaClave123!',
+            'reset_password_confirmation' => 'NuevaClave123!',
+        ])
+        ->assertRedirect(route('superadmin.gym.index'))
+        ->assertSessionHas('status', 'Contrasena del admin actualizada correctamente.');
+
+    $gymAdmin->refresh();
+    expect(Hash::check('NuevaClave123!', (string) $gymAdmin->password))->toBeTrue();
+    expect($gymAdmin->remember_token)->toBeNull();
+});
+
+it('blocks gym users from resetting gym admin password', function () {
+    $gym = makeGym('forbidden-password-reset');
+    $gymAdmin = makeGymUser($gym, 'owner-forbidden-reset@example.test');
+    $gymUser = makeGymUser($gym, 'staff-forbidden-reset@example.test');
+
+    $this->actingAs($gymUser)
+        ->patch(route('superadmin.gyms.admin-user.password.update', ['gym' => $gym->id]), [
+            'reset_password_gym_id' => $gym->id,
+            'reset_password_user_id' => $gymAdmin->id,
+            'reset_password' => 'NuevaClave123!',
+            'reset_password_confirmation' => 'NuevaClave123!',
+        ])
+        ->assertStatus(403);
+});
+
+it('allows custom renewal price for sucursales plan per gym', function () {
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    $gym = makeGym('custom-sucursales-price');
+    $superAdmin = User::query()->create([
+        'name' => 'Super Admin Custom Price',
+        'email' => 'superadmin-custom-price@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $sucursalesTemplate = SuperAdminPlanTemplate::query()
+        ->where('plan_key', 'sucursales')
+        ->where('status', 'active')
+        ->firstOrFail();
+
+    $this->actingAs($superAdmin)
+        ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
+            'plan_template_id' => (int) $sucursalesTemplate->id,
+            'payment_method' => 'efectivo',
+            'custom_price' => '149.99',
+        ])
+        ->assertRedirect(route('superadmin.gyms.index'));
+
+    $this->assertDatabaseHas('subscriptions', [
+        'gym_id' => $gym->id,
+        'plan_key' => 'sucursales',
+        'price' => 149.99,
+    ]);
+});
+
+it('applies 50 percent on first sucursales cycle and restores full price on next renewal', function () {
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    $gym = makeGym('intro-sucursales-discount');
+    $superAdmin = User::query()->create([
+        'name' => 'Super Admin Intro',
+        'email' => 'superadmin-intro-sucursales@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $sucursalesTemplate = SuperAdminPlanTemplate::query()
+        ->where('plan_key', 'sucursales')
+        ->where('status', 'active')
+        ->firstOrFail();
+
+    $this->actingAs($superAdmin)
+        ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
+            'plan_template_id' => (int) $sucursalesTemplate->id,
+            'payment_method' => 'efectivo',
+            'custom_price' => '200.00',
+            'apply_intro_50' => '1',
+        ])
+        ->assertRedirect(route('superadmin.gyms.index'));
+
+    $firstCycleSubscription = Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->firstOrFail();
+
+    expect((string) $firstCycleSubscription->plan_key)->toBe('sucursales');
+    expect((float) $firstCycleSubscription->price)->toBe(100.0);
+    expect((bool) $firstCycleSubscription->sucursales_intro_pending)->toBeTrue();
+    expect((float) $firstCycleSubscription->sucursales_base_price)->toBe(200.0);
+    expect((int) $firstCycleSubscription->sucursales_intro_discount_percent)->toBe(50);
+
+    $this->actingAs($superAdmin)
+        ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
+            'payment_method' => 'efectivo',
+            'months' => 1,
+        ])
+        ->assertRedirect(route('superadmin.gyms.index'));
+
+    $firstCycleSubscription->refresh();
+
+    expect((float) $firstCycleSubscription->price)->toBe(200.0);
+    expect((bool) $firstCycleSubscription->sucursales_intro_pending)->toBeFalse();
+    expect($firstCycleSubscription->sucursales_base_price)->toBeNull();
+    expect($firstCycleSubscription->sucursales_intro_discount_percent)->toBeNull();
+});
+
 it('blocks reports module when current plan does not include reports_base', function () {
     $gym = makeGym('reports-blocked');
     $user = makeGymUser($gym, 'reports-blocked@example.test');
@@ -215,7 +476,7 @@ it('blocks reports export routes when current plan does not include reports_expo
     Subscription::query()
         ->where('gym_id', $gym->id)
         ->update([
-            'plan_key' => 'profesional',
+            'plan_key' => 'basico',
             'feature_version' => 'v1',
             'status' => 'active',
             'starts_at' => Carbon::today()->subDay()->toDateString(),
@@ -234,7 +495,7 @@ it('returns json details when reports export is blocked by plan', function () {
     Subscription::query()
         ->where('gym_id', $gym->id)
         ->update([
-            'plan_key' => 'profesional',
+            'plan_key' => 'basico',
             'feature_version' => 'v1',
             'status' => 'active',
             'starts_at' => Carbon::today()->subDay()->toDateString(),
@@ -246,7 +507,7 @@ it('returns json details when reports export is blocked by plan', function () {
         ->assertForbidden()
         ->assertJsonPath('ok', false)
         ->assertJsonPath('feature', 'reports_export')
-        ->assertJsonPath('plan_key', 'profesional');
+        ->assertJsonPath('plan_key', 'basico');
 });
 
 it('allows reports export routes when current plan includes reports_export', function () {
@@ -256,7 +517,7 @@ it('allows reports export routes when current plan includes reports_export', fun
     Subscription::query()
         ->where('gym_id', $gym->id)
         ->update([
-            'plan_key' => 'premium',
+            'plan_key' => 'profesional',
             'feature_version' => 'v1',
             'status' => 'active',
             'starts_at' => Carbon::today()->subDay()->toDateString(),

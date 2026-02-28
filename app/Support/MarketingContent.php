@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Normalizer;
 
 class MarketingContent
 {
@@ -24,6 +25,10 @@ class MarketingContent
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => '593991066303',
             'whatsapp_message' => 'Hola, quiero más información de GymSystem para controlar mi gimnasio.',
+            'whatsapp_message_plan_basico' => 'Hola, quiero informacion del Plan basico de GymSystem.',
+            'whatsapp_message_plan_profesional' => 'Hola, quiero informacion del Plan profesional de GymSystem.',
+            'whatsapp_message_plan_premium' => 'Hola, quiero informacion del Plan premium de GymSystem.',
+            'whatsapp_message_plan_sucursales' => 'Hola, quiero informacion del Plan sucursales de GymSystem para multi-sede.',
             'final_cta_title' => 'Convierte tu operación diaria en un flujo simple y medible.',
             'final_cta_text' => 'Solicita una demo temporal y prueba el sistema real con datos de ejemplo que luego se eliminan.',
             'final_cta_image_path' => '',
@@ -184,6 +189,22 @@ class MarketingContent
             (string) ($content['whatsapp_phone'] ?? ''),
             (string) ($content['whatsapp_message'] ?? '')
         );
+        $content['whatsapp_url_plan_basico'] = self::buildWhatsappUrl(
+            (string) ($content['whatsapp_phone'] ?? ''),
+            (string) ($content['whatsapp_message_plan_basico'] ?? '')
+        );
+        $content['whatsapp_url_plan_profesional'] = self::buildWhatsappUrl(
+            (string) ($content['whatsapp_phone'] ?? ''),
+            (string) ($content['whatsapp_message_plan_profesional'] ?? '')
+        );
+        $content['whatsapp_url_plan_premium'] = self::buildWhatsappUrl(
+            (string) ($content['whatsapp_phone'] ?? ''),
+            (string) ($content['whatsapp_message_plan_premium'] ?? '')
+        );
+        $content['whatsapp_url_plan_sucursales'] = self::buildWhatsappUrl(
+            (string) ($content['whatsapp_phone'] ?? ''),
+            (string) ($content['whatsapp_message_plan_sucursales'] ?? '')
+        );
         $content['brand_logo_url'] = self::publicStorageUrl((string) ($content['brand_logo_path'] ?? ''));
         $content['final_cta_image_url'] = self::publicStorageUrl((string) ($content['final_cta_image_path'] ?? ''));
         $content['hero_slide_1_url'] = self::publicStorageUrl((string) ($content['hero_slide_1_path'] ?? ''));
@@ -209,13 +230,23 @@ class MarketingContent
             return '#';
         }
 
-        $base = 'https://wa.me/'.$normalizedPhone;
-        $text = trim($message);
+        $base = 'https://api.whatsapp.com/send?phone='.$normalizedPhone;
+        $text = str_replace(["\r\n", "\r"], "\n", trim($message));
         if ($text === '') {
             return $base;
         }
 
-        return $base.'?text='.rawurlencode($text);
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+        }
+        if (class_exists(Normalizer::class)) {
+            $normalized = Normalizer::normalize($text, Normalizer::FORM_C);
+            if (is_string($normalized) && $normalized !== '') {
+                $text = $normalized;
+            }
+        }
+
+        return $base.'&text='.rawurlencode($text);
     }
 
     private static function publicStorageUrl(string $path): string
@@ -253,4 +284,3 @@ class MarketingContent
         return $initials !== '' ? $initials : 'GS';
     }
 }
-

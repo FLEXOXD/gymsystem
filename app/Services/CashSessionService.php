@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\CashMovement;
 use App\Models\CashSession;
 use App\Models\Membership;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class CashSessionService
@@ -30,6 +32,8 @@ class CashSessionService
      */
     public function openSession(int $gymId, int $userId, float $openingBalance, ?string $notes = null): CashSession
     {
+        $this->assertUserCanOpenCash(gymId: $gymId, userId: $userId);
+
         return DB::transaction(function () use ($gymId, $userId, $openingBalance, $notes): CashSession {
             $hasOpenSession = CashSession::query()
                 ->forGym($gymId)
@@ -66,6 +70,8 @@ class CashSessionService
         ?int $membershipId = null,
         ?string $description = null
     ): CashMovement {
+        $this->assertUserCanManageMovements(gymId: $gymId, userId: $userId);
+
         $session = $this->getOpenSession($gymId);
         if (! $session) {
             throw new RuntimeException('Debe abrir caja para registrar movimientos.');
@@ -102,6 +108,8 @@ class CashSessionService
      */
     public function closeSession(int $gymId, int $userId, float $closingBalance, ?string $notes = null): CashSession
     {
+        $this->assertUserCanCloseCash(gymId: $gymId, userId: $userId);
+
         return DB::transaction(function () use ($gymId, $userId, $closingBalance, $notes): CashSession {
             $session = CashSession::query()
                 ->forGym($gymId)
@@ -138,5 +146,65 @@ class CashSessionService
 
             return $session->fresh();
         });
+    }
+
+    private function assertUserCanOpenCash(int $gymId, int $userId): void
+    {
+        $user = $this->resolveOperator($gymId, $userId);
+        if ($user && ! $user->canOpenCashBox()) {
+            throw new RuntimeException('No tienes permiso para abrir caja. Esta accion la controla el dueno del gimnasio.');
+        }
+    }
+
+    private function assertUserCanCloseCash(int $gymId, int $userId): void
+    {
+        $user = $this->resolveOperator($gymId, $userId);
+        if ($user && ! $user->canCloseCashBox()) {
+            throw new RuntimeException('No tienes permiso para cerrar caja. Esta accion la controla el dueno del gimnasio.');
+        }
+    }
+
+    private function assertUserCanManageMovements(int $gymId, int $userId): void
+    {
+        $user = $this->resolveOperator($gymId, $userId);
+        if ($user && ! $user->canManageCashMovements()) {
+            throw new RuntimeException('No tienes permiso para registrar movimientos de caja.');
+        }
+    }
+
+    private function resolveOperator(int $gymId, int $userId): ?User
+    {
+        if ($gymId <= 0 || $userId <= 0 || ! Schema::hasColumn('users', 'role')) {
+            return null;
+        }
+
+        $columns = ['id', 'gym_id', 'role'];
+        if (Schema::hasColumn('users', 'is_active')) {
+            $columns[] = 'is_active';
+        }
+        if (Schema::hasColumn('users', 'can_open_cash')) {
+            $columns[] = 'can_open_cash';
+        }
+        if (Schema::hasColumn('users', 'can_close_cash')) {
+            $columns[] = 'can_close_cash';
+        }
+        if (Schema::hasColumn('users', 'can_manage_cash_movements')) {
+            $columns[] = 'can_manage_cash_movements';
+        }
+
+        $user = User::query()
+            ->where('id', $userId)
+            ->where('gym_id', $gymId)
+            ->first($columns);
+
+        if (! $user) {
+            throw new RuntimeException('No se pudo validar permisos del operador de caja.');
+        }
+
+        if (! $user->isActiveAccount()) {
+            throw new RuntimeException('Tu usuario esta desactivado.');
+        }
+
+        return $user;
     }
 }

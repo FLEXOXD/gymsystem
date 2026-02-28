@@ -11,6 +11,7 @@ use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\GymPanelController;
+use App\Http\Controllers\GymStaffController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReceptionCheckInController;
 use App\Http\Controllers\SuperAdminDashboardController;
@@ -57,6 +58,15 @@ Route::get('/app', function (Request $request) {
 })->name('app.entry');
 
 Route::get('/public', fn () => redirect('/'))->name('public.root.redirect');
+Route::get('/client-qr/{client}', [ClientCardController::class, 'publicCard'])
+    ->middleware('signed')
+    ->name('clients.card.public');
+Route::get('/client-qr/{client}/image', [ClientCardController::class, 'publicQrImage'])
+    ->middleware('signed')
+    ->name('clients.card.public-qr-image');
+Route::get('/client-qr/{client}/download', [ClientCardController::class, 'publicQrDownload'])
+    ->middleware('signed')
+    ->name('clients.card.public-download');
 Route::get('/demo', [MarketingController::class, 'demo'])->name('demo');
 Route::get('/demo/guia', [MarketingController::class, 'demoGuide'])->name('demo.guide');
 Route::post('/demo/solicitar', [MarketingController::class, 'requestDemo'])
@@ -88,6 +98,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): void {
     Route::get('/subscription/expired', [ThemeController::class, 'subscriptionExpired'])->name('subscription.expired');
+    Route::post('/demo/finalizar', [AuthenticatedSessionController::class, 'endDemo'])->name('demo.end');
     Route::post('/legal/modal-acceptance', [LegalAcceptanceController::class, 'storeModal'])
         ->name('legal.modal-acceptance.store');
 
@@ -122,6 +133,8 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 ->name('gyms.store');
             Route::patch('/gyms/{gym}/admin-user', [SuperAdminDashboardController::class, 'updateGymAdminUser'])
                 ->name('gyms.admin-user.update');
+            Route::patch('/gyms/{gym}/admin-user/password', [SuperAdminDashboardController::class, 'updateGymAdminPassword'])
+                ->name('gyms.admin-user.password.update');
             Route::delete('/gyms/{gym}', [SuperAdminDashboardController::class, 'destroyGym'])
                 ->name('gyms.destroy');
             Route::get('/notifications', [SuperAdminNotificationsController::class, 'index'])
@@ -178,105 +191,163 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
             ->where(['contextGym' => '(?!superadmin$)[A-Za-z0-9\-]+'])
             ->middleware(['gym.route', 'pwa.standalone.access'])
             ->group(function (): void {
-                Route::get('/panel', [GymPanelController::class, 'index'])->name('panel.index');
+                Route::get('/panel', [GymPanelController::class, 'index'])
+                    ->middleware('role:owner,cashier')
+                    ->name('panel.index');
 
-                Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
-                Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
-                Route::get('/clients/check-document', [ClientController::class, 'checkDocument'])->name('clients.check-document');
-                Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
-                Route::patch('/clients/{client}/photo', [ClientController::class, 'updatePhoto'])->name('clients.photo.update');
-                Route::get('/clients/{client}/card', [ClientCardController::class, 'show'])->name('clients.card');
-                Route::get('/clients/{client}/card.pdf', [ClientCardController::class, 'pdf'])->name('clients.card.pdf');
+                Route::get('/clients', [ClientController::class, 'index'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.index');
+                Route::post('/clients', [ClientController::class, 'store'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.store');
+                Route::get('/clients/check-document', [ClientController::class, 'checkDocument'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.check-document');
+                Route::get('/clients/{client}', [ClientController::class, 'show'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.show');
+                Route::patch('/clients/{client}/photo', [ClientController::class, 'updatePhoto'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.photo.update');
+                Route::get('/clients/{client}/card', [ClientCardController::class, 'show'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.card');
+                Route::get('/clients/{client}/card.pdf', [ClientCardController::class, 'pdf'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.card.pdf');
 
-                Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
+                Route::get('/staff', [GymStaffController::class, 'index'])
+                    ->middleware('role:owner')
+                    ->name('staff.index');
+                Route::post('/staff/cashiers', [GymStaffController::class, 'storeCashier'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.store');
+                Route::patch('/staff/cashiers/{cashier}/permissions', [GymStaffController::class, 'updateCashierPermissions'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.permissions.update');
+                Route::patch('/staff/cashiers/{cashier}/password', [GymStaffController::class, 'updateCashierPassword'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.password.update');
+                Route::patch('/staff/cashiers/{cashier}/disable', [GymStaffController::class, 'disableCashier'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.disable');
+                Route::patch('/staff/cashiers/{cashier}/activate', [GymStaffController::class, 'activateCashier'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.activate');
+                Route::delete('/staff/cashiers/{cashier}', [GymStaffController::class, 'destroyCashier'])
+                    ->middleware('role:owner')
+                    ->name('staff.cashiers.destroy');
+
+                Route::get('/plans', [PlanController::class, 'index'])
+                    ->middleware('role:owner')
+                    ->name('plans.index');
                 Route::post('/plans', [PlanController::class, 'store'])
-                    ->middleware('not.branch:manage_plans')
+                    ->middleware(['role:owner', 'not.branch:manage_plans'])
                     ->name('plans.store');
                 Route::put('/plans/{plan}', [PlanController::class, 'update'])
-                    ->middleware('not.branch:manage_plans')
+                    ->middleware(['role:owner', 'not.branch:manage_plans'])
                     ->name('plans.update');
                 Route::patch('/plans/{plan}/toggle', [PlanController::class, 'toggle'])
-                    ->middleware('not.branch:manage_plans')
+                    ->middleware(['role:owner', 'not.branch:manage_plans'])
                     ->name('plans.toggle');
                 Route::delete('/plans/{plan}', [PlanController::class, 'destroy'])
-                    ->middleware('not.branch:manage_plans')
+                    ->middleware(['role:owner', 'not.branch:manage_plans'])
                     ->name('plans.destroy');
                 Route::post('/plans/promotions', [PlanController::class, 'storePromotion'])
-                    ->middleware(['plan.feature:promotions', 'not.branch:manage_promotions'])
+                    ->middleware(['role:owner', 'plan.feature:promotions', 'not.branch:manage_promotions'])
                     ->name('plans.promotions.store');
                 Route::put('/plans/promotions/{promotion}', [PlanController::class, 'updatePromotion'])
-                    ->middleware(['plan.feature:promotions', 'not.branch:manage_promotions'])
+                    ->middleware(['role:owner', 'plan.feature:promotions', 'not.branch:manage_promotions'])
                     ->name('plans.promotions.update');
                 Route::patch('/plans/promotions/{promotion}/toggle', [PlanController::class, 'togglePromotion'])
-                    ->middleware(['plan.feature:promotions', 'not.branch:manage_promotions'])
+                    ->middleware(['role:owner', 'plan.feature:promotions', 'not.branch:manage_promotions'])
                     ->name('plans.promotions.toggle');
                 Route::delete('/plans/promotions/{promotion}', [PlanController::class, 'destroyPromotion'])
-                    ->middleware(['plan.feature:promotions', 'not.branch:manage_promotions'])
+                    ->middleware(['role:owner', 'plan.feature:promotions', 'not.branch:manage_promotions'])
                     ->name('plans.promotions.destroy');
 
-                Route::post('/memberships', [MembershipController::class, 'store'])->name('memberships.store');
+                Route::post('/memberships', [MembershipController::class, 'store'])
+                    ->middleware('role:owner,cashier')
+                    ->name('memberships.store');
                 Route::post('/clients/{client}/credentials/rfid', [ClientCredentialController::class, 'storeRfid'])
+                    ->middleware('role:owner,cashier')
                     ->name('client-credentials.store-rfid');
                 Route::post('/clients/{client}/credentials/qr', [ClientCredentialController::class, 'generateQr'])
+                    ->middleware('role:owner,cashier')
                     ->name('client-credentials.generate-qr');
                 Route::patch('/client-credentials/{credential}/deactivate', [ClientCredentialController::class, 'deactivate'])
+                    ->middleware('role:owner,cashier')
                     ->name('client-credentials.deactivate');
 
-                Route::get('/reception', [ReceptionCheckInController::class, 'index'])->name('reception.index');
-                Route::get('/reception/display', [ReceptionCheckInController::class, 'display'])->name('reception.display');
-                Route::get('/reception/sync/latest', [ReceptionCheckInController::class, 'syncLatest'])->name('reception.sync.latest');
+                Route::get('/reception', [ReceptionCheckInController::class, 'index'])
+                    ->middleware('role:owner,cashier')
+                    ->name('reception.index');
+                Route::get('/reception/display', [ReceptionCheckInController::class, 'display'])
+                    ->middleware('role:owner,cashier')
+                    ->name('reception.display');
+                Route::get('/reception/sync/latest', [ReceptionCheckInController::class, 'syncLatest'])
+                    ->middleware('role:owner,cashier')
+                    ->name('reception.sync.latest');
                 Route::post('/reception/check-in', [ReceptionCheckInController::class, 'store'])
-                    ->middleware('throttle:checkin')
+                    ->middleware(['role:owner,cashier', 'throttle:checkin'])
                     ->name('reception.check-in');
 
-                Route::get('/cash', [CashController::class, 'index'])->name('cash.index');
+                Route::get('/cash', [CashController::class, 'index'])
+                    ->middleware('role:owner,cashier')
+                    ->name('cash.index');
                 Route::post('/cash/open', [CashController::class, 'open'])
-                    ->middleware('not.branch:manage_cash')
+                    ->middleware(['role:owner,cashier', 'not.branch:manage_cash'])
                     ->name('cash.open');
                 Route::post('/cash/movements', [CashController::class, 'addMovement'])
-                    ->middleware('not.branch:manage_cash')
+                    ->middleware(['role:owner,cashier', 'not.branch:manage_cash'])
                     ->name('cash.movements.store');
                 Route::post('/cash/close', [CashController::class, 'close'])
-                    ->middleware('not.branch:manage_cash')
+                    ->middleware(['role:owner,cashier', 'not.branch:manage_cash'])
                     ->name('cash.close');
-                Route::get('/cash/sessions', [CashController::class, 'sessions'])->name('cash.sessions.index');
-                Route::get('/cash/sessions/{session}', [CashController::class, 'show'])->name('cash.sessions.show');
+                Route::get('/cash/sessions', [CashController::class, 'sessions'])
+                    ->middleware('role:owner,cashier')
+                    ->name('cash.sessions.index');
+                Route::get('/cash/sessions/{session}', [CashController::class, 'show'])
+                    ->middleware('role:owner,cashier')
+                    ->name('cash.sessions.show');
 
                 Route::get('/sucursales', [BranchController::class, 'index'])
-                    ->middleware(['not.branch:manage_branches', 'plan.feature:multi_branch'])
+                    ->middleware(['role:owner', 'not.branch:manage_branches', 'plan.feature:multi_branch'])
                     ->name('branches.index');
 
                 Route::get('/reports', [ReportController::class, 'index'])
-                    ->middleware('plan.feature:reports_base')
+                    ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.index');
                 Route::get('/reports/income', [ReportController::class, 'income'])
-                    ->middleware('plan.feature:reports_base')
+                    ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.income');
                 Route::get('/reports/attendance', [ReportController::class, 'attendance'])
-                    ->middleware('plan.feature:reports_base')
+                    ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.attendance');
                 Route::get('/reports/memberships', [ReportController::class, 'memberships'])
-                    ->middleware('plan.feature:reports_base')
+                    ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.memberships');
                 Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])
-                    ->middleware(['plan.feature:reports_export', 'not.branch:export_reports'])
+                    ->middleware(['role:owner', 'plan.feature:reports_export', 'not.branch:export_reports'])
                     ->name('reports.export.csv');
                 Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
-                    ->middleware(['plan.feature:reports_export', 'not.branch:export_reports'])
+                    ->middleware(['role:owner', 'plan.feature:reports_export', 'not.branch:export_reports'])
                     ->name('reports.export.pdf');
 
                 // Context-aware profile/settings/contact routes for gym users.
-                Route::get('/profile', [ThemeController::class, 'profile'])->name('gym.profile.index');
-                Route::get('/contact', [ThemeController::class, 'contact'])->name('gym.contact.index');
-                Route::post('/contact/suggestions', [ContactSuggestionController::class, 'store'])->name('gym.contact.suggestions.store');
+                Route::get('/profile', [ThemeController::class, 'profile'])->middleware('role:owner')->name('gym.profile.index');
+                Route::get('/contact', [ThemeController::class, 'contact'])->middleware('role:owner')->name('gym.contact.index');
+                Route::post('/contact/suggestions', [ContactSuggestionController::class, 'store'])->middleware('role:owner')->name('gym.contact.suggestions.store');
                 Route::get('/profile/membership-invoices/{subscription}/pdf', [ThemeController::class, 'membershipInvoicePdf'])
+                    ->middleware('role:owner')
                     ->name('gym.profile.membership-invoice.pdf');
-                Route::get('/config', [ThemeController::class, 'index'])->name('gym.settings.index');
-                Route::post('/config/theme', [ThemeController::class, 'update'])->name('gym.settings.theme.update');
-                Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->name('gym.settings.profile.update');
-                Route::post('/config/gym-profile', [ThemeController::class, 'updateGymProfile'])->name('gym.settings.gym-profile.update');
-                Route::post('/config/gym-logo', [ThemeController::class, 'updateGymLogo'])->name('gym.settings.gym-logo.update');
-                Route::post('/config/gym-avatars', [ThemeController::class, 'updateGymAvatars'])->name('gym.settings.gym-avatars.update');
+                Route::get('/config', [ThemeController::class, 'index'])->middleware('role:owner')->name('gym.settings.index');
+                Route::post('/config/theme', [ThemeController::class, 'update'])->middleware('role:owner')->name('gym.settings.theme.update');
+                Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->middleware('role:owner')->name('gym.settings.profile.update');
+                Route::post('/config/gym-profile', [ThemeController::class, 'updateGymProfile'])->middleware('role:owner')->name('gym.settings.gym-profile.update');
+                Route::post('/config/gym-logo', [ThemeController::class, 'updateGymLogo'])->middleware('role:owner')->name('gym.settings.gym-logo.update');
+                Route::post('/config/gym-avatars', [ThemeController::class, 'updateGymAvatars'])->middleware('role:owner')->name('gym.settings.gym-avatars.update');
             });
 
         $redirectGymUserToContextRoute = function (Request $request, string $routeName, array $params = []) {

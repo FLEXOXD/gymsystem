@@ -11,10 +11,14 @@ class StoreClientRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        $phone = trim((string) $this->input('phone', ''));
+        $phone = preg_replace('/\s+/u', ' ', $phone) ?? '';
+
         $this->merge([
             'first_name' => $this->formatPersonName($this->input('first_name')),
             'last_name' => $this->formatPersonName($this->input('last_name')),
             'document_number' => Client::normalizeDocumentNumber($this->input('document_number')),
+            'phone' => $phone,
         ]);
     }
 
@@ -99,7 +103,36 @@ class StoreClientRequest extends FormRequest
                     }
                 },
             ],
-            'phone' => ['nullable', 'string', 'min:7', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
+            'phone' => [
+                'bail',
+                'required',
+                'string',
+                'max:25',
+                'regex:/^[0-9+\-\s()]+$/',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $digits = preg_replace('/\D+/', '', (string) $value) ?? '';
+
+                    if ($digits === '') {
+                        $fail('Ingresa el telefono del cliente.');
+                        return;
+                    }
+
+                    $length = strlen($digits);
+                    if ($length < 7 || $length > 15) {
+                        $fail('El telefono debe tener entre 7 y 15 digitos.');
+                        return;
+                    }
+
+                    if (preg_match('/^(\d)\1+$/', $digits) === 1) {
+                        $fail('El telefono ingresado no parece valido.');
+                        return;
+                    }
+
+                    if ($this->isSequentialDigits($digits)) {
+                        $fail('El telefono ingresado no parece valido.');
+                    }
+                },
+            ],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'neutral'])],
             'start_membership' => ['nullable', 'boolean'],
@@ -138,15 +171,43 @@ class StoreClientRequest extends FormRequest
     {
         return [
             'gym_context.required' => 'El usuario autenticado no tiene gym_id asignado.',
-            'phone.regex' => 'El teléfono solo puede contener numeros, espacios y + - ( ).',
+            'first_name.required' => 'Ingresa el nombre del cliente.',
+            'first_name.max' => 'El nombre no puede superar 120 caracteres.',
+            'last_name.required' => 'Ingresa el apellido del cliente.',
+            'last_name.max' => 'El apellido no puede superar 120 caracteres.',
+            'document_number.required' => 'Ingresa el documento del cliente.',
+            'phone.required' => 'Ingresa el telefono del cliente.',
+            'phone.regex' => 'El telefono solo puede contener numeros y los simbolos + - ( ).',
+            'phone.max' => 'El telefono no puede superar 25 caracteres.',
             'photo.image' => 'La foto debe ser una imagen valida.',
             'photo.max' => 'La foto no puede superar 2MB.',
-            'plan_id.required' => 'Selecciona un plan para iniciar la membresía.',
+            'plan_id.required' => 'Selecciona un plan para iniciar la membresia.',
             'membership_starts_at.required' => 'La fecha de inicio es obligatoria.',
-            'membership_price.required' => 'El precio de la membresía es obligatorio.',
-            'promotion_id.exists' => 'La promoción seleccionada no es valida o no esta disponible.',
-            'payment_method.required' => 'Selecciona el método de pago.',
+            'membership_price.required' => 'El precio de la membresia es obligatorio.',
+            'promotion_id.exists' => 'La promocion seleccionada no es valida o no esta disponible.',
+            'payment_method.required' => 'Selecciona el metodo de pago.',
             'amount_paid.required' => 'Ingresa el monto pagado.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'first_name' => 'nombre',
+            'last_name' => 'apellido',
+            'document_number' => 'documento',
+            'phone' => 'telefono',
+            'gender' => 'genero',
+            'photo' => 'foto',
+            'plan_id' => 'plan',
+            'membership_starts_at' => 'fecha de inicio',
+            'membership_price' => 'precio de membresia',
+            'promotion_id' => 'promocion',
+            'payment_method' => 'metodo de pago',
+            'amount_paid' => 'monto pagado',
         ];
     }
 

@@ -263,7 +263,12 @@
                  x-transition.scale.origin.top
                  role="dialog"
                  aria-modal="true">
-                <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" class="flex h-full min-h-0 flex-1 flex-col space-y-0" x-on:submit="normalizeNameField('first_name'); normalizeNameField('last_name'); submitting = true">
+                <form method="POST"
+                      action="{{ route('clients.store') }}"
+                      enctype="multipart/form-data"
+                      novalidate
+                      class="flex h-full min-h-0 flex-1 flex-col space-y-0"
+                      x-on:submit="submitCreateClient($event)">
                     @csrf
                     <input type="hidden" name="_open_create_modal" value="1">
 
@@ -295,7 +300,16 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Nombre</span>
-                                <input type="text" name="first_name" x-model="form.first_name" x-on:blur="normalizeNameField('first_name')" required class="ui-input" x-ref="firstNameInput">
+                                <input type="text"
+                                       name="first_name"
+                                       x-model="form.first_name"
+                                       x-on:blur="normalizeNameField('first_name')"
+                                       x-on:input="clearClientFieldError('first_name')"
+                                       required
+                                       class="ui-input"
+                                       x-bind:class="clientValidationErrors.first_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
+                                       x-ref="firstNameInput">
+                                <p x-cloak x-show="clientValidationErrors.first_name" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.first_name"></p>
                                 @error('first_name')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
                                 @enderror
@@ -303,7 +317,15 @@
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Apellido</span>
-                                <input type="text" name="last_name" x-model="form.last_name" x-on:blur="normalizeNameField('last_name')" required class="ui-input">
+                                <input type="text"
+                                       name="last_name"
+                                       x-model="form.last_name"
+                                       x-on:blur="normalizeNameField('last_name')"
+                                       x-on:input="clearClientFieldError('last_name')"
+                                       required
+                                       class="ui-input"
+                                       x-bind:class="clientValidationErrors.last_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''">
+                                <p x-cloak x-show="clientValidationErrors.last_name" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.last_name"></p>
                                 @error('last_name')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
                                 @enderror
@@ -314,10 +336,13 @@
                                 <input type="text"
                                        name="document_number"
                                        x-model.trim="form.document_number"
+                                       x-on:input="clearClientFieldError('document_number')"
                                        x-on:input.debounce.350ms="checkDocument()"
                                        required
                                        class="ui-input"
+                                       x-bind:class="clientValidationErrors.document_number ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        placeholder="Cedula, DNI o pasaporte">
+                                <p x-cloak x-show="clientValidationErrors.document_number" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.document_number"></p>
                                 @error('document_number')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
                                 @enderror
@@ -334,7 +359,15 @@
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
                                 <span>Teléfono</span>
-                                <input type="text" name="phone" x-model="form.phone" class="ui-input" placeholder="Opcional">
+                                <input type="text"
+                                       name="phone"
+                                       x-model="form.phone"
+                                       x-on:input="clearClientFieldError('phone')"
+                                       required
+                                       class="ui-input"
+                                       x-bind:class="clientValidationErrors.phone ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
+                                       placeholder="Ej: 0991234567">
+                                <p x-cloak x-show="clientValidationErrors.phone" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.phone"></p>
                                 @error('phone')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
                                 @enderror
@@ -514,6 +547,7 @@
                 plans: Array.isArray(config.plans) ? config.plans : [],
                 promotions: Array.isArray(config.promotions) ? config.promotions : [],
                 documentCheckUrl: config.documentCheckUrl,
+                clientValidationErrors: {},
                 form: {
                     first_name: config.defaults?.first_name ?? '',
                     last_name: config.defaults?.last_name ?? '',
@@ -560,6 +594,7 @@
                         return;
                     }
                     this.modalOpen = false;
+                    this.clearClientValidationErrors();
                 },
 
                 avatarInitials() {
@@ -605,6 +640,156 @@
                     }
 
                     this.form[field] = this.formatPersonName(this.form[field]);
+                },
+
+                clearClientFieldError(field) {
+                    if (!field) {
+                        return;
+                    }
+
+                    delete this.clientValidationErrors[field];
+                },
+
+                clearClientValidationErrors() {
+                    this.clientValidationErrors = {};
+                },
+
+                setClientFieldError(field, message) {
+                    if (!field || !message) {
+                        return;
+                    }
+
+                    this.clientValidationErrors[field] = message;
+                },
+
+                isSequentialDigits(value) {
+                    const text = String(value || '');
+                    if (text.length < 6 || text.length > 10) {
+                        return false;
+                    }
+
+                    return '0123456789'.includes(text) || '9876543210'.includes(text);
+                },
+
+                validateDocumentField() {
+                    const raw = String(this.form.document_number || '').trim();
+                    const canonical = raw.toUpperCase().replace(/[-\s]/g, '');
+
+                    if (raw === '') {
+                        return 'Ingresa el documento del cliente.';
+                    }
+
+                    if (!/^[A-Za-z0-9\- ]+$/.test(raw)) {
+                        return 'El documento solo puede usar letras, numeros, espacios y guion.';
+                    }
+
+                    if (canonical.length < 6 || canonical.length > 20) {
+                        return 'El documento debe tener entre 6 y 20 caracteres utiles.';
+                    }
+
+                    if (!/\d/.test(canonical)) {
+                        return 'El documento debe incluir al menos un numero.';
+                    }
+
+                    if (/^(.)\1+$/.test(canonical)) {
+                        return 'El documento ingresado no parece valido.';
+                    }
+
+                    if (/^\d+$/.test(canonical) && this.isSequentialDigits(canonical)) {
+                        return 'El documento ingresado no parece valido.';
+                    }
+
+                    return '';
+                },
+
+                validatePhoneField() {
+                    const raw = String(this.form.phone || '').trim();
+                    const digits = raw.replace(/\D/g, '');
+
+                    if (raw === '') {
+                        return 'Ingresa el telefono del cliente.';
+                    }
+
+                    if (!/^[0-9+\-\s()]+$/.test(raw)) {
+                        return 'El telefono solo puede contener numeros y los simbolos + - ( ).';
+                    }
+
+                    if (digits.length < 7 || digits.length > 15) {
+                        return 'El telefono debe tener entre 7 y 15 digitos.';
+                    }
+
+                    if (/^(\d)\1+$/.test(digits)) {
+                        return 'El telefono ingresado no parece valido.';
+                    }
+
+                    if (this.isSequentialDigits(digits)) {
+                        return 'El telefono ingresado no parece valido.';
+                    }
+
+                    return '';
+                },
+
+                validateCreateClientForm() {
+                    this.clearClientValidationErrors();
+
+                    const firstName = String(this.form.first_name || '').trim();
+                    const lastName = String(this.form.last_name || '').trim();
+                    const documentError = this.validateDocumentField();
+                    const phoneError = this.validatePhoneField();
+
+                    if (firstName === '') {
+                        this.setClientFieldError('first_name', 'Ingresa el nombre del cliente.');
+                    }
+
+                    if (lastName === '') {
+                        this.setClientFieldError('last_name', 'Ingresa el apellido del cliente.');
+                    }
+
+                    if (documentError !== '') {
+                        this.setClientFieldError('document_number', documentError);
+                    } else if (this.documentState === 'exists') {
+                        this.setClientFieldError('document_number', 'Este documento ya esta registrado en este gimnasio.');
+                    }
+
+                    if (phoneError !== '') {
+                        this.setClientFieldError('phone', phoneError);
+                    }
+
+                    return Object.keys(this.clientValidationErrors).length === 0;
+                },
+
+                focusFirstClientValidationError() {
+                    if (this.clientValidationErrors.first_name) {
+                        this.$refs.firstNameInput?.focus();
+                        return;
+                    }
+
+                    const fieldOrder = ['last_name', 'document_number', 'phone'];
+                    for (const fieldName of fieldOrder) {
+                        if (!this.clientValidationErrors[fieldName]) {
+                            continue;
+                        }
+
+                        const input = this.$el.querySelector(`[name="${fieldName}"]`);
+                        if (input) {
+                            input.focus();
+                        }
+                        return;
+                    }
+                },
+
+                submitCreateClient(event) {
+                    this.normalizeNameField('first_name');
+                    this.normalizeNameField('last_name');
+                    this.submitting = false;
+
+                    if (!this.validateCreateClientForm()) {
+                        event.preventDefault();
+                        this.focusFirstClientValidationError();
+                        return;
+                    }
+
+                    this.submitting = true;
                 },
 
                 normalizePlanDurationUnit(unit) {

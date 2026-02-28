@@ -27,7 +27,9 @@
         ];
 
         $user = auth()->user();
-        $isCashAdmin = (bool) ($isCashAdmin ?? ($user && ($user->gym_id === null || str_contains(strtolower((string) $user->name), 'admin'))));
+        $isOwnerUser = (bool) ($user?->isOwner());
+        $isCashierUser = (bool) ($user?->isCashier());
+        $isCashAdmin = (bool) ($isCashAdmin ?? ($user && ($user->gym_id === null || $isOwnerUser)));
         $canApproveDifference = (bool) ($canApproveCashDifference ?? $isCashAdmin);
 
         $routeHasVoidMovement = \Illuminate\Support\Facades\Route::has('cash.movements.void');
@@ -38,15 +40,27 @@
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $cashWriteBlocked = (bool) ($cashWriteBlocked ?? false);
         $cashWriteBlockedReason = trim((string) ($cashWriteBlockedReason ?? ''));
+        $canOpenCash = (bool) ($canOpenCash ?? $isOwnerUser);
+        $canCloseCash = (bool) ($canCloseCash ?? $isOwnerUser);
+        $canManageMovements = (bool) ($canManageMovements ?? true);
     @endphp
 
-    <div class="cash-page space-y-4">
+    <div class="cash-page space-y-4"
+         data-module="cash-index"
+         data-currency-symbol="{{ $currencySymbol }}"
+         data-void-route-template="{{ $voidRouteTemplate }}">
         @if ($isCurrentCashView)
             @if (! $openSession)
                 @if ($cashWriteBlocked)
                     <x-ui.card title="Caja en solo lectura" subtitle="Operacion administrada desde sede principal.">
                         <p class="ui-alert ui-alert-warning">
                             {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'No tienes permisos para abrir o cerrar caja en esta sucursal.' }}
+                        </p>
+                    </x-ui.card>
+                @elseif (! $canOpenCash)
+                    <x-ui.card title="Apertura restringida" subtitle="Solo usuarios autorizados pueden abrir caja.">
+                        <p class="ui-alert ui-alert-warning">
+                            Tu perfil no tiene permiso para abrir caja. Solicita al dueno del gimnasio que abra el turno o te habilite este permiso.
                         </p>
                     </x-ui.card>
                 @else
@@ -140,7 +154,12 @@
                         </x-ui.card>
                     @else
                         <x-ui.card title="Registrar movimiento" class="xl:col-span-2">
-                            <form id="cash-movement-form" method="POST" action="{{ route('cash.movements.store') }}" class="space-y-4" data-high-threshold="100">
+                            @if (! $canManageMovements)
+                                <p class="ui-alert ui-alert-warning">
+                                    Tu perfil no tiene permiso para registrar cobros o movimientos de caja.
+                                </p>
+                            @else
+                                <form id="cash-movement-form" method="POST" action="{{ route('cash.movements.store') }}" class="space-y-4" data-high-threshold="100">
                                 @csrf
                                 <input type="hidden" id="movement-high-confirmed" name="high_amount_confirmed" value="0">
 
@@ -189,11 +208,18 @@
                                     </label>
                                 </div>
 
-                                <x-ui.button id="movement-submit" type="submit" variant="success">Registrar ingreso</x-ui.button>
-                            </form>
+                                    <x-ui.button id="movement-submit" type="submit" variant="success">Registrar ingreso</x-ui.button>
+                                </form>
+                            @endif
                         </x-ui.card>
 
                         <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
+                            @if (! $canCloseCash)
+                                <p class="ui-alert ui-alert-warning mb-3">
+                                    Tu perfil no tiene permiso para cerrar caja. Esta accion la realiza el dueno o un usuario autorizado.
+                                </p>
+                            @endif
+
                             <div id="close-form-alert" class="hidden ui-alert ui-alert-warning"></div>
 
                             <div class="space-y-2 text-sm">
@@ -252,7 +278,7 @@
                                 <p class="ui-alert ui-alert-warning text-xs">Solo Admin puede confirmar cierre con diferencia.</p>
                             @endif
 
-                                <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center">Cerrar turno</x-ui.button>
+                                <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center" :disabled="!$canCloseCash">Cerrar turno</x-ui.button>
                             </form>
                         </x-ui.card>
                     @endif
@@ -320,62 +346,13 @@
                     <div class="mt-4 flex flex-wrap gap-2">
                         <x-ui.button :href="route('clients.index')" variant="primary">Cobrar membresía</x-ui.button>
                         <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
-                        <x-ui.button :href="route('reports.income')" variant="ghost">Ver reporte de ingresos</x-ui.button>
+                        @if (! $isCashierUser)
+                            <x-ui.button :href="route('reports.income')" variant="ghost">Ver reporte de ingresos</x-ui.button>
+                        @endif
                     </div>
                 </x-ui.card>
 
-                <div id="high-amount-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="highAmountTitle">
-                    <div class="ui-modal-panel max-w-md">
-                        <h3 id="highAmountTitle" class="ui-heading text-lg">Confirmar monto alto</h3>
-                        <p class="mt-2 text-sm ui-muted">Estas registrando un movimiento alto: <strong id="high-amount-value">{{ $currencySymbol }}0.00</strong></p>
-                        <p class="mt-1 text-xs ui-muted">Verifica tipo y método antes de continuar.</p>
-                        <div class="mt-4 flex justify-end gap-2">
-                            <button type="button" class="ui-button ui-button-ghost" data-close-high-modal>Cancelar</button>
-                            <button type="button" class="ui-button ui-button-primary" id="confirm-high-amount">Confirmar y guardar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="difference-approval-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="differenceApprovalTitle">
-                    <div class="ui-modal-panel max-w-md">
-                        <h3 id="differenceApprovalTitle" class="ui-heading text-lg">Aprobación supervisor</h3>
-                        <p class="mt-2 text-sm ui-muted">El cierre tiene diferencia. Solo Admin puede aprobarlo.</p>
-                        <label class="mt-3 block space-y-1 text-sm font-semibold ui-muted">
-                            <span>Password/PIN admin</span>
-                            <input id="difference-approval-password" type="password" class="ui-input" autocomplete="new-password">
-                        </label>
-                        <p id="difference-approval-error" class="mt-2 hidden text-xs font-semibold text-rose-600 dark:text-rose-300">Ingresa password/PIN para continuar.</p>
-                        <div class="mt-4 flex justify-end gap-2">
-                            <button type="button" class="ui-button ui-button-ghost" data-close-difference-modal>Cancelar</button>
-                            <button type="button" class="ui-button ui-button-danger" id="confirm-close-with-diff">Aprobar cierre</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="void-movement-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="voidMovementTitle">
-                    <div class="ui-modal-panel max-w-md">
-                        <h3 id="voidMovementTitle" class="ui-heading text-lg">Anular movimiento</h3>
-                        <p class="mt-2 text-sm ui-muted">Movimiento: <strong id="void-movement-label">-</strong></p>
-
-                        <form id="void-movement-form" method="POST" action="{{ $voidRouteTemplate }}" class="mt-3 space-y-3">
-                            @csrf
-                            @method('PATCH')
-                            <label class="space-y-1 text-sm font-semibold ui-muted">
-                                <span>Motivo de anulación (obligatorio)</span>
-                                <textarea name="void_reason" id="void-reason" rows="3" required class="ui-input" placeholder="Ej: ingreso duplicado o error de caja."></textarea>
-                            </label>
-
-                            @if (! $routeHasVoidMovement)
-                                <p class="ui-alert ui-alert-danger text-xs">Falta route `cash.movements.void` en backend.</p>
-                            @endif
-
-                            <div class="flex justify-end gap-2">
-                                <button type="button" class="ui-button ui-button-ghost" data-close-void-modal>Cancelar</button>
-                                <button type="submit" class="ui-button ui-button-danger" @disabled(! $routeHasVoidMovement)>Anular movimiento</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                @include('cash.partials.session-modals')
             @endif
         @else
             @php
@@ -450,308 +427,7 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-    (function () {
-        const currencySymbol = @json($currencySymbol);
-
-        function formatMoney(value) {
-            const num = Number(value || 0);
-            return (num < 0 ? '-' : '') + currencySymbol + Math.abs(num).toFixed(2);
-        }
-
-        function openModal(el) {
-            if (!el) return;
-            el.classList.remove('hidden');
-        }
-
-        function closeModal(el) {
-            if (!el) return;
-            el.classList.add('hidden');
-        }
-
-        const movementForm = document.getElementById('cash-movement-form');
-        const movementType = document.getElementById('movement-type');
-        const movementDescription = document.getElementById('movement-description');
-        const movementDescriptionLabel = document.getElementById('movement-description-label');
-        const movementCategoryWrap = document.getElementById('movement-expense-category-wrap');
-        const movementSubmit = document.getElementById('movement-submit');
-        const movementAmount = document.getElementById('movement-amount');
-        const highConfirmed = document.getElementById('movement-high-confirmed');
-        const guardAlert = document.getElementById('movement-guard-alert');
-
-        const highAmountModal = document.getElementById('high-amount-modal');
-        const highAmountValue = document.getElementById('high-amount-value');
-        const highAmountConfirm = document.getElementById('confirm-high-amount');
-
-        const closeForm = document.getElementById('cash-close-form');
-        const closeStatusText = document.getElementById('close-status-text');
-        const differenceCash = document.getElementById('difference-cash');
-        const differenceCard = document.getElementById('difference-card');
-        const differenceTransfer = document.getElementById('difference-transfer');
-        const differenceTotal = document.getElementById('difference-total');
-        const differenceReason = document.getElementById('difference-reason');
-        const closeBalanceInput = document.getElementById('close-closing-balance');
-        const closeAlert = document.getElementById('close-form-alert');
-        const differenceApproved = document.getElementById('close-difference-approved');
-
-        const differenceApprovalModal = document.getElementById('difference-approval-modal');
-        const differenceApprovalPassword = document.getElementById('difference-approval-password');
-        const differenceApprovalError = document.getElementById('difference-approval-error');
-        const confirmCloseWithDiff = document.getElementById('confirm-close-with-diff');
-
-        const voidModal = document.getElementById('void-movement-modal');
-        const voidLabel = document.getElementById('void-movement-label');
-        const voidForm = document.getElementById('void-movement-form');
-        const voidRouteTemplate = @json($voidRouteTemplate);
-
-        function setTone(el, value) {
-            if (!el) return;
-            const tone = value > 0 ? 'warn' : (value < 0 ? 'bad' : 'ok');
-            el.setAttribute('data-tone', tone);
-        }
-
-        function updateMovementMode() {
-            if (!movementType) return;
-            const isExpense = movementType.value === 'expense';
-
-            if (movementDescription) {
-                movementDescription.required = true;
-                movementDescription.placeholder = isExpense ? 'Motivo obligatorio del egreso.' : 'Ingresa descripción obligatoria.';
-            }
-
-            if (movementDescriptionLabel) {
-                movementDescriptionLabel.textContent = 'Descripción (obligatoria)';
-            }
-
-            if (movementCategoryWrap) {
-                movementCategoryWrap.classList.toggle('hidden', !isExpense);
-            }
-
-            if (movementSubmit) {
-                movementSubmit.textContent = isExpense ? 'Registrar egreso' : 'Registrar ingreso';
-                movementSubmit.classList.toggle('ui-button-danger', isExpense);
-                movementSubmit.classList.toggle('ui-button-success', !isExpense);
-            }
-
-            if (guardAlert) {
-                if (isExpense) {
-                    guardAlert.classList.remove('hidden');
-                    guardAlert.textContent = 'Egreso requiere descripción obligatoria para auditoría.';
-                } else {
-                    guardAlert.classList.add('hidden');
-                    guardAlert.textContent = '';
-                }
-            }
-        }
-
-        movementType?.addEventListener('change', updateMovementMode);
-        updateMovementMode();
-
-        movementForm?.addEventListener('submit', function (event) {
-            const amount = Number(movementAmount?.value || 0);
-            const threshold = Number(movementForm.dataset.highThreshold || 100);
-            const alreadyConfirmed = highConfirmed?.value === '1';
-            const descriptionValue = (movementDescription?.value || '').trim();
-
-            if (descriptionValue === '') {
-                event.preventDefault();
-                movementDescription?.focus();
-                if (guardAlert) {
-                    guardAlert.classList.remove('hidden');
-                    guardAlert.textContent = 'Ingresa descripción obligatoria.';
-                }
-                return;
-            }
-
-            if (amount <= 0) {
-                event.preventDefault();
-                if (guardAlert) {
-                    guardAlert.classList.remove('hidden');
-                    guardAlert.textContent = 'Monto debe ser mayor a 0.';
-                }
-                return;
-            }
-
-            if (amount > threshold && !alreadyConfirmed) {
-                event.preventDefault();
-                if (highAmountValue) highAmountValue.textContent = formatMoney(amount);
-                openModal(highAmountModal);
-            }
-        });
-
-        highAmountConfirm?.addEventListener('click', function () {
-            if (highConfirmed) highConfirmed.value = '1';
-            closeModal(highAmountModal);
-            movementForm?.submit();
-        });
-
-        document.querySelectorAll('[data-close-high-modal]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                closeModal(highAmountModal);
-            });
-        });
-
-        function updateCloseMath() {
-            if (!closeForm) return { totalDiff: 0, totalCounted: 0 };
-
-            const expectedCash = Number(closeForm.dataset.expectedCash || 0);
-            const expectedCard = Number(closeForm.dataset.expectedCard || 0);
-            const expectedTransfer = Number(closeForm.dataset.expectedTransfer || 0);
-
-            const countedCash = Number((document.getElementById('counted-cash') || {}).value || 0);
-            const countedCard = Number((document.getElementById('counted-card') || {}).value || 0);
-            const countedTransfer = Number((document.getElementById('counted-transfer') || {}).value || 0);
-
-            const diffCash = Math.round((countedCash - expectedCash) * 100) / 100;
-            const diffCard = Math.round((countedCard - expectedCard) * 100) / 100;
-            const diffTransfer = Math.round((countedTransfer - expectedTransfer) * 100) / 100;
-            const totalDiff = Math.round((diffCash + diffCard + diffTransfer) * 100) / 100;
-            const totalCounted = Math.round((countedCash + countedCard + countedTransfer) * 100) / 100;
-
-            if (differenceCash) {
-                differenceCash.textContent = formatMoney(diffCash);
-                setTone(differenceCash, diffCash);
-            }
-            if (differenceCard) {
-                differenceCard.textContent = formatMoney(diffCard);
-                setTone(differenceCard, diffCard);
-            }
-            if (differenceTransfer) {
-                differenceTransfer.textContent = formatMoney(diffTransfer);
-                setTone(differenceTransfer, diffTransfer);
-            }
-            if (differenceTotal) {
-                differenceTotal.textContent = formatMoney(totalDiff);
-                setTone(differenceTotal, totalDiff);
-            }
-
-            if (closeStatusText) {
-                if (totalDiff === 0) {
-                    closeStatusText.textContent = 'CUADRA';
-                    closeStatusText.setAttribute('data-tone', 'ok');
-                } else if (totalDiff > 0) {
-                    closeStatusText.textContent = 'SOBRANTE ' + formatMoney(totalDiff);
-                    closeStatusText.setAttribute('data-tone', 'warn');
-                } else {
-                    closeStatusText.textContent = 'FALTANTE ' + formatMoney(totalDiff);
-                    closeStatusText.setAttribute('data-tone', 'bad');
-                }
-            }
-
-            if (differenceReason) {
-                differenceReason.required = totalDiff !== 0;
-            }
-
-            if (closeBalanceInput) {
-                closeBalanceInput.value = totalCounted.toFixed(2);
-            }
-
-            return { totalDiff, totalCounted };
-        }
-
-        ['counted-cash', 'counted-card', 'counted-transfer'].forEach(function (id) {
-            document.getElementById(id)?.addEventListener('input', updateCloseMath);
-        });
-        updateCloseMath();
-
-        closeForm?.addEventListener('submit', function (event) {
-            const calc = updateCloseMath();
-            const canApprove = (closeForm.dataset.canApproveDifference || '0') === '1';
-            const hasDifference = Math.abs(calc.totalDiff) > 0.0001;
-
-            if (closeAlert) {
-                closeAlert.classList.add('hidden');
-                closeAlert.textContent = '';
-            }
-
-            if (!hasDifference) {
-                if (differenceApproved) differenceApproved.value = '0';
-                return;
-            }
-
-            if (!differenceReason || differenceReason.value.trim() === '') {
-                event.preventDefault();
-                if (closeAlert) {
-                    closeAlert.classList.remove('hidden');
-                    closeAlert.textContent = 'Debes ingresar un motivo porque el cierre no cuadra.';
-                }
-                return;
-            }
-
-            if (!canApprove) {
-                event.preventDefault();
-                if (closeAlert) {
-                    closeAlert.classList.remove('hidden');
-                    closeAlert.textContent = 'Solo Admin puede confirmar cierre con diferencia.';
-                }
-                return;
-            }
-
-            if (differenceApproved && differenceApproved.value !== '1') {
-                event.preventDefault();
-                if (differenceApprovalError) differenceApprovalError.classList.add('hidden');
-                if (differenceApprovalPassword) differenceApprovalPassword.value = '';
-                openModal(differenceApprovalModal);
-            }
-        });
-
-        confirmCloseWithDiff?.addEventListener('click', function () {
-            if (!differenceApprovalPassword || differenceApprovalPassword.value.trim() === '') {
-                if (differenceApprovalError) differenceApprovalError.classList.remove('hidden');
-                return;
-            }
-
-            if (differenceApproved) differenceApproved.value = '1';
-
-            const oldHidden = closeForm?.querySelector('input[name="supervisor_password"]');
-            if (oldHidden) {
-                oldHidden.value = differenceApprovalPassword.value;
-            } else if (closeForm) {
-                const hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = 'supervisor_password';
-                hidden.value = differenceApprovalPassword.value;
-                closeForm.appendChild(hidden);
-            }
-
-            closeModal(differenceApprovalModal);
-            closeForm?.submit();
-        });
-
-        document.querySelectorAll('[data-close-difference-modal]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                closeModal(differenceApprovalModal);
-            });
-        });
-
-        document.querySelectorAll('.js-open-void-modal').forEach(function (button) {
-            button.addEventListener('click', function () {
-                if (!voidForm || !voidRouteTemplate) return;
-
-                const movementId = button.getAttribute('data-movement-id') || '';
-                const movementLabel = button.getAttribute('data-movement-label') || '-';
-                voidForm.action = voidRouteTemplate.replace('__MOVEMENT__', movementId);
-                if (voidLabel) voidLabel.textContent = movementLabel;
-
-                const reason = document.getElementById('void-reason');
-                if (reason) reason.value = '';
-
-                openModal(voidModal);
-            });
-        });
-
-        document.querySelectorAll('[data-close-void-modal]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                closeModal(voidModal);
-            });
-        });
-
-    })();
-</script>
-@endpush
-
-{{--
+{{-- 
 TODO backend minimo:
 1) Route sugerida: PATCH /cash/movements/{movement}/void -> cash.movements.void
 2) CashMovement: status, void_reason, voided_at, voided_by (solo Admin puede anular).

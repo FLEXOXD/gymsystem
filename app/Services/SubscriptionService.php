@@ -213,6 +213,13 @@ class SubscriptionService
                 planTemplate: $planTemplate ?? [],
                 fallback: (string) ($subscription?->feature_version ?? '')
             );
+            $sucursalesIntroPending = (bool) ($subscription?->sucursales_intro_pending ?? false);
+            $sucursalesBasePrice = $subscription?->sucursales_base_price !== null
+                ? (float) $subscription->sucursales_base_price
+                : null;
+            $sucursalesIntroDiscountPercent = $subscription?->sucursales_intro_discount_percent !== null
+                ? (int) $subscription->sucursales_intro_discount_percent
+                : null;
 
             if (is_array($planTemplate)) {
                 ['plan_name' => $planName, 'price' => $price, 'ends_at' => $endsAt] = $this->resolvePlanTemplateSnapshot(
@@ -233,12 +240,29 @@ class SubscriptionService
                 );
             }
 
+            [
+                'price' => $price,
+                'sucursales_intro_pending' => $sucursalesIntroPending,
+                'sucursales_base_price' => $sucursalesBasePrice,
+                'sucursales_intro_discount_percent' => $sucursalesIntroDiscountPercent,
+            ] = $this->resolveSucursalesIntroPricing(
+                planKey: $planKey,
+                price: $price,
+                planTemplate: $planTemplate,
+                currentPending: $sucursalesIntroPending,
+                currentBasePrice: $sucursalesBasePrice,
+                currentDiscountPercent: $sucursalesIntroDiscountPercent
+            );
+
             $payload = [
                 'plan_key' => $planKey,
                 'plan_template_id' => $planTemplateId,
                 'feature_version' => $featureVersion,
                 'plan_name' => $planName,
                 'price' => $price,
+                'sucursales_intro_pending' => $sucursalesIntroPending,
+                'sucursales_base_price' => $sucursalesBasePrice,
+                'sucursales_intro_discount_percent' => $sucursalesIntroDiscountPercent,
                 'starts_at' => $startsAt->toDateString(),
                 'ends_at' => $endsAt->toDateString(),
                 'status' => 'active',
@@ -305,6 +329,27 @@ class SubscriptionService
                 planTemplate: $planTemplate,
                 fallback: (string) ($subscription?->feature_version ?? '')
             );
+            $sucursalesIntroPending = (bool) ($subscription?->sucursales_intro_pending ?? false);
+            $sucursalesBasePrice = $subscription?->sucursales_base_price !== null
+                ? (float) $subscription->sucursales_base_price
+                : null;
+            $sucursalesIntroDiscountPercent = $subscription?->sucursales_intro_discount_percent !== null
+                ? (int) $subscription->sucursales_intro_discount_percent
+                : null;
+
+            [
+                'price' => $price,
+                'sucursales_intro_pending' => $sucursalesIntroPending,
+                'sucursales_base_price' => $sucursalesBasePrice,
+                'sucursales_intro_discount_percent' => $sucursalesIntroDiscountPercent,
+            ] = $this->resolveSucursalesIntroPricing(
+                planKey: $planKey,
+                price: $price,
+                planTemplate: $planTemplate,
+                currentPending: $sucursalesIntroPending,
+                currentBasePrice: $sucursalesBasePrice,
+                currentDiscountPercent: $sucursalesIntroDiscountPercent
+            );
 
             $payload = [
                 'plan_key' => $planKey,
@@ -312,6 +357,9 @@ class SubscriptionService
                 'feature_version' => $featureVersion,
                 'plan_name' => $planName,
                 'price' => $price,
+                'sucursales_intro_pending' => $sucursalesIntroPending,
+                'sucursales_base_price' => $sucursalesBasePrice,
+                'sucursales_intro_discount_percent' => $sucursalesIntroDiscountPercent,
                 'starts_at' => $startsAt->toDateString(),
                 'ends_at' => $endsAt->toDateString(),
                 'status' => 'active',
@@ -461,6 +509,79 @@ class SubscriptionService
             'price' => $price,
             'ends_at' => $endsAt,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     * @return array{price:float,sucursales_intro_pending:bool,sucursales_base_price:?float,sucursales_intro_discount_percent:?int}
+     */
+    private function resolveSucursalesIntroPricing(
+        string $planKey,
+        float $price,
+        ?array $planTemplate,
+        bool $currentPending,
+        ?float $currentBasePrice,
+        ?int $currentDiscountPercent
+    ): array {
+        $resolvedPlanKey = strtolower(trim($planKey));
+        $isTemplateDrivenUpdate = is_array($planTemplate);
+        $resolvedPrice = max(0, $price);
+        $pending = $currentPending;
+        $basePrice = $currentBasePrice;
+        $discountPercent = $currentDiscountPercent;
+
+        if ($resolvedPlanKey !== 'sucursales') {
+            return [
+                'price' => $resolvedPrice,
+                'sucursales_intro_pending' => false,
+                'sucursales_base_price' => null,
+                'sucursales_intro_discount_percent' => null,
+            ];
+        }
+
+        if (! $isTemplateDrivenUpdate) {
+            if ($pending) {
+                $resolvedPrice = $basePrice !== null ? max(0, $basePrice) : $resolvedPrice;
+                $pending = false;
+                $basePrice = null;
+                $discountPercent = null;
+            }
+
+            return [
+                'price' => $resolvedPrice,
+                'sucursales_intro_pending' => $pending,
+                'sucursales_base_price' => $basePrice,
+                'sucursales_intro_discount_percent' => $discountPercent,
+            ];
+        }
+
+        $applyIntroFirstCycle = (bool) ($planTemplate['intro_discount_first_cycle'] ?? false);
+        if (! $applyIntroFirstCycle) {
+            return [
+                'price' => $resolvedPrice,
+                'sucursales_intro_pending' => false,
+                'sucursales_base_price' => null,
+                'sucursales_intro_discount_percent' => null,
+            ];
+        }
+
+        $introPercent = $this->resolveIntroDiscountPercent($planTemplate['intro_discount_percent'] ?? null);
+        $base = max(0, $resolvedPrice);
+        $discounted = round($base * (1 - ($introPercent / 100)), 2);
+
+        return [
+            'price' => max(0, $discounted),
+            'sucursales_intro_pending' => true,
+            'sucursales_base_price' => $base,
+            'sucursales_intro_discount_percent' => $introPercent,
+        ];
+    }
+
+    private function resolveIntroDiscountPercent(mixed $value): int
+    {
+        $percent = is_numeric($value) ? (int) round((float) $value) : 50;
+
+        return max(1, min(100, $percent));
     }
 
     /**

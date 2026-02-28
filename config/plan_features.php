@@ -25,7 +25,7 @@ return [
         'profesional' => [
             'promotions' => true,
             'reports_base' => true,
-            'reports_export' => false,
+            'reports_export' => true,
             'multi_branch' => false,
             'pwa_install' => true,
         ],

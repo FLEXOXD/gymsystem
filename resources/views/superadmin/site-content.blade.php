@@ -34,7 +34,7 @@
     <div class="grid items-start gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
         <div class="space-y-4">
             <x-ui.card title="Contenido comercial" subtitle="Editor visual de landing para editar por secciones y ver la vista previa al instante.">
-                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="theme-surface-light grid gap-4 text-slate-800 lg:grid-cols-2">
+                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2">
                     @csrf
 
                     <div class="lg:col-span-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
@@ -111,6 +111,49 @@
                             URL WhatsApp generada automáticamente
                             <input type="text" id="wa-preview" class="ui-input" value="{{ $content['whatsapp_url'] ?? '' }}" readonly>
                         </label>
+
+                        <div class="lg:col-span-2 rounded-xl border border-slate-300 bg-white p-3">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Mensajes por plan (botones de precios)</p>
+                            <p class="mt-1 text-xs text-slate-500">Cada plan enviara su propio texto a WhatsApp.</p>
+
+                            <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Mensaje plan basico
+                                    <textarea id="wa-plan-basico-message" name="whatsapp_message_plan_basico" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_basico', $content['whatsapp_message_plan_basico'] ?? '') }}</textarea>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Mensaje plan profesional
+                                    <textarea id="wa-plan-profesional-message" name="whatsapp_message_plan_profesional" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_profesional', $content['whatsapp_message_plan_profesional'] ?? '') }}</textarea>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Mensaje plan premium
+                                    <textarea id="wa-plan-premium-message" name="whatsapp_message_plan_premium" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_premium', $content['whatsapp_message_plan_premium'] ?? '') }}</textarea>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Mensaje plan sucursales
+                                    <textarea id="wa-plan-sucursales-message" name="whatsapp_message_plan_sucursales" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_sucursales', $content['whatsapp_message_plan_sucursales'] ?? '') }}</textarea>
+                                </label>
+                            </div>
+
+                            <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    URL plan basico
+                                    <input type="text" id="wa-plan-basico-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_basico'] ?? '' }}" readonly>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    URL plan profesional
+                                    <input type="text" id="wa-plan-profesional-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_profesional'] ?? '' }}" readonly>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    URL plan premium
+                                    <input type="text" id="wa-plan-premium-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_premium'] ?? '' }}" readonly>
+                                </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    URL plan sucursales
+                                    <input type="text" id="wa-plan-sucursales-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_sucursales'] ?? '' }}" readonly>
+                                </label>
+                            </div>
+                        </div>
                     </section>
                     <section id="editor-hero" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
@@ -261,6 +304,54 @@
     </div>
 
     <style>
+        .theme-dark .site-content-editor {
+            color: #e2e8f0;
+        }
+        .theme-dark .site-content-editor > .rounded-xl,
+        .theme-dark .site-content-editor .editor-block {
+            border-color: rgba(71, 85, 105, 0.85) !important;
+            background: rgba(15, 23, 42, 0.72) !important;
+        }
+        .theme-dark .site-content-editor [class*="bg-slate-50"],
+        .theme-dark .site-content-editor [class*="bg-slate-50\\/"] {
+            background: rgba(15, 23, 42, 0.72) !important;
+        }
+        .theme-dark .site-content-editor [class*="border-slate-300"] {
+            border-color: rgba(71, 85, 105, 0.85) !important;
+        }
+        .theme-dark .site-content-editor .bg-white,
+        .theme-dark .site-content-editor details {
+            background: rgba(15, 23, 42, 0.9) !important;
+        }
+        .theme-dark .site-content-editor .text-slate-800,
+        .theme-dark .site-content-editor .text-slate-700 {
+            color: #e2e8f0 !important;
+        }
+        .theme-dark .site-content-editor .text-slate-600,
+        .theme-dark .site-content-editor .text-slate-500 {
+            color: #94a3b8 !important;
+        }
+        .theme-dark .site-content-editor [data-scroll-target] {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-color: rgba(71, 85, 105, 0.85) !important;
+            color: #e2e8f0 !important;
+        }
+        .theme-dark .site-content-editor [data-scroll-target]:hover {
+            border-color: rgba(34, 211, 238, 0.65) !important;
+            color: #a5f3fc !important;
+        }
+        .theme-dark .site-content-editor .ui-input {
+            background: #020617;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+        .theme-dark .site-content-editor .ui-input::placeholder {
+            color: #94a3b8;
+        }
+        .theme-dark .site-content-editor details summary {
+            color: #f1f5f9;
+        }
+
         .web-preview-fab {
             position: fixed;
             right: 1rem;
@@ -391,6 +482,24 @@
             const phoneEl = document.getElementById('wa-phone');
             const messageEl = document.getElementById('wa-message');
             const waPreviewEl = document.getElementById('wa-preview');
+            const planWhatsappFields = {
+                basico: {
+                    message: document.getElementById('wa-plan-basico-message'),
+                    preview: document.getElementById('wa-plan-basico-preview'),
+                },
+                profesional: {
+                    message: document.getElementById('wa-plan-profesional-message'),
+                    preview: document.getElementById('wa-plan-profesional-preview'),
+                },
+                premium: {
+                    message: document.getElementById('wa-plan-premium-message'),
+                    preview: document.getElementById('wa-plan-premium-preview'),
+                },
+                sucursales: {
+                    message: document.getElementById('wa-plan-sucursales-message'),
+                    preview: document.getElementById('wa-plan-sucursales-preview'),
+                },
+            };
             const changeIndicator = document.getElementById('editor-change-indicator');
             const modalIframe = document.getElementById('landing-preview-modal');
             const previewViewport = document.getElementById('preview-modal-viewport');
@@ -417,25 +526,55 @@
                 });
             };
 
-            const buildWhatsappUrl = function () {
-                if (!phoneEl || !messageEl || !waPreviewEl) {
+            const normalizeWhatsappPhone = function () {
+                return String(phoneEl && phoneEl.value ? phoneEl.value : '').replace(/\D+/g, '');
+            };
+
+            const buildWhatsappUrlFromValues = function (phone, message) {
+                const normalizedPhone = String(phone || '').trim();
+                if (!normalizedPhone) {
                     return '#';
                 }
 
-                const phone = String(phoneEl.value || '').replace(/\D+/g, '');
-                const message = String(messageEl.value || '').trim();
-                if (!phone) {
-                    waPreviewEl.value = '#';
-                    return '#';
+                const normalizedMessage = String(message || '')
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\r/g, '\n')
+                    .trim()
+                    .normalize('NFC');
+                let url = 'https://api.whatsapp.com/send?phone=' + normalizedPhone;
+                if (normalizedMessage) {
+                    url += '&text=' + encodeURIComponent(normalizedMessage);
                 }
 
-                let url = 'https://wa.me/' + phone;
-                if (message) {
-                    url += '?text=' + encodeURIComponent(message);
-                }
-
-                waPreviewEl.value = url;
                 return url;
+            };
+
+            const buildWhatsappUrls = function () {
+                const phone = normalizeWhatsappPhone();
+                const baseMessage = String(messageEl && messageEl.value ? messageEl.value : '').trim();
+                const urls = {
+                    base: buildWhatsappUrlFromValues(phone, baseMessage),
+                    basico: '#',
+                    profesional: '#',
+                    premium: '#',
+                    sucursales: '#',
+                };
+
+                if (waPreviewEl) {
+                    waPreviewEl.value = urls.base;
+                }
+
+                Object.keys(planWhatsappFields).forEach(function (planKey) {
+                    const config = planWhatsappFields[planKey];
+                    const planMessage = String(config && config.message && config.message.value ? config.message.value : '').trim();
+                    const planUrl = buildWhatsappUrlFromValues(phone, planMessage);
+                    urls[planKey] = planUrl;
+                    if (config && config.preview) {
+                        config.preview.value = planUrl;
+                    }
+                });
+
+                return urls;
             };
 
             const serializeForm = function () {
@@ -489,13 +628,23 @@
                 });
             };
 
-            const applyWhatsappLinks = function (url) {
+            const applyWhatsappLinks = function (urls) {
                 forEachPreviewDoc(function (doc) {
+                    const baseUrl = String(urls && urls.base ? urls.base : '#');
+                    const planLinks = doc.querySelectorAll('[data-plan-cta-key]');
+                    planLinks.forEach(function (link) {
+                        const key = String(link.getAttribute('data-plan-cta-key') || '').trim();
+                        const targetUrl = String(urls && urls[key] ? urls[key] : baseUrl);
+                        link.setAttribute('href', targetUrl !== '' ? targetUrl : '#');
+                    });
+
                     const links = doc.querySelectorAll('a[href*="wa.me"], .btn-wa');
                     links.forEach(function (link) {
-                        if (url !== '') {
-                            link.setAttribute('href', url);
+                        if (link.hasAttribute('data-plan-cta-key')) {
+                            return;
                         }
+
+                        link.setAttribute('href', baseUrl !== '' ? baseUrl : '#');
                     });
                 });
             };
@@ -673,7 +822,8 @@
                     }
                 });
 
-                applyWhatsappLinks(buildWhatsappUrl());
+                const whatsappUrls = buildWhatsappUrls();
+                applyWhatsappLinks(whatsappUrls);
             };
 
             let livePreviewTimer = null;
@@ -847,7 +997,7 @@
                 });
             });
 
-            buildWhatsappUrl();
+            buildWhatsappUrls();
             updateChangeIndicator();
         })();
     </script>

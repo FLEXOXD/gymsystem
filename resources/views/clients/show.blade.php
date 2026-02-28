@@ -211,6 +211,7 @@
                 confirmMessage: '',
                 pendingDeactivateFormId: null,
                 qrCopyFeedback: '',
+                whatsappCopyFeedback: '',
 
                 init() {
                     if (this.membershipModalOpen) {
@@ -279,6 +280,19 @@
                         this.qrCopyFeedback = 'Valor QR copiado.';
                     } catch (error) {
                         this.qrCopyFeedback = 'No se pudo copiar automáticamente.';
+                    }
+                },
+
+                async copyWhatsappMessage(value) {
+                    if (!value) {
+                        return;
+                    }
+
+                    try {
+                        await navigator.clipboard.writeText(value);
+                        this.whatsappCopyFeedback = 'Mensaje de WhatsApp copiado.';
+                    } catch (error) {
+                        this.whatsappCopyFeedback = 'No se pudo copiar el mensaje automaticamente.';
                     }
                 },
             };

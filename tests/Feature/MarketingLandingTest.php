@@ -102,6 +102,40 @@ it('shows dedicated legal pages', function () {
         ->assertDontSee('id="contacto"', false);
 });
 
+it('renders whatsapp urls per pricing plan using superadmin-configured messages', function () {
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_phone',
+        'value' => '593111222333',
+    ]);
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_message_plan_basico',
+        'value' => 'msg_plan_basico',
+    ]);
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_message_plan_profesional',
+        'value' => 'msg_plan_profesional',
+    ]);
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_message_plan_premium',
+        'value' => 'msg_plan_premium',
+    ]);
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_message_plan_sucursales',
+        'value' => 'msg_plan_sucursales',
+    ]);
+
+    $this->get(route('landing'))
+        ->assertOk()
+        ->assertSee('data-plan-cta-key="basico"', false)
+        ->assertSee('data-plan-cta-key="profesional"', false)
+        ->assertSee('data-plan-cta-key="premium"', false)
+        ->assertSee('data-plan-cta-key="sucursales"', false)
+        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_basico', false)
+        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_profesional', false)
+        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_premium', false)
+        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_sucursales', false);
+});
+
 it('stores legal acceptance evidence with validation', function () {
     $this->from(route('landing.legal.privacy'))
         ->post(route('landing.legal.accept'), [
@@ -274,4 +308,35 @@ it('creates a temporary demo account and redirects to panel', function () {
     $response->assertRedirect(route('panel.index', ['contextGym' => $session->gym->slug]));
 
     $this->assertAuthenticatedAs($session->user);
+});
+
+it('loads panel successfully after requesting a demo session', function () {
+    $response = $this->post(route('demo.request'));
+
+    $session = DemoSession::query()->first();
+    expect($session)->not->toBeNull();
+
+    $response->assertRedirect(route('panel.index', ['contextGym' => $session->gym->slug]));
+
+    $this->actingAs($session->user)
+        ->get(route('panel.index', ['contextGym' => $session->gym->slug]))
+        ->assertOk();
+});
+
+it('ends demo session and deletes demo data immediately', function () {
+    $this->post(route('demo.request'));
+
+    $session = DemoSession::query()->firstOrFail();
+    $demoSessionId = (int) $session->id;
+    $demoGymId = (int) $session->gym_id;
+    $demoUserId = (int) $session->user_id;
+
+    $this->actingAs($session->user)
+        ->post(route('demo.end'))
+        ->assertRedirect(route('landing'));
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('demo_sessions', ['id' => $demoSessionId]);
+    $this->assertDatabaseMissing('gyms', ['id' => $demoGymId]);
+    $this->assertDatabaseMissing('users', ['id' => $demoUserId]);
 });
