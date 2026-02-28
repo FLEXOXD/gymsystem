@@ -18,24 +18,24 @@ class MarketingContent
             'brand_kicker' => 'Sistema Operativo',
             'brand_name' => 'GymSystem',
             'brand_logo_path' => '',
-            'login_button_label' => 'Iniciar sesiÃ³n',
+            'login_button_label' => 'Iniciar sesiÃƒÂ³n',
             'hero_kicker' => 'Software para gimnasios',
-            'hero_title' => 'Administra tu gimnasio en un solo sistema, rÃ¡pido y sin problemas.',
-            'hero_subtitle' => 'Gestiona recepciÃ³n, clientes, membresÃ­as, caja y reportes desde una plataforma estable para escritorio y mÃ³vil. Ideal para gimnasios individuales o multisucursal.',
+            'hero_title' => 'Administra tu gimnasio en un solo sistema, rÃƒÂ¡pido y sin problemas.',
+            'hero_subtitle' => 'Gestiona recepciÃƒÂ³n, clientes, membresÃƒÂ­as, caja y reportes desde una plataforma estable para escritorio y mÃƒÂ³vil. Ideal para gimnasios individuales o multisucursal.',
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => '593991066303',
-            'whatsapp_message' => 'Hola, quiero mÃ¡s informaciÃ³n de GymSystem para controlar mi gimnasio.',
+            'whatsapp_message' => 'Hola, quiero mÃƒÂ¡s informaciÃƒÂ³n de GymSystem para controlar mi gimnasio.',
             'whatsapp_message_plan_basico' => 'Hola, quiero informacion del Plan basico de GymSystem.',
             'whatsapp_message_plan_profesional' => 'Hola, quiero informacion del Plan profesional de GymSystem.',
             'whatsapp_message_plan_premium' => 'Hola, quiero informacion del Plan premium de GymSystem.',
             'whatsapp_message_plan_sucursales' => 'Hola, quiero informacion del Plan sucursales de GymSystem para multi-sede.',
-            'final_cta_title' => 'Convierte tu operaciÃ³n diaria en un flujo simple y medible.',
+            'final_cta_title' => 'Convierte tu operaciÃƒÂ³n diaria en un flujo simple y medible.',
             'final_cta_text' => 'Solicita una demo temporal y prueba el sistema real con datos de ejemplo que luego se eliminan.',
             'final_cta_image_path' => '',
             'footer_text' => 'GymSystem {year} | Control operativo para gimnasios',
             'footer_contact_email' => 'soporte@gymsystem.local',
             'hero_panel_left_title' => 'Panel operativo en vivo',
-            'hero_panel_right_title' => 'Modo recepciÃ³n',
+            'hero_panel_right_title' => 'Modo recepciÃƒÂ³n',
             'hero_metric_1_label' => 'Clientes',
             'hero_metric_1_value' => '124',
             'hero_metric_2_label' => 'Activos',
@@ -45,14 +45,14 @@ class MarketingContent
             'hero_metric_4_label' => 'Caja hoy',
             'hero_metric_4_value' => '$ 1,430',
             'hero_media_tag' => 'Marca - Web - Crecimiento',
-            'hero_media_note' => 'Carrusel visual en vivo de tu operaciÃ³n',
+            'hero_media_note' => 'Carrusel visual en vivo de tu operaciÃƒÂ³n',
             'hero_slide_1_path' => '',
             'hero_slide_2_path' => '',
             'hero_slide_3_path' => '',
-            'section_1_title' => 'OperaciÃ³n diaria clara para recepciÃ³n y administraciÃ³n',
-            'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista: alta rÃ¡pida de cliente, cobro inmediato, renovaciÃ³n de membresÃ­a y control de caja por turno.',
-            'section_1_item_1' => 'Cobros de membresÃ­a con control de mÃ©todo de pago',
-            'section_1_item_2' => 'Alertas de vencimiento y seguimiento de clientes',
+            'section_1_title' => 'OperaciÃƒÂ³n diaria clara para recepciÃƒÂ³n y administraciÃƒÂ³n',
+            'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rapida.',
+            'section_1_item_1' => 'Ingreso y check-in con QR, RFID, pulseras y llaveros',
+            'section_1_item_2' => 'Cobros de membresia con control por metodo de pago',
             'section_1_item_3' => 'Reportes de ingresos y asistencia en tiempo real',
             'section_1_image_path' => '',
             'section_1_metric_1_label' => 'Por vencer',
@@ -77,10 +77,10 @@ class MarketingContent
             'section_2_metric_3_value' => 'Por rol',
             'section_2_metric_4_label' => 'Escalabilidad',
             'section_2_metric_4_value' => 'Lista',
-            'section_3_title' => 'Experiencia mÃ³vil tipo app (PWA) para operar desde cualquier dispositivo',
-            'section_3_text' => 'Instalable en celular y escritorio, con interfaz operativa adaptada para recepciÃ³n y administraciÃ³n diaria.',
-            'section_3_item_1' => 'Pantalla de inicio tipo aplicaciÃ³n',
-            'section_3_item_2' => 'CachÃ© de assets para carga rÃ¡pida',
+            'section_3_title' => 'Experiencia mÃƒÂ³vil tipo app (PWA) para operar desde cualquier dispositivo',
+            'section_3_text' => 'Instalable en celular y escritorio, con interfaz operativa adaptada para recepciÃƒÂ³n y administraciÃƒÂ³n diaria.',
+            'section_3_item_1' => 'Pantalla de inicio tipo aplicaciÃƒÂ³n',
+            'section_3_item_2' => 'CachÃƒÂ© de assets para carga rÃƒÂ¡pida',
             'section_3_item_3' => 'Base lista para notificaciones y recordatorios',
             'section_3_image_path' => '',
             'section_3_metric_1_label' => 'PWA',
@@ -154,6 +154,7 @@ class MarketingContent
             }
         }
 
+        $defaults = self::replaceLegacySectionOneCopy($defaults);
         $defaults = self::replaceLegacySectionTwoCopy($defaults);
 
         return self::withComputed($defaults);
@@ -290,6 +291,46 @@ class MarketingContent
      * @param array<string, string> $content
      * @return array<string, string>
      */
+    private static function replaceLegacySectionOneCopy(array $content): array
+    {
+        $legacyMap = [
+            'section_1_text' => [
+                'Todo lo que tu equipo necesita en una sola vista.',
+                'Todo lo que tu equipo necesita en una sola vista: alta rapida de cliente, cobro inmediato, renovacion de membresia y control de caja por turno.',
+                'Todo lo que tu equipo necesita en una sola vista: alta rápida de cliente, cobro inmediato, renovación de membresía y control de caja por turno.',
+            ],
+            'section_1_item_1' => [
+                'Cobros de membresia con control de metodo de pago',
+                'Cobros de membresía con control de método de pago',
+            ],
+            'section_1_item_2' => [
+                'Alertas de vencimiento y seguimiento de clientes',
+            ],
+        ];
+
+        $defaults = self::defaults();
+
+        foreach ($legacyMap as $key => $legacyValues) {
+            $current = trim((string) ($content[$key] ?? ''));
+            if ($current === '') {
+                continue;
+            }
+
+            foreach ($legacyValues as $legacyValue) {
+                if (mb_strtolower($current) === mb_strtolower(trim($legacyValue))) {
+                    $content[$key] = (string) ($defaults[$key] ?? $current);
+                    break;
+                }
+            }
+        }
+
+        return $content;
+    }
+
+    /**
+     * @param array<string, string> $content
+     * @return array<string, string>
+     */
     private static function replaceLegacySectionTwoCopy(array $content): array
     {
         $legacyMap = [
@@ -305,11 +346,11 @@ class MarketingContent
             ],
             'section_2_item_2' => [
                 'Filtros por gym_id en operaciones criticas',
-                'Filtros por gym_id en operaciones crÃ­ticas',
+                'Filtros por gym_id en operaciones crÃƒÂ­ticas',
             ],
             'section_2_item_3' => [
                 'Auditoria y pruebas de aislamiento multi-tenant',
-                'AuditorÃ­a y pruebas de aislamiento multi-tenant',
+                'AuditorÃƒÂ­a y pruebas de aislamiento multi-tenant',
             ],
         ];
 
@@ -332,4 +373,5 @@ class MarketingContent
         return $content;
     }
 }
+
 

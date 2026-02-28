@@ -8,6 +8,7 @@ use App\Modules\Clients\Actions\RegisterClientAction;
 use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\Client;
+use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\Promotion;
@@ -96,6 +97,7 @@ class ClientController extends Controller
                 'clients.photo_path',
                 'clients.status',
                 'g.name as gym_name',
+                'g.slug as gym_slug',
                 'lm.latest_membership_id',
                 'lm.starts_at as membership_starts_at',
                 'lm.ends_at as membership_ends_at',
@@ -138,8 +140,16 @@ class ClientController extends Controller
 
         $paymentsByMembership = $this->resolveMembershipPayments($gymIds, $clients);
         $clients->setCollection(
-            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now): array {
-                return $this->buildClientCardRow($client, $paymentsByMembership, $now);
+            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now, $request): array {
+                $row = $this->buildClientCardRow($client, $paymentsByMembership, $now);
+                $row['show_url'] = $this->buildClientShowUrl(
+                    $request,
+                    (int) $client->id,
+                    (int) ($client->gym_id ?? 0),
+                    trim((string) ($client->gym_slug ?? ''))
+                );
+
+                return $row;
             })
         );
 
@@ -257,7 +267,7 @@ class ClientController extends Controller
 
         $client = Client::query()
             ->forGyms($gymIds)
-            ->select(['id', 'first_name', 'last_name', 'document_number'])
+            ->select(['id', 'gym_id', 'first_name', 'last_name', 'document_number'])
             ->whereRaw("REPLACE(REPLACE(UPPER(document_number), '-', ''), ' ', '') = ?", [$canonical])
             ->first();
 
@@ -272,14 +282,19 @@ class ClientController extends Controller
             'id' => (int) $client->id,
             'full_name' => $client->full_name,
             'document_number' => (string) $client->document_number,
-            'show_url' => route('clients.show', ['client' => $client->id] + (ActiveGymContext::isGlobal($request) ? ['scope' => 'global'] : [])),
+            'show_url' => $this->buildClientShowUrl(
+                $request,
+                (int) $client->id,
+                (int) ($client->gym_id ?? 0),
+                null
+            ),
         ]);
     }
 
     /**
      * Show one client scoped by gym.
      */
-    public function show(Request $request, string $contextGym, int $client): View
+    public function show(Request $request, string $contextGym, int $client): View|RedirectResponse
     {
         $gymId = $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
@@ -334,6 +349,26 @@ class ClientController extends Controller
             ->findOrFail($client);
 
         $clientGymId = (int) $clientModel->gym_id;
+        if (ActiveGymContext::isGlobal($request)) {
+            $clientGymSlug = trim((string) Gym::query()
+                ->whereKey($clientGymId)
+                ->value('slug'));
+
+            if ($clientGymSlug !== '') {
+                $params = [
+                    'contextGym' => $clientGymSlug,
+                    'client' => (int) $clientModel->id,
+                ];
+
+                $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+                if ($pwaMode === 'standalone') {
+                    $params['pwa_mode'] = 'standalone';
+                }
+
+                return redirect()->route('clients.show', $params);
+            }
+        }
+
         $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
 
         $plans = Plan::query()
@@ -748,6 +783,54 @@ class ClientController extends Controller
             ->map(static fn ($part): string => mb_strtoupper(mb_substr((string) $part, 0, 1)));
 
         return $parts->isNotEmpty() ? $parts->implode('') : '--';
+    }
+
+    private function buildClientShowUrl(
+        Request $request,
+        int $clientId,
+        int $clientGymId,
+        ?string $clientGymSlug = null
+    ): string {
+        $isGlobal = ActiveGymContext::isGlobal($request);
+
+        if ($isGlobal) {
+            $targetSlug = trim((string) $clientGymSlug);
+            if ($targetSlug === '' && $clientGymId > 0) {
+                $targetSlug = trim((string) Gym::query()
+                    ->whereKey($clientGymId)
+                    ->value('slug'));
+            }
+
+            if ($targetSlug !== '') {
+                $params = [
+                    'contextGym' => $targetSlug,
+                    'client' => $clientId,
+                ];
+
+                $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+                if ($pwaMode === 'standalone') {
+                    $params['pwa_mode'] = 'standalone';
+                }
+
+                return route('clients.show', $params);
+            }
+        }
+
+        $params = ['client' => $clientId];
+        $contextGym = trim((string) ($request->route('contextGym') ?? ''));
+        if ($contextGym !== '') {
+            $params['contextGym'] = $contextGym;
+        }
+        if ($isGlobal) {
+            $params['scope'] = 'global';
+        }
+
+        $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+        if ($pwaMode === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return route('clients.show', $params);
     }
 
     private function resolvePhotoUrl(?string $photoPath): ?string

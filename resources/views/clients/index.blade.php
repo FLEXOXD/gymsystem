@@ -221,7 +221,7 @@
                                     </td>
                                 @endif
                                 <td class="px-3 py-3">
-                                    <a href="{{ route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])) }}"
+                                    <a href="{{ (string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : []))) }}"
                                        class="ui-button ui-button-secondary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>

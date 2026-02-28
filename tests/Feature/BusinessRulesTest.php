@@ -981,6 +981,49 @@ it('supports global scope lookups across linked branches', function () {
         ->assertJsonPath('exists', false);
 });
 
+it('redirects global client detail view to the client branch context', function () {
+    $hubGym = makeGym('hub-global-client-show');
+    $branchGym = makeGym('branch-global-client-show');
+    $hubUser = makeGymUser($hubGym, 'hub-global-client-show@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'created_by' => $hubUser->id,
+    ]);
+
+    $branchClient = Client::query()->create([
+        'gym_id' => $branchGym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Sucursal',
+        'document_number' => 'DOC-BR-SHOW-1',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($hubUser)
+        ->get(route('clients.show', [
+            'contextGym' => $hubGym->slug,
+            'scope' => 'global',
+            'client' => $branchClient->id,
+        ]))
+        ->assertRedirect(route('clients.show', [
+            'contextGym' => $branchGym->slug,
+            'client' => $branchClient->id,
+        ]));
+});
+
 it('shows consolidated cashiers in global scope for hub owner', function () {
     $hubGym = makeGym('hub-global-staff');
     $branchGym = makeGym('branch-global-staff');

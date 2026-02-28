@@ -71,10 +71,10 @@
         [
             'index' => '1',
             'title' => trim((string) ($content['section_1_title'] ?? 'Operación diaria clara para recepción y administración')),
-            'text' => trim((string) ($content['section_1_text'] ?? 'Todo lo que tu equipo necesita en una sola vista.')),
+            'text' => trim((string) ($content['section_1_text'] ?? 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rápida.')),
             'items' => [
-                trim((string) ($content['section_1_item_1'] ?? 'Cobros de membresía con control de método de pago')),
-                trim((string) ($content['section_1_item_2'] ?? 'Alertas de vencimiento y seguimiento de clientes')),
+                trim((string) ($content['section_1_item_1'] ?? 'Ingreso y check-in con QR, RFID, pulseras y llaveros')),
+                trim((string) ($content['section_1_item_2'] ?? 'Cobros de membresía con control por método de pago')),
                 trim((string) ($content['section_1_item_3'] ?? 'Reportes de ingresos y asistencia en tiempo real')),
             ],
         ],
