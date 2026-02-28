@@ -27,14 +27,55 @@ class GymStaffController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (ActiveGymContext::isGlobal($request)) {
-            return redirect()
-                ->route('panel.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para gestionar cajeros.']);
-        }
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
 
         if (! $this->isStaffSchemaReady()) {
             return $this->renderSchemaRequiredView($request);
+        }
+
+        if ($isGlobalScope) {
+            $hubGymId = $this->resolveGymId($request);
+            $scopeGymIds = ActiveGymContext::ids($request);
+            $scopeGymCount = count($scopeGymIds);
+
+            $cashiers = User::query()
+                ->whereIn('gym_id', $scopeGymIds)
+                ->where('role', User::ROLE_CASHIER)
+                ->with(['gym:id,name,slug'])
+                ->orderByDesc('is_active')
+                ->orderBy('gym_id')
+                ->orderByDesc('id')
+                ->get([
+                    'id',
+                    'gym_id',
+                    'name',
+                    'email',
+                    'created_at',
+                    'last_login_at',
+                    'role',
+                    'is_active',
+                    'can_open_cash',
+                    'can_close_cash',
+                    'can_manage_cash_movements',
+                ]);
+
+            $totalCashiers = (int) $cashiers->count();
+            $activeCashiers = (int) $cashiers->where('is_active', true)->count();
+            $inactiveCashiers = max(0, $totalCashiers - $activeCashiers);
+
+            return view('staff.index', [
+                'cashiers' => $cashiers,
+                'currentPlanKey' => $this->planAccessService->currentPlanKeyForGym($hubGymId),
+                'maxCashiers' => 0,
+                'currentCashiers' => $activeCashiers,
+                'remainingCashiers' => 0,
+                'inactiveCashiers' => $inactiveCashiers,
+                'roleSchemaReady' => true,
+                'isGlobalStaffView' => true,
+                'scopeGymCount' => $scopeGymCount,
+                'totalCashiers' => $totalCashiers,
+                'activeCashiers' => $activeCashiers,
+            ]);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -73,6 +114,7 @@ class GymStaffController extends Controller
             'remainingCashiers' => $remainingCashiers,
             'inactiveCashiers' => $inactiveCashiers,
             'roleSchemaReady' => true,
+            'isGlobalStaffView' => false,
         ]);
     }
 
@@ -346,7 +388,17 @@ class GymStaffController extends Controller
             $contextGym = trim((string) ($request->user()?->gym?->slug ?? ''));
         }
 
-        return ['contextGym' => $contextGym];
+        $params = ['contextGym' => $contextGym];
+        if (ActiveGymContext::isGlobal($request)) {
+            $params['scope'] = 'global';
+        }
+
+        $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+        if ($pwaMode === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return $params;
     }
 
     private function isStaffSchemaReady(): bool
@@ -374,6 +426,7 @@ class GymStaffController extends Controller
             'inactiveCashiers' => 0,
             'roleSchemaReady' => false,
             'schemaErrorMessage' => self::STAFF_SCHEMA_ERROR_MESSAGE,
+            'isGlobalStaffView' => ActiveGymContext::isGlobal($request),
         ]);
     }
 

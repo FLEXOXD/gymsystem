@@ -979,6 +979,45 @@ it('supports global scope lookups across linked branches', function () {
         ->assertJsonPath('exists', false);
 });
 
+it('shows consolidated cashiers in global scope for hub owner', function () {
+    $hubGym = makeGym('hub-global-staff');
+    $branchGym = makeGym('branch-global-staff');
+    $hubUser = makeGymUser($hubGym, 'hub-global-staff@example.test', User::ROLE_OWNER);
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'created_by' => $hubUser->id,
+    ]);
+
+    $hubCashier = makeCashierUser($hubGym, 'hub-cashier-global-staff@example.test');
+    $branchCashier = makeCashierUser($branchGym, 'branch-cashier-global-staff@example.test');
+    $branchCashier->update(['is_active' => false]);
+
+    $this->actingAs($hubUser)
+        ->get(route('staff.index', [
+            'contextGym' => $hubGym->slug,
+            'scope' => 'global',
+        ]))
+        ->assertOk()
+        ->assertSee('Resumen global de cajeros')
+        ->assertSee('solo lectura')
+        ->assertSee('Sede')
+        ->assertSee($hubCashier->email)
+        ->assertSee($branchCashier->email)
+        ->assertDontSee('Crear cajero');
+});
+
 it('ignores global scope for branch users even when branch subscription is sucursales', function () {
     $hubGym = makeGym('hub-branch-global-guard');
     $branchGym = makeGym('branch-global-guard');
@@ -1207,6 +1246,57 @@ it('blocks cash opening for a branch user when cash is managed by hub', function
 
     $response->assertForbidden();
     $this->assertDatabaseCount('cash_sessions', 0);
+});
+
+it('allows hub owner to open cash in linked branch when cash is managed by hub', function () {
+    $hubGym = makeGym('hub-cash-open-branch');
+    $branchGym = makeGym('branch-cash-open-branch');
+    $hubUser = makeGymUser($hubGym, 'hub-cash-open-branch@example.test', User::ROLE_OWNER);
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    Subscription::query()
+        ->where('gym_id', $branchGym->id)
+        ->update([
+            'plan_key' => 'basico',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'branch_plan_key' => 'basico',
+        'cash_managed_by_hub' => 1,
+        'status' => 'active',
+        'created_by' => $hubUser->id,
+    ]);
+
+    $this->actingAs($hubUser)
+        ->post(route('cash.open', [
+            'contextGym' => $branchGym->slug,
+        ]), [
+            'opening_balance' => '50.00',
+            'notes' => 'Apertura sede principal',
+        ])
+        ->assertRedirect(route('cash.index', ['contextGym' => $branchGym->slug]))
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseHas('cash_sessions', [
+        'gym_id' => $branchGym->id,
+        'opened_by' => $hubUser->id,
+        'status' => 'open',
+    ]);
 });
 
 it('blocks cash opening for a branch user even when branch link allows local cash', function () {

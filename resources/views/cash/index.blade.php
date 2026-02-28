@@ -35,9 +35,9 @@
         $routeHasVoidMovement = \Illuminate\Support\Facades\Route::has('cash.movements.void');
         $voidRouteTemplate = $routeHasVoidMovement ? route('cash.movements.void', ['movement' => '__MOVEMENT__']) : '';
 
-        $isCurrentCashView = array_key_exists('openSession', get_defined_vars());
-        $openSession = $openSession ?? null;
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $isCurrentCashView = ! $isGlobalScope && array_key_exists('openSession', get_defined_vars());
+        $openSession = $openSession ?? null;
         $cashWriteBlocked = (bool) ($cashWriteBlocked ?? false);
         $cashWriteBlockedReason = trim((string) ($cashWriteBlockedReason ?? ''));
         $canOpenCash = (bool) ($canOpenCash ?? $isOwnerUser);

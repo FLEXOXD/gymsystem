@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CashMovement;
 use App\Models\CashSession;
+use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Models\User;
 use Carbon\Carbon;
@@ -194,11 +195,15 @@ class CashSessionService
 
         $user = User::query()
             ->where('id', $userId)
-            ->where('gym_id', $gymId)
             ->first($columns);
 
         if (! $user) {
             throw new RuntimeException('No se pudo validar permisos del operador de caja.');
+        }
+
+        $operatorGymId = (int) ($user->gym_id ?? 0);
+        if ($operatorGymId !== $gymId && ! $this->canHubOperateBranchCash($operatorGymId, $gymId)) {
+            throw new RuntimeException('No tienes permisos para operar caja en esta sede.');
         }
 
         if (! $user->isActiveAccount()) {
@@ -206,5 +211,19 @@ class CashSessionService
         }
 
         return $user;
+    }
+
+    private function canHubOperateBranchCash(int $operatorGymId, int $targetGymId): bool
+    {
+        if ($operatorGymId <= 0 || $targetGymId <= 0 || $operatorGymId === $targetGymId) {
+            return false;
+        }
+
+        return GymBranchLink::query()
+            ->where('hub_gym_id', $operatorGymId)
+            ->where('branch_gym_id', $targetGymId)
+            ->where('status', 'active')
+            ->where('cash_managed_by_hub', true)
+            ->exists();
     }
 }
