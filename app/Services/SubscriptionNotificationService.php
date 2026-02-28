@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendSubscriptionNotificationPushJob;
 use App\Models\Gym;
 use App\Models\Subscription;
 use App\Models\SubscriptionNotification;
@@ -88,6 +89,7 @@ class SubscriptionNotificationService
 
                         if ($notification->wasRecentlyCreated) {
                             $created++;
+                            SendSubscriptionNotificationPushJob::dispatch((int) $notification->id);
                         }
                     }
                 }

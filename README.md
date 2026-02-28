@@ -169,6 +169,45 @@ Queue worker (Supervisor o systemd):
 php artisan queue:work --queue=default --sleep=2 --tries=1 --timeout=90
 ```
 
+## Notificaciones Push PWA (movil)
+
+Esta version incluye soporte Web Push para la app instalada en celular.
+
+### 1) Instalar dependencia PHP
+
+```bash
+composer update minishlink/web-push
+# luego puedes volver a usar composer install normalmente
+```
+
+### 2) Generar llaves VAPID
+
+```bash
+php artisan notifications:webpush-keys
+```
+
+### 3) Configurar `.env`
+
+```bash
+WEBPUSH_ENABLED=true
+WEBPUSH_VAPID_SUBJECT=mailto:soporte@gymsystem.app
+WEBPUSH_VAPID_PUBLIC_KEY=...
+WEBPUSH_VAPID_PRIVATE_KEY=...
+```
+
+### 4) Migrar y levantar worker
+
+```bash
+php artisan migrate
+php artisan queue:work --queue=default --sleep=2 --tries=1 --timeout=90
+```
+
+### 5) Activar desde panel
+
+- Instalar la PWA en el celular.
+- Ingresar al panel y usar el boton `Activar alertas`.
+- El sistema envia una notificacion de prueba inmediata.
+
 ## Operacion y disco
 
 - Usa `LOG_CHANNEL=daily` y define `LOG_DAILY_DAYS`.

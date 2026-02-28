@@ -21,6 +21,7 @@ use App\Http\Controllers\SuperAdminSiteContentController;
 use App\Http\Controllers\SuperAdminNotificationsController;
 use App\Http\Controllers\SuperAdminPlanTemplateController;
 use App\Http\Controllers\SubscriptionAdminController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Http\Request;
@@ -103,6 +104,18 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
         ->name('legal.modal-acceptance.store');
 
     Route::middleware('check.subscription')->group(function (): void {
+        Route::prefix('notifications/push')->name('notifications.push.')->group(function (): void {
+            Route::get('/status', [PushSubscriptionController::class, 'status'])
+                ->name('status');
+            Route::post('/subscribe', [PushSubscriptionController::class, 'subscribe'])
+                ->name('subscribe');
+            Route::post('/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'])
+                ->name('unsubscribe');
+            Route::post('/test', [PushSubscriptionController::class, 'test'])
+                ->middleware('throttle:10,1')
+                ->name('test');
+        });
+
         Route::get('/panel', function (Request $request) {
             $gymSlug = trim((string) ($request->user()?->gym?->slug ?? ''));
             if ($gymSlug === '') {
@@ -171,6 +184,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 ->name('notifications.sent');
             Route::post('/notifications/{notification}/skipped', [SuperAdminNotificationsController::class, 'markSkipped'])
                 ->name('notifications.skipped');
+            Route::post('/notifications/push-campaigns', [SuperAdminNotificationsController::class, 'sendPushCampaign'])
+                ->middleware('throttle:20,1')
+                ->name('notifications.push-campaigns.send');
             Route::get('/subscriptions', [SubscriptionAdminController::class, 'index'])
                 ->name('subscriptions.index');
             Route::post('/subscriptions/{gym}/renew', [SubscriptionAdminController::class, 'renew'])

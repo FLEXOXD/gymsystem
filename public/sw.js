@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gymsystem-v1";
+const CACHE_VERSION = "gymsystem-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const STATIC_ASSETS = [
@@ -83,4 +83,90 @@ self.addEventListener("fetch", (event) => {
       }),
     );
   }
+});
+
+function normalizePushPayload(payload) {
+  const safePayload = payload && typeof payload === "object" ? payload : {};
+  const data = safePayload.data && typeof safePayload.data === "object" ? safePayload.data : {};
+  const fallbackUrl = typeof safePayload.url === "string" && safePayload.url.trim() !== ""
+    ? safePayload.url
+    : "/app";
+
+  return {
+    title: typeof safePayload.title === "string" && safePayload.title.trim() !== ""
+      ? safePayload.title
+      : "GymSystem",
+    body: typeof safePayload.body === "string" && safePayload.body.trim() !== ""
+      ? safePayload.body
+      : "Tienes una notificacion nueva.",
+    icon: typeof safePayload.icon === "string" && safePayload.icon.trim() !== ""
+      ? safePayload.icon
+      : "/pwa/icon-maskable.png",
+    badge: typeof safePayload.badge === "string" && safePayload.badge.trim() !== ""
+      ? safePayload.badge
+      : "/pwa/icon-maskable.png",
+    tag: typeof safePayload.tag === "string" && safePayload.tag.trim() !== ""
+      ? safePayload.tag
+      : "gymsystem-notification",
+    renotify: Boolean(safePayload.renotify),
+    requireInteraction: Boolean(safePayload.requireInteraction),
+    data: {
+      ...data,
+      url: typeof data.url === "string" && data.url.trim() !== "" ? data.url : fallbackUrl,
+    },
+  };
+}
+
+self.addEventListener("push", (event) => {
+  const pushData = event.data
+    ? (() => {
+        try {
+          return event.data.json();
+        } catch (_error) {
+          return {
+            body: event.data.text(),
+          };
+        }
+      })()
+    : {};
+
+  const payload = normalizePushPayload(pushData);
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon,
+      badge: payload.badge,
+      tag: payload.tag,
+      renotify: payload.renotify,
+      requireInteraction: payload.requireInteraction,
+      data: payload.data,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification && event.notification.data && event.notification.data.url)
+    ? String(event.notification.data.url)
+    : "/app";
+  const targetUrlWithoutHash = targetUrl.split("#")[0];
+
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true,
+    }).then((windowClients) => {
+      for (const client of windowClients) {
+        const clientUrl = String(client.url || "").split("#")[0];
+        if ("focus" in client && (clientUrl === targetUrlWithoutHash || clientUrl.startsWith(targetUrlWithoutHash))) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+
+      return null;
+    }),
+  );
 });

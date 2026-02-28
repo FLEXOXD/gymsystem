@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'webpush' => [
+        'enabled' => (bool) env('WEBPUSH_ENABLED', false),
+        'vapid' => [
+            'subject' => env('WEBPUSH_VAPID_SUBJECT', 'mailto:soporte@gymsystem.app'),
+            'public_key' => env('WEBPUSH_VAPID_PUBLIC_KEY'),
+            'private_key' => env('WEBPUSH_VAPID_PRIVATE_KEY'),
+        ],
+    ],
+
 ];

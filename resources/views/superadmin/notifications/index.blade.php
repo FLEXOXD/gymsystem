@@ -4,7 +4,111 @@
 @section('page-title', 'Notificaciones pendientes')
 
 @section('content')
-    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automáticos por vencimiento y días de gracia.">
+    <x-ui.card title="Campanas push" subtitle="Envio segmentado de notificaciones push a gimnasios y roles operativos.">
+        <form method="POST" action="{{ route('superadmin.notifications.push-campaigns.send') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            @csrf
+            <label class="text-sm font-semibold ui-muted">
+                Gimnasio
+                <select name="gym_id" class="ui-input mt-1 block w-full">
+                    <option value="">Todos los gimnasios</option>
+                    @foreach ($gyms as $gym)
+                        <option value="{{ $gym->id }}" @selected((int) old('gym_id') === (int) $gym->id)>{{ $gym->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <label class="text-sm font-semibold ui-muted">
+                Audiencia
+                <select name="audience" class="ui-input mt-1 block w-full" required>
+                    <option value="owners" @selected(old('audience', 'owners') === 'owners')>Solo duenos</option>
+                    <option value="staff" @selected(old('audience') === 'staff')>Duenos y cajeros</option>
+                    <option value="all_users" @selected(old('audience') === 'all_users')>Todos los usuarios del gym</option>
+                </select>
+            </label>
+
+            <label class="text-sm font-semibold ui-muted xl:col-span-2">
+                Titulo
+                <input type="text" name="title" value="{{ old('title') }}" maxlength="120" class="ui-input mt-1 block w-full" placeholder="Ej: Recordatorio de renovacion" required>
+            </label>
+
+            <label class="text-sm font-semibold ui-muted xl:col-span-2">
+                Mensaje
+                <input type="text" name="body" value="{{ old('body') }}" maxlength="255" class="ui-input mt-1 block w-full" placeholder="Mensaje corto para push en celular" required>
+            </label>
+
+            <label class="text-sm font-semibold ui-muted">
+                URL al tocar
+                <input type="text" name="url" value="{{ old('url') }}" maxlength="500" class="ui-input mt-1 block w-full" placeholder="/app o URL completa">
+            </label>
+
+            <label class="text-sm font-semibold ui-muted">
+                Tag (opcional)
+                <input type="text" name="tag" value="{{ old('tag') }}" maxlength="120" class="ui-input mt-1 block w-full" placeholder="promo-marzo-2026">
+            </label>
+
+            <div class="flex items-end xl:col-span-1">
+                <x-ui.button type="submit" variant="primary">Enviar campana push</x-ui.button>
+            </div>
+        </form>
+
+        <div class="mt-4 overflow-x-auto">
+            <table class="ui-table min-w-[1100px]">
+                <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <th class="px-3 py-3">Fecha</th>
+                    <th class="px-3 py-3">Gimnasio</th>
+                    <th class="px-3 py-3">Audiencia</th>
+                    <th class="px-3 py-3">Titulo</th>
+                    <th class="px-3 py-3">Estado</th>
+                    <th class="px-3 py-3">Enviadas</th>
+                    <th class="px-3 py-3">Fallidas</th>
+                    <th class="px-3 py-3">Saltadas</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse (($pushCampaigns ?? collect()) as $campaign)
+                    @php
+                        $statusVariant = match ((string) ($campaign->status ?? 'queued')) {
+                            'sent' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                            'partial' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                            'failed' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
+                            'skipped' => 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-100',
+                            'sending' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
+                            default => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                        };
+                        $audienceLabel = match ((string) ($campaign->audience ?? 'owners')) {
+                            'staff' => 'Duenos y cajeros',
+                            'all_users' => 'Todos usuarios',
+                            default => 'Solo duenos',
+                        };
+                    @endphp
+                    <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
+                        <td class="px-3 py-3 dark:text-slate-200">{{ $campaign->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $campaign->gym?->name ?? 'Todos' }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ $audienceLabel }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ $campaign->title }}</td>
+                        <td class="px-3 py-3">
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusVariant }}">
+                                {{ $campaign->status }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->sent_count ?? 0) }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->failed_count ?? 0) }}</td>
+                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->skipped_count ?? 0) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                            Aun no se han enviado campanas push.
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </x-ui.card>
+
+    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automaticos por vencimiento y dias de gracia.">
         <form method="GET" action="{{ route('superadmin.notifications.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
                 Fecha
@@ -34,12 +138,12 @@
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
                             : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200';
                         $typeLabel = match ($notification->type) {
-                            'expires_7' => 'Vence en 7 días',
-                            'expires_3' => 'Vence en 3 días',
-                            'expires_1' => 'Vence en 1 día',
-                            'grace_1' => 'Gracia día 1',
-                            'grace_2' => 'Gracia día 2',
-                            'grace_3' => 'Gracia día 3',
+                            'expires_7' => 'Vence en 7 dias',
+                            'expires_3' => 'Vence en 3 dias',
+                            'expires_1' => 'Vence en 1 dia',
+                            'grace_1' => 'Gracia dia 1',
+                            'grace_2' => 'Gracia dia 2',
+                            'grace_3' => 'Gracia dia 3',
                             default => str_replace('_', ' ', $notification->type),
                         };
                     @endphp

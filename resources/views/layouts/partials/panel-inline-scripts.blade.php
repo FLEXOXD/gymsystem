@@ -39,11 +39,21 @@
         const headerBellButton = document.getElementById('header-bell-button');
         const headerBellDropdown = document.getElementById('header-bell-dropdown');
         const pwaInstallButton = document.getElementById('pwa-install-button');
+        const pushNotificationsButton = document.getElementById('push-notifications-button');
         const pwaAccessAlert = document.getElementById('pwa-access-alert');
+        const pushAccessAlert = document.getElementById('push-access-alert');
         const pwaInstallEnabled = pwaInstallButton?.getAttribute('data-pwa-enabled') === '1';
         const pwaUpgradeMessage = @json($pwaUpgradeMessage);
+        const pushWebEnabled = document.querySelector('meta[name="push-web-enabled"]')?.getAttribute('content') === '1';
+        const pushVapidPublicKey = (document.querySelector('meta[name="push-vapid-public-key"]')?.getAttribute('content') || '').trim();
+        const pushSubscribeUrl = document.querySelector('meta[name="push-subscribe-url"]')?.getAttribute('content') || '';
+        const pushUnsubscribeUrl = document.querySelector('meta[name="push-unsubscribe-url"]')?.getAttribute('content') || '';
+        const pushStatusUrl = document.querySelector('meta[name="push-status-url"]')?.getAttribute('content') || '';
+        const pushTestUrl = document.querySelector('meta[name="push-test-url"]')?.getAttribute('content') || '';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         let pwaInstallPromptEvent = null;
         let pwaAlertTimeoutId = null;
+        let pushAlertTimeoutId = null;
 
         function isStandaloneMode() {
             const mediaMatch = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
@@ -62,6 +72,19 @@
             }
             pwaAlertTimeoutId = window.setTimeout(function () {
                 pwaAccessAlert.classList.add('hidden');
+            }, 6500);
+        }
+        function showPushAccessAlert(message, variant = 'info') {
+            if (!pushAccessAlert) return;
+            pushAccessAlert.textContent = String(message || '').trim();
+            pushAccessAlert.classList.remove('hidden', 'ui-alert-info', 'ui-alert-warning', 'ui-alert-danger', 'ui-alert-success');
+            const resolvedVariant = ['warning', 'danger', 'success'].includes(variant) ? variant : 'info';
+            pushAccessAlert.classList.add('ui-alert-' + resolvedVariant);
+            if (pushAlertTimeoutId) {
+                window.clearTimeout(pushAlertTimeoutId);
+            }
+            pushAlertTimeoutId = window.setTimeout(function () {
+                pushAccessAlert.classList.add('hidden');
             }, 6500);
         }
 
@@ -110,6 +133,188 @@
                 showPwaAccessAlert(pwaUpgradeMessage, 'danger');
             }
         }
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; i += 1) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+
+            return outputArray;
+        }
+
+        async function postJson(url, payload) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload || {}),
+            });
+            const data = await response.json().catch(function () {
+                return { ok: false, message: 'Respuesta invalida del servidor.' };
+            });
+            if (!response.ok || data.ok === false) {
+                const errorMessage = (data && data.message) ? String(data.message) : 'No se pudo completar la operacion.';
+                throw new Error(errorMessage);
+            }
+
+            return data;
+        }
+
+        function updatePushButtonState(state) {
+            if (!pushNotificationsButton) return;
+
+            if (state === 'unsupported') {
+                pushNotificationsButton.textContent = 'Alertas no disponibles';
+                pushNotificationsButton.classList.add('opacity-60', 'cursor-not-allowed');
+                pushNotificationsButton.setAttribute('disabled', 'disabled');
+                return;
+            }
+
+            if (state === 'denied') {
+                pushNotificationsButton.textContent = 'Alertas bloqueadas';
+                pushNotificationsButton.classList.add('border-rose-300/80', 'text-rose-300');
+                pushNotificationsButton.removeAttribute('disabled');
+                return;
+            }
+
+            if (state === 'active') {
+                pushNotificationsButton.textContent = 'Desactivar alertas';
+                pushNotificationsButton.classList.add('border-emerald-300/70', 'text-emerald-200');
+                pushNotificationsButton.classList.remove('border-rose-300/80', 'text-rose-300', 'opacity-60', 'cursor-not-allowed');
+                pushNotificationsButton.removeAttribute('disabled');
+                return;
+            }
+
+            pushNotificationsButton.textContent = 'Activar alertas';
+            pushNotificationsButton.classList.remove('border-emerald-300/70', 'text-emerald-200', 'border-rose-300/80', 'text-rose-300', 'opacity-60', 'cursor-not-allowed');
+            pushNotificationsButton.removeAttribute('disabled');
+        }
+
+        async function bootstrapPushNotifications() {
+            if (!pushNotificationsButton) {
+                return;
+            }
+
+            const hasPushSupport = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+            if (!hasPushSupport) {
+                updatePushButtonState('unsupported');
+                return;
+            }
+
+            if (!window.isSecureContext) {
+                updatePushButtonState('unsupported');
+                showPushAccessAlert('Push requiere HTTPS para funcionar en celulares.', 'warning');
+                return;
+            }
+
+            if (!pushWebEnabled || pushVapidPublicKey === '') {
+                updatePushButtonState('unsupported');
+                showPushAccessAlert('Falta configurar Web Push en el servidor (VAPID).', 'warning');
+                return;
+            }
+
+            const statusOnServer = pushStatusUrl !== ''
+                ? await fetch(pushStatusUrl, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                }).then(function (response) {
+                    return response.ok ? response.json() : null;
+                }).catch(function () {
+                    return null;
+                })
+                : null;
+
+            const registration = await navigator.serviceWorker.ready;
+            let currentSubscription = await registration.pushManager.getSubscription();
+
+            if (Notification.permission === 'denied') {
+                updatePushButtonState('denied');
+            } else if (currentSubscription) {
+                updatePushButtonState('active');
+            } else {
+                updatePushButtonState('idle');
+            }
+
+            if (statusOnServer && statusOnServer.webpush_ready === false) {
+                showPushAccessAlert('El servidor aun no tiene llaves VAPID activas.', 'warning');
+            }
+
+            pushNotificationsButton.addEventListener('click', async function () {
+                pushNotificationsButton.setAttribute('disabled', 'disabled');
+
+                try {
+                    currentSubscription = await registration.pushManager.getSubscription();
+
+                    if (currentSubscription) {
+                        if (pushUnsubscribeUrl !== '') {
+                            await postJson(pushUnsubscribeUrl, {
+                                endpoint: currentSubscription.endpoint,
+                            });
+                        }
+                        await currentSubscription.unsubscribe().catch(function () {
+                            // Keep backend cleanup as source of truth.
+                        });
+                        updatePushButtonState('idle');
+                        showPushAccessAlert('Notificaciones push desactivadas para este dispositivo.', 'success');
+
+                        return;
+                    }
+
+                    const permissionResult = await Notification.requestPermission();
+                    if (permissionResult !== 'granted') {
+                        updatePushButtonState(permissionResult === 'denied' ? 'denied' : 'idle');
+                        showPushAccessAlert('No se concedio permiso de notificaciones.', 'warning');
+
+                        return;
+                    }
+
+                    const applicationServerKey = urlBase64ToUint8Array(pushVapidPublicKey);
+                    currentSubscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: applicationServerKey,
+                    });
+
+                    if (pushSubscribeUrl !== '') {
+                        const supportedEncodings = Array.isArray(PushManager.supportedContentEncodings)
+                            ? PushManager.supportedContentEncodings
+                            : [];
+                        const resolvedEncoding = supportedEncodings.includes('aes128gcm') ? 'aes128gcm' : 'aesgcm';
+                        await postJson(pushSubscribeUrl, {
+                            subscription: currentSubscription.toJSON(),
+                            encoding: resolvedEncoding,
+                            device_name: window.navigator.platform || null,
+                        });
+                    }
+
+                    updatePushButtonState('active');
+                    showPushAccessAlert('Notificaciones push activadas correctamente.', 'success');
+
+                    if (pushTestUrl !== '') {
+                        await postJson(pushTestUrl, {});
+                        showPushAccessAlert('Se envio una notificacion de prueba a este dispositivo.', 'success');
+                    }
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : 'No se pudo activar notificaciones push.';
+                    showPushAccessAlert(message, 'danger');
+                    updatePushButtonState(Notification.permission === 'denied' ? 'denied' : 'idle');
+                } finally {
+                    if (Notification.permission !== 'denied') {
+                        pushNotificationsButton.removeAttribute('disabled');
+                    }
+                }
+            });
+        }
+
+        bootstrapPushNotifications().catch(function () {
+            updatePushButtonState('unsupported');
+        });
 
         function closeUserMenu() {
             if (!userMenuDropdown || !userMenuButton) return;

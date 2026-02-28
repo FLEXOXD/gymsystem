@@ -147,6 +147,8 @@
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
+    $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
+    $pushWebEnabled = (bool) config('services.webpush.enabled', false);
     $pwaUpgradeMessage = 'Sube de plan a Profesional, Premium o Sucursales para usar la app instalable (PWA).';
     $suppressGlobalValidationToast = request()->routeIs('clients.index') && (bool) old('_open_create_modal', false);
 
@@ -330,6 +332,14 @@
     <meta name="theme-color" content="#0f3cc9">
     <meta name="pwa-install-enabled" content="{{ $canInstallPwa ? '1' : '0' }}">
     <meta name="pwa-upgrade-message" content="{{ $pwaUpgradeMessage }}">
+    @if ($canInstallPwa)
+        <meta name="push-web-enabled" content="{{ $pushWebEnabled ? '1' : '0' }}">
+        <meta name="push-vapid-public-key" content="{{ $pushVapidPublicKey }}">
+        <meta name="push-subscribe-url" content="{{ route('notifications.push.subscribe') }}">
+        <meta name="push-unsubscribe-url" content="{{ route('notifications.push.unsubscribe') }}">
+        <meta name="push-status-url" content="{{ route('notifications.push.status') }}">
+        <meta name="push-test-url" content="{{ route('notifications.push.test') }}">
+    @endif
     <script>
         (function () {
             var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
@@ -1225,6 +1235,16 @@
                         <x-badge :variant="$statusVariant">{{ $gymSubscriptionStatus }}</x-badge>
                     @endif
 
+                    @if (!$isSuperAdmin && $canInstallPwa)
+                        <button id="push-notifications-button"
+                                type="button"
+                                class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold"
+                                data-push-enabled="{{ $pushWebEnabled ? '1' : '0' }}"
+                                title="Activar notificaciones push">
+                            Activar alertas
+                        </button>
+                    @endif
+
                     @if (!$isSuperAdmin)
                         <button id="pwa-install-button"
                                 type="button"
@@ -1334,6 +1354,7 @@
 
             @if (! $isSuperAdmin)
                 <section id="pwa-access-alert" class="ui-alert ui-alert-warning hidden text-xs font-semibold"></section>
+                <section id="push-access-alert" class="ui-alert ui-alert-info hidden text-xs font-semibold"></section>
             @endif
 
             @if ($isCashierMode)

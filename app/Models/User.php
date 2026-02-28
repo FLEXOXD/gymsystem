@@ -172,6 +172,14 @@ class User extends Authenticatable
         return $this->hasMany(LegalAcceptance::class, 'user_id');
     }
 
+    /**
+     * Push subscriptions registered by this user (one per device/browser).
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function roleKey(): string
     {
         if ($this->gym_id === null) {
