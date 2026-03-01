@@ -5,7 +5,11 @@
 
 @section('content')
     <x-ui.card title="Campanas push" subtitle="Envio segmentado de notificaciones push a gimnasios y roles operativos.">
-        <form method="POST" action="{{ route('superadmin.notifications.push-campaigns.send') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <form method="POST"
+              action="{{ route('superadmin.notifications.push-campaigns.send') }}"
+              class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+              data-ui-loading-overlay="1"
+              data-ui-loading-message="Enviando campana push...">
             @csrf
             <label class="text-sm font-semibold ui-muted">
                 Gimnasio
@@ -36,9 +40,9 @@
                 <input type="text" name="body" value="{{ old('body') }}" maxlength="255" class="ui-input mt-1 block w-full" placeholder="Mensaje corto para push en celular" required>
             </label>
 
-            <label class="text-sm font-semibold ui-muted">
-                URL al tocar
-                <input type="text" name="url" value="{{ old('url') }}" maxlength="500" class="ui-input mt-1 block w-full" placeholder="/app o URL completa">
+            <label class="text-sm font-semibold ui-muted xl:col-span-3">
+                Detalle (opcional)
+                <textarea name="detail_text" rows="3" maxlength="1500" class="ui-input mt-1 block w-full" placeholder="Texto adicional para abrir en detalle">{{ old('detail_text') }}</textarea>
             </label>
 
             <label class="text-sm font-semibold ui-muted">
@@ -82,7 +86,7 @@
                             default => 'Solo duenos',
                         };
                     @endphp
-                    <tr class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
+                    <tr data-push-campaign-status="{{ (string) ($campaign->status ?? 'queued') }}" class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3 dark:text-slate-200">{{ $campaign->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
                         <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $campaign->gym?->name ?? 'Todos' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $audienceLabel }}</td>
@@ -210,5 +214,6 @@
             });
         });
     });
+
 </script>
 @endpush

@@ -42,6 +42,12 @@ return [
             'public_key' => env('WEBPUSH_VAPID_PUBLIC_KEY'),
             'private_key' => env('WEBPUSH_VAPID_PRIVATE_KEY'),
         ],
+        'openssl' => [
+            'conf' => env('WEBPUSH_OPENSSL_CONF', env('OPENSSL_CONF')),
+            'rand_file' => env('WEBPUSH_RAND_FILE', env('RANDFILE')),
+        ],
+        'proxy' => env('WEBPUSH_PROXY'),
+        'campaign_dispatch' => env('WEBPUSH_CAMPAIGN_DISPATCH', 'auto'),
     ],
 
 ];

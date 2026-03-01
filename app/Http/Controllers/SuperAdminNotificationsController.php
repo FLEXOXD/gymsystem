@@ -120,7 +120,7 @@ class SuperAdminNotificationsController extends Controller
             'audience' => ['required', 'string', 'in:owners,staff,all_users'],
             'title' => ['required', 'string', 'max:120'],
             'body' => ['required', 'string', 'max:255'],
-            'url' => ['nullable', 'string', 'max:500'],
+            'detail_text' => ['nullable', 'string', 'max:1500'],
             'tag' => ['nullable', 'string', 'max:120'],
         ]);
 
@@ -130,10 +130,23 @@ class SuperAdminNotificationsController extends Controller
             'audience' => (string) $data['audience'],
             'title' => trim((string) $data['title']),
             'body' => trim((string) $data['body']),
-            'url' => isset($data['url']) && trim((string) $data['url']) !== '' ? trim((string) $data['url']) : null,
+            'detail_text' => isset($data['detail_text']) && trim((string) $data['detail_text']) !== ''
+                ? trim((string) $data['detail_text'])
+                : null,
             'tag' => isset($data['tag']) && trim((string) $data['tag']) !== '' ? trim((string) $data['tag']) : null,
             'status' => 'queued',
         ]);
+
+        $dispatchMode = mb_strtolower(trim((string) config('services.webpush.campaign_dispatch', 'auto')));
+        $queueConnection = trim((string) config('queue.default', 'sync'));
+        $shouldDispatchSync = $dispatchMode === 'sync'
+            || ($dispatchMode === 'auto' && $queueConnection === 'sync');
+
+        if ($shouldDispatchSync) {
+            SendPushCampaignJob::dispatchSync((int) $campaign->id);
+
+            return back()->with('status', 'Campana push enviada y procesada al instante.');
+        }
 
         SendPushCampaignJob::dispatch((int) $campaign->id);
 

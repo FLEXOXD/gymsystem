@@ -117,6 +117,29 @@ function normalizePushPayload(payload) {
   };
 }
 
+function broadcastPushPayload(payload) {
+  return clients
+    .matchAll({
+      type: "window",
+      includeUncontrolled: true,
+    })
+    .then((windowClients) => {
+      windowClients.forEach((client) => {
+        try {
+          client.postMessage({
+            type: "GYMSYSTEM_PUSH_EVENT",
+            payload,
+          });
+        } catch (_error) {
+          // Keep silent, system notification is still shown.
+        }
+      });
+    })
+    .catch(() => {
+      // Keep silent.
+    });
+}
+
 self.addEventListener("push", (event) => {
   const pushData = event.data
     ? (() => {
@@ -131,17 +154,22 @@ self.addEventListener("push", (event) => {
     : {};
 
   const payload = normalizePushPayload(pushData);
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: payload.icon,
-      badge: payload.badge,
-      tag: payload.tag,
-      renotify: payload.renotify,
-      requireInteraction: payload.requireInteraction,
-      data: payload.data,
-    }),
-  );
+  event.waitUntil((async () => {
+    await broadcastPushPayload(payload);
+    try {
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: payload.icon,
+        badge: payload.badge,
+        tag: payload.tag,
+        renotify: payload.renotify,
+        requireInteraction: payload.requireInteraction,
+        data: payload.data,
+      });
+    } catch (_error) {
+      // Keep silent. Foreground toast already has the payload.
+    }
+  })());
 });
 
 self.addEventListener("notificationclick", (event) => {

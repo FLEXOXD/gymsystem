@@ -40,10 +40,12 @@
         const headerBellDropdown = document.getElementById('header-bell-dropdown');
         const pwaInstallButton = document.getElementById('pwa-install-button');
         const pushNotificationsButton = document.getElementById('push-notifications-button');
+        const pushNotificationsStateBadge = document.getElementById('push-notifications-state');
         const pwaAccessAlert = document.getElementById('pwa-access-alert');
         const pushAccessAlert = document.getElementById('push-access-alert');
         const pwaInstallEnabled = pwaInstallButton?.getAttribute('data-pwa-enabled') === '1';
         const pwaUpgradeMessage = @json($pwaUpgradeMessage);
+        const currentUserId = Number(@json((int) ($user?->id ?? 0)));
         const pushWebEnabled = document.querySelector('meta[name="push-web-enabled"]')?.getAttribute('content') === '1';
         const pushVapidPublicKey = (document.querySelector('meta[name="push-vapid-public-key"]')?.getAttribute('content') || '').trim();
         const pushSubscribeUrl = document.querySelector('meta[name="push-subscribe-url"]')?.getAttribute('content') || '';
@@ -51,15 +53,112 @@
         const pushStatusUrl = document.querySelector('meta[name="push-status-url"]')?.getAttribute('content') || '';
         const pushTestUrl = document.querySelector('meta[name="push-test-url"]')?.getAttribute('content') || '';
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const panelToastStack = document.querySelector('.panel-toast-stack');
+        const uiLoadingOverlay = document.getElementById('ui-loading-overlay');
+        const uiLoadingMessage = document.getElementById('ui-loading-message');
         let pwaInstallPromptEvent = null;
         let pwaAlertTimeoutId = null;
         let pushAlertTimeoutId = null;
+        let pushUnsupportedReason = '';
+        let uiLoadingTimeoutId = null;
+        let uiLoadingReleaseId = null;
+        let uiNavigationStarted = false;
+
+        function showUiLoading(message, withFailsafe = false) {
+            if (!uiLoadingOverlay) return;
+            if (uiLoadingTimeoutId) {
+                window.clearTimeout(uiLoadingTimeoutId);
+                uiLoadingTimeoutId = null;
+            }
+            uiLoadingOverlay.setAttribute('data-open', '1');
+            uiLoadingOverlay.setAttribute('aria-hidden', 'false');
+            if (uiLoadingMessage && typeof message === 'string' && message.trim() !== '') {
+                uiLoadingMessage.textContent = message.trim();
+            }
+            if (withFailsafe) {
+                uiLoadingTimeoutId = window.setTimeout(function () {
+                    hideUiLoading();
+                    showPushAccessAlert('La accion esta tardando mas de lo esperado. Intenta de nuevo.', 'warning');
+                }, 15000);
+            }
+        }
+
+        function hideUiLoading() {
+            if (!uiLoadingOverlay) return;
+            if (uiLoadingTimeoutId) {
+                window.clearTimeout(uiLoadingTimeoutId);
+                uiLoadingTimeoutId = null;
+            }
+            uiLoadingOverlay.setAttribute('data-open', '0');
+            uiLoadingOverlay.setAttribute('aria-hidden', 'true');
+            if (uiLoadingMessage) {
+                uiLoadingMessage.textContent = 'Procesando solicitud...';
+            }
+        }
+
+        function clearUiLoadingRelease() {
+            if (uiLoadingReleaseId) {
+                window.clearTimeout(uiLoadingReleaseId);
+                uiLoadingReleaseId = null;
+            }
+        }
+
+        function markUiNavigationStarted() {
+            uiNavigationStarted = true;
+            clearUiLoadingRelease();
+        }
+
+        function showUiLoadingForNavigation(message) {
+            uiNavigationStarted = false;
+            clearUiLoadingRelease();
+            showUiLoading(message, false);
+            uiLoadingReleaseId = window.setTimeout(function () {
+                if (!uiNavigationStarted && document.visibilityState === 'visible') {
+                    hideUiLoading();
+                }
+            }, 1800);
+        }
 
         function isStandaloneMode() {
             const mediaMatch = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
             const iosStandalone = window.navigator && window.navigator.standalone === true;
 
             return Boolean(mediaMatch || iosStandalone);
+        }
+
+        function hidePwaInstallButton() {
+            if (!pwaInstallButton) return;
+            pwaInstallButton.classList.add('hidden');
+            pwaInstallButton.setAttribute('aria-hidden', 'true');
+            pwaInstallButton.setAttribute('tabindex', '-1');
+        }
+
+        function showPwaInstallButton() {
+            if (!pwaInstallButton) return;
+            pwaInstallButton.classList.remove('hidden');
+            pwaInstallButton.classList.add('lg:inline-flex');
+            pwaInstallButton.removeAttribute('aria-hidden');
+            pwaInstallButton.removeAttribute('tabindex');
+        }
+
+        function getPwaInstalledStorageKey() {
+            return ['pwa-installed', window.location.host].join(':');
+        }
+
+        function markPwaInstalled() {
+            try {
+                window.localStorage.setItem(getPwaInstalledStorageKey(), '1');
+            } catch (_error) {
+                // Keep silent.
+            }
+        }
+
+        function wasPwaInstalledBefore() {
+            try {
+                return window.localStorage.getItem(getPwaInstalledStorageKey()) === '1';
+            } catch (_error) {
+                return false;
+            }
         }
 
         function showPwaAccessAlert(message, variant = 'warning') {
@@ -88,7 +187,168 @@
             }, 6500);
         }
 
+        function isDesktopPushToastContext() {
+            if (!window.matchMedia) return true;
+            return window.matchMedia('(min-width: 1024px)').matches;
+        }
+
+        function scheduleRuntimeToastRemoval(toast, delayMs) {
+            const safeDelay = Number.isFinite(delayMs) ? Math.max(1200, Number(delayMs)) : 6500;
+            window.setTimeout(function () {
+                toast.classList.add('opacity-0', 'translate-y-1', 'transition');
+                window.setTimeout(function () {
+                    toast.remove();
+                }, 260);
+            }, safeDelay);
+        }
+
+        function showPushDetailModal(title, shortMessage, detailText) {
+            const text = typeof detailText === 'string' ? detailText.trim() : '';
+            if (text === '') return;
+
+            const existing = document.getElementById('push-detail-overlay');
+            if (existing) {
+                existing.remove();
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'push-detail-overlay';
+            overlay.className = 'fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4';
+
+            const dialog = document.createElement('div');
+            dialog.className = 'w-full max-w-lg rounded-2xl border border-cyan-300/40 bg-slate-950 p-4 text-slate-100 shadow-2xl';
+
+            const heading = document.createElement('h3');
+            heading.className = 'text-base font-black';
+            heading.textContent = typeof title === 'string' && title.trim() !== '' ? title.trim() : 'Notificacion';
+            dialog.appendChild(heading);
+
+            if (typeof shortMessage === 'string' && shortMessage.trim() !== '') {
+                const subtitle = document.createElement('p');
+                subtitle.className = 'mt-1 text-xs text-cyan-200';
+                subtitle.textContent = shortMessage.trim();
+                dialog.appendChild(subtitle);
+            }
+
+            const body = document.createElement('p');
+            body.className = 'mt-3 whitespace-pre-wrap rounded-xl border border-slate-700/70 bg-slate-900/80 p-3 text-sm leading-relaxed';
+            body.textContent = text;
+            dialog.appendChild(body);
+
+            const actions = document.createElement('div');
+            actions.className = 'mt-4 flex justify-end';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'inline-flex items-center rounded-lg border border-cyan-300/60 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-cyan-200 transition hover:bg-cyan-900/30';
+            closeBtn.textContent = 'Cerrar';
+            closeBtn.addEventListener('click', function () {
+                overlay.remove();
+            });
+            actions.appendChild(closeBtn);
+
+            dialog.appendChild(actions);
+            overlay.appendChild(dialog);
+            overlay.addEventListener('click', function (event) {
+                if (event.target === overlay) {
+                    overlay.remove();
+                }
+            });
+
+            document.body.appendChild(overlay);
+        }
+
+        function showDesktopPushToast(pushPayload) {
+            const payload = (pushPayload && typeof pushPayload === 'object') ? pushPayload : {};
+
+            if (!isDesktopPushToastContext()) {
+                const compactTitle = typeof payload.title === 'string' && payload.title.trim() !== '' ? payload.title.trim() : 'GymSystem';
+                const compactBody = typeof payload.body === 'string' ? payload.body.trim() : '';
+                showPushAccessAlert(compactBody !== '' ? compactTitle + ': ' + compactBody : compactTitle, 'info');
+                return;
+            }
+            if (document.visibilityState !== 'visible') return;
+            const rawData = (payload.data && typeof payload.data === 'object') ? payload.data : {};
+            const title = typeof payload.title === 'string' && payload.title.trim() !== ''
+                ? payload.title.trim()
+                : 'GymSystem';
+            const body = typeof payload.body === 'string' ? payload.body.trim() : '';
+            const detailText = typeof rawData.detail_text === 'string' ? rawData.detail_text.trim() : '';
+
+            const toast = document.createElement('div');
+            toast.setAttribute('data-toast', '1');
+            toast.setAttribute('data-autohide', '1');
+            toast.setAttribute('data-delay', '7000');
+            toast.className = 'ui-alert ui-alert-info';
+
+            const titleEl = document.createElement('p');
+            titleEl.className = 'text-sm font-black';
+            titleEl.textContent = title;
+            toast.appendChild(titleEl);
+
+            if (body !== '') {
+                const bodyEl = document.createElement('p');
+                bodyEl.className = 'mt-1 text-xs';
+                bodyEl.textContent = body;
+                toast.appendChild(bodyEl);
+            }
+
+            const actions = document.createElement('div');
+            actions.className = 'mt-2 flex items-center justify-between gap-2';
+
+            const hint = document.createElement('span');
+            hint.className = 'text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-300';
+            hint.textContent = 'Notificacion recibida';
+            actions.appendChild(hint);
+
+            if (detailText !== '') {
+                const openButton = document.createElement('button');
+                openButton.type = 'button';
+                openButton.className = 'inline-flex items-center rounded-md border border-cyan-300/60 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-800 transition hover:bg-cyan-100/60 dark:border-cyan-500/55 dark:text-cyan-200 dark:hover:bg-cyan-900/30';
+                openButton.textContent = 'Abrir';
+                openButton.addEventListener('click', function () {
+                    showPushDetailModal(title, body, detailText);
+                });
+                actions.appendChild(openButton);
+            }
+
+            toast.appendChild(actions);
+            const toastContainer = panelToastStack || (function () {
+                const fallback = document.createElement('div');
+                fallback.className = 'panel-toast-stack';
+                fallback.setAttribute('aria-live', 'polite');
+                fallback.setAttribute('aria-atomic', 'true');
+                document.body.appendChild(fallback);
+                return fallback;
+            })();
+            toastContainer.prepend(toast);
+
+            const visibleToasts = toastContainer.querySelectorAll('[data-toast]');
+            if (visibleToasts.length > 4) {
+                for (let i = 4; i < visibleToasts.length; i += 1) {
+                    visibleToasts[i].remove();
+                }
+            }
+
+            scheduleRuntimeToastRemoval(toast, 7000);
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', function (event) {
+                const message = event && event.data ? event.data : null;
+                if (!message || message.type !== 'GYMSYSTEM_PUSH_EVENT') return;
+                showDesktopPushToast(message.payload);
+            });
+        }
+
         if (pwaInstallButton) {
+            if (isStandaloneMode()) {
+                markPwaInstalled();
+                hidePwaInstallButton();
+            } else {
+                showPwaInstallButton();
+            }
+
             if (!pwaInstallEnabled) {
                 pwaInstallButton.classList.add('border-amber-300/70', 'text-amber-200');
             }
@@ -105,7 +365,8 @@
 
             window.addEventListener('appinstalled', function () {
                 pwaInstallPromptEvent = null;
-                pwaInstallButton.textContent = 'App instalada';
+                markPwaInstalled();
+                hidePwaInstallButton();
                 showPwaAccessAlert('Aplicacion instalada correctamente.', 'warning');
             });
 
@@ -116,6 +377,10 @@
                 }
 
                 if (!pwaInstallPromptEvent) {
+                    if (wasPwaInstalledBefore()) {
+                        showPwaAccessAlert('Ya instalaste la app. Revisa tu pantalla de inicio o lista de aplicaciones instaladas.', 'warning');
+                        return;
+                    }
                     showPwaAccessAlert('Tu navegador no habilito el instalador automatico. Usa "Agregar a pantalla de inicio".', 'warning');
                     return;
                 }
@@ -134,9 +399,22 @@
             }
         }
         function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const rawData = window.atob(base64);
+            const normalized = String(base64String || '').trim().replace(/\s+/g, '');
+            if (normalized === '') {
+                throw new Error('Falta WEBPUSH_VAPID_PUBLIC_KEY en .env.');
+            }
+            if (!/^[A-Za-z0-9\-_]+$/.test(normalized)) {
+                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY invalida. Regenera llaves VAPID.');
+            }
+
+            const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+            const base64 = (normalized + padding).replace(/-/g, '+').replace(/_/g, '/');
+            let rawData = '';
+            try {
+                rawData = window.atob(base64);
+            } catch (_error) {
+                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY invalida. Ejecuta notifications:webpush-keys y actualiza .env.');
+            }
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; i += 1) {
                 outputArray[i] = rawData.charCodeAt(i);
@@ -170,31 +448,159 @@
         function updatePushButtonState(state) {
             if (!pushNotificationsButton) return;
 
+            function setBadge(label, tone) {
+                if (!pushNotificationsStateBadge) return;
+                pushNotificationsStateBadge.textContent = label;
+                pushNotificationsStateBadge.classList.remove(
+                    'border-slate-300/80', 'text-slate-600', 'dark:border-slate-600', 'dark:text-slate-300',
+                    'border-emerald-300/80', 'text-emerald-700', 'dark:border-emerald-500/70', 'dark:text-emerald-300',
+                    'border-rose-300/80', 'text-rose-700', 'dark:border-rose-500/70', 'dark:text-rose-300',
+                    'border-amber-300/80', 'text-amber-700', 'dark:border-amber-500/70', 'dark:text-amber-300'
+                );
+                if (tone === 'success') {
+                    pushNotificationsStateBadge.classList.add('border-emerald-300/80', 'text-emerald-700', 'dark:border-emerald-500/70', 'dark:text-emerald-300');
+                    return;
+                }
+                if (tone === 'danger') {
+                    pushNotificationsStateBadge.classList.add('border-rose-300/80', 'text-rose-700', 'dark:border-rose-500/70', 'dark:text-rose-300');
+                    return;
+                }
+                if (tone === 'warning') {
+                    pushNotificationsStateBadge.classList.add('border-amber-300/80', 'text-amber-700', 'dark:border-amber-500/70', 'dark:text-amber-300');
+                    return;
+                }
+                pushNotificationsStateBadge.classList.add('border-slate-300/80', 'text-slate-600', 'dark:border-slate-600', 'dark:text-slate-300');
+            }
+
             if (state === 'unsupported') {
-                pushNotificationsButton.textContent = 'Alertas no disponibles';
-                pushNotificationsButton.classList.add('opacity-60', 'cursor-not-allowed');
-                pushNotificationsButton.setAttribute('disabled', 'disabled');
+                pushNotificationsButton.classList.add('opacity-60');
+                pushNotificationsButton.classList.remove('cursor-not-allowed', 'border-emerald-300/70', 'text-emerald-200', 'border-rose-300/80', 'text-rose-300');
+                pushNotificationsButton.setAttribute('data-push-unsupported', '1');
+                pushNotificationsButton.removeAttribute('disabled');
+                setBadge('No disp.', 'warning');
                 return;
             }
 
             if (state === 'denied') {
-                pushNotificationsButton.textContent = 'Alertas bloqueadas';
                 pushNotificationsButton.classList.add('border-rose-300/80', 'text-rose-300');
+                pushNotificationsButton.removeAttribute('data-push-unsupported');
                 pushNotificationsButton.removeAttribute('disabled');
+                setBadge('Bloqueadas', 'danger');
                 return;
             }
 
             if (state === 'active') {
-                pushNotificationsButton.textContent = 'Desactivar alertas';
                 pushNotificationsButton.classList.add('border-emerald-300/70', 'text-emerald-200');
                 pushNotificationsButton.classList.remove('border-rose-300/80', 'text-rose-300', 'opacity-60', 'cursor-not-allowed');
+                pushNotificationsButton.removeAttribute('data-push-unsupported');
                 pushNotificationsButton.removeAttribute('disabled');
+                setBadge('Activas', 'success');
                 return;
             }
 
-            pushNotificationsButton.textContent = 'Activar alertas';
             pushNotificationsButton.classList.remove('border-emerald-300/70', 'text-emerald-200', 'border-rose-300/80', 'text-rose-300', 'opacity-60', 'cursor-not-allowed');
+            pushNotificationsButton.removeAttribute('data-push-unsupported');
             pushNotificationsButton.removeAttribute('disabled');
+            setBadge('Apagadas', 'neutral');
+        }
+
+        function getPushOnboardingStorageKey() {
+            const userKey = Number.isFinite(currentUserId) && currentUserId > 0 ? String(currentUserId) : 'guest';
+            return ['push-onboarding-dismissed', window.location.host, userKey].join(':');
+        }
+
+        function markPushOnboardingDismissed() {
+            try {
+                window.localStorage.setItem(getPushOnboardingStorageKey(), '1');
+            } catch (_error) {
+                // Keep silent.
+            }
+        }
+
+        function isPushOnboardingDismissed() {
+            try {
+                return window.localStorage.getItem(getPushOnboardingStorageKey()) === '1';
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        function closePushOnboardingModal() {
+            const overlay = document.getElementById('push-onboarding-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        function showPushOnboardingModal(onAccept) {
+            if (document.getElementById('push-onboarding-overlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'push-onboarding-overlay';
+            overlay.className = 'fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/70 p-4';
+
+            const dialog = document.createElement('div');
+            dialog.className = 'w-full max-w-xl rounded-2xl border border-cyan-300/40 bg-slate-950 p-5 text-slate-100 shadow-2xl';
+
+            const title = document.createElement('h3');
+            title.className = 'text-lg font-black';
+            title.textContent = 'Activa notificaciones de GymSystem';
+            dialog.appendChild(title);
+
+            const subtitle = document.createElement('p');
+            subtitle.className = 'mt-2 text-sm text-cyan-100';
+            subtitle.textContent = 'Te avisaremos en tiempo real para que no pierdas eventos importantes.';
+            dialog.appendChild(subtitle);
+
+            const benefits = document.createElement('ul');
+            benefits.className = 'mt-3 space-y-1.5 text-sm text-slate-200';
+            [
+                'Recordatorios de renovaciones y vencimientos.',
+                'Alertas operativas importantes de tu gimnasio.',
+                'Mensajes inmediatos sin tener que recargar la pagina.',
+            ].forEach(function (item) {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = '<span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-cyan-300"></span><span>' + item + '</span>';
+                benefits.appendChild(li);
+            });
+            dialog.appendChild(benefits);
+
+            const actions = document.createElement('div');
+            actions.className = 'mt-5 flex flex-wrap justify-end gap-2';
+
+            const skipBtn = document.createElement('button');
+            skipBtn.type = 'button';
+            skipBtn.className = 'inline-flex items-center rounded-lg border border-slate-500/70 px-3 py-2 text-xs font-bold uppercase tracking-[0.06em] text-slate-200 transition hover:bg-slate-800';
+            skipBtn.textContent = 'Ahora no';
+            skipBtn.addEventListener('click', function () {
+                markPushOnboardingDismissed();
+                closePushOnboardingModal();
+            });
+            actions.appendChild(skipBtn);
+
+            const acceptBtn = document.createElement('button');
+            acceptBtn.type = 'button';
+            acceptBtn.className = 'inline-flex items-center rounded-lg border border-cyan-300/80 bg-cyan-500/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.06em] text-cyan-100 transition hover:bg-cyan-500/25';
+            acceptBtn.textContent = 'Permitir notificaciones';
+            acceptBtn.addEventListener('click', function () {
+                markPushOnboardingDismissed();
+                closePushOnboardingModal();
+                if (typeof onAccept === 'function') {
+                    onAccept();
+                }
+            });
+            actions.appendChild(acceptBtn);
+
+            dialog.appendChild(actions);
+            overlay.appendChild(dialog);
+            overlay.addEventListener('click', function (event) {
+                if (event.target === overlay) {
+                    markPushOnboardingDismissed();
+                    closePushOnboardingModal();
+                }
+            });
+            document.body.appendChild(overlay);
         }
 
         async function bootstrapPushNotifications() {
@@ -202,21 +608,65 @@
                 return;
             }
 
+            async function resolvePushServiceWorkerRegistration() {
+                const swMetaUrl = document.querySelector('meta[name="sw-url"]')?.getAttribute('content') || '';
+                const swUrl = swMetaUrl.trim() !== '' ? swMetaUrl : '/sw.js';
+
+                let registration = await navigator.serviceWorker.getRegistration(swUrl).catch(function () {
+                    return null;
+                });
+                if (!registration) {
+                    registration = await navigator.serviceWorker.getRegistration().catch(function () {
+                        return null;
+                    });
+                }
+                if (!registration) {
+                    registration = await navigator.serviceWorker.register(swUrl).catch(function () {
+                        return null;
+                    });
+                }
+
+                return registration;
+            }
+
+            pushNotificationsButton.addEventListener('click', function () {
+                if (pushNotificationsButton.getAttribute('data-push-unsupported') === '1') {
+                    showPushAccessAlert(
+                        pushUnsupportedReason !== ''
+                            ? pushUnsupportedReason
+                            : 'Push no disponible en este entorno.',
+                        'warning'
+                    );
+                }
+            });
+
             const hasPushSupport = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
             if (!hasPushSupport) {
+                pushUnsupportedReason = 'Tu navegador no soporta notificaciones push.';
                 updatePushButtonState('unsupported');
                 return;
             }
 
             if (!window.isSecureContext) {
+                pushUnsupportedReason = 'Push requiere HTTPS (o localhost) para funcionar.';
                 updatePushButtonState('unsupported');
-                showPushAccessAlert('Push requiere HTTPS para funcionar en celulares.', 'warning');
+                showPushAccessAlert(pushUnsupportedReason, 'warning');
                 return;
             }
 
             if (!pushWebEnabled || pushVapidPublicKey === '') {
+                pushUnsupportedReason = 'Falta configurar WEBPUSH_ENABLED y llaves VAPID en .env.';
                 updatePushButtonState('unsupported');
-                showPushAccessAlert('Falta configurar Web Push en el servidor (VAPID).', 'warning');
+                showPushAccessAlert(pushUnsupportedReason, 'warning');
+                return;
+            }
+
+            try {
+                urlBase64ToUint8Array(pushVapidPublicKey);
+            } catch (error) {
+                pushUnsupportedReason = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY invalida.';
+                updatePushButtonState('unsupported');
+                showPushAccessAlert(pushUnsupportedReason, 'warning');
                 return;
             }
 
@@ -231,8 +681,12 @@
                 })
                 : null;
 
-            const registration = await navigator.serviceWorker.ready;
-            let currentSubscription = await registration.pushManager.getSubscription();
+            let registration = await resolvePushServiceWorkerRegistration();
+            let currentSubscription = registration
+                ? await registration.pushManager.getSubscription().catch(function () {
+                    return null;
+                })
+                : null;
 
             if (Notification.permission === 'denied') {
                 updatePushButtonState('denied');
@@ -247,9 +701,19 @@
             }
 
             pushNotificationsButton.addEventListener('click', async function () {
+                if (pushNotificationsButton.getAttribute('data-push-unsupported') === '1') {
+                    return;
+                }
+
+                showUiLoading('Configurando notificaciones...', true);
                 pushNotificationsButton.setAttribute('disabled', 'disabled');
 
                 try {
+                    registration = await resolvePushServiceWorkerRegistration();
+                    if (!registration || !registration.pushManager) {
+                        throw new Error('No se pudo inicializar Service Worker para push. Recarga la pagina.');
+                    }
+
                     currentSubscription = await registration.pushManager.getSubscription();
 
                     if (currentSubscription) {
@@ -308,8 +772,23 @@
                     if (Notification.permission !== 'denied') {
                         pushNotificationsButton.removeAttribute('disabled');
                     }
+                    hideUiLoading();
                 }
             });
+
+            const shouldShowOnboarding = Notification.permission === 'default'
+                && !currentSubscription
+                && !isPushOnboardingDismissed();
+
+            if (shouldShowOnboarding) {
+                window.setTimeout(function () {
+                    showPushOnboardingModal(function () {
+                        if (pushNotificationsButton) {
+                            pushNotificationsButton.click();
+                        }
+                    });
+                }, 850);
+            }
         }
 
         bootstrapPushNotifications().catch(function () {
@@ -383,6 +862,86 @@
                 closeUserMenu();
                 closeBellMenu();
             }
+        });
+
+        function shouldIgnoreLinkForLoading(anchor, clickEvent) {
+            if (!(anchor instanceof HTMLAnchorElement)) return true;
+            if (anchor.hasAttribute('download')) return true;
+            if (anchor.getAttribute('data-ui-loading-ignore') === '1') return true;
+            if (anchor.getAttribute('role') === 'button') return true;
+            if (anchor.hasAttribute('aria-controls')) return true;
+            const linkTarget = (anchor.getAttribute('target') || '').trim().toLowerCase();
+            if (linkTarget !== '' && linkTarget !== '_self') return true;
+            if (clickEvent.defaultPrevented) return true;
+            if (clickEvent.button !== 0) return true;
+            if (clickEvent.metaKey || clickEvent.ctrlKey || clickEvent.shiftKey || clickEvent.altKey) return true;
+
+            const href = (anchor.getAttribute('href') || '').trim();
+            if (href === '' || href.startsWith('#') || href.startsWith('javascript:')) return true;
+
+            let parsed;
+            try {
+                parsed = new URL(anchor.href, window.location.href);
+            } catch (_error) {
+                return true;
+            }
+
+            if (parsed.origin !== window.location.origin) return true;
+            if (parsed.href === window.location.href) return true;
+            if (parsed.pathname === window.location.pathname && parsed.search === window.location.search && parsed.hash !== '') return true;
+
+            return false;
+        }
+
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const anchor = target.closest('a[href]');
+            if (!anchor) return;
+            if (shouldIgnoreLinkForLoading(anchor, event)) return;
+            showUiLoadingForNavigation('Cargando pagina...');
+        });
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            if (event.defaultPrevented) return;
+            if (form.getAttribute('data-ui-loading-ignore') === '1') return;
+            const formTarget = (form.getAttribute('target') || '').trim().toLowerCase();
+            if (formTarget !== '' && formTarget !== '_self') return;
+            if ((form.getAttribute('method') || '').toLowerCase() === 'dialog') return;
+
+            const customEnabled = form.getAttribute('data-ui-loading-overlay') === '1';
+            const message = customEnabled
+                ? (form.getAttribute('data-ui-loading-message') || 'Cargando...')
+                : 'Procesando...';
+            showUiLoadingForNavigation(message);
+        });
+
+        window.addEventListener('popstate', function () {
+            showUiLoadingForNavigation('Cargando pagina...');
+        });
+        window.addEventListener('beforeunload', function () {
+            markUiNavigationStarted();
+        });
+        window.addEventListener('pagehide', function (event) {
+            if (!event.persisted) {
+                markUiNavigationStarted();
+            }
+        });
+
+        // Safety net: avoid a stuck overlay if some script crashes during navigation.
+        window.addEventListener('error', function () {
+            hideUiLoading();
+        });
+        window.addEventListener('unhandledrejection', function () {
+            hideUiLoading();
+        });
+
+        window.addEventListener('pageshow', function () {
+            uiNavigationStarted = false;
+            clearUiLoadingRelease();
+            hideUiLoading();
         });
 
         document.querySelectorAll('[data-toast]').forEach(function (toast) {
@@ -487,7 +1046,6 @@
             event.preventDefault();
             window.location.href = targetUrl;
         });
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         let demoFinalizeTriggered = false;
         let demoLeaveCleanupInitialized = false;
 

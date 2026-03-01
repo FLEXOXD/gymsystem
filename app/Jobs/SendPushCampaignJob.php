@@ -49,6 +49,7 @@ class SendPushCampaignJob implements ShouldQueue
                 'data' => [
                     'kind' => 'push_campaign',
                     'campaign_id' => (int) $campaign->id,
+                    'detail_text' => trim((string) ($campaign->detail_text ?? '')),
                 ],
                 'renotify' => true,
             ];

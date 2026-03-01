@@ -21,6 +21,7 @@ class PushCampaign extends Model
         'audience',
         'title',
         'body',
+        'detail_text',
         'url',
         'tag',
         'status',
@@ -59,4 +60,3 @@ class PushCampaign extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 }
-

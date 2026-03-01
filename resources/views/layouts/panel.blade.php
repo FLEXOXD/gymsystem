@@ -332,7 +332,7 @@
     <meta name="theme-color" content="#0f3cc9">
     <meta name="pwa-install-enabled" content="{{ $canInstallPwa ? '1' : '0' }}">
     <meta name="pwa-upgrade-message" content="{{ $pwaUpgradeMessage }}">
-    @if ($canInstallPwa)
+    @if (! $isSuperAdmin)
         <meta name="push-web-enabled" content="{{ $pushWebEnabled ? '1' : '0' }}">
         <meta name="push-vapid-public-key" content="{{ $pushVapidPublicKey }}">
         <meta name="push-subscribe-url" content="{{ route('notifications.push.subscribe') }}">
@@ -694,6 +694,60 @@
         .panel-toast-stack [data-toast] {
             pointer-events: auto;
             box-shadow: 0 14px 36px rgb(2 6 23 / 0.35);
+        }
+        .ui-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 170;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 20% 20%, rgb(34 197 94 / 0.12), transparent 40%), rgb(2 6 23 / 0.72);
+            backdrop-filter: blur(4px);
+        }
+        .ui-loading-overlay[data-open="1"] {
+            display: flex;
+        }
+        .ui-loading-card {
+            width: min(92vw, 19rem);
+            border: 1px solid rgb(34 197 94 / 0.45);
+            border-radius: 1rem;
+            background: linear-gradient(165deg, rgb(2 6 23 / 0.94), rgb(3 14 10 / 0.96));
+            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 18px 56px rgb(0 0 0 / 0.45), 0 0 30px rgb(34 197 94 / 0.2);
+            padding: 1rem 1.1rem;
+            color: #f8fafc;
+            display: grid;
+            justify-items: center;
+            gap: 0.62rem;
+        }
+        .ui-loading-spin {
+            width: 3.1rem;
+            height: 3.1rem;
+            border-radius: 9999px;
+            border: 3px solid rgb(255 255 255 / 0.2);
+            border-top-color: #22c55e;
+            border-right-color: #86efac;
+            border-bottom-color: #ffffff;
+            animation: ui-spin-rotate 0.9s linear infinite;
+            box-shadow: 0 0 18px rgb(34 197 94 / 0.5);
+        }
+        .ui-loading-title {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #86efac;
+        }
+        .ui-loading-message {
+            margin: 0;
+            text-align: center;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            color: rgb(248 250 252 / 0.92);
+        }
+        @keyframes ui-spin-rotate {
+            to { transform: rotate(360deg); }
         }
         .demo-header-badge {
             display: inline-flex;
@@ -1235,20 +1289,10 @@
                         <x-badge :variant="$statusVariant">{{ $gymSubscriptionStatus }}</x-badge>
                     @endif
 
-                    @if (!$isSuperAdmin && $canInstallPwa)
-                        <button id="push-notifications-button"
-                                type="button"
-                                class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold"
-                                data-push-enabled="{{ $pushWebEnabled ? '1' : '0' }}"
-                                title="Activar notificaciones push">
-                            Activar alertas
-                        </button>
-                    @endif
-
                     @if (!$isSuperAdmin)
                         <button id="pwa-install-button"
                                 type="button"
-                                class="ui-button ui-button-ghost hidden px-3 py-2 text-xs font-bold lg:inline-flex"
+                                class="ui-button ui-button-ghost {{ $isStandalonePwaMode ? 'hidden' : 'hidden lg:inline-flex' }} px-3 py-2 text-xs font-bold"
                                 data-pwa-enabled="{{ $canInstallPwa ? '1' : '0' }}"
                                 title="{{ $canInstallPwa ? 'Instalar app' : $pwaUpgradeMessage }}">
                             {{ $canInstallPwa ? 'Instalar app' : 'PWA bloqueada' }}
@@ -1327,6 +1371,25 @@
                                     <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
                                     <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
                                     <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
+                                @endif
+
+                                @if (! $isSuperAdmin)
+                                    <button id="push-notifications-button"
+                                            type="button"
+                                            class="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            data-push-enabled="{{ $pushWebEnabled ? '1' : '0' }}"
+                                            title="Gestionar notificaciones push">
+                                        <span class="inline-flex items-center gap-2">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M6 10a6 6 0 1 1 12 0v4l2 2H4l2-2v-4Zm4 8a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                            <span>Notificaciones</span>
+                                        </span>
+                                        <span id="push-notifications-state"
+                                              class="inline-flex items-center rounded-full border border-slate-300/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                                            Apagadas
+                                        </span>
+                                    </button>
                                 @endif
 
                                 <form method="POST" action="{{ route('logout') }}" class="mt-1">
@@ -1549,6 +1612,14 @@
         </div>
     </section>
 @endif
+
+<div id="ui-loading-overlay" class="ui-loading-overlay" data-open="0" aria-hidden="true">
+    <div class="ui-loading-card" role="status" aria-live="polite">
+        <span class="ui-loading-spin" aria-hidden="true"></span>
+        <p class="ui-loading-title">Cargando</p>
+        <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud...</p>
+    </div>
+</div>
 
 @include('layouts.partials.panel-inline-scripts')
 @stack('scripts')
