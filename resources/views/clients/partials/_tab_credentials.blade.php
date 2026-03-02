@@ -57,14 +57,67 @@
         $publicCardUrl = '';
         $publicQrImageUrl = '';
         $publicQrDownloadUrl = '';
+        $sanitizeAddressForQr = static function (string $raw): string {
+            $value = trim((string) preg_replace('/\s+/', ' ', str_replace(["\r", "\n"], ' ', $raw)));
+            if ($value === '') {
+                return '';
+            }
+
+            $parts = array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $part): bool => $part !== ''));
+            $filtered = array_values(array_filter($parts, static function (string $part): bool {
+                $digits = preg_replace('/\D+/', '', $part) ?? '';
+                $looksLikePhone = strlen($digits) >= 7;
+                $hasPhoneKeyword = preg_match('/\b(tel|telefono|cel|movil|whatsapp|phone)\b/i', $part) === 1;
+                if ($hasPhoneKeyword) {
+                    return false;
+                }
+                if ($looksLikePhone) {
+                    $hasLetters = preg_match('/[[:alpha:]]/u', $part) === 1;
+                    if (! $hasLetters) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }));
+
+            return implode(', ', $filtered);
+        };
+        $contextGym = request()->attributes->get('active_gym');
+        if (! $contextGym instanceof \App\Models\Gym) {
+            $contextGym = null;
+        }
+
+        $gymNameForQr = trim((string) ($client->gym?->name ?? $contextGym?->name ?? ''));
+        $gymSlugForQr = trim((string) ($client->gym?->slug ?? $contextGym?->slug ?? ''));
+        $gymAddressForQr = trim((string) ($client->gym?->address ?? $contextGym?->address ?? ''));
+        if ($gymAddressForQr === '') {
+            $gymAddressForQr = collect([
+                trim((string) ($client->gym?->address_line ?? $contextGym?->address_line ?? '')),
+                trim((string) ($client->gym?->address_city ?? $contextGym?->address_city ?? '')),
+                trim((string) ($client->gym?->address_state ?? $contextGym?->address_state ?? '')),
+            ])->filter()->implode(', ');
+        }
+        $gymAddressForQr = $sanitizeAddressForQr($gymAddressForQr);
         if ($activeQrCredential && $hasWhatsappPhone) {
             $publicCardUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public', ['client' => $client->id]);
             $publicQrImageUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public-qr-image', ['client' => $client->id]);
             $publicQrDownloadUrl = \Illuminate\Support\Facades\URL::signedRoute('clients.card.public-download', ['client' => $client->id]);
-            $whatsappQrMessage = implode("\n", [
+            $gymSummaryParts = array_values(array_filter([
+                $gymNameForQr !== '' ? 'Gimnasio: '.$gymNameForQr : '',
+                $gymSlugForQr !== '' ? 'Código/sede: '.$gymSlugForQr : '',
+                $gymAddressForQr !== '' ? 'Dirección: '.$gymAddressForQr : '',
+            ], static fn ($line) => $line !== ''));
+            $gymSummaryLine = count($gymSummaryParts) > 0
+                ? implode(' | ', $gymSummaryParts)
+                : 'Gimnasio: no definido';
+
+            $whatsappLines = [
                 'Hola '.$client->full_name.'.',
-                'Descarga tu QR aqui: '.$publicQrDownloadUrl,
-            ]);
+                $gymSummaryLine,
+                'Descarga tu QR aquí: '.$publicQrDownloadUrl,
+            ];
+            $whatsappQrMessage = implode("\n", $whatsappLines);
             $whatsappQrUrl = 'https://wa.me/'.$whatsappDigits.'?text='.rawurlencode($whatsappQrMessage);
         }
     @endphp
@@ -114,6 +167,12 @@
                 </div>
                 <p class="text-xs text-cyan-700 dark:text-cyan-300" x-text="qrCopyFeedback"></p>
                 <p class="text-xs text-emerald-700 dark:text-emerald-300" x-text="whatsappCopyFeedback"></p>
+                @if ($whatsappQrMessage !== '')
+                    <details class="rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs text-slate-700 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-300">
+                        <summary class="cursor-pointer font-semibold">Vista previa del mensaje de WhatsApp</summary>
+                        <pre class="mt-2 whitespace-pre-wrap break-words">{{ $whatsappQrMessage }}</pre>
+                    </details>
+                @endif
                 @if (! $hasWhatsappPhone)
                     <p class="text-xs text-amber-700 dark:text-amber-300">
                         Este cliente no tiene telefono valido para WhatsApp. Guarda el numero con codigo de pais (ej: 593...).
