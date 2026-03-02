@@ -28,6 +28,18 @@
             }
         }
     }
+    $aboutInternetImages = [
+        'hero' => 'https://images.unsplash.com/photo-1647456753452-e5d7cbf16df1?auto=format&fit=crop&w=2200&q=80',
+        'story' => 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1800&q=80',
+        'team_1' => 'https://images.unsplash.com/photo-1683147779485-24912f480130?auto=format&fit=crop&w=1400&q=80',
+        'team_2' => 'https://images.unsplash.com/photo-1737608749249-a39c697ae34a?auto=format&fit=crop&w=1400&q=80',
+        'team_3' => 'https://images.unsplash.com/photo-1534367899781-0d696bebc1d2?auto=format&fit=crop&w=1400&q=80',
+    ];
+    $aboutHeroImage = $aboutInternetImages['hero'];
+    $aboutStoryImage = $aboutInternetImages['story'];
+    $aboutTeamImage1 = $aboutInternetImages['team_1'];
+    $aboutTeamImage2 = $aboutInternetImages['team_2'];
+    $aboutTeamImage3 = $aboutInternetImages['team_3'];
     $marqueeItems = [];
     for ($i = 1; $i <= 6; $i++) {
         $text = trim((string) ($content['marquee_item_'.$i.'_text'] ?? ''));
@@ -776,74 +788,346 @@
             color: #b4c8bc; line-height: 1.55; padding: 0 1rem;
         }
         .faq-item.is-open .faq-content { max-height: 220px; padding: 0 1rem .9rem; }
-        .about-grid {
-            margin-top: 1.1rem;
-            display: grid;
-            grid-template-columns: 1.1fr .9fr;
-            gap: 1rem;
+        .about-section {
+            border-top: 0;
+            margin-top: 1.5rem;
+            padding-top: .5rem;
         }
-        .about-card {
-            border: 1px solid #2b5a40;
-            border-radius: 1rem;
-            background: linear-gradient(145deg, #0b1510, #0f1c15);
-            padding: 1rem;
+        .about-hero-band {
+            position: relative;
+            min-height: clamp(240px, 34vw, 420px);
+            border-radius: 1.15rem;
+            overflow: hidden;
+            background:
+                linear-gradient(112deg, rgba(4, 20, 13, .92), rgba(7, 36, 23, .84) 45%, rgba(4, 20, 13, .56)),
+                var(--about-hero-image, linear-gradient(145deg, #08150f, #103724));
+            background-size: cover;
+            background-position: center;
+            border: 0;
+            box-shadow: 0 26px 48px rgba(2, 12, 8, .42);
+            display: flex;
+            align-items: center;
         }
-        .about-card h3 {
+        .about-hero-band::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(3, 15, 10, .84) 0%, rgba(3, 15, 10, .54) 45%, rgba(3, 15, 10, .18) 100%);
+        }
+        .about-hero-content {
+            position: relative;
+            z-index: 2;
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
+        }
+        .about-hero-kicker {
             margin: 0;
-            font-size: 1.32rem;
-            color: #ecfff2;
+            font-size: .82rem;
+            letter-spacing: .12em;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #97ffc0;
         }
-        .about-card p {
-            margin: .72rem 0 0;
-            color: #b4c8bc;
+        .about-hero-title {
+            margin: .4rem 0 0;
+            font-size: clamp(2.15rem, 5.8vw, 4.35rem);
+            line-height: .95;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+            color: #f6fbff;
+        }
+        .about-hero-breadcrumb {
+            margin: .9rem 0 0;
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            color: #dff7e8;
+            font-size: .86rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .about-hero-breadcrumb::before {
+            content: "";
+            width: 70px;
+            height: 2px;
+            background: #59ff95;
+            opacity: .9;
+        }
+        .about-story {
+            margin-top: 1.9rem;
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        .about-story-copy {
+            border: 0;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #08160f, #0d2a1b);
+            padding: 1.1rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 18px 32px rgba(2, 12, 8, .32);
+        }
+        .about-story-copy::before {
+            content: "NOSOTROS";
+            position: absolute;
+            top: .25rem;
+            left: .85rem;
+            font-size: clamp(2.4rem, 7vw, 5.8rem);
+            line-height: .9;
+            font-weight: 900;
+            letter-spacing: .03em;
+            color: rgba(172, 240, 199, .08);
+            pointer-events: none;
+        }
+        .about-story-title {
+            margin: .3rem 0 0;
+            position: relative;
+            z-index: 1;
+            font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+            text-transform: uppercase;
+            letter-spacing: .02em;
+            color: #f2fff7;
+        }
+        .about-story-lead {
+            margin: .68rem 0 0;
+            position: relative;
+            z-index: 1;
+            color: #c8e9d5;
             line-height: 1.62;
+            font-size: 1rem;
         }
         .about-highlights {
-            margin: .85rem 0 0;
+            margin: .88rem 0 0;
             padding: 0;
             list-style: none;
             display: grid;
-            gap: .44rem;
-            color: #d9f2e1;
+            gap: .48rem;
         }
         .about-highlights li {
             display: flex;
             align-items: flex-start;
-            gap: .5rem;
+            gap: .52rem;
+            color: #e7faef;
+            line-height: 1.48;
         }
         .about-highlights li::before {
             content: "";
-            width: .5rem;
-            height: .5rem;
-            margin-top: .38rem;
+            width: .48rem;
+            height: .48rem;
             border-radius: 999px;
-            flex: 0 0 .5rem;
-            background: #47ff6f;
-            box-shadow: 0 0 10px rgba(71, 255, 111, .82);
+            margin-top: .34rem;
+            flex: 0 0 .48rem;
+            background: #5bff96;
+            box-shadow: 0 0 10px rgba(91, 255, 150, .76);
         }
-        .about-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: .62rem;
-        }
-        .about-metric {
-            border: 1px solid #2d6043;
-            border-radius: .8rem;
-            background: rgba(8, 17, 12, .88);
-            padding: .8rem .82rem;
-        }
-        .about-metric strong {
-            display: block;
-            font-size: 1.34rem;
+        .about-highlights.is-checks li::before {
+            content: "✓";
+            width: auto;
+            height: auto;
+            margin-top: 0;
+            border-radius: 0;
+            flex: 0 0 auto;
+            background: transparent;
+            box-shadow: none;
             color: #9dffb6;
+            font-weight: 900;
+            line-height: 1.2;
         }
-        .about-metric span {
+        .about-story-media {
+            border: 0;
+            border-radius: 1rem;
+            overflow: hidden;
+            position: relative;
+            min-height: 380px;
+            background: linear-gradient(145deg, #0a1b12, #123623);
+            box-shadow: 0 18px 34px rgba(4, 10, 7, .34);
+        }
+        .about-story-media img {
+            width: 100%;
+            height: 100%;
+            min-height: 380px;
+            object-fit: cover;
             display: block;
-            margin-top: .25rem;
-            color: #b7cfc0;
+            filter: saturate(1.08) contrast(1.02);
+        }
+        .about-story-media-placeholder {
+            min-height: 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+            color: #d9f2e3;
+            font-weight: 700;
+        }
+        .about-year-badge {
+            position: absolute;
+            left: 1rem;
+            bottom: 1rem;
+            background: linear-gradient(145deg, #69ff9f, #21cf6d);
+            color: #042312;
+            border-radius: .7rem;
+            padding: .7rem .88rem;
+            min-width: 120px;
+            box-shadow: 0 12px 26px rgba(2, 18, 9, .42);
+        }
+        .about-year-value {
+            display: block;
+            font-size: 1.85rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: .03em;
+        }
+        .about-year-label {
+            display: block;
+            margin-top: .2rem;
+            font-size: .74rem;
+            font-weight: 700;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+        }
+        .about-proof {
+            margin-top: 1.15rem;
+            border: 0;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #061f13, #0b3922);
+            padding: 1.15rem 1.2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 30px rgba(2, 12, 8, .32);
+        }
+        .about-proof::before {
+            content: "TESTIMONIO";
+            position: absolute;
+            right: .8rem;
+            top: .3rem;
+            font-size: clamp(1.9rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: .9;
+            color: rgba(175, 243, 203, .08);
+            letter-spacing: .02em;
+            pointer-events: none;
+        }
+        .about-proof-kicker {
+            margin: 0;
+            color: #97ffc0;
+            font-size: .8rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .about-proof-quote {
+            margin: .56rem 0 0;
+            font-size: 1.08rem;
+            line-height: 1.64;
+            color: #dcf6e7;
+            max-width: 80ch;
+        }
+        .about-proof-author {
+            margin-top: .9rem;
+            border-left: 2px solid #5bff96;
+            padding-left: .68rem;
+            color: #f4fff8;
+            font-weight: 700;
+        }
+        .about-proof-author span {
+            display: block;
+            margin-top: .18rem;
+            color: #b7dbc6;
+            font-weight: 600;
             font-size: .86rem;
             text-transform: uppercase;
-            letter-spacing: .06em;
+            letter-spacing: .05em;
+        }
+        .about-team {
+            margin-top: 1.15rem;
+        }
+        .about-team-title {
+            margin: 0;
+            font-size: clamp(1.5rem, 3.3vw, 2.2rem);
+            text-transform: uppercase;
+            letter-spacing: .02em;
+            color: #f3fff8;
+        }
+        .about-team-subtitle {
+            margin: .45rem 0 0;
+            color: #bddfc8;
+            line-height: 1.58;
+            max-width: 66ch;
+        }
+        .about-team-grid {
+            margin-top: .95rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .82rem;
+        }
+        .about-team-card {
+            border: 0;
+            border-radius: .9rem;
+            background: linear-gradient(145deg, #0a1a11, #0e2c1c);
+            overflow: hidden;
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+            box-shadow: 0 12px 24px rgba(2, 12, 8, .24);
+        }
+        .about-team-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 30px rgba(3, 12, 8, .36);
+        }
+        .about-team-image-wrap {
+            min-height: 220px;
+            background: linear-gradient(145deg, #0b2216, #123726);
+        }
+        .about-team-image-wrap img {
+            width: 100%;
+            height: 100%;
+            min-height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+        .about-team-placeholder {
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #dcf3e3;
+            font-weight: 700;
+            padding: 1rem;
+        }
+        .about-team-info {
+            padding: .78rem .82rem .9rem;
+        }
+        .about-team-role {
+            display: inline-flex;
+            align-items: center;
+            gap: .42rem;
+            color: #98ffc0;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .about-team-role::before {
+            content: "";
+            width: 20px;
+            height: 2px;
+            background: #5bff96;
+        }
+        .about-team-name {
+            margin: .52rem 0 0;
+            color: #f3fff8;
+            font-size: 1.26rem;
+            line-height: 1.22;
+            font-weight: 900;
+        }
+        .about-team-note {
+            margin: .28rem 0 0;
+            color: #bbdfc8;
+            line-height: 1.45;
+            font-size: .9rem;
         }
         .contact-shell {
             margin-top: 1.1rem;
@@ -1234,12 +1518,15 @@
             .footer-panel { padding: 1.5rem 1.2rem 1rem; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
             .hero-insight-grid { grid-template-columns: 1fr 1fr; }
-            .about-grid { grid-template-columns: 1fr; }
+            .about-story { grid-template-columns: 1fr; }
+            .about-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .about-story-media,
+            .about-story-media img,
+            .about-story-media-placeholder { min-height: 300px; }
             .contact-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .contact-info-grid .contact-info-card:last-child { grid-column: 1 / -1; }
             .contact-form-grid { grid-template-columns: 1fr; }
             .legal-grid { grid-template-columns: 1fr; }
-            .about-card,
             .contact-shell,
             .legal-shell { padding: .95rem; }
             .heading h2 { font-size: clamp(1.5rem, 4.1vw, 2.5rem); }
@@ -1273,6 +1560,10 @@
             .hero-slide-image,
             .hero-media-placeholder { min-height: 300px; }
             .hero-carousel-control { width: 32px; height: 32px; }
+            .about-hero-content { padding-top: .9rem; padding-bottom: .9rem; }
+            .about-hero-breadcrumb::before { width: 42px; }
+            .about-proof { padding: 1rem; }
+            .about-proof-quote { font-size: .98rem; }
             .brands-track { animation-duration: 32s; }
             .brands-row { gap: 1.45rem; padding-right: 1.45rem; }
             .brand-chip { min-width: 0; }
@@ -1281,8 +1572,7 @@
             .pricing-grid,
             .footer-grid,
             .hero-insight-grid,
-            .about-metrics,
-            .about-grid,
+            .about-team-grid,
             .contact-info-grid,
             .contact-form-grid,
             .legal-grid { grid-template-columns: 1fr; }
@@ -1309,6 +1599,15 @@
             .hero-actions { gap: .5rem; }
             .hero-actions .btn,
             .hero-actions .inline-form { width: 100%; }
+            .about-story-copy,
+            .about-proof { padding: .88rem; }
+            .about-year-badge {
+                left: .7rem;
+                bottom: .7rem;
+                min-width: 104px;
+                padding: .58rem .68rem;
+            }
+            .about-year-value { font-size: 1.48rem; }
             .service-media { min-height: 170px; padding: .4rem; }
             .footer-brand-logo {
                 width: clamp(150px, 54vw, 210px);
@@ -1631,45 +1930,125 @@
         @endif
 
         @if ($showAboutSection)
-        <section id="nosotros" class="shell section">
-            <header class="heading reveal">
-                <small>Sobre nosotros</small>
-                <h2>Construido para operar gimnasios reales</h2>
-                <p>{{ $brandName }} es un sistema creado de forma independiente para resolver el trabajo diario de recepción, membresías, caja y control administrativo sin complicaciones.</p>
-            </header>
-            <div class="about-grid">
-                <article class="about-card reveal">
-                    <h3>Producto hecho con enfoque operativo</h3>
-                    <p>Este proyecto nace de la necesidad de tener un flujo claro para gimnasios en Ecuador: rápido, estable y fácil de usar por equipos pequeños o multisede.</p>
+        <section id="nosotros" class="section about-section">
+            <div class="about-hero-band reveal" @if ($aboutHeroImage !== '') style="--about-hero-image: url('{{ $aboutHeroImage }}');" @endif>
+                <div class="shell about-hero-content">
+                    <p class="about-hero-kicker">Sobre nosotros</p>
+                    <h2 class="about-hero-title">FlexJok</h2>
+                    <p class="about-hero-breadcrumb">Inicio / Sobre nosotros</p>
+                </div>
+            </div>
+
+            <div class="shell about-story">
+                <article class="about-story-copy reveal">
+                    <h3 class="about-story-title">Tecnología diseñada para aumentar la rentabilidad de tu gimnasio</h3>
+                    <p class="about-story-lead">En FlexJok desarrollamos soluciones digitales enfocadas en un objetivo claro: ayudar a los gimnasios a aumentar ingresos, reducir pérdidas y operar con mayor eficiencia.</p>
                     <ul class="about-highlights">
-                        <li>Recepcion agil con control de asistencia.</li>
-                        <li>Membresias, vencimientos y caja diaria en un mismo sistema.</li>
-                        <li>Panel SuperAdmin para administrar varios gimnasios.</li>
-                        <li>Base PWA para uso en celular, tablet y computadora.</li>
+                        <li>Membresías vencidas que no se renuevan a tiempo.</li>
+                        <li>Falta de control en caja diaria.</li>
+                        <li>Procesos manuales que generan errores.</li>
+                        <li>Dificultad para medir crecimiento real.</li>
+                        <li>Falta de indicadores claros para tomar decisiones.</li>
                     </ul>
+                    <p class="about-story-lead">Nuestro enfoque no es solo administrativo. Es estratégico.</p>
                 </article>
-                <aside class="about-card reveal">
-                    <h3>Estado actual</h3>
-                    <div class="about-metrics">
-                        <article class="about-metric">
-                            <strong>{{ number_format((int) ($stats['gyms'] ?? 0)) }}</strong>
-                            <span>Gimnasios registrados</span>
-                        </article>
-                        <article class="about-metric">
-                            <strong>{{ number_format((int) ($stats['active_sessions'] ?? 0)) }}</strong>
-                            <span>Con suscripcion activa</span>
-                        </article>
-                        <article class="about-metric">
-                            <strong>1</strong>
-                            <span>Fundador operador</span>
-                        </article>
-                        <article class="about-metric">
-                            <strong>24/7</strong>
-                            <span>Evolucion continua</span>
-                        </article>
+
+                <aside class="about-story-media reveal">
+                    @if ($aboutStoryImage !== '')
+                        <img src="{{ $aboutStoryImage }}" alt="Equipo FlexJok">
+                    @else
+                        <div class="about-story-media-placeholder">Sube una imagen principal para la sección Sobre nosotros desde SuperAdmin.</div>
+                    @endif
+                    <div class="about-year-badge">
+                        <span class="about-year-value">2025</span>
+                        <span class="about-year-label">Desde</span>
                     </div>
-                    <p>La prioridad es mantener el sistema estable y seguir sumando mejoras practicas segun necesidades reales de cada gimnasio.</p>
                 </aside>
+            </div>
+
+            <div class="shell about-proof reveal">
+                <p class="about-proof-kicker">Fundador</p>
+                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrollé GymSystem para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
+                <div class="about-proof-author">
+                    David Israel Quintana Tapia
+                    <span>Fundador de FlexJok y creador de GymSystem</span>
+                </div>
+            </div>
+
+            <div class="shell about-story">
+                <article class="about-story-copy reveal">
+                    <h3 class="about-story-title">Cómo ayudamos a tu gimnasio a generar más ingresos</h3>
+                    <p class="about-story-lead">Implementamos herramientas que impactan directamente en la rentabilidad:</p>
+                    <ul class="about-highlights is-checks">
+                        <li>Control automatizado de membresías y vencimientos.</li>
+                        <li>Recordatorios estratégicos para renovaciones.</li>
+                        <li>Seguimiento de pagos en tiempo real.</li>
+                        <li>Reportes financieros claros y detallados.</li>
+                        <li>Control de asistencia para medir retención.</li>
+                        <li>Gestión multi-sucursal centralizada.</li>
+                    </ul>
+                    <p class="about-story-lead">Un gimnasio que mide, controla y automatiza es un gimnasio que crece.</p>
+                </article>
+                <article class="about-story-copy reveal">
+                    <h3 class="about-story-title">Misión, visión y compromiso</h3>
+                    <p class="about-story-lead">Nuestra misión es optimizar la operación interna de los gimnasios para que el propietario pueda enfocarse en captar más clientes, fidelizar miembros y escalar su negocio.</p>
+                    <p class="about-story-lead">Nuestra visión es convertir GymSystem en la plataforma de gestión más confiable para gimnasios en Latinoamérica.</p>
+                    <ul class="about-highlights">
+                        <li>Eficiencia operativa.</li>
+                        <li>Control financiero claro.</li>
+                        <li>Crecimiento sostenible.</li>
+                    </ul>
+                    <p class="about-story-lead">Porque un sistema no debe ser un gasto. Debe ser una inversión que genere retorno.</p>
+                </article>
+            </div>
+
+            <div class="shell about-team reveal">
+                <h3 class="about-team-title">Nuestro equipo</h3>
+                <p class="about-team-subtitle">Combinamos visión comercial, operación fitness y desarrollo de software para construir una plataforma que realmente ayuda a crecer a los gimnasios.</p>
+                <div class="about-team-grid">
+                    <article class="about-team-card">
+                        <div class="about-team-image-wrap">
+                            @if ($aboutTeamImage1 !== '')
+                                <img src="{{ $aboutTeamImage1 }}" alt="Equipo FlexJok - Estrategia comercial">
+                            @else
+                                <div class="about-team-placeholder">Imagen de equipo</div>
+                            @endif
+                        </div>
+                        <div class="about-team-info">
+                            <span class="about-team-role">Dirección</span>
+                            <h4 class="about-team-name">David Israel Quintana Tapia</h4>
+                            <p class="about-team-note">Estrategia comercial, visión de producto y crecimiento.</p>
+                        </div>
+                    </article>
+                    <article class="about-team-card">
+                        <div class="about-team-image-wrap">
+                            @if ($aboutTeamImage2 !== '')
+                                <img src="{{ $aboutTeamImage2 }}" alt="Equipo FlexJok - Operaciones">
+                            @else
+                                <div class="about-team-placeholder">Imagen de operaciones</div>
+                            @endif
+                        </div>
+                        <div class="about-team-info">
+                            <span class="about-team-role">Operación</span>
+                            <h4 class="about-team-name">Equipo FlexJok</h4>
+                            <p class="about-team-note">Implementación, acompañamiento y mejora continua para gimnasios.</p>
+                        </div>
+                    </article>
+                    <article class="about-team-card">
+                        <div class="about-team-image-wrap">
+                            @if ($aboutTeamImage3 !== '')
+                                <img src="{{ $aboutTeamImage3 }}" alt="Equipo FlexJok - Tecnología">
+                            @else
+                                <div class="about-team-placeholder">Imagen de tecnología</div>
+                            @endif
+                        </div>
+                        <div class="about-team-info">
+                            <span class="about-team-role">Tecnología</span>
+                            <h4 class="about-team-name">Desarrollo GymSystem</h4>
+                            <p class="about-team-note">Automatización, reportes e inteligencia operativa para decisiones rápidas.</p>
+                        </div>
+                    </article>
+                </div>
             </div>
         </section>
         @endif
