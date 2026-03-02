@@ -110,14 +110,7 @@ class EnsureGymRouteContextMiddleware
             }
         }
 
-        $scopeRequested = strtolower(trim((string) $request->query('scope', '')));
-        $globalRequested = $scopeRequested === 'global';
-        $branchScopeRequested = $scopeRequested === 'branch';
-
-        // Default to global view for hub users with multibranch access when no scope is provided.
-        if (! $globalRequested && ! $branchScopeRequested && $canUseMultiBranch && $requestedGymId === $userGymId) {
-            $globalRequested = true;
-        }
+        $globalRequested = strtolower(trim((string) $request->query('scope', ''))) === 'global';
         $activeGymIds = [$requestedGymId];
         $activeGym = $requestedGym;
         $activeGymId = $requestedGymId;

@@ -1,15 +1,32 @@
 {
-  "id": "/",
+  "id": "/app",
   "name": "GymSystem Operativo",
   "short_name": "GymSystem",
   "description": "Operacion diaria para gimnasios: clientes, membresias, caja y reportes.",
-  "start_url": "/app",
+  "start_url": "/app?pwa_mode=standalone",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "portrait-primary",
-  "background_color": "#0b1020",
-  "theme_color": "#0f3cc9",
+  "background_color": "#061410",
+  "theme_color": "#16c172",
   "icons": [
+    {
+      "src": "/pwa/favicon-brand-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/favicon-brand.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/pwa/icon.svg",
       "sizes": "any",
@@ -28,5 +45,7 @@
     "productivity",
     "finance"
   ],
-  "lang": "es-EC"
+  "lang": "es-EC",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }

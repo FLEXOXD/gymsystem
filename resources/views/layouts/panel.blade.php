@@ -329,7 +329,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#0f3cc9">
+    <meta name="pwa-events-url" content="{{ route('pwa.events.store') }}">
+    <meta name="theme-color" content="#16c172">
     <meta name="pwa-install-enabled" content="{{ $canInstallPwa ? '1' : '0' }}">
     <meta name="pwa-upgrade-message" content="{{ $pwaUpgradeMessage }}">
     @if (! $isSuperAdmin)
@@ -602,6 +603,7 @@
             align-items: center;
             justify-content: flex-end;
             gap: 0.5rem;
+            flex-wrap: nowrap;
         }
         #user-menu-button {
             min-height: 2.85rem;
@@ -1066,7 +1068,12 @@
             }
             #panel-header-right {
                 width: 100%;
-                justify-content: flex-end;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                row-gap: 0.45rem;
+            }
+            #panel-header-right > * {
+                flex-shrink: 0;
             }
             .panel-header-main {
                 font-size: clamp(1.15rem, 0.98rem + 0.5vw, 1.38rem);
@@ -1430,59 +1437,9 @@
                 </section>
             @endif
 
-            @if ($showBranchContextSwitcher)
-                <section class="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <details class="group" open>
-                        <summary class="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
-                            <div>
-                                <p class="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">Sucursales</p>
-                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                    {{ $activeBranchContextTitle }}
-                                </p>
-                                <p class="text-xs text-slate-500 dark:text-slate-300">
-                                    {{ $activeBranchContextAddress }}
-                                </p>
-                            </div>
-                            <span class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition group-open:text-cyan-700 dark:text-slate-300 dark:group-open:text-cyan-200">
-                                Cambiar sede
-                                <svg class="h-4 w-4 transition group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-                                </svg>
-                            </span>
-                        </summary>
-                        <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                            @php
-                                $isGlobalContextCardActive = $isAdminGlobalContext || $isGlobalScope;
-                            @endphp
-                            <a href="{{ $globalContextUrl }}"
-                               class="rounded-xl border px-3 py-2 transition {{ $isGlobalContextCardActive ? 'border-cyan-400 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-500/60 dark:bg-cyan-900/25 dark:text-cyan-100' : 'border-slate-200 bg-white text-slate-800 hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-cyan-500/50 dark:hover:bg-cyan-900/20' }}">
-                                <p class="text-sm font-bold leading-tight">Admin global</p>
-                                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">Consolidado de todas las sucursales (solo lectura)</p>
-                            </a>
-                            @foreach ($branchContextOptions as $branchOption)
-                                @php
-                                    $isActiveBranchOption = (string) ($branchOption['slug'] ?? '') === $activeBranchContextSlug && ! $isGlobalContextCardActive;
-                                @endphp
-                                <a href="{{ (string) ($branchOption['url'] ?? '#') }}"
-                                   class="rounded-xl border px-3 py-2 transition {{ $isActiveBranchOption ? 'border-cyan-400 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-500/60 dark:bg-cyan-900/25 dark:text-cyan-100' : 'border-slate-200 bg-white text-slate-800 hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-cyan-500/50 dark:hover:bg-cyan-900/20' }}">
-                                    <p class="text-sm font-bold leading-tight">{{ (string) ($branchOption['name'] ?? 'Sucursal') }}</p>
-                                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">{{ (string) ($branchOption['address'] ?? '-') }}</p>
-                                </a>
-                            @endforeach
-                        </div>
-                    </details>
-                </section>
-            @endif
+            @include('layouts.partials.panel.branch-context-switcher')
 
-            @if ($isGlobalScope)
-                <section class="rounded-2xl border border-cyan-200 bg-cyan-50/90 px-4 py-3 text-sm text-cyan-900 shadow-sm dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
-                    <p class="font-bold uppercase tracking-wide">Modo Admin global</p>
-                    <p class="mt-1 text-xs">
-                        Vista consolidada y de solo lectura para recepcion, clientes, planes y caja.
-                        Selecciona una sede especifica para crear o editar datos.
-                    </p>
-                </section>
-            @endif
+            @include('layouts.partials.panel.global-scope-banner')
 
             <div class="panel-toast-stack" aria-live="polite" aria-atomic="true">
             @if (!empty($subscription_grace))
@@ -1543,77 +1500,9 @@
     </div>
 </div>
 
-<nav class="theme-mobile-nav fixed inset-x-0 bottom-0 z-30 border-t p-2 backdrop-blur lg:hidden">
-    <div class="mx-auto flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
-        @foreach ($navItems as $item)
-            @php
-                $activePatterns = explode('|', $item['active']);
-                $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
-            @endphp
-            <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-               class="min-w-[84px] shrink-0 rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
-                {{ $item['label'] }}
-            </a>
-        @endforeach
-    </div>
-</nav>
+@include('layouts.partials.panel.mobile-nav')
 
-@if ($legalAcceptanceRequired)
-    <section id="legal-acceptance-overlay" class="legal-accept-overlay" aria-modal="true" role="dialog" aria-labelledby="legal-accept-title">
-        <div class="legal-accept-dialog">
-            <header class="legal-accept-header">
-                <h2 id="legal-accept-title">Aceptación de condiciones legales</h2>
-                <p>Para continuar debes aceptar una sola vez las condiciones legales vigentes. Esta aceptación queda registrada como respaldo legal.</p>
-                <p><strong>Versión vigente:</strong> {{ $legalCurrentVersion }}</p>
-            </header>
-
-            <div class="legal-accept-docs">
-                @foreach ($legalTermsDocuments as $doc)
-                    <article class="legal-accept-doc">
-                        <h3>{{ $doc['label'] }}</h3>
-                        <p>{{ $doc['summary'] }}</p>
-                        <ul>
-                            @foreach ($doc['points'] as $point)
-                                <li>{{ $point }}</li>
-                            @endforeach
-                        </ul>
-                    </article>
-                @endforeach
-            </div>
-
-            <form id="legal-accept-form" method="POST" action="{{ $legalAcceptancePostUrl }}" class="legal-accept-form">
-                @csrf
-                <input type="hidden" name="accepted" value="1">
-                <input type="hidden" name="terms_version" value="{{ $legalCurrentVersion }}">
-                <input type="hidden" name="location_permission" id="legal-location-permission" value="skipped">
-                <input type="hidden" name="latitude" id="legal-location-latitude" value="">
-                <input type="hidden" name="longitude" id="legal-location-longitude" value="">
-                <input type="hidden" name="location_accuracy_m" id="legal-location-accuracy" value="">
-
-                @if ($errors->has('accepted') || $errors->has('terms_version'))
-                    <div class="legal-accept-errors">
-                        @if ($errors->has('accepted'))
-                            <p>{{ $errors->first('accepted') }}</p>
-                        @endif
-                        @if ($errors->has('terms_version'))
-                            <p>{{ $errors->first('terms_version') }}</p>
-                        @endif
-                    </div>
-                @endif
-
-                <label class="legal-accept-check">
-                    <input type="checkbox" id="legal-accept-checkbox" required>
-                    <span>Confirmo que leí y acepto la Política de privacidad, Condiciones de servicio y Términos comerciales versión {{ $legalCurrentVersion }}.</span>
-                </label>
-
-                <div class="legal-accept-actions">
-                    <button id="legal-accept-submit" type="submit" class="ui-button ui-button-primary" disabled>Aceptar condiciones</button>
-                </div>
-            </form>
-        </div>
-    </section>
-@endif
-
+@include('layouts.partials.panel.legal-acceptance-modal')
 <div id="ui-loading-overlay" class="ui-loading-overlay" data-open="0" aria-hidden="true">
     <div class="ui-loading-card" role="status" aria-live="polite">
         <span class="ui-loading-spin" aria-hidden="true"></span>

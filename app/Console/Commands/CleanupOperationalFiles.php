@@ -14,7 +14,7 @@ class CleanupOperationalFiles extends Command
      */
     protected $signature = 'maintenance:cleanup-files
         {--days=14 : Eliminar archivos con antigüedad mayor a N días}
-        {--dry-run : Solo mostrar lo que se eliminaria}';
+        {--dry-run : Solo mostrar lo que se eliminaría}';
 
     /**
      * The console command description.

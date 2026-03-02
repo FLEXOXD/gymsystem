@@ -22,6 +22,7 @@ use App\Http\Controllers\SuperAdminNotificationsController;
 use App\Http\Controllers\SuperAdminPlanTemplateController;
 use App\Http\Controllers\SubscriptionAdminController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\PwaEventController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Http\Request;
@@ -102,6 +103,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
     Route::post('/demo/finalizar', [AuthenticatedSessionController::class, 'endDemo'])->name('demo.end');
     Route::post('/legal/modal-acceptance', [LegalAcceptanceController::class, 'storeModal'])
         ->name('legal.modal-acceptance.store');
+    Route::post('/pwa/events', [PwaEventController::class, 'store'])
+        ->middleware('throttle:120,1')
+        ->name('pwa.events.store');
 
     Route::middleware('check.subscription')->group(function (): void {
         Route::prefix('notifications/push')->name('notifications.push.')->group(function (): void {

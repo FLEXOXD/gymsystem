@@ -10,6 +10,7 @@ use App\Models\Membership;
 use App\Models\Plan;
 use App\Support\ActiveGymContext;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -18,8 +19,26 @@ class GymPanelController extends Controller
     /**
      * Main operational panel for gym users.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        $scopeRequested = strtolower(trim((string) $request->query('scope', '')));
+        $canUseMultiBranch = (bool) $request->attributes->get('gym_context_can_use_multibranch', false);
+        $hubGymSlug = trim((string) $request->attributes->get('hub_gym_slug', ''));
+        $routeGymSlug = trim((string) ($request->route('contextGym') ?? ''));
+        $isStandalonePwaMode = strtolower(trim((string) $request->query('pwa_mode', ''))) === 'standalone';
+
+        if (
+            $scopeRequested === ''
+            && $canUseMultiBranch
+            && $hubGymSlug !== ''
+            && mb_strtolower($routeGymSlug) === mb_strtolower($hubGymSlug)
+        ) {
+            return redirect()->route('panel.index', [
+                'contextGym' => $hubGymSlug,
+                'scope' => 'global',
+            ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : []));
+        }
+
         $gymId = ActiveGymContext::id($request);
         $gymIds = ActiveGymContext::ids($request);
         $isGlobalScope = ActiveGymContext::isGlobal($request);
