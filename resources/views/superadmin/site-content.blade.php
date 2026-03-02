@@ -186,9 +186,9 @@
                         </label>
 
                         <div class="space-y-2 lg:col-span-2 rounded-xl border border-slate-300 bg-white p-3">
-                            <p class="text-xs font-bold uppercase tracking-wide">Carrusel hero (3 imágenes)</p>
-                            <div class="grid gap-3 lg:grid-cols-3">
-                                @for ($slide = 1; $slide <= 3; $slide++)
+                            <p class="text-xs font-bold uppercase tracking-wide">Carrusel hero (4 imágenes)</p>
+                            <div class="grid gap-3 lg:grid-cols-4">
+                                @for ($slide = 1; $slide <= 4; $slide++)
                                     <div class="space-y-2 rounded-lg border border-slate-300/70 bg-slate-50/60 p-2">
                                         <p class="text-[11px] font-bold uppercase tracking-wide">Slide {{ $slide }}</p>
                                         @if (!empty($content['hero_slide_'.$slide.'_url'] ?? ''))
@@ -768,6 +768,15 @@
 
                     if (image) {
                         image.src = src;
+
+                        const allSlides = carousel.querySelectorAll('[data-hero-slide]');
+                        allSlides.forEach(function (slide) {
+                            slide.classList.remove('is-active');
+                        });
+                        const parentSlide = image.closest('[data-hero-slide]');
+                        if (parentSlide) {
+                            parentSlide.classList.add('is-active');
+                        }
                     }
                 });
             };
@@ -951,6 +960,10 @@
                     }
                     if (input.name === 'hero_slide_3_file') {
                         ensureHeroSlideAt(3, localUrl);
+                        return;
+                    }
+                    if (input.name === 'hero_slide_4_file') {
+                        ensureHeroSlideAt(4, localUrl);
                         return;
                     }
                     if (input.name === 'marquee_item_1_logo_file') {

@@ -14,7 +14,7 @@
     $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rápido'));
     $heroTitleText = trim((string) preg_replace('/\bsin\s+friccion\b\.?/i', '', $heroTitleText));
     $heroSlides = [];
-    for ($slide = 1; $slide <= 3; $slide++) {
+    for ($slide = 1; $slide <= 4; $slide++) {
         $slideUrl = trim((string) ($content['hero_slide_'.$slide.'_url'] ?? ''));
         if ($slideUrl !== '') {
             $heroSlides[] = $slideUrl;
@@ -332,8 +332,8 @@
         }
         .flash-error { border-color: #5e3a40; background: rgba(43, 20, 26, .75); color: #ffd9df; }
         .hero {
-            display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
-            gap: 2rem; align-items: center; padding-top: 2.8rem;
+            display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+            gap: clamp(1.25rem, 2.4vw, 2.4rem); align-items: center; padding-top: 2.8rem;
             position: relative;
             overflow: visible;
             isolation: isolate;
@@ -414,18 +414,19 @@
         .hero-note b { color: #f1f7ff; }
 
         .hero-panel {
-            border-radius: 1.2rem; border: 1px solid #2b5a40;
-            background: linear-gradient(160deg, #09130d, #102018 55%, #0b1711);
-            padding: 1rem; box-shadow: 0 28px 56px rgba(3, 8, 22, .52); overflow: hidden;
+            border-radius: 1.2rem; border: 0;
+            background: transparent;
+            padding: 0; box-shadow: none; overflow: visible;
             display: grid; gap: .72rem;
         }
         .hero-media-frame {
             position: relative;
-            border: 1px solid #2f5f43;
+            border: 0;
             border-radius: 1rem;
-            min-height: 320px;
+            min-height: clamp(360px, 38vw, 500px);
             background: #050b08;
             overflow: hidden;
+            box-shadow: 0 24px 52px rgba(3, 8, 22, .44);
         }
         .hero-carousel {
             position: absolute;
@@ -443,13 +444,13 @@
         .hero-slide-image {
             width: 100%;
             height: 100%;
-            min-height: 320px;
+            min-height: clamp(360px, 38vw, 500px);
             display: block;
             object-fit: cover;
-            filter: saturate(1.08) contrast(1.03);
+            filter: saturate(1.1) contrast(1.05);
         }
         .hero-media-placeholder {
-            min-height: 320px;
+            min-height: clamp(360px, 38vw, 500px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -506,12 +507,13 @@
             margin-top: .18rem;
         }
         .hero-insight-card {
-            border: 1px solid #2f5f43;
+            border: 0;
             border-radius: .88rem;
             background: linear-gradient(145deg, rgba(10, 22, 14, .96), rgba(8, 18, 12, .92));
             padding: .7rem .78rem;
             position: relative;
             overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(89, 255, 142, .35);
         }
         .hero-insight-card::after {
             content: "";
@@ -1269,7 +1271,7 @@
             .heading p { font-size: .98rem; }
             .hero-media-frame,
             .hero-slide-image,
-            .hero-media-placeholder { min-height: 220px; }
+            .hero-media-placeholder { min-height: 300px; }
             .hero-carousel-control { width: 32px; height: 32px; }
             .brands-track { animation-duration: 32s; }
             .brands-row { gap: 1.45rem; padding-right: 1.45rem; }
@@ -2293,17 +2295,13 @@
                     if (slides.length <= 1) {
                         return;
                     }
-                    if (document.body.classList.contains('perf-lite')) {
-                        return;
-                    }
-
                     if (timer) {
                         window.clearInterval(timer);
                     }
 
                     timer = window.setInterval(function () {
                         activate(activeIndex + 1);
-                    }, 4200);
+                    }, 3600);
                 };
 
                 const stop = function () {
@@ -2344,7 +2342,6 @@
                         start();
                     }
                 });
-                window.addEventListener('codex:perf-lite', stop);
                 activate(0);
                 start();
             }

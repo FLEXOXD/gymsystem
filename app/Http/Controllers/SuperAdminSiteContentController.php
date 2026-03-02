@@ -65,6 +65,7 @@ class SuperAdminSiteContentController extends Controller
             'hero_slide_1_file' => 'hero_slide_1_path',
             'hero_slide_2_file' => 'hero_slide_2_path',
             'hero_slide_3_file' => 'hero_slide_3_path',
+            'hero_slide_4_file' => 'hero_slide_4_path',
             'marquee_item_1_logo_file' => 'marquee_item_1_logo_path',
             'marquee_item_2_logo_file' => 'marquee_item_2_logo_path',
             'marquee_item_3_logo_file' => 'marquee_item_3_logo_path',

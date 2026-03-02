@@ -49,6 +49,7 @@ class MarketingContent
             'hero_slide_1_path' => '',
             'hero_slide_2_path' => '',
             'hero_slide_3_path' => '',
+            'hero_slide_4_path' => '',
             'section_1_title' => 'OperaciÃƒÂ³n diaria clara para recepciÃƒÂ³n y administraciÃƒÂ³n',
             'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rapida.',
             'section_1_item_1' => 'Ingreso y check-in con QR, RFID, pulseras y llaveros',
@@ -213,6 +214,7 @@ class MarketingContent
         $content['hero_slide_1_url'] = self::publicStorageUrl((string) ($content['hero_slide_1_path'] ?? ''));
         $content['hero_slide_2_url'] = self::publicStorageUrl((string) ($content['hero_slide_2_path'] ?? ''));
         $content['hero_slide_3_url'] = self::publicStorageUrl((string) ($content['hero_slide_3_path'] ?? ''));
+        $content['hero_slide_4_url'] = self::publicStorageUrl((string) ($content['hero_slide_4_path'] ?? ''));
         $content['section_1_image_url'] = self::publicStorageUrl((string) ($content['section_1_image_path'] ?? ''));
         $content['section_2_image_url'] = self::publicStorageUrl((string) ($content['section_2_image_path'] ?? ''));
         $content['section_3_image_url'] = self::publicStorageUrl((string) ($content['section_3_image_path'] ?? ''));
