@@ -28,6 +28,9 @@
             }
         }
     }
+    $homePageBackgroundFallback = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=2400&q=80';
+    $homePageBackgroundUrl = trim((string) ($content['home_bg_page_url'] ?? ''));
+    $homePageBackgroundUrl = $homePageBackgroundUrl !== '' ? $homePageBackgroundUrl : $homePageBackgroundFallback;
     $aboutInternetImages = [
         'hero' => 'https://images.unsplash.com/photo-1647456753452-e5d7cbf16df1?auto=format&fit=crop&w=2200&q=80',
         'story' => 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1800&q=80',
@@ -158,6 +161,7 @@
             --neon: #47ff6f;
             --neon-soft: rgba(71, 255, 111, 0.32);
             --border: #254235;
+            --home-page-bg: url('{{ $homePageBackgroundUrl }}');
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
@@ -169,6 +173,12 @@
             overflow-x: hidden;
             position: relative;
             isolation: isolate;
+        }
+        body.is-home {
+            background:
+                linear-gradient(118deg, rgba(2, 11, 7, .88) 0%, rgba(2, 11, 7, .72) 42%, rgba(2, 11, 7, .84) 100%),
+                linear-gradient(180deg, rgba(2, 9, 5, .62) 0%, rgba(3, 17, 10, .52) 55%, rgba(2, 10, 6, .76) 100%),
+                var(--home-page-bg) center top / cover no-repeat fixed;
         }
         .shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; }
         body::before,
@@ -1535,6 +1545,7 @@
             .legal-shell { padding: .95rem; }
             .heading h2 { font-size: clamp(1.5rem, 4.1vw, 2.5rem); }
             .service-media { min-height: 188px; }
+            body.is-home { background-attachment: scroll; }
         }
         @media (max-width: 820px) {
             .shell { width: min(1240px, calc(100% - 1rem)); }
@@ -1624,7 +1635,7 @@
         }
     </style>
 </head>
-<body>
+<body class="{{ $showPrimarySections ? 'is-home' : 'is-subpage' }}">
 
     <header class="top-wrap">
         <div class="shell">
