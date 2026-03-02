@@ -6,7 +6,9 @@
     <meta name="theme-color" content="#0f3cc9">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
     <title>Iniciar sesión</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

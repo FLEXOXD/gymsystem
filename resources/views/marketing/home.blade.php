@@ -77,6 +77,7 @@
         'commercial' => 'Términos comerciales',
         default => 'Software para gimnasios',
     };
+    $tabIconUrl = asset('pwa/favicon-brand.png?v=20260302');
 @endphp
 @php
     $serviceCards = [
@@ -142,6 +143,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#05080f">
     <title>{{ $brandName }} | {{ $pageTitleSuffix }}</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $tabIconUrl }}">
+    <link rel="shortcut icon" href="{{ $tabIconUrl }}">
+    <link rel="apple-touch-icon" href="{{ $tabIconUrl }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
