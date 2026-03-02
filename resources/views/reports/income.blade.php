@@ -53,6 +53,7 @@
                     <x-ui.button id="reports-income-export-pdf" :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
                                  target="_blank" rel="noopener" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
                     <x-ui.button id="reports-income-export-csv" :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 data-ui-loading-ignore="1"
                                  variant="secondary">Exportar CSV</x-ui.button>
                 @else
                     <p class="text-xs font-semibold text-amber-700 dark:text-amber-300 self-center">

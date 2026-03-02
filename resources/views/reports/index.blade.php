@@ -40,6 +40,7 @@
                                  target="_blank" rel="noopener" variant="ghost" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
                     <x-ui.button id="reports-export-csv"
                                  :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 data-ui-loading-ignore="1"
                                  variant="ghost">Exportar CSV</x-ui.button>
                 @else
                     <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">

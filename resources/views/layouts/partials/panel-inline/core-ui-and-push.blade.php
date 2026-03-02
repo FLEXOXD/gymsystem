@@ -64,6 +64,7 @@
         let pushUnsupportedReason = '';
         let uiLoadingTimeoutId = null;
         let uiLoadingReleaseId = null;
+        let uiLoadingHardReleaseId = null;
         let uiNavigationStarted = false;
 
         function showUiLoading(message, withFailsafe = false) {
@@ -103,6 +104,10 @@
                 window.clearTimeout(uiLoadingReleaseId);
                 uiLoadingReleaseId = null;
             }
+            if (uiLoadingHardReleaseId) {
+                window.clearTimeout(uiLoadingHardReleaseId);
+                uiLoadingHardReleaseId = null;
+            }
         }
 
         function markUiNavigationStarted() {
@@ -119,6 +124,13 @@
                     hideUiLoading();
                 }
             }, 1800);
+            // Failsafe for download-like navigations (CSV/PDF) where the browser
+            // may trigger navigation events without unloading the current page.
+            uiLoadingHardReleaseId = window.setTimeout(function () {
+                if (document.visibilityState === 'visible') {
+                    hideUiLoading();
+                }
+            }, 9000);
         }
 
         function isStandaloneMode() {
