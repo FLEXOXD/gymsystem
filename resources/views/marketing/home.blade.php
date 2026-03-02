@@ -28,9 +28,18 @@
             }
         }
     }
-    $homePageBackgroundFallback = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=2400&q=80';
-    $homePageBackgroundUrl = trim((string) ($content['home_bg_page_url'] ?? ''));
-    $homePageBackgroundUrl = $homePageBackgroundUrl !== '' ? $homePageBackgroundUrl : $homePageBackgroundFallback;
+    $homePageBackgroundFallbacks = [
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=2400&q=80',
+        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=2400&q=80',
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=2400&q=80',
+        'https://images.unsplash.com/photo-1576678927484-cc907957088c?auto=format&fit=crop&w=2400&q=80',
+        'https://images.unsplash.com/photo-1517344368193-41552b6ad3f5?auto=format&fit=crop&w=2400&q=80',
+    ];
+    $homePageBackgroundUrls = [];
+    foreach ($homePageBackgroundFallbacks as $index => $fallbackUrl) {
+        $configuredUrl = trim((string) ($content['home_bg_page_'.($index + 1).'_url'] ?? ''));
+        $homePageBackgroundUrls[] = $configuredUrl !== '' ? $configuredUrl : $fallbackUrl;
+    }
     $aboutInternetImages = [
         'hero' => 'https://images.unsplash.com/photo-1647456753452-e5d7cbf16df1?auto=format&fit=crop&w=2200&q=80',
         'story' => 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1800&q=80',
@@ -161,7 +170,11 @@
             --neon: #47ff6f;
             --neon-soft: rgba(71, 255, 111, 0.32);
             --border: #254235;
-            --home-page-bg: url('{{ $homePageBackgroundUrl }}');
+            --home-page-bg-1: url('{{ $homePageBackgroundUrls[0] }}');
+            --home-page-bg-2: url('{{ $homePageBackgroundUrls[1] }}');
+            --home-page-bg-3: url('{{ $homePageBackgroundUrls[2] }}');
+            --home-page-bg-4: url('{{ $homePageBackgroundUrls[3] }}');
+            --home-page-bg-5: url('{{ $homePageBackgroundUrls[4] }}');
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
@@ -176,9 +189,39 @@
         }
         body.is-home {
             background:
-                linear-gradient(118deg, rgba(2, 11, 7, .88) 0%, rgba(2, 11, 7, .72) 42%, rgba(2, 11, 7, .84) 100%),
-                linear-gradient(180deg, rgba(2, 9, 5, .62) 0%, rgba(3, 17, 10, .52) 55%, rgba(2, 10, 6, .76) 100%),
-                var(--home-page-bg) center top / cover no-repeat fixed;
+                linear-gradient(180deg, rgba(2, 9, 5, .55) 0%, rgba(3, 17, 10, .45) 55%, rgba(2, 10, 6, .65) 100%);
+        }
+        .home-scroll-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .home-scroll-bg-layer {
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            transform: scale(1.04);
+            opacity: 0;
+            transition: opacity .7s ease;
+            will-change: opacity;
+        }
+        .home-scroll-bg-layer.is-a {
+            background-image: var(--home-page-bg-1);
+        }
+        .home-scroll-bg-layer.is-active {
+            opacity: 1;
+        }
+        .home-scroll-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(116deg, rgba(2, 11, 7, .86) 0%, rgba(2, 11, 7, .67) 44%, rgba(2, 11, 7, .82) 100%),
+                radial-gradient(circle at 72% 18%, rgba(38, 255, 131, .12), transparent 36%);
         }
         .shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; }
         body::before,
@@ -187,7 +230,7 @@
             position: fixed;
             inset: -10%;
             pointer-events: none;
-            z-index: 0;
+            z-index: 1;
         }
         body::before {
             background:
@@ -1545,7 +1588,7 @@
             .legal-shell { padding: .95rem; }
             .heading h2 { font-size: clamp(1.5rem, 4.1vw, 2.5rem); }
             .service-media { min-height: 188px; }
-            body.is-home { background-attachment: scroll; }
+            .home-scroll-bg-layer { transform: none; }
         }
         @media (max-width: 820px) {
             .shell { width: min(1240px, calc(100% - 1rem)); }
@@ -1636,6 +1679,12 @@
     </style>
 </head>
 <body class="{{ $showPrimarySections ? 'is-home' : 'is-subpage' }}">
+    @if ($showPrimarySections)
+        <div class="home-scroll-bg" data-home-scroll-bg data-bg-images='@json($homePageBackgroundUrls)' aria-hidden="true">
+            <span class="home-scroll-bg-layer is-a is-active" data-home-bg-layer="0"></span>
+            <span class="home-scroll-bg-layer is-b" data-home-bg-layer="1"></span>
+        </div>
+    @endif
 
     <header class="top-wrap">
         <div class="shell">
@@ -2434,6 +2483,91 @@
                     revealItems.forEach(function (item) {
                         observer.observe(item);
                     });
+                }
+            }
+
+            const homeScrollBackground = document.querySelector('[data-home-scroll-bg]');
+            if (homeScrollBackground) {
+                let images = [];
+                try {
+                    images = JSON.parse(homeScrollBackground.getAttribute('data-bg-images') || '[]');
+                } catch (_error) {
+                    images = [];
+                }
+                images = images.filter(function (item) {
+                    return typeof item === 'string' && item.trim() !== '';
+                });
+
+                const layers = Array.from(homeScrollBackground.querySelectorAll('[data-home-bg-layer]'));
+                if (images.length > 1 && layers.length >= 2) {
+                    let activeLayerIndex = 0;
+                    let activeImageIndex = 0;
+                    let frameId = 0;
+
+                    const sectionIds = ['#inicio', '#features', '#pricing', '#faq', '#contacto'];
+                    const trackedSections = sectionIds
+                        .map(function (selector) {
+                            return document.querySelector(selector);
+                        })
+                        .filter(Boolean);
+
+                    const toCssBackground = function (value) {
+                        return 'url("' + String(value).replace(/"/g, '\\"') + '")';
+                    };
+
+                    const targetIndexFromViewport = function () {
+                        if (trackedSections.length > 0) {
+                            const marker = window.scrollY + (window.innerHeight * 0.38);
+                            let sectionIndex = 0;
+                            trackedSections.forEach(function (section, idx) {
+                                if (marker >= section.offsetTop) {
+                                    sectionIndex = idx;
+                                }
+                            });
+                            return Math.min(images.length - 1, sectionIndex);
+                        }
+
+                        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+                        const progress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+                        return Math.min(images.length - 1, Math.floor(progress * images.length));
+                    };
+
+                    const switchBackground = function (nextImageIndex) {
+                        if (nextImageIndex === activeImageIndex) {
+                            return;
+                        }
+                        const nextLayerIndex = activeLayerIndex === 0 ? 1 : 0;
+                        const activeLayer = layers[activeLayerIndex];
+                        const nextLayer = layers[nextLayerIndex];
+                        if (!activeLayer || !nextLayer) {
+                            return;
+                        }
+
+                        nextLayer.style.backgroundImage = toCssBackground(images[nextImageIndex]);
+                        nextLayer.classList.add('is-active');
+                        activeLayer.classList.remove('is-active');
+
+                        activeLayerIndex = nextLayerIndex;
+                        activeImageIndex = nextImageIndex;
+                    };
+
+                    const syncScrollBackground = function () {
+                        frameId = 0;
+                        switchBackground(targetIndexFromViewport());
+                    };
+
+                    const requestSyncScrollBackground = function () {
+                        if (frameId) {
+                            return;
+                        }
+                        frameId = window.requestAnimationFrame(syncScrollBackground);
+                    };
+
+                    layers[0].style.backgroundImage = toCssBackground(images[0]);
+                    requestSyncScrollBackground();
+                    window.addEventListener('scroll', requestSyncScrollBackground, { passive: true });
+                    window.addEventListener('resize', requestSyncScrollBackground);
+                    window.addEventListener('load', requestSyncScrollBackground);
                 }
             }
 
