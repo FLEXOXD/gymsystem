@@ -57,6 +57,7 @@ class User extends Authenticatable
         'can_close_cash',
         'can_manage_cash_movements',
         'theme',
+        'timezone',
         'legal_accepted_at',
         'legal_accepted_version',
         'password',

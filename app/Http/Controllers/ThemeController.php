@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateGymAvatarsRequest;
 use App\Http\Requests\UpdateGymLogoRequest;
 use App\Http\Requests\UpdateGymProfileRequest;
 use App\Http\Requests\UpdateSuperAdminContactRequest;
+use App\Http\Requests\UpdateSuperAdminTimezoneRequest;
 use App\Http\Requests\UpdateThemeRequest;
 use App\Http\Requests\UpdateUserProfileRequest;
 use App\Http\Requests\UpdateUserPasswordRequest;
@@ -279,6 +280,24 @@ class ThemeController extends Controller
         $user->forceFill($data)->save();
 
         return back()->with('status', __('messages.superadmin_contact_updated'));
+    }
+
+    /**
+     * Update preferred timezone for SuperAdmin screens.
+     */
+    public function updateSuperAdminTimezone(UpdateSuperAdminTimezoneRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->gym_id !== null, 403, __('messages.user_not_authenticated'));
+        if (! Schema::hasColumn('users', 'timezone')) {
+            return back()->with('error', 'Falta actualizar base de datos. Ejecuta: php artisan migrate');
+        }
+
+        $user->forceFill([
+            'timezone' => (string) $request->validated('superadmin_timezone'),
+        ])->save();
+
+        return back()->with('status', 'Zona horaria de SuperAdmin actualizada.');
     }
 
     /**

@@ -32,8 +32,16 @@ class SetGymTimezoneMiddleware
         $canUseMultiBranch = $user && $userGymId > 0
             ? ! $isCashier && $this->planAccessService->can($user, 'multi_branch') && ! $isBranchGym
             : false;
-        $gym = $user?->gym;
-        if ($user && $userGymId > 0 && $routeGymSlug !== '' && (! $isGlobalScope || ! $canUseMultiBranch)) {
+        $activeGym = $request->attributes->get('active_gym');
+        $gym = $activeGym instanceof \App\Models\Gym ? $activeGym : $user?->gym;
+
+        if (
+            ! $activeGym instanceof \App\Models\Gym
+            && $user
+            && $userGymId > 0
+            && $routeGymSlug !== ''
+            && (! $isGlobalScope || ! $canUseMultiBranch)
+        ) {
             $requestedGym = \App\Models\Gym::query()
                 ->withoutDemoSessions()
                 ->select(['id', 'slug', 'timezone', 'language_code'])
@@ -54,7 +62,15 @@ class SetGymTimezoneMiddleware
                 }
             }
         }
+
         $timezone = $gym?->timezone;
+        if (! (is_string($timezone) && in_array($timezone, timezone_identifiers_list(), true))) {
+            $superAdminTimezone = $user && $userGymId === 0 ? trim((string) ($user->timezone ?? '')) : '';
+            if ($superAdminTimezone !== '' && in_array($superAdminTimezone, timezone_identifiers_list(), true)) {
+                $timezone = $superAdminTimezone;
+            }
+        }
+
         $language = strtolower((string) ($gym?->language_code ?? 'es'));
         $language = str_replace('_', '-', $language);
         if ($language === 'pt-br') {

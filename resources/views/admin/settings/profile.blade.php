@@ -117,7 +117,10 @@
         $profileBirthDate = old('user_birth_date', $currentUser?->birth_date?->format('Y-m-d'));
         $profileIdentificationType = old('user_identification_type', (string) ($currentUser?->identification_type ?? ''));
         $profileIdentificationNumber = old('user_identification_number', (string) ($currentUser?->identification_number ?? ''));
-        $profileTimezone = $currentUser?->gym?->timezone ?: config('app.timezone', 'UTC');
+        $activeGymContext = request()->attributes->get('active_gym');
+        $profileTimezone = $activeGymContext instanceof \App\Models\Gym
+            ? (string) ($activeGymContext->timezone ?? '')
+            : (string) ($currentUser?->timezone ?: ($currentUser?->gym?->timezone ?: config('app.timezone', 'UTC')));
         if (! is_string($profileTimezone) || ! in_array($profileTimezone, timezone_identifiers_list(), true)) {
             $profileTimezone = 'UTC';
         }

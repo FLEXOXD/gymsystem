@@ -421,6 +421,7 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
         })->name('settings.index');
         Route::post('/config/theme', [ThemeController::class, 'update'])->name('settings.theme.update');
         Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->name('settings.profile.update');
+        Route::post('/config/superadmin-timezone', [ThemeController::class, 'updateSuperAdminTimezone'])->name('settings.superadmin-timezone.update');
         Route::post('/config/superadmin-contact', [ThemeController::class, 'updateSuperAdminContact'])->name('settings.superadmin-contact.update');
         Route::post('/config/profile/password', [ThemeController::class, 'updateProfilePassword'])->name('settings.profile.password.update');
         Route::post('/config/profile/logout-others', [ThemeController::class, 'logoutOtherDevices'])->name('settings.profile.logout-others');

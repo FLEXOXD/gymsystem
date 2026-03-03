@@ -14,8 +14,10 @@
         $gymProfileUpdateUrl = route('settings.gym-profile.update');
         $gymLogoUpdateUrl = route('settings.gym-logo.update');
         $gymAvatarsUpdateUrl = route('settings.gym-avatars.update');
+        $superAdminTimezoneUpdateUrl = route('settings.superadmin-timezone.update');
         $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
         $gymLanguageCode = old('language_code', $gym->language_code ?? 'es');
+        $superAdminTimezone = old('superadmin_timezone', auth()->user()?->timezone ?? config('app.timezone', 'UTC'));
         $gymAddressCountry = '-';
         $gymAddressState = '-';
         $gymAddressCity = '-';
@@ -112,6 +114,9 @@
             $gymAddressState = $gymAddressState !== '' ? $gymAddressState : '-';
             $gymAddressCity = $gymAddressCity !== '' ? $gymAddressCity : '-';
             $gymAddressLine = $gymAddressLine !== '' ? $gymAddressLine : '-';
+        }
+        if (! is_string($superAdminTimezone) || ! in_array($superAdminTimezone, timezone_identifiers_list(), true)) {
+            $superAdminTimezone = 'America/Guayaquil';
         }
     @endphp
 
@@ -364,9 +369,40 @@
                     <p class="ui-muted mt-1 text-sm">
                         Como SuperAdmin gestionas múltiples gimnasios. El logo, teléfono y dirección se administran por cada gym.
                     </p>
-                    <a href="{{ route('superadmin.gyms.index') }}" class="ui-button ui-button-primary mt-4">
-                        Ir a Gimnasios
-                    </a>
+                    <form method="POST" action="{{ $superAdminTimezoneUpdateUrl }}" class="mt-4 space-y-3">
+                        @csrf
+                        <div>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Zona horaria de SuperAdmin</label>
+                            <div class="theme-surface-light space-y-2 rounded-xl border border-slate-300/70 bg-slate-50/80 p-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <input id="timezone-search"
+                                           type="text"
+                                           class="ui-input min-w-[220px] flex-1"
+                                           placeholder="Buscar por pais, ciudad o zona (ej: ecuador, bogota, mexico)">
+                                    <button id="timezone-detect-btn" type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold">
+                                        Usar navegador
+                                    </button>
+                                </div>
+                                <p id="timezone-detect-hint" class="ui-muted text-xs"></p>
+                                <select id="timezone-select" name="superadmin_timezone" class="ui-input" required>
+                                    @foreach ($timezoneOptions as $timezoneValue => $timezoneLabel)
+                                        <option value="{{ $timezoneValue }}" @selected($superAdminTimezone === $timezoneValue)>
+                                            {{ $timezoneLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p id="timezone-current" class="ui-muted text-xs"></p>
+                            </div>
+                            <p class="ui-muted mt-1 text-xs">Esta zona se usa para fechas y horas en paneles de SuperAdmin.</p>
+                            @error('superadmin_timezone')
+                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="submit" class="ui-button ui-button-primary">Guardar zona horaria</button>
+                            <a href="{{ route('superadmin.gyms.index') }}" class="ui-button ui-button-muted">Ir a Gimnasios</a>
+                        </div>
+                    </form>
                 </section>
             @else
                 <section class="ui-card">
