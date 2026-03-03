@@ -1381,7 +1381,7 @@
                                     <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
                                 @endif
 
-                                @if (! $isSuperAdmin)
+                                @if (! $isSuperAdmin && ! $isDemoMode)
                                     <button id="push-notifications-button"
                                             type="button"
                                             class="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"

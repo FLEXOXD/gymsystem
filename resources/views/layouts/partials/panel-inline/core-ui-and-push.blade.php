@@ -43,6 +43,7 @@
         const pushAccessAlert = document.getElementById('push-access-alert');
         const pwaInstallEnabled = pwaInstallButton?.getAttribute('data-pwa-enabled') === '1';
         const pwaUpgradeMessage = @json($pwaUpgradeMessage);
+        const isDemoMode = Boolean(@json((bool) ($demo_mode ?? false)));
         const currentUserId = Number(@json((int) ($user?->id ?? 0)));
         const reportPwaEvent = typeof window.reportGymPwaEvent === 'function'
             ? window.reportGymPwaEvent
@@ -656,6 +657,12 @@
                 return;
             }
 
+            if (isDemoMode) {
+                pushUnsupportedReason = 'Las notificaciones push no estan disponibles en la cuenta demo.';
+                updatePushButtonState('unsupported');
+                return;
+            }
+
             async function resolvePushServiceWorkerRegistration() {
                 const swMetaUrl = document.querySelector('meta[name="sw-url"]')?.getAttribute('content') || '';
                 const swUrl = swMetaUrl.trim() !== '' ? swMetaUrl : '/sw.js';
@@ -826,6 +833,7 @@
 
             const shouldShowOnboarding = Notification.permission === 'default'
                 && !currentSubscription
+                && !isDemoMode
                 && !isPushOnboardingDismissed();
 
             if (shouldShowOnboarding) {

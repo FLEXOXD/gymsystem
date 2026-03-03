@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushSubscription;
+use App\Models\User;
 use App\Services\PushNotificationService;
 use App\Services\WebPushService;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +34,12 @@ class PushSubscriptionController extends Controller
     {
         $user = $request->user();
         abort_if(! $user, 403, 'No autorizado.');
+        if ($this->isDemoUser($user)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Las notificaciones push no estan disponibles en la cuenta demo.',
+            ], 403);
+        }
 
         $data = $request->validate([
             'subscription' => ['required', 'array'],
@@ -123,6 +130,12 @@ class PushSubscriptionController extends Controller
     {
         $user = $request->user();
         abort_if(! $user, 403, 'No autorizado.');
+        if ($this->isDemoUser($user)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Las notificaciones push no estan disponibles en la cuenta demo.',
+            ], 403);
+        }
 
         $activeSubscriptions = PushSubscription::query()
             ->active()
@@ -178,5 +191,10 @@ class PushSubscriptionController extends Controller
         }
 
         return route('app.entry');
+    }
+
+    private function isDemoUser(User $user): bool
+    {
+        return $user->demoSession()->active()->exists();
     }
 }
