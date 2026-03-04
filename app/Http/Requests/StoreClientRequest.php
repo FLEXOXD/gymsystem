@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Client;
+use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,12 +14,16 @@ class StoreClientRequest extends FormRequest
     {
         $phone = trim((string) $this->input('phone', ''));
         $phone = preg_replace('/\s+/u', ' ', $phone) ?? '';
+        $appUsername = mb_strtolower(trim((string) $this->input('app_username', '')));
+        $appUsername = preg_replace('/\s+/u', '', $appUsername) ?? '';
 
         $this->merge([
             'first_name' => $this->formatPersonName($this->input('first_name')),
             'last_name' => $this->formatPersonName($this->input('last_name')),
             'document_number' => Client::normalizeDocumentNumber($this->input('document_number')),
             'phone' => $phone,
+            'create_app_account' => $this->boolean('create_app_account'),
+            'app_username' => $appUsername,
         ]);
     }
 
@@ -39,6 +44,10 @@ class StoreClientRequest extends FormRequest
     {
         $gymId = ActiveGymContext::id($this);
         $startsMembership = $this->boolean('start_membership');
+        $canManageClientAccounts = $gymId
+            ? app(PlanAccessService::class)->canForGym((int) $gymId, 'client_accounts')
+            : false;
+        $creatingAppAccount = $canManageClientAccounts && $this->boolean('create_app_account');
 
         if (! $gymId) {
             return [
@@ -133,6 +142,26 @@ class StoreClientRequest extends FormRequest
                     }
                 },
             ],
+            'create_app_account' => ['nullable', 'boolean'],
+            'app_username' => [
+                'nullable',
+                Rule::requiredIf($creatingAppAccount),
+                'string',
+                'min:4',
+                'max:80',
+                'regex:/^[a-z0-9._-]+$/',
+                Rule::unique('clients', 'app_username')->where(
+                    fn ($query) => $query->where('gym_id', $gymId)
+                ),
+            ],
+            'app_password' => [
+                'nullable',
+                Rule::requiredIf($creatingAppAccount),
+                'string',
+                'min:8',
+                'max:120',
+                'confirmed',
+            ],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'neutral'])],
             'start_membership' => ['nullable', 'boolean'],
@@ -179,6 +208,14 @@ class StoreClientRequest extends FormRequest
             'phone.required' => 'Ingresa el telefono del cliente.',
             'phone.regex' => 'El telefono solo puede contener numeros y los simbolos + - ( ).',
             'phone.max' => 'El telefono no puede superar 25 caracteres.',
+            'app_username.required' => 'Ingresa un usuario para el acceso cliente.',
+            'app_username.min' => 'El usuario debe tener al menos 4 caracteres.',
+            'app_username.max' => 'El usuario no puede superar 80 caracteres.',
+            'app_username.regex' => 'El usuario solo puede usar letras minusculas, numeros, punto, guion y guion bajo.',
+            'app_username.unique' => 'Este usuario ya existe en este gimnasio.',
+            'app_password.required' => 'Ingresa una contrasena para el acceso cliente.',
+            'app_password.min' => 'La contrasena debe tener al menos 8 caracteres.',
+            'app_password.confirmed' => 'La confirmacion de contrasena no coincide.',
             'photo.image' => 'La foto debe ser una imagen valida.',
             'photo.max' => 'La foto no puede superar 2MB.',
             'plan_id.required' => 'Selecciona un plan para iniciar la membresia.',
@@ -200,6 +237,10 @@ class StoreClientRequest extends FormRequest
             'last_name' => 'apellido',
             'document_number' => 'documento',
             'phone' => 'telefono',
+            'create_app_account' => 'crear cuenta app',
+            'app_username' => 'usuario app',
+            'app_password' => 'contrasena app',
+            'app_password_confirmation' => 'confirmacion de contrasena app',
             'gender' => 'genero',
             'photo' => 'foto',
             'plan_id' => 'plan',

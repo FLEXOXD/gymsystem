@@ -272,6 +272,7 @@ class SubscriptionService
 
             if ($subscription) {
                 $subscription->update($payload);
+                $this->invalidatePlanAccessCache((int) $subscription->gym_id);
 
                 $updated = $subscription->fresh();
                 if (! (bool) ($updated->is_branch_managed ?? false)) {
@@ -285,6 +286,7 @@ class SubscriptionService
                 'gym_id' => $gymId,
                 ...$payload,
             ]);
+            $this->invalidatePlanAccessCache((int) $created->gym_id);
 
             if (! (bool) ($created->is_branch_managed ?? false)) {
                 $this->syncManagedBranchesFromHub((int) $created->gym_id);
@@ -369,6 +371,7 @@ class SubscriptionService
 
             if ($subscription) {
                 $subscription->update($payload);
+                $this->invalidatePlanAccessCache((int) $subscription->gym_id);
 
                 $updated = $subscription->fresh();
                 if (! (bool) ($updated->is_branch_managed ?? false)) {
@@ -382,6 +385,7 @@ class SubscriptionService
                 'gym_id' => $gymId,
                 ...$payload,
             ]);
+            $this->invalidatePlanAccessCache((int) $created->gym_id);
 
             if (! (bool) ($created->is_branch_managed ?? false)) {
                 $this->syncManagedBranchesFromHub((int) $created->gym_id);
@@ -444,6 +448,9 @@ class SubscriptionService
             'last_payment_method' => null,
             'grace_days' => 3,
         ]);
+        if ((bool) ($subscription->wasRecentlyCreated ?? false)) {
+            $this->invalidatePlanAccessCache((int) $subscription->gym_id);
+        }
 
         $resolvedPlanKey = $this->planAccessService->inferPlanKey(
             rawPlanKey: (string) ($subscription->plan_key ?? ''),
@@ -465,6 +472,7 @@ class SubscriptionService
 
         if ($payload !== []) {
             $subscription->update($payload);
+            $this->invalidatePlanAccessCache((int) $subscription->gym_id);
 
             $updated = $subscription->fresh();
             if ((bool) ($updated->is_branch_managed ?? false)) {
@@ -629,5 +637,14 @@ class SubscriptionService
         $configured = trim((string) config('plan_features.default_feature_version', 'v1'));
 
         return $configured !== '' ? $configured : 'v1';
+    }
+
+    private function invalidatePlanAccessCache(int $gymId): void
+    {
+        if ($gymId <= 0) {
+            return;
+        }
+
+        $this->planAccessService->forgetGym($gymId);
     }
 }

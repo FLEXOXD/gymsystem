@@ -6,6 +6,7 @@ use App\Models\GymBranchLink;
 use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\PresenceSession;
 use App\Models\Promotion;
 use App\Models\Subscription;
 use App\Models\SuperAdminPlanTemplate;
@@ -117,6 +118,139 @@ it('does not allow duplicate attendance on the same day', function () {
     $second->assertStatus(422)
         ->assertJsonPath('ok', false)
         ->assertJsonPath('message', 'Asistencia ya registrada hoy');
+});
+
+it('tracks live present clients with check-in and check-out', function () {
+    $gym = makeGym('presence-live');
+    $user = makeGymUser($gym, 'presence-live@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Pedro',
+        'last_name' => 'Vera',
+        'document_number' => 'DOC-PRESENCE-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Presencia',
+        'duration_days' => 30,
+        'price' => 35,
+        'status' => 'active',
+    ]);
+
+    Membership::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(10)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $checkIn = $this->actingAs($user)->postJson(route('reception.check-in', [
+        'contextGym' => $gym->slug,
+    ]), [
+        'value' => 'DOC-PRESENCE-001',
+    ]);
+    $checkIn->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('event_type', 'checkin');
+
+    $this->assertDatabaseHas('presence_sessions', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'check_out_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->getJson(route('panel.live-clients', ['contextGym' => $gym->slug]))
+        ->assertOk()
+        ->assertJsonPath('count', 1);
+
+    $checkOut = $this->actingAs($user)->postJson(route('reception.check-out', [
+        'contextGym' => $gym->slug,
+    ]), [
+        'value' => 'DOC-PRESENCE-001',
+    ]);
+    $checkOut->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('reason', 'checkout_success')
+        ->assertJsonPath('event_type', 'checkout');
+
+    expect(PresenceSession::query()
+        ->forGym($gym->id)
+        ->where('client_id', $client->id)
+        ->open()
+        ->count())
+        ->toBe(0);
+
+    $this->actingAs($user)
+        ->getJson(route('panel.live-clients', ['contextGym' => $gym->slug]))
+        ->assertOk()
+        ->assertJsonPath('count', 0);
+
+    $this->actingAs($user)
+        ->postJson(route('reception.check-out', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'value' => 'DOC-PRESENCE-001',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('reason', 'not_inside');
+});
+
+it('isolates live present count between gyms', function () {
+    $gymA = makeGym('presence-a');
+    $gymB = makeGym('presence-b');
+    $userA = makeGymUser($gymA, 'presence-a@example.test');
+    $userB = makeGymUser($gymB, 'presence-b@example.test');
+
+    $clientA = Client::query()->create([
+        'gym_id' => $gymA->id,
+        'first_name' => 'Ariel',
+        'last_name' => 'Uno',
+        'document_number' => 'DOC-PRES-A',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $planA = Plan::query()->create([
+        'gym_id' => $gymA->id,
+        'name' => 'Plan A',
+        'duration_days' => 30,
+        'price' => 30,
+        'status' => 'active',
+    ]);
+
+    Membership::query()->create([
+        'gym_id' => $gymA->id,
+        'client_id' => $clientA->id,
+        'plan_id' => $planA->id,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(10)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($userA)->postJson(route('reception.check-in', [
+        'contextGym' => $gymA->slug,
+    ]), [
+        'value' => 'DOC-PRES-A',
+    ])->assertOk();
+
+    $this->actingAs($userA)
+        ->getJson(route('panel.live-clients', ['contextGym' => $gymA->slug]))
+        ->assertOk()
+        ->assertJsonPath('count', 1);
+
+    $this->actingAs($userB)
+        ->getJson(route('panel.live-clients', ['contextGym' => $gymB->slug]))
+        ->assertOk()
+        ->assertJsonPath('count', 0);
 });
 
 it('does not allow membership sale when cash session is closed', function () {

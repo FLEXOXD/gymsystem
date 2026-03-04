@@ -310,6 +310,11 @@
                     </tbody>
                 </table>
             </div>
+            @if (method_exists($links, 'links'))
+                <div class="mt-4">
+                    {{ $links->onEachSide(1)->links() }}
+                </div>
+            @endif
         </x-ui.card>
     </div>
 @endsection

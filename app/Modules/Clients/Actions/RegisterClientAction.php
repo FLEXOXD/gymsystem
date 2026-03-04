@@ -10,6 +10,7 @@ use App\Services\CashSessionService;
 use App\Services\PromotionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
 class RegisterClientAction
@@ -29,16 +30,25 @@ class RegisterClientAction
         int $userId,
         array $data,
         bool $canManagePromotions,
-        ?string $photoPath = null
+        ?string $photoPath = null,
+        bool $canManageClientAccounts = false
     ): Client {
         $startsMembership = (bool) ($data['start_membership'] ?? false);
+        $requestedAppUsername = mb_strtolower(trim((string) ($data['app_username'] ?? '')));
+        $requestedAppPassword = trim((string) ($data['app_password'] ?? ''));
+        $createAppAccount = $canManageClientAccounts
+            && (bool) ($data['create_app_account'] ?? false)
+            && $requestedAppUsername !== ''
+            && $requestedAppPassword !== '';
 
-        return DB::transaction(function () use ($gymId, $userId, $data, $canManagePromotions, $photoPath, $startsMembership): Client {
+        return DB::transaction(function () use ($gymId, $userId, $data, $canManagePromotions, $photoPath, $startsMembership, $createAppAccount, $requestedAppUsername, $requestedAppPassword): Client {
             $client = Client::query()->create([
                 'gym_id' => $gymId,
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'document_number' => $data['document_number'],
+                'app_username' => $createAppAccount ? $requestedAppUsername : null,
+                'app_password' => $createAppAccount ? Hash::make($requestedAppPassword) : null,
                 'phone' => $data['phone'] ?? null,
                 'photo_path' => $photoPath,
                 'gender' => $data['gender'] ?? 'neutral',
@@ -124,4 +134,3 @@ class RegisterClientAction
         });
     }
 }
-

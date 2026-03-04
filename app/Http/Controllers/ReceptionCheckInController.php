@@ -8,18 +8,28 @@ use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Http\Requests\ReceptionCheckInRequest;
 use App\Services\AttendanceCheckinService;
+use App\Services\MobileCheckInTokenService;
+use App\Services\PresenceSessionService;
+use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use DateTimeInterface;
 use Throwable;
 
 class ReceptionCheckInController extends Controller
 {
+    public function __construct(
+        private readonly PlanAccessService $planAccessService
+    ) {
+    }
+
     /**
      * Show reception mode page.
      */
@@ -82,6 +92,10 @@ class ReceptionCheckInController extends Controller
         }
 
         $recentAttendances = $this->recentAttendancesForGym($gymId);
+        $latestSyncEvent = $this->latestSyncEventForGym($gymId);
+        $latestSyncPayload = is_array($latestSyncEvent['payload'] ?? null)
+            ? $latestSyncEvent['payload']
+            : null;
         $attendanceHistoryStart = now()->subMonthsNoOverflow(2)->toDateString();
         $attendanceHistoryBaseQuery = Attendance::query()
             ->forGym($gymId)
@@ -105,7 +119,11 @@ class ReceptionCheckInController extends Controller
             'attendanceHistoryTruncated' => $attendanceHistoryTotal > $attendanceHistoryLimit,
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
+            'latestResult' => $latestSyncPayload ?? $this->latestResultForGym($gymId),
+            'latestSyncEventId' => (string) ($latestSyncEvent['id'] ?? ''),
+            'latestSyncEventPublishedAt' => (int) ($latestSyncEvent['published_at_ms'] ?? 0),
             'gymAvatarUrls' => $this->gymAvatarUrls($request, $gym),
+            'canManageClientAccounts' => $this->planAccessService->canForGym((int) $gymId, 'client_accounts'),
         ]);
     }
 
@@ -139,7 +157,13 @@ class ReceptionCheckInController extends Controller
             'syncGymId' => $gymId,
             'syncGymName' => $gymName !== '' ? $gymName : 'Gym',
             'gymAvatarUrls' => $this->gymAvatarUrls($request, $gym),
+            'canManageClientAccounts' => $this->planAccessService->canForGym((int) $gymId, 'client_accounts'),
         ]);
+    }
+
+    public function mobileDisplay(Request $request): View
+    {
+        return $this->display($request);
     }
 
     /**
@@ -168,6 +192,81 @@ class ReceptionCheckInController extends Controller
         return response()->json(['event' => $event]);
     }
 
+    public function mobileQr(Request $request, MobileCheckInTokenService $mobileCheckInTokenService): JsonResponse
+    {
+        $gymId = ActiveGymContext::id($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return response()->json([
+                'ok' => false,
+                'message' => __('messages.reception.select_branch_generate_mobile_qr'),
+            ], 409);
+        }
+
+        abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
+
+        $data = $request->validate([
+            'rotate_seconds' => ['nullable', 'integer', 'min:10', 'max:2592000'],
+            'force' => ['nullable', 'boolean'],
+        ]);
+
+        $rotateSeconds = (int) ($data['rotate_seconds'] ?? 20);
+        $force = (bool) ($data['force'] ?? false);
+        $generated = null;
+        if (! $force) {
+            $generated = $mobileCheckInTokenService->current((int) $gymId);
+        }
+
+        if (! is_array($generated)) {
+            $generated = $mobileCheckInTokenService->generate(
+                gymId: (int) $gymId,
+                issuedBy: (int) $request->user()->id,
+                ttlSeconds: $rotateSeconds
+            );
+        }
+
+        $qrPayload = $mobileCheckInTokenService->buildQrPayload((string) ($generated['token'] ?? ''));
+        $qrSvg = QrCode::format('svg')
+            ->size(260)
+            ->margin(1)
+            ->errorCorrection('M')
+            ->generate($qrPayload);
+
+        return response()->json([
+            'ok' => true,
+            'token' => (string) ($generated['token'] ?? ''),
+            'qr_payload' => $qrPayload,
+            'qr_svg' => (string) $qrSvg,
+            'rotate_seconds' => (int) ($generated['ttl_seconds'] ?? $rotateSeconds),
+            'expires_at_ts' => (int) ($generated['expires_at_ts'] ?? 0),
+            'issued_at_ts' => (int) ($generated['issued_at_ts'] ?? now()->timestamp),
+            'server_time_ts' => now()->timestamp,
+        ]);
+    }
+
+    public function mobileQrStatus(Request $request, MobileCheckInTokenService $mobileCheckInTokenService): JsonResponse
+    {
+        $gymId = ActiveGymContext::id($request);
+        if (ActiveGymContext::isGlobal($request)) {
+            return response()->json([
+                'ok' => false,
+                'message' => __('messages.reception.select_branch_status_mobile_qr'),
+            ], 409);
+        }
+
+        abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
+
+        $event = $mobileCheckInTokenService->latestConsumedEvent((int) $gymId);
+
+        return response()->json([
+            'ok' => true,
+            'consumed' => $event ? [
+                'token' => (string) ($event['token'] ?? ''),
+                'consumed_at_ms' => (int) ($event['consumed_at_ms'] ?? 0),
+            ] : null,
+            'server_time_ts' => now()->timestamp,
+        ]);
+    }
+
     /**
      * Unified endpoint for RFID/QR/document check-in.
      */
@@ -181,7 +280,7 @@ class ReceptionCheckInController extends Controller
             return response()->json([
                 'ok' => false,
                 'reason' => 'global_scope_blocked',
-                'message' => 'Selecciona una sucursal especifica para registrar check-in.',
+                'message' => __('messages.reception.select_branch_check_in'),
             ], 409);
         }
 
@@ -197,6 +296,7 @@ class ReceptionCheckInController extends Controller
                     'date' => now()->toDateString(),
                     'time' => now()->format('H:i:s'),
                 ],
+                'event_type' => 'checkin',
             ];
 
             Log::warning('reception.check_in.failed', [
@@ -221,7 +321,7 @@ class ReceptionCheckInController extends Controller
             $payload = [
                 'ok' => false,
                 'reason' => 'internal_error',
-                'message' => 'No se pudo registrar el ingreso por un error interno.',
+                'message' => __('messages.reception.checkin_internal_error'),
                 'method' => null,
                 'client' => null,
                 'attendance' => null,
@@ -229,6 +329,7 @@ class ReceptionCheckInController extends Controller
                     'date' => now()->toDateString(),
                     'time' => now()->format('H:i:s'),
                 ],
+                'event_type' => 'checkin',
             ];
 
             Log::warning('reception.check_in.failed', [
@@ -261,6 +362,160 @@ class ReceptionCheckInController extends Controller
         $this->publishSyncEventForGym($gymId, $result);
 
         return response()->json($result, $result['ok'] ? 200 : 422);
+    }
+
+    /**
+     * Unified endpoint for RFID/QR/document check-out.
+     */
+    public function checkOut(
+        ReceptionCheckInRequest $request,
+        PresenceSessionService $presenceSessionService
+    ): JsonResponse {
+        $userId = (int) $request->user()->id;
+        $gymId = ActiveGymContext::id($request);
+        $attempt = $this->attemptPayload();
+
+        if (ActiveGymContext::isGlobal($request)) {
+            $payload = [
+                'ok' => false,
+                'reason' => 'global_scope_blocked',
+                'message' => __('messages.reception.select_branch_check_out'),
+                'method' => null,
+                'client' => null,
+                'attendance' => null,
+                'attempt' => $attempt,
+                'event_type' => 'checkout',
+            ];
+
+            return response()->json($payload, 409);
+        }
+
+        if (! $gymId) {
+            $payload = [
+                'ok' => false,
+                'reason' => 'missing_gym',
+                'message' => 'El usuario autenticado no tiene gym_id asignado.',
+                'method' => null,
+                'client' => null,
+                'attendance' => null,
+                'attempt' => $attempt,
+                'event_type' => 'checkout',
+            ];
+
+            Log::warning('reception.check_out.failed', [
+                'gym_id' => null,
+                'user_id' => $userId,
+                'reason' => 'missing_gym_id',
+            ]);
+
+            return response()->json($payload, 422);
+        }
+
+        try {
+            $candidate = $this->resolveClientCandidateByValue($gymId, (string) $request->validated('value'));
+            if (! $candidate) {
+                $payload = [
+                    'ok' => false,
+                    'reason' => 'not_found',
+                    'message' => __('messages.reception.client_not_found_for_value'),
+                    'method' => null,
+                    'client' => null,
+                    'attendance' => null,
+                    'attempt' => $attempt,
+                    'event_type' => 'checkout',
+                ];
+
+                Log::warning('reception.check_out.failed', [
+                    'gym_id' => $gymId,
+                    'user_id' => $userId,
+                    'reason' => 'not_found',
+                ]);
+
+                $this->publishSyncEventForGym($gymId, $payload, 'checkout');
+
+                return response()->json($payload, 422);
+            }
+
+            $clientPayload = $this->buildClientPayloadForResult($gymId, $candidate);
+            $method = (string) $candidate['method'];
+            $closedSession = $presenceSessionService->registerCheckOut(
+                gymId: $gymId,
+                clientId: (int) $candidate['client_id'],
+                checkOutBy: $userId,
+                checkOutMethod: $method,
+                reason: 'manual'
+            );
+
+            if (! $closedSession) {
+                $payload = [
+                    'ok' => false,
+                    'reason' => 'not_inside',
+                    'message' => __('messages.reception.client_not_inside'),
+                    'method' => $method,
+                    'client' => $clientPayload,
+                    'attendance' => null,
+                    'attempt' => $attempt,
+                    'event_type' => 'checkout',
+                ];
+
+                Log::warning('reception.check_out.failed', [
+                    'gym_id' => $gymId,
+                    'user_id' => $userId,
+                    'client_id' => (int) $candidate['client_id'],
+                    'method' => $method,
+                    'reason' => 'not_inside',
+                ]);
+
+                $this->publishSyncEventForGym($gymId, $payload, 'checkout');
+
+                return response()->json($payload, 422);
+            }
+
+            $payload = [
+                'ok' => true,
+                'reason' => 'checkout_success',
+                'message' => __('messages.reception.checkout_success'),
+                'method' => $method,
+                'client' => $clientPayload,
+                'attendance' => null,
+                'attempt' => $attempt,
+                'event_type' => 'checkout',
+            ];
+
+            Log::info('reception.check_out.success', [
+                'gym_id' => $gymId,
+                'user_id' => $userId,
+                'client_id' => (int) $candidate['client_id'],
+                'method' => $method,
+            ]);
+
+            $this->publishSyncEventForGym($gymId, $payload, 'checkout');
+
+            return response()->json($payload);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $payload = [
+                'ok' => false,
+                'reason' => 'internal_error',
+                'message' => __('messages.reception.checkout_internal_error'),
+                'method' => null,
+                'client' => null,
+                'attendance' => null,
+                'attempt' => $attempt,
+                'event_type' => 'checkout',
+            ];
+
+            Log::warning('reception.check_out.failed', [
+                'gym_id' => $gymId,
+                'user_id' => $userId,
+                'reason' => 'internal_exception',
+            ]);
+
+            $this->publishSyncEventForGym($gymId, $payload, 'checkout');
+
+            return response()->json($payload, 500);
+        }
     }
 
     private function recentAttendancesForGym(int $gymId)
@@ -323,7 +578,7 @@ class ReceptionCheckInController extends Controller
         return [
             'ok' => true,
             'reason' => 'success',
-            'message' => 'Check-in registrado correctamente.',
+            'message' => __('messages.reception.checkin_success'),
             'method' => $method,
             'client' => [
                 'id' => (int) $latest->client_id,
@@ -348,6 +603,7 @@ class ReceptionCheckInController extends Controller
                 'date' => $attendanceDate,
                 'time' => (string) ($latest->time ?? ''),
             ],
+            'event_type' => 'checkin',
         ];
     }
 
@@ -507,15 +763,155 @@ class ReceptionCheckInController extends Controller
             ->count();
     }
 
-    private function publishSyncEventForGym(int $gymId, array $payload): void
+    /**
+     * @return array{date:string,time:string}
+     */
+    private function attemptPayload(): array
+    {
+        return [
+            'date' => now()->toDateString(),
+            'time' => now()->format('H:i:s'),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     client_id:int,
+     *     full_name:string,
+     *     photo_path:?string,
+     *     gender:string,
+     *     method:string
+     * }|null
+     */
+    private function resolveClientCandidateByValue(int $gymId, string $value): ?array
+    {
+        $normalizedValue = trim($value);
+        if ($normalizedValue === '') {
+            return null;
+        }
+
+        $candidate = DB::table('client_credentials as credentials')
+            ->join('clients as clients', function ($join): void {
+                $join->on('clients.id', '=', 'credentials.client_id')
+                    ->on('clients.gym_id', '=', 'credentials.gym_id');
+            })
+            ->where('credentials.gym_id', $gymId)
+            ->where('credentials.value', $normalizedValue)
+            ->orderByRaw("CASE WHEN credentials.status = 'active' THEN 0 ELSE 1 END")
+            ->orderByDesc('credentials.id')
+            ->select([
+                'clients.id as client_id',
+                'clients.first_name',
+                'clients.last_name',
+                'clients.photo_path',
+                'clients.gender as client_gender',
+                'credentials.type as credential_type',
+            ])
+            ->first();
+
+        if ($candidate) {
+            return [
+                'client_id' => (int) $candidate->client_id,
+                'full_name' => trim(((string) $candidate->first_name).' '.((string) $candidate->last_name)),
+                'photo_path' => $candidate->photo_path ? (string) $candidate->photo_path : null,
+                'gender' => (string) ($candidate->client_gender ?? ''),
+                'method' => $candidate->credential_type
+                    ? (string) $candidate->credential_type
+                    : 'document',
+            ];
+        }
+
+        $documentCandidate = DB::table('clients')
+            ->where('gym_id', $gymId)
+            ->where('document_number', $normalizedValue)
+            ->select([
+                'id as client_id',
+                'first_name',
+                'last_name',
+                'photo_path',
+                'gender as client_gender',
+            ])
+            ->first();
+
+        if (! $documentCandidate) {
+            return null;
+        }
+
+        return [
+            'client_id' => (int) $documentCandidate->client_id,
+            'full_name' => trim(((string) $documentCandidate->first_name).' '.((string) $documentCandidate->last_name)),
+            'photo_path' => $documentCandidate->photo_path ? (string) $documentCandidate->photo_path : null,
+            'gender' => (string) ($documentCandidate->client_gender ?? ''),
+            'method' => 'document',
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     client_id:int,
+     *     full_name:string,
+     *     photo_path:?string,
+     *     gender:string
+     * }  $candidate
+     * @return array{
+     *     id:int,
+     *     full_name:string,
+     *     photo_url:?string,
+     *     membership_ends_at:?string,
+     *     month_visits:int,
+     *     total_visits:int,
+     *     last_attendance_date:?string,
+     *     last_attendance_time:?string,
+     *     gender:'male'|'female'|'neutral'
+     * }
+     */
+    private function buildClientPayloadForResult(int $gymId, array $candidate): array
+    {
+        $clientId = (int) $candidate['client_id'];
+        $latestAttendance = Attendance::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->orderByDesc('id')
+            ->first(['date', 'time']);
+        $referenceDate = (string) ($latestAttendance?->date?->toDateString() ?? now()->toDateString());
+        $membershipEndsAt = Membership::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->orderByDesc('ends_at')
+            ->value('ends_at');
+
+        return [
+            'id' => $clientId,
+            'full_name' => (string) ($candidate['full_name'] ?: '-'),
+            'photo_url' => $this->resolvePhotoUrl($candidate['photo_path'] ?? null),
+            'membership_ends_at' => $this->normalizeMembershipEndsAt($membershipEndsAt),
+            'month_visits' => $this->countMonthVisits($gymId, $clientId, $referenceDate),
+            'total_visits' => Attendance::query()
+                ->forGym($gymId)
+                ->where('client_id', $clientId)
+                ->count(),
+            'last_attendance_date' => $latestAttendance?->date?->toDateString(),
+            'last_attendance_time' => (string) ($latestAttendance?->time ?? ''),
+            'gender' => $this->normalizeGender($candidate['gender'] ?? null),
+        ];
+    }
+
+    private function publishSyncEventForGym(int $gymId, array $payload, string $eventType = 'checkin'): void
     {
         if ($gymId <= 0) {
             return;
         }
 
+        $normalizedType = strtolower(trim($eventType));
+        if (! in_array($normalizedType, ['checkin', 'checkout', 'mobile_qr_refresh', 'mobile_qr_state'], true)) {
+            $normalizedType = 'checkin';
+        }
+
         Cache::put($this->syncCacheKey($gymId), [
             'id' => (string) Str::ulid(),
-            'type' => 'checkin',
+            'type' => $normalizedType,
             'source' => 'server',
             'payload' => $payload,
             'published_at_ms' => (int) round(microtime(true) * 1000),

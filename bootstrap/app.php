@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,8 +24,31 @@ return Application::configure(basePath: dirname(__DIR__))
             'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
             'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,
             'pwa.standalone.access' => \App\Http\Middleware\EnsurePwaStandaloneAccessMiddleware::class,
+            'client.mobile.session' => \App\Http\Middleware\EnsureClientMobileSessionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (ThrottleRequestsException|TooManyRequestsHttpException $exception, Request $request) {
+            $headers = $exception->getHeaders();
+            $retryAfter = (int) ($headers['Retry-After'] ?? 60);
+            $retryAfter = max(1, $retryAfter);
+
+            $message = $retryAfter === 1
+                ? 'Demasiados intentos. Espera 1 segundo y vuelve a intentar.'
+                : 'Demasiados intentos. Espera '.$retryAfter.' segundos y vuelve a intentar.';
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'ok' => false,
+                    'reason' => 'too_many_attempts',
+                    'message' => $message,
+                    'retry_after_seconds' => $retryAfter,
+                ], 429, $headers);
+            }
+
+            return back()
+                ->withInput($request->except('password'))
+                ->withErrors(['throttle' => $message]);
+        });
     })->create();
+

@@ -22,10 +22,19 @@ class Client extends Model
         'first_name',
         'last_name',
         'document_number',
+        'app_username',
+        'app_password',
         'phone',
         'photo_path',
         'gender',
         'status',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = [
+        'app_password',
     ];
 
     /**
@@ -58,6 +67,14 @@ class Client extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Get open/closed presence sessions for the client.
+     */
+    public function presenceSessions(): HasMany
+    {
+        return $this->hasMany(PresenceSession::class);
     }
 
     /**

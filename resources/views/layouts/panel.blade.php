@@ -1286,6 +1286,10 @@
                         </form>
                     @endif
 
+                    @hasSection('header-live-banner')
+                        @yield('header-live-banner')
+                    @endif
+
                     @if ($isDemoMode)
                         <span class="demo-header-badge" title="Tiempo restante de la demo">
                             Demo:

@@ -24,6 +24,9 @@ class SetGymTimezoneMiddleware
         $user = $request->user();
         $userGymId = (int) ($user?->gym_id ?? 0);
         $routeGymSlug = trim((string) ($request->route('contextGym') ?? ''));
+        if ($routeGymSlug === '') {
+            $routeGymSlug = trim((string) ($request->route('gymSlug') ?? ''));
+        }
         $isGlobalScope = strtolower(trim((string) $request->query('scope', ''))) === 'global';
         $isBranchGym = $userGymId > 0
             ? GymBranchLink::query()->where('branch_gym_id', $userGymId)->exists()
@@ -60,6 +63,18 @@ class SetGymTimezoneMiddleware
                         $gym = $requestedGym;
                     }
                 }
+            }
+        }
+
+        if (! $gym instanceof \App\Models\Gym && $routeGymSlug !== '') {
+            $routeGym = \App\Models\Gym::query()
+                ->withoutDemoSessions()
+                ->select(['id', 'slug', 'timezone', 'language_code'])
+                ->whereRaw('LOWER(slug) = ?', [mb_strtolower($routeGymSlug)])
+                ->first();
+
+            if ($routeGym instanceof \App\Models\Gym) {
+                $gym = $routeGym;
             }
         }
 

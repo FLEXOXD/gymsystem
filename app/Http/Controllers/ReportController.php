@@ -33,7 +33,6 @@ class ReportController extends Controller
         $incomeByMethod = $this->reportService->getIncomeByMethod($gymIds, $from, $to);
         $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
-
         $methodLabels = $incomeByMethod
             ->pluck('method')
             ->map(fn (string $method) => match ($method) {

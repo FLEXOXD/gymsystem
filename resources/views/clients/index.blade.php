@@ -14,6 +14,7 @@
 @section('content')
     @php
         $canManagePromotions = (bool) ($canManagePromotions ?? false);
+        $canManageClientAccounts = (bool) ($canManageClientAccounts ?? false);
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $filters = [
             'all' => 'Todos',
@@ -63,17 +64,20 @@
             'promotion_id' => $canManagePromotions && old('promotion_id') !== null ? (string) old('promotion_id') : '',
             'payment_method' => (string) old('payment_method', 'cash'),
             'amount_paid' => old('amount_paid') !== null ? (string) old('amount_paid') : '',
+            'create_app_account' => $canManageClientAccounts && old('create_app_account') ? true : false,
+            'app_username' => $canManageClientAccounts ? (string) old('app_username', '') : '',
         ];
     @endphp
 
     <div x-data="clientsIndexPage({
             openCreateModal: @js($openCreateModal),
             plans: @js($planCatalog),
-            promotions: @js($promotionCatalog),
-            defaults: @js($formDefaults),
-            documentCheckUrl: @js(route('clients.check-document')),
-            allowCreate: @js(! $isGlobalScope),
-        })"
+             promotions: @js($promotionCatalog),
+             defaults: @js($formDefaults),
+             documentCheckUrl: @js(route('clients.check-document')),
+             allowCreate: @js(! $isGlobalScope),
+             canManageClientAccounts: @js($canManageClientAccounts),
+         })"
          x-init="init()"
          class="space-y-4">
 
@@ -385,6 +389,74 @@
                                 @enderror
                             </label>
 
+                            @if ($canManageClientAccounts)
+                                <div class="space-y-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 md:col-span-2">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-100">
+                                            <input type="checkbox"
+                                                   name="create_app_account"
+                                                   value="1"
+                                                   x-model="form.create_app_account"
+                                                   class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400/40">
+                                            Crear usuario y contraseña para app cliente
+                                        </label>
+                                        <span class="inline-flex rounded-full border border-cyan-400/30 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-100">
+                                            Premium / Sucursales
+                                        </span>
+                                    </div>
+
+                                    <div class="grid gap-3 md:grid-cols-2" x-cloak x-show="form.create_app_account">
+                                        <label class="space-y-1 text-sm font-semibold text-slate-300">
+                                            <span>Usuario app</span>
+                                            <input type="text"
+                                                   name="app_username"
+                                                   x-model.trim="form.app_username"
+                                                   x-on:input="clearClientFieldError('app_username')"
+                                                   autocomplete="off"
+                                                   class="ui-input"
+                                                   x-bind:class="clientValidationErrors.app_username ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
+                                                   placeholder="ej: maria.perez">
+                                            <p x-cloak x-show="clientValidationErrors.app_username" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_username"></p>
+                                            @error('app_username')
+                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                            @enderror
+                                        </label>
+
+                                        <label class="space-y-1 text-sm font-semibold text-slate-300">
+                                            <span>Contraseña app</span>
+                                            <input type="password"
+                                                   name="app_password"
+                                                   x-model="form.app_password"
+                                                   x-on:input="clearClientFieldError('app_password')"
+                                                   autocomplete="new-password"
+                                                   class="ui-input"
+                                                   x-bind:class="clientValidationErrors.app_password ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
+                                                   placeholder="Minimo 8 caracteres">
+                                            <p x-cloak x-show="clientValidationErrors.app_password" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password"></p>
+                                            @error('app_password')
+                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                            @enderror
+                                        </label>
+
+                                        <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
+                                            <span>Confirmar contraseña app</span>
+                                            <input type="password"
+                                                   name="app_password_confirmation"
+                                                   x-model="form.app_password_confirmation"
+                                                   x-on:input="clearClientFieldError('app_password_confirmation')"
+                                                   autocomplete="new-password"
+                                                   class="ui-input"
+                                                   x-bind:class="clientValidationErrors.app_password_confirmation ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
+                                                   placeholder="Repite la contraseña">
+                                            <p x-cloak x-show="clientValidationErrors.app_password_confirmation" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password_confirmation"></p>
+                                            @error('app_password_confirmation')
+                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
+                                            @enderror
+                                        </label>
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="space-y-2 md:col-span-2">
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Foto del cliente</span>
@@ -540,6 +612,7 @@
             const allowCreate = Boolean(config.allowCreate);
             return {
                 allowCreate: allowCreate,
+                canManageClientAccounts: Boolean(config.canManageClientAccounts),
                 modalOpen: allowCreate && Boolean(config.openCreateModal),
                 submitting: false,
                 documentState: 'idle',
@@ -561,6 +634,10 @@
                     promotion_id: config.defaults?.promotion_id ?? '',
                     payment_method: config.defaults?.payment_method ?? 'cash',
                     amount_paid: config.defaults?.amount_paid ?? '',
+                    create_app_account: Boolean(config.defaults?.create_app_account),
+                    app_username: config.defaults?.app_username ?? '',
+                    app_password: '',
+                    app_password_confirmation: '',
                 },
                 photoPreview: null,
                 membershipEndLabel: 'N/A',
@@ -729,6 +806,23 @@
                     return '';
                 },
 
+                validateAppUsernameField() {
+                    const username = String(this.form.app_username || '').trim().toLowerCase();
+                    if (username === '') {
+                        return 'Ingresa el usuario para la app cliente.';
+                    }
+
+                    if (username.length < 4 || username.length > 80) {
+                        return 'El usuario debe tener entre 4 y 80 caracteres.';
+                    }
+
+                    if (!/^[a-z0-9._-]+$/.test(username)) {
+                        return 'El usuario solo puede usar letras minusculas, numeros, punto, guion y guion bajo.';
+                    }
+
+                    return '';
+                },
+
                 validateCreateClientForm() {
                     this.clearClientValidationErrors();
 
@@ -755,6 +849,26 @@
                         this.setClientFieldError('phone', phoneError);
                     }
 
+                    if (this.canManageClientAccounts && this.form.create_app_account) {
+                        const appUsernameError = this.validateAppUsernameField();
+                        const appPassword = String(this.form.app_password || '');
+                        const appPasswordConfirmation = String(this.form.app_password_confirmation || '');
+
+                        if (appUsernameError !== '') {
+                            this.setClientFieldError('app_username', appUsernameError);
+                        }
+
+                        if (appPassword.length < 8) {
+                            this.setClientFieldError('app_password', 'La contrasena debe tener al menos 8 caracteres.');
+                        }
+
+                        if (appPasswordConfirmation === '') {
+                            this.setClientFieldError('app_password_confirmation', 'Confirma la contrasena de la app cliente.');
+                        } else if (appPasswordConfirmation !== appPassword) {
+                            this.setClientFieldError('app_password_confirmation', 'La confirmacion de contrasena no coincide.');
+                        }
+                    }
+
                     return Object.keys(this.clientValidationErrors).length === 0;
                 },
 
@@ -764,7 +878,7 @@
                         return;
                     }
 
-                    const fieldOrder = ['last_name', 'document_number', 'phone'];
+                    const fieldOrder = ['last_name', 'document_number', 'phone', 'app_username', 'app_password', 'app_password_confirmation'];
                     for (const fieldName of fieldOrder) {
                         if (!this.clientValidationErrors[fieldName]) {
                             continue;
@@ -781,6 +895,14 @@
                 submitCreateClient(event) {
                     this.normalizeNameField('first_name');
                     this.normalizeNameField('last_name');
+                    if (this.canManageClientAccounts) {
+                        this.form.app_username = String(this.form.app_username || '').trim().toLowerCase();
+                        if (!this.form.create_app_account) {
+                            this.form.app_username = '';
+                            this.form.app_password = '';
+                            this.form.app_password_confirmation = '';
+                        }
+                    }
                     this.submitting = false;
 
                     if (!this.validateCreateClientForm()) {

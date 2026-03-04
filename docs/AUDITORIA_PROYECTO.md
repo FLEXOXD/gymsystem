@@ -1,4 +1,4 @@
-# Auditoría Técnica del Proyecto GymSystem
+﻿# Auditoría Técnica del Proyecto GymSystem
 
 Fecha: 2026-02-27
 Stack: Laravel 12.52, PHP 8.3, Pest, Pint, Blade
@@ -59,7 +59,7 @@ Observación:
 ### Riesgo alto
 - Controladores con demasiadas responsabilidades (riesgo de regresiones y bugs en mantenimiento).
 - Strings visibles al usuario mezclados entre hardcode y `lang/*`.
-- Evidencia de textos con acentos degradados en múltiples archivos (`MembresÃ­a`, `PromociÃ³n`, etc.) por historial de codificación.
+- Evidencia de textos con acentos degradados en múltiples archivos (`Membresía`, `Promoción`, etc.) por historial de codificación.
 
 ### Riesgo medio
 - Potenciales N+1/performance:
@@ -126,4 +126,6 @@ Sugerencias a validar con EXPLAIN en entorno real:
 
 Nota:
 - No se aplican migraciones de índices en esta fase para evitar cambios no validados en producción.
+
+
 

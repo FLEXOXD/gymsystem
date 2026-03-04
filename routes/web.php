@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCardController;
 use App\Http\Controllers\ClientCredentialController;
+use App\Http\Controllers\ClientMobileController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\ContactSuggestionController;
@@ -74,6 +75,28 @@ Route::get('/demo/guia', [MarketingController::class, 'demoGuide'])->name('demo.
 Route::post('/demo/solicitar', [MarketingController::class, 'requestDemo'])
     ->middleware(['guest', 'throttle:demo-request'])
     ->name('demo.request');
+
+Route::prefix('cliente/{gymSlug}')
+    ->where(['gymSlug' => '[A-Za-z0-9\-]+'])
+    ->middleware('gym.timezone')
+    ->name('client-mobile.')
+    ->group(function (): void {
+        Route::get('/login', [ClientMobileController::class, 'login'])->name('login');
+        Route::post('/login', [ClientMobileController::class, 'authenticate'])
+            ->middleware('throttle:60,1')
+            ->name('authenticate');
+
+        Route::middleware('client.mobile.session')->group(function (): void {
+            Route::get('/app', [ClientMobileController::class, 'app'])->name('app');
+            Route::get('/progress', [ClientMobileController::class, 'progress'])
+                ->middleware('throttle:120,1')
+                ->name('progress');
+            Route::post('/check-in', [ClientMobileController::class, 'checkIn'])
+                ->middleware('throttle:120,1')
+                ->name('check-in');
+            Route::post('/logout', [ClientMobileController::class, 'logout'])->name('logout');
+        });
+    });
 
 Route::middleware('guest')->group(function (): void {
     // Legacy login endpoint used by some deployments that submit to "/".
@@ -214,6 +237,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::get('/panel', [GymPanelController::class, 'index'])
                     ->middleware('role:owner,cashier')
                     ->name('panel.index');
+                Route::get('/panel/live-clients', [GymPanelController::class, 'liveClients'])
+                    ->middleware('role:owner,cashier')
+                    ->name('panel.live-clients');
 
                 Route::get('/clients', [ClientController::class, 'index'])
                     ->middleware('role:owner,cashier')
@@ -306,12 +332,24 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::get('/reception/display', [ReceptionCheckInController::class, 'display'])
                     ->middleware('role:owner,cashier')
                     ->name('reception.display');
+                Route::get('/reception/mobile-display', [ReceptionCheckInController::class, 'mobileDisplay'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts'])
+                    ->name('reception.mobile-display');
                 Route::get('/reception/sync/latest', [ReceptionCheckInController::class, 'syncLatest'])
                     ->middleware('role:owner,cashier')
                     ->name('reception.sync.latest');
+                Route::get('/reception/mobile-qr', [ReceptionCheckInController::class, 'mobileQr'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts', 'throttle:600,1'])
+                    ->name('reception.mobile-qr');
+                Route::get('/reception/mobile-qr/status', [ReceptionCheckInController::class, 'mobileQrStatus'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts', 'throttle:600,1'])
+                    ->name('reception.mobile-qr.status');
                 Route::post('/reception/check-in', [ReceptionCheckInController::class, 'store'])
                     ->middleware(['role:owner,cashier', 'throttle:checkin'])
                     ->name('reception.check-in');
+                Route::post('/reception/check-out', [ReceptionCheckInController::class, 'checkOut'])
+                    ->middleware(['role:owner,cashier', 'throttle:checkin'])
+                    ->name('reception.check-out');
 
                 Route::get('/cash', [CashController::class, 'index'])
                     ->middleware('role:owner,cashier')
@@ -431,3 +469,4 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
 
     });
 });
+

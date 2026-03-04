@@ -8,8 +8,10 @@ use App\Models\CashSession;
 use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\PresenceSession;
 use App\Support\ActiveGymContext;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -116,6 +118,13 @@ class GymPanelController extends Controller
             ->forGyms($gymIds)
             ->whereDate('date', $today)
             ->count();
+
+        $liveClientsNow = $gymId > 0
+            ? PresenceSession::query()
+                ->forGym($gymId)
+                ->open()
+                ->count()
+            : 0;
 
         $incomeToday = (float) CashMovement::query()
             ->forGyms($gymIds)
@@ -310,6 +319,7 @@ class GymPanelController extends Controller
             'expiredMemberships' => $expiredMemberships,
             'activePlans' => $activePlans,
             'checkinsToday' => $checkinsToday,
+            'liveClientsNow' => $liveClientsNow,
             'incomeToday' => $incomeToday,
             'expenseToday' => $expenseToday,
             'todayBalance' => $todayBalance,
@@ -328,6 +338,26 @@ class GymPanelController extends Controller
             'expiredRenewalCandidates' => $expiredRenewalCandidates,
             'todayAttendances' => $todayAttendances,
             'recentCashMovements' => $recentCashMovements,
+        ]);
+    }
+
+    public function liveClients(Request $request): JsonResponse
+    {
+        $gymId = ActiveGymContext::id($request);
+        $today = now()->toDateString();
+
+        $count = $gymId > 0
+            ? PresenceSession::query()
+                ->forGym($gymId)
+                ->open()
+                ->count()
+            : 0;
+
+        return response()->json([
+            'ok' => true,
+            'count' => (int) $count,
+            'today' => $today,
+            'updated_at' => now()->format('H:i:s'),
         ]);
     }
 }

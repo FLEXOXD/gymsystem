@@ -28,9 +28,9 @@ Mejorar estabilidad, limpieza, deduplicación, españolización y performance si
 - [ ] Mantener intactos nombres técnicos (clases, tablas, rutas, claves JSON de frontend).
 
 ## Fase 5: Performance y DB (sin romper)
-- [ ] Evitar consultas repetitivas en evaluaciones de acceso por plan (batch/caché segura).
-- [ ] Mantener o introducir paginación en listados de alto volumen.
-- [ ] Documentar índices recomendados (sin aplicar sin validación).
+- [x] Evitar consultas repetitivas en evaluaciones de acceso por plan (batch/caché segura).
+- [x] Mantener o introducir paginación en listados de alto volumen.
+- [x] Documentar índices recomendados (sin aplicar sin validación).
 
 ## Fase 6: Seguridad
 - [ ] Confirmar `authorize()` en nuevos FormRequest.
@@ -50,4 +50,3 @@ Mejorar estabilidad, limpieza, deduplicación, españolización y performance si
 - Menor duplicación directa de lógica crítica.
 - Sin regresiones funcionales en pruebas.
 - Reporte final en `docs/RESUMEN_CAMBIOS.md`.
-

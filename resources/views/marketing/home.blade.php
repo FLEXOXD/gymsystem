@@ -1562,7 +1562,7 @@
                 white-space: nowrap;
             }
             .nav-actions { gap: .42rem; }
-            .nav-actions .btn-outline { display: none; }
+            .nav-actions .btn-outline { display: inline-flex; }
             .nav-actions .btn {
                 min-height: 40px;
                 font-size: .8rem;

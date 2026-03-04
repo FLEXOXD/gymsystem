@@ -13,6 +13,7 @@ return [
     */
     'default_plan_key' => 'basico',
     'default_feature_version' => 'v1',
+    'access_cache_seconds' => env('PLAN_FEATURE_ACCESS_CACHE_SECONDS', 60),
 
     'matrix' => [
         'basico' => [
@@ -21,6 +22,7 @@ return [
             'reports_export' => false,
             'multi_branch' => false,
             'pwa_install' => false,
+            'client_accounts' => false,
         ],
         'profesional' => [
             'promotions' => true,
@@ -28,6 +30,7 @@ return [
             'reports_export' => true,
             'multi_branch' => false,
             'pwa_install' => true,
+            'client_accounts' => false,
         ],
         'premium' => [
             'promotions' => true,
@@ -35,6 +38,7 @@ return [
             'reports_export' => true,
             'multi_branch' => false,
             'pwa_install' => true,
+            'client_accounts' => true,
         ],
         'sucursales' => [
             'promotions' => true,
@@ -42,6 +46,7 @@ return [
             'reports_export' => true,
             'multi_branch' => true,
             'pwa_install' => true,
+            'client_accounts' => true,
         ],
     ],
 ];

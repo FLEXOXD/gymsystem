@@ -43,6 +43,7 @@ class ClientController extends Controller
         $gymId = $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
         $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
+        $canManageClientAccounts = $this->planAccessService->canForGym($gymId, 'client_accounts');
         $search = trim((string) $request->query('q', ''));
         $quickFilter = (string) $request->query('filter', 'all');
         if (! in_array($quickFilter, ['all', 'active', 'expiring', 'expired', 'attended_today'], true)) {
@@ -193,6 +194,7 @@ class ClientController extends Controller
             'plans' => $plans,
             'promotions' => $promotions,
             'canManagePromotions' => $canManagePromotions,
+            'canManageClientAccounts' => $canManageClientAccounts,
             'openCreateModal' => $openCreateModal,
         ]);
     }
@@ -210,8 +212,10 @@ class ClientController extends Controller
 
         $gymId = $this->resolveGymId($request);
         $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
+        $canManageClientAccounts = $this->planAccessService->canForGym($gymId, 'client_accounts');
         $data = $request->validated();
         $startsMembership = (bool) ($data['start_membership'] ?? false);
+        $createAppAccount = (bool) ($data['create_app_account'] ?? false);
 
         if ($startsMembership && ! $this->cashSessionService->getOpenSession($gymId)) {
             return redirect()
@@ -227,6 +231,13 @@ class ClientController extends Controller
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
+        if ($createAppAccount && ! $canManageClientAccounts) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['app_username' => 'Tu plan actual no incluye cuentas cliente con usuario y contrasena.'])
+                ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
+        }
+
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('clients', 'public');
@@ -238,7 +249,8 @@ class ClientController extends Controller
                 userId: (int) $request->user()->id,
                 data: $data,
                 canManagePromotions: $canManagePromotions,
-                photoPath: $photoPath
+                photoPath: $photoPath,
+                canManageClientAccounts: $canManageClientAccounts
             );
         } catch (RuntimeException $exception) {
             return redirect()

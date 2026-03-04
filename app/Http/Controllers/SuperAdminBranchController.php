@@ -36,8 +36,14 @@ class SuperAdminBranchController extends Controller
                 'address_line',
             ]);
 
+        $allGymIds = $allGyms
+            ->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+        $hubAccessByGym = $this->planAccessService->canForGyms($allGymIds, 'multi_branch');
+
         $hubGyms = $allGyms
-            ->filter(fn (Gym $gym): bool => $this->planAccessService->canForGym((int) $gym->id, 'multi_branch'))
+            ->filter(fn (Gym $gym): bool => (bool) ($hubAccessByGym[(int) $gym->id] ?? false))
             ->values();
         $hubGymAdminDomains = [];
         if ($hubGyms->isNotEmpty()) {
@@ -68,12 +74,13 @@ class SuperAdminBranchController extends Controller
                 'createdBy:id,name,email',
             ])
             ->orderByDesc('id')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         $kpis = [
-            'total_links' => $links->count(),
-            'total_hubs' => $links->pluck('hub_gym_id')->unique()->count(),
-            'total_branches' => $links->pluck('branch_gym_id')->unique()->count(),
+            'total_links' => GymBranchLink::query()->count(),
+            'total_hubs' => GymBranchLink::query()->distinct()->count('hub_gym_id'),
+            'total_branches' => GymBranchLink::query()->distinct()->count('branch_gym_id'),
         ];
 
         return view('superadmin.branches', [

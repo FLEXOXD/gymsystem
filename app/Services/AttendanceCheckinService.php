@@ -12,6 +12,11 @@ use Illuminate\Support\Str;
 
 class AttendanceCheckinService
 {
+    public function __construct(
+        private readonly PresenceSessionService $presenceSessionService
+    ) {
+    }
+
     /**
      * Resolve a check-in value and register attendance when valid.
      *
@@ -32,7 +37,8 @@ class AttendanceCheckinService
      *         gender:'male'|'female'|'neutral'
      *     }|null,
      *     attendance: array{id:int,date:string,time:string}|null,
-     *     attempt: array{date:string,time:string}|null
+     *     attempt: array{date:string,time:string}|null,
+     *     event_type: 'checkin'
      * }
      */
     public function checkInByValue(int $gymId, int $userId, string $value): array
@@ -211,6 +217,15 @@ class AttendanceCheckinService
             throw $exception;
         }
 
+        $this->presenceSessionService->registerCheckIn(
+            gymId: $gymId,
+            clientId: (int) $candidate->client_id,
+            checkInBy: $userId,
+            checkInMethod: $method,
+            attendanceId: (int) $attendance->id,
+            checkInAt: $attemptAt
+        );
+
         return $this->buildResponse(
             ok: true,
             message: 'Check-in registrado correctamente.',
@@ -249,7 +264,8 @@ class AttendanceCheckinService
      *         gender:'male'|'female'|'neutral'
      *     }|null,
      *     attendance: array{id:int,date:string,time:string}|null,
-     *     attempt: array{date:string,time:string}|null
+     *     attempt: array{date:string,time:string}|null,
+     *     event_type: 'checkin'
      * }
      */
     private function buildResponse(
@@ -270,6 +286,7 @@ class AttendanceCheckinService
             'client' => $client,
             'attendance' => $attendance,
             'attempt' => $attempt,
+            'event_type' => 'checkin',
         ];
     }
 

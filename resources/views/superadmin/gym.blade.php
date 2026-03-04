@@ -343,7 +343,7 @@
 
                 <div>
                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Confirmar contrasena</label>
-                    <input type="password" name="admin_password_confirmation" class="ui-input" placeholder="Repite la contrasena" required>
+                    <input type="password" name="admin_password_confirmation" class="ui-input" placeholder="Repite la contraseña" required>
                 </div>
 
                 <div class="lg:col-span-3 flex items-center justify-between gap-3">
@@ -593,7 +593,7 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Confirmar nueva contrasena
-                            <input id="modal-reset-password-confirmation" type="password" name="reset_password_confirmation" class="ui-input" placeholder="Repite la contrasena" required autocomplete="new-password">
+                            <input id="modal-reset-password-confirmation" type="password" name="reset_password_confirmation" class="ui-input" placeholder="Repite la contraseña" required autocomplete="new-password">
                         </label>
 
                         @if ($passwordResetHasErrors)
