@@ -4,9 +4,14 @@
             @php
                 $activePatterns = explode('|', $item['active']);
                 $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
+                $isHighlight = (bool) ($item['highlight'] ?? false);
+                $mobileClass = $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link';
+                if (! $isActive && $isHighlight) {
+                    $mobileClass .= ' theme-nav-mobile-highlight';
+                }
             @endphp
             <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-               class="min-w-[84px] shrink-0 rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
+               class="min-w-[84px] shrink-0 rounded-lg px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide {{ $mobileClass }}">
                 {{ $item['label'] }}
             </a>
         @endforeach

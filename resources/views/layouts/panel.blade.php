@@ -2,6 +2,7 @@
     use App\Models\Gym;
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
+    use App\Models\PresenceSession;
     use App\Models\Subscription;
     use App\Services\LegalAcceptanceEligibilityService;
     use App\Services\PlanAccessService;
@@ -144,6 +145,18 @@
         ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : []);
         $activeGymSlug = $hubGymSlug;
     }
+    $headerLiveClientsVisible = ! $isSuperAdmin && $activeGymId > 0;
+    $headerLiveClientsCount = 0;
+    $headerLiveClientsUrl = null;
+    if ($headerLiveClientsVisible) {
+        $headerLiveClientsCount = PresenceSession::query()
+            ->forGym($activeGymId)
+            ->open()
+            ->count();
+        if (\Illuminate\Support\Facades\Route::has('panel.live-clients') && $activeGymSlug !== '') {
+            $headerLiveClientsUrl = route('panel.live-clients', $gymRouteParams);
+        }
+    }
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
@@ -157,9 +170,10 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index', 'staff.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index', 'staff.index', 'client-portal.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
+    $showGlobalBranchOption = ! request()->routeIs('client-portal.*');
 
     $buildGymAddress = static function (?Gym $item): string {
         if (! $item) {
@@ -257,6 +271,21 @@
     }
     if (! $isCashierMode && $canViewReports) {
         $gymNavItems[] = ['label' => __('ui.nav.reports'), 'route' => 'reports.index', 'params' => $gymRouteParams, 'active' => 'reports.*', 'icon' => 'reports'];
+    }
+    if (
+        ! $isSuperAdmin
+        && $activeGymId > 0
+        && $planAccessService->canForGym($activeGymId, 'client_accounts')
+        && \Illuminate\Support\Facades\Route::has('client-portal.index')
+    ) {
+        $gymNavItems[] = [
+            'label' => 'Portal cliente',
+            'route' => 'client-portal.index',
+            'params' => $gymRouteParams,
+            'active' => 'client-portal.*',
+            'icon' => 'client_portal',
+            'highlight' => true,
+        ];
     }
 
     $navItems = $isSuperAdmin
@@ -604,6 +633,112 @@
             justify-content: flex-end;
             gap: 0.5rem;
             flex-wrap: nowrap;
+        }
+        .header-live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.48rem;
+            min-height: 2.35rem;
+            padding: 0.38rem 0.82rem 0.38rem 0.72rem;
+            border-radius: 9999px;
+            border: 1px solid rgb(16 185 129 / 0.52);
+            background: linear-gradient(135deg, rgb(16 185 129 / 0.2), rgb(16 185 129 / 0.08) 38%, rgb(2 6 23 / 0.2));
+            color: #d1fae5;
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 0 0 1px rgb(16 185 129 / 0.2), 0 0 22px rgb(16 185 129 / 0.2);
+            font-size: 0.69rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+            transition: box-shadow 0.22s ease, transform 0.22s ease;
+            animation: header-live-breathe 1.9s ease-in-out infinite;
+        }
+        .header-live-pill.is-updated {
+            transform: translateY(-1px);
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 0 0 1px rgb(16 185 129 / 0.34), 0 0 30px rgb(16 185 129 / 0.34);
+        }
+        .header-live-pill .live-core-dot {
+            position: relative;
+            width: 0.62rem;
+            height: 0.62rem;
+            border-radius: 9999px;
+            background: #34d399;
+            box-shadow: 0 0 0 1px rgb(5 150 105 / 0.5), 0 0 0 5px rgb(16 185 129 / 0.26), 0 0 14px rgb(52 211 153 / 0.85);
+            flex: 0 0 auto;
+        }
+        .header-live-pill .live-core-dot::after {
+            content: '';
+            position: absolute;
+            inset: -7px;
+            border-radius: 9999px;
+            border: 1px solid rgb(52 211 153 / 0.44);
+            animation: header-live-pulse 1.75s ease-out infinite;
+        }
+        .header-live-pill .live-label {
+            opacity: 0.96;
+        }
+        .header-live-pill .live-count {
+            font-size: 1rem;
+            line-height: 1;
+            letter-spacing: 0;
+            color: #ecfdf5;
+            text-shadow: 0 0 14px rgb(16 185 129 / 0.45);
+            min-width: 1.5ch;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .theme-light .header-live-pill {
+            color: #065f46;
+            border-color: rgb(16 185 129 / 0.45);
+            background: linear-gradient(135deg, rgb(16 185 129 / 0.18), rgb(209 250 229 / 0.95));
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55), 0 0 0 1px rgb(16 185 129 / 0.22), 0 0 18px rgb(16 185 129 / 0.14);
+        }
+        .theme-light .header-live-pill.is-updated {
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.65), 0 0 0 1px rgb(16 185 129 / 0.28), 0 0 22px rgb(16 185 129 / 0.22);
+        }
+        .theme-light .header-live-pill .live-count {
+            color: #047857;
+            text-shadow: none;
+        }
+        .theme-nav-link.nav-link-highlight {
+            border: 1px solid color-mix(in srgb, #22c55e 52%, var(--border));
+            background: linear-gradient(132deg, rgb(16 185 129 / 0.2), rgb(6 78 59 / 0.08));
+            color: color-mix(in srgb, var(--text) 98%, #ffffff);
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 10px 22px rgb(16 185 129 / 0.18);
+        }
+        .theme-nav-link.nav-link-highlight:hover {
+            background: linear-gradient(132deg, rgb(16 185 129 / 0.3), rgb(6 78 59 / 0.16));
+            border-color: color-mix(in srgb, #34d399 66%, var(--border));
+        }
+        .theme-nav-active.nav-link-highlight {
+            background: linear-gradient(132deg, #16a34a, #06b6d4);
+            color: #ecfdf5;
+            box-shadow: 0 12px 28px rgb(16 185 129 / 0.3);
+        }
+        .theme-nav-dot.theme-nav-dot-highlight {
+            background: #34d399;
+            box-shadow: 0 0 0 5px rgb(16 185 129 / 0.22), 0 0 14px rgb(52 211 153 / 0.6);
+        }
+        .theme-nav-mobile-link.theme-nav-mobile-highlight {
+            border: 1px solid color-mix(in srgb, #22c55e 42%, var(--border));
+            background: linear-gradient(130deg, rgb(16 185 129 / 0.16), rgb(2 6 23 / 0.4));
+            color: color-mix(in srgb, var(--text) 92%, #ecfdf5);
+        }
+        @keyframes header-live-breathe {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 0 0 1px rgb(16 185 129 / 0.2), 0 0 18px rgb(16 185 129 / 0.18);
+            }
+            50% {
+                transform: translateY(-1px) scale(1.018);
+                box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 0 0 1px rgb(16 185 129 / 0.34), 0 0 30px rgb(16 185 129 / 0.35);
+            }
+        }
+        @keyframes header-live-pulse {
+            0% { transform: scale(0.42); opacity: 0.9; }
+            72% { opacity: 0.2; }
+            100% { transform: scale(1.58); opacity: 0; }
         }
         #user-menu-button {
             min-height: 2.85rem;
@@ -1129,11 +1264,16 @@
                 @php
                     $activePatterns = explode('|', $item['active']);
                     $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
+                    $isHighlight = (bool) ($item['highlight'] ?? false);
+                    $navClass = $isActive ? 'theme-nav-active' : 'theme-nav-link';
+                    if ($isHighlight) {
+                        $navClass .= ' nav-link-highlight';
+                    }
                 @endphp
                 <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                    data-tour="nav-{{ $item['icon'] ?? 'item' }}"
-                   class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $isActive ? 'theme-nav-active' : 'theme-nav-link' }}">
-                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : '' }}"></span>
+                   class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $navClass }}">
+                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : ($isHighlight ? 'theme-nav-dot-highlight' : '') }}"></span>
                     <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
                         @switch($item['icon'] ?? '')
                             @case('panel')
@@ -1222,6 +1362,13 @@
                                     <path d="M3 8h18M8 4v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
                                 @break
+                            @case('client_portal')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <rect x="7.5" y="2.8" width="9" height="18.4" rx="2.3" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M11 18.3h2M9.4 6.7h5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M3.8 10h2.3M18 10h2.2M5.3 6.3 6.9 7.9M18.7 6.3 17.1 7.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
                             @default
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
@@ -1229,6 +1376,11 @@
                         @endswitch
                     </span>
                     <span class="sidebar-label">{{ $item['label'] }}</span>
+                    @if ($isHighlight)
+                        <span class="ml-auto rounded-full border border-emerald-300/45 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100">
+                            Link
+                        </span>
+                    @endif
                 </a>
             @endforeach
         </nav>
@@ -1286,8 +1438,18 @@
                         </form>
                     @endif
 
-                    @hasSection('header-live-banner')
-                        @yield('header-live-banner')
+                    @if ($headerLiveClientsVisible)
+                        @hasSection('header-live-banner')
+                            @yield('header-live-banner')
+                        @else
+                            <span id="header-live-banner"
+                                  class="header-live-pill"
+                                  data-live-url="{{ $headerLiveClientsUrl ?? '' }}">
+                                <span class="live-core-dot" aria-hidden="true"></span>
+                                <span class="live-label">PRESENTES</span>
+                                <strong id="header-live-clients" class="live-count">{{ (int) $headerLiveClientsCount }}</strong>
+                            </span>
+                        @endif
                     @endif
 
                     @if ($isDemoMode)
@@ -1514,6 +1676,90 @@
         <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud...</p>
     </div>
 </div>
+
+<script>
+    (function () {
+        const headerLiveBanner = document.getElementById('header-live-banner');
+        const headerLiveClients = document.getElementById('header-live-clients');
+
+        if (!headerLiveBanner || !headerLiveClients) {
+            return;
+        }
+
+        const liveUrl = (headerLiveBanner.getAttribute('data-live-url') || '').trim();
+        if (liveUrl === '') {
+            return;
+        }
+
+        let inFlight = false;
+        let pollTimer = null;
+        let updateFlashTimer = null;
+        let lastRenderedCount = Number(headerLiveClients.textContent || '0');
+
+        async function refreshLiveClients() {
+            if (inFlight) {
+                return;
+            }
+
+            inFlight = true;
+            try {
+                const response = await fetch(liveUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                if (payload && Object.prototype.hasOwnProperty.call(payload, 'count')) {
+                    const nextCount = Number(payload.count);
+                    const normalizedCount = Number.isFinite(nextCount) ? Math.max(0, Math.floor(nextCount)) : 0;
+                    headerLiveClients.textContent = String(normalizedCount);
+
+                    if (normalizedCount !== lastRenderedCount) {
+                        lastRenderedCount = normalizedCount;
+                        headerLiveBanner.classList.add('is-updated');
+                        if (updateFlashTimer) {
+                            clearTimeout(updateFlashTimer);
+                        }
+                        updateFlashTimer = window.setTimeout(function () {
+                            headerLiveBanner.classList.remove('is-updated');
+                            updateFlashTimer = null;
+                        }, 760);
+                    }
+                }
+            } catch (error) {
+                // Ignore intermittent network failures.
+            } finally {
+                inFlight = false;
+            }
+        }
+
+        refreshLiveClients();
+        pollTimer = window.setInterval(refreshLiveClients, 12000);
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                refreshLiveClients();
+            }
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+            if (updateFlashTimer) {
+                clearTimeout(updateFlashTimer);
+                updateFlashTimer = null;
+            }
+        });
+    })();
+</script>
 
 @include('layouts.partials.panel-inline-scripts')
 @stack('scripts')

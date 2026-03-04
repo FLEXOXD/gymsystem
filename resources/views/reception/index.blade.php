@@ -325,7 +325,11 @@
         let audioContext = null;
         let lastRenderedAttendanceId = readTopAttendanceId();
         let lastHandledSyncEventId = latestSyncEventId !== '' ? latestSyncEventId : null;
-        let lastHandledSyncPublishedAt = latestSyncEventPublishedAt > 0 ? latestSyncEventPublishedAt : 0;
+        // Ignora eventos previos a esta carga para no pintar la última asistencia al reabrir recepción.
+        let lastHandledSyncPublishedAt = Math.max(
+            latestSyncEventPublishedAt > 0 ? latestSyncEventPublishedAt : 0,
+            Date.now()
+        );
         let syncPollTimer = null;
         let syncPollInFlight = false;
         let mobileQrExpiresAtTs = 0;
@@ -1714,15 +1718,8 @@
         startMobileQrStatusPolling();
         startSyncPolling();
         generateMobileQr(true);
-        const initialResult = @json($latestResult ?? null);
-        if (initialResult) {
-            const payload = safePayload(initialResult);
-            render(payload);
-            prependRecentAttendance(payload);
-            scheduleReset();
-        } else {
-            renderIdle();
-        }
+        input.value = '';
+        renderIdle();
         focusInput();
     })();
 </script>

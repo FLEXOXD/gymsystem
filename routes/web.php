@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCardController;
 use App\Http\Controllers\ClientCredentialController;
 use App\Http\Controllers\ClientMobileController;
+use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\ContactSuggestionController;
@@ -256,6 +257,12 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::patch('/clients/{client}/photo', [ClientController::class, 'updatePhoto'])
                     ->middleware('role:owner,cashier')
                     ->name('clients.photo.update');
+                Route::patch('/clients/{client}/app-account', [ClientController::class, 'updateAppAccount'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts'])
+                    ->name('clients.app-account.update');
+                Route::patch('/clients/{client}/app-password', [ClientController::class, 'resetAppPassword'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts'])
+                    ->name('clients.app-password.reset');
                 Route::get('/clients/{client}/card', [ClientCardController::class, 'show'])
                     ->middleware('role:owner,cashier')
                     ->name('clients.card');
@@ -392,6 +399,10 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
                     ->middleware(['role:owner', 'plan.feature:reports_export', 'not.branch:export_reports'])
                     ->name('reports.export.pdf');
+
+                Route::get('/portal-cliente', [ClientPortalController::class, 'index'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts'])
+                    ->name('client-portal.index');
 
                 // Context-aware profile/settings/contact routes for gym users.
                 Route::get('/profile', [ThemeController::class, 'profile'])->middleware('role:owner')->name('gym.profile.index');

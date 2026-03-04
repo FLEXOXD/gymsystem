@@ -20,13 +20,15 @@
                         </summary>
                         <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                             @php
-                                $isGlobalContextCardActive = $isAdminGlobalContext || $isGlobalScope;
+                                $isGlobalContextCardActive = ($showGlobalBranchOption ?? true) && ($isAdminGlobalContext || $isGlobalScope);
                             @endphp
-                            <a href="{{ $globalContextUrl }}"
-                               class="rounded-xl border px-3 py-2 transition {{ $isGlobalContextCardActive ? 'border-cyan-400 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-500/60 dark:bg-cyan-900/25 dark:text-cyan-100' : 'border-slate-200 bg-white text-slate-800 hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-cyan-500/50 dark:hover:bg-cyan-900/20' }}">
-                                <p class="text-sm font-bold leading-tight">Admin global</p>
-                                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">Consolidado de todas las sucursales (solo lectura)</p>
-                            </a>
+                            @if (($showGlobalBranchOption ?? true))
+                                <a href="{{ $globalContextUrl }}"
+                                   class="rounded-xl border px-3 py-2 transition {{ $isGlobalContextCardActive ? 'border-cyan-400 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-500/60 dark:bg-cyan-900/25 dark:text-cyan-100' : 'border-slate-200 bg-white text-slate-800 hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-cyan-500/50 dark:hover:bg-cyan-900/20' }}">
+                                    <p class="text-sm font-bold leading-tight">Admin global</p>
+                                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">Consolidado de todas las sucursales (solo lectura)</p>
+                                </a>
+                            @endif
                             @foreach ($branchContextOptions as $branchOption)
                                 @php
                                     $isActiveBranchOption = (string) ($branchOption['slug'] ?? '') === $activeBranchContextSlug && ! $isGlobalContextCardActive;

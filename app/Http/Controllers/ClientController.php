@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientPhotoRequest;
+use App\Http\Requests\UpdateClientAppAccountRequest;
+use App\Http\Requests\ResetClientAppPasswordRequest;
 use App\Modules\Clients\Actions\RegisterClientAction;
 use App\Models\Attendance;
 use App\Models\CashMovement;
@@ -22,6 +24,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use RuntimeException;
@@ -320,6 +323,8 @@ class ClientController extends Controller
                 'first_name',
                 'last_name',
                 'document_number',
+                'app_username',
+                'app_password',
                 'phone',
                 'photo_path',
                 'gender',
@@ -382,6 +387,7 @@ class ClientController extends Controller
         }
 
         $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
+        $canManageClientAccounts = $this->planAccessService->canForGym($clientGymId, 'client_accounts');
 
         $plans = Plan::query()
             ->forGym($clientGymId)
@@ -475,6 +481,7 @@ class ClientController extends Controller
             'recentMembershipPayments' => $recentMembershipPayments,
             'promotions' => $promotions,
             'canManagePromotions' => $canManagePromotions,
+            'canManageClientAccounts' => $canManageClientAccounts,
         ]);
     }
 
@@ -505,6 +512,67 @@ class ClientController extends Controller
         return redirect()
             ->route('clients.show', $clientModel->id)
             ->with('status', 'Foto del cliente actualizada correctamente.');
+    }
+
+    public function updateAppAccount(
+        UpdateClientAppAccountRequest $request,
+        string $contextGym,
+        int $client
+    ): RedirectResponse {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['clients' => 'Selecciona una sucursal específica para editar usuarios app cliente.']);
+        }
+
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $clientModel = Client::query()
+            ->forGyms($gymIds)
+            ->select(['id', 'gym_id', 'app_username', 'app_password'])
+            ->findOrFail($client);
+
+        $clientModel->update([
+            'app_username' => (string) $request->validated('app_username'),
+        ]);
+
+        return redirect()
+            ->route('clients.show', $clientModel->id)
+            ->with('status', 'Usuario app del cliente actualizado correctamente.');
+    }
+
+    public function resetAppPassword(
+        ResetClientAppPasswordRequest $request,
+        string $contextGym,
+        int $client
+    ): RedirectResponse {
+        if (ActiveGymContext::isGlobal($request)) {
+            return redirect()
+                ->route('clients.index')
+                ->withErrors(['clients' => 'Selecciona una sucursal específica para restablecer contraseñas app cliente.']);
+        }
+
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $clientModel = Client::query()
+            ->forGyms($gymIds)
+            ->select(['id', 'gym_id', 'app_username', 'app_password'])
+            ->findOrFail($client);
+
+        if (trim((string) ($clientModel->app_username ?? '')) === '') {
+            return redirect()
+                ->route('clients.show', $clientModel->id)
+                ->withErrors(['app_username' => 'Define primero el usuario app del cliente.'])
+                ->withInput(['active_tab' => 'app_access']);
+        }
+
+        $clientModel->update([
+            'app_password' => Hash::make((string) $request->validated('app_password')),
+        ]);
+
+        return redirect()
+            ->route('clients.show', $clientModel->id)
+            ->with('status', 'Contraseña app del cliente restablecida correctamente.');
     }
 
     private function resolveGymId(Request $request): int

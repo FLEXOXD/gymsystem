@@ -3,19 +3,6 @@
 
 @section('title', 'Panel de control')
 @section('page-title', 'Panel de control')
-@section('header-live-banner')
-    <div id="header-live-clients"
-         class="header-live-pill inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-emerald-300/70 bg-emerald-500/10 px-3 py-1.5 shadow-[0_0_20px_rgba(16,185,129,0.22)] max-[420px]:gap-1 max-[420px]:px-2"
-         data-live-url="{{ route('panel.live-clients') }}">
-        <span class="relative inline-flex h-2.5 w-2.5">
-            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="live-core-dot relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-        </span>
-        <span class="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200 max-[420px]:text-[9px]">PRESENTES</span>
-        <span id="header-live-count" class="text-sm font-black text-white max-[420px]:text-xs">{{ (int) $liveClientsNow }}</span>
-        <span class="text-xs font-semibold text-emerald-100/90 max-[420px]:hidden">ahora</span>
-    </div>
-@endsection
 
 @section('content')
     @php
@@ -441,36 +428,6 @@
     </div>
 @endsection
 
-@push('styles')
-<style>
-    .header-live-pill {
-        animation: headerLiveGlow 1.9s ease-in-out infinite;
-    }
-
-    .header-live-pill .live-core-dot {
-        animation: headerLiveBeat 1.15s ease-in-out infinite;
-    }
-
-    @keyframes headerLiveGlow {
-        0%, 100% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.12), 0 0 18px rgba(16, 185, 129, 0.22);
-        }
-        50% {
-            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.22), 0 0 28px rgba(16, 185, 129, 0.36);
-        }
-    }
-
-    @keyframes headerLiveBeat {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.22);
-        }
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
     (function () {
@@ -509,63 +466,6 @@
             }
         });
 
-        const headerLiveRoot = document.getElementById('header-live-clients');
-        if (headerLiveRoot) {
-            const headerLiveCount = document.getElementById('header-live-count');
-            const liveUrl = String(headerLiveRoot.dataset.liveUrl || '').trim();
-            let currentCount = Number(headerLiveCount?.textContent || 0);
-
-            const animateCount = function (nextCount) {
-                const target = Number.isFinite(nextCount) ? Math.max(0, Math.floor(nextCount)) : 0;
-                if (!headerLiveCount) {
-                    currentCount = target;
-                    return;
-                }
-                if (target === currentCount) {
-                    headerLiveCount.textContent = String(target);
-                    return;
-                }
-
-                const from = currentCount;
-                const diff = target - from;
-                const steps = Math.min(16, Math.max(6, Math.abs(diff)));
-                let frame = 0;
-                const tick = function () {
-                    frame += 1;
-                    const progress = frame / steps;
-                    const value = Math.round(from + diff * progress);
-                    headerLiveCount.textContent = String(value);
-                    if (frame < steps) {
-                        window.requestAnimationFrame(tick);
-                    } else {
-                        currentCount = target;
-                        headerLiveCount.textContent = String(target);
-                    }
-                };
-                window.requestAnimationFrame(tick);
-            };
-
-            const refreshHeaderLive = async function () {
-                if (liveUrl === '') return;
-                try {
-                    const response = await fetch(liveUrl, {
-                        method: 'GET',
-                        headers: { 'Accept': 'application/json' },
-                        credentials: 'same-origin',
-                    });
-                    if (!response.ok) return;
-                    const payload = await response.json();
-                    if (!payload || payload.ok !== true) return;
-
-                    animateCount(Number(payload.count || 0));
-                } catch (error) {
-                    // ignore transient network errors
-                }
-            };
-
-            refreshHeaderLive();
-            window.setInterval(refreshHeaderLive, 20000);
-        }
     })();
 </script>
 @endpush

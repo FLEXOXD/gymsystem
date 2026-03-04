@@ -104,16 +104,32 @@
 
         $membershipErrorKeys = ['plan_id', 'starts_at', 'status', 'payment_method', 'promotion_id', 'cash'];
         $rfidErrorKeys = ['rfid', 'value'];
+        $appAccountErrorKeys = ['app_username', 'app_password', 'app_password_confirmation'];
 
         $openMembershipModal = $errors->hasAny($membershipErrorKeys);
         $openRfidModal = $errors->hasAny($rfidErrorKeys);
+        $openAppAccountTab = ! empty($canManageClientAccounts) && (
+            $errors->hasAny($appAccountErrorKeys) || old('active_tab') === 'app_access'
+        );
 
         $initialTab = 'summary';
+        $requestedTab = trim((string) old('active_tab', ''));
+        $allowedTabs = ['summary', 'membership', 'attendance', 'credentials'];
+        if (! empty($canManageClientAccounts)) {
+            $allowedTabs[] = 'app_access';
+        }
+        if (in_array($requestedTab, $allowedTabs, true)) {
+            $initialTab = $requestedTab;
+        }
+
         if ($openMembershipModal) {
             $initialTab = 'membership';
         }
         if ($openRfidModal) {
             $initialTab = 'credentials';
+        }
+        if ($openAppAccountTab) {
+            $initialTab = 'app_access';
         }
 
         $attendancePreview = $client->attendances->take(4);
@@ -181,6 +197,14 @@
                 'activeQrSvg' => $activeQrSvg,
             ])
         </section>
+
+        @if (! empty($canManageClientAccounts))
+            <section x-cloak x-show="activeTab === 'app_access'" x-transition.opacity class="client-tab-panel">
+                @include('clients.partials._tab_usuario_app', [
+                    'client' => $client,
+                ])
+            </section>
+        @endif
 
         @include('clients.partials._modal_membership', [
             'client' => $client,
