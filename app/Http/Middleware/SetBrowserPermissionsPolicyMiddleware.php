@@ -24,12 +24,7 @@ class SetBrowserPermissionsPolicyMiddleware
             'Permissions-Policy',
             'camera=(self), microphone=(self), geolocation=(self), fullscreen=(self), display-capture=(self)'
         );
-        $response->headers->set(
-            'Feature-Policy',
-            "camera 'self'; microphone 'self'; geolocation 'self'"
-        );
 
         return $response;
     }
 }
-

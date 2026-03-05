@@ -4483,16 +4483,6 @@
             return;
         }
 
-        const permissionsPolicy = document.permissionsPolicy || document.featurePolicy;
-        if (
-            permissionsPolicy
-            && typeof permissionsPolicy.allowsFeature === 'function'
-            && !permissionsPolicy.allowsFeature('camera')
-        ) {
-            statusEl.textContent = 'La politica de permisos del sitio esta bloqueando camara. Recarga y vuelve a intentar.';
-            return;
-        }
-
         if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
             statusEl.textContent = 'Este navegador no permite abrir la camara.';
             return;
