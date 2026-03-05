@@ -153,13 +153,26 @@ jobs:
 
             # Enforce Apache vhosts to always use current/public (never fixed release or legacy /public).
             if [ -d /etc/apache2 ]; then
+              sudo a2enmod headers >/dev/null 2>&1 || true
               for conf in /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/*.conf /etc/apache2/conf-enabled/*.conf; do
                 [ -f "$conf" ] || continue
                 sudo sed -E -i \
                   -e "s#/var/www/gymsystem/releases/[0-9]{14}/public#/var/www/gymsystem/current/public#g" \
                   -e "s#/var/www/gymsystem/public#/var/www/gymsystem/current/public#g" \
+                  -e "/^[[:space:]]*Header[[:space:]]+(always[[:space:]]+)?(set|append|add)[[:space:]]+Permissions-Policy[[:space:]].*camera/d" \
+                  -e "/^[[:space:]]*Header[[:space:]]+(always[[:space:]]+)?(set|append|add)[[:space:]]+Feature-Policy[[:space:]].*camera/d" \
                   "$conf"
               done
+
+              sudo tee /etc/apache2/conf-available/gymsystem-permissions-policy.conf >/dev/null <<'EOF'
+<IfModule mod_headers.c>
+    Header always unset Permissions-Policy
+    Header always unset Feature-Policy
+    Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), fullscreen=(self), display-capture=(self)"
+</IfModule>
+EOF
+              sudo a2enconf gymsystem-permissions-policy >/dev/null 2>&1 || true
+
               if sudo grep -R -E -q "/var/www/gymsystem/releases/[0-9]{14}/public|/var/www/gymsystem/public" /etc/apache2/sites-enabled /etc/apache2/conf-enabled; then
                 echo "ERROR: Apache still has hardcoded release/legacy paths"
                 sudo grep -R -E "/var/www/gymsystem/releases/[0-9]{14}/public|/var/www/gymsystem/public" /etc/apache2/sites-enabled /etc/apache2/conf-enabled || true
