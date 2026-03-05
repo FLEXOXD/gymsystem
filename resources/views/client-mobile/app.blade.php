@@ -1322,8 +1322,69 @@
             background: rgba(0, 0, 0, .64);
             backdrop-filter: blur(1.5px);
         }
+        .action-guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 58;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+        }
+        .action-guide-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2,6,23,.76);
+            backdrop-filter: blur(2px);
+        }
+        .action-guide-panel {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 360px);
+            border-radius: 18px;
+            border: 1px solid rgba(34,211,238,.45);
+            background: linear-gradient(145deg, rgba(2,6,23,.95), rgba(8,47,73,.76));
+            box-shadow: 0 18px 40px rgba(0,0,0,.45);
+            padding: 14px;
+            display: grid;
+            gap: 10px;
+        }
+        .action-guide-eyebrow {
+            color: #86efac;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .action-guide-title {
+            color: #f8fafc;
+            font-size: 18px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+        .action-guide-text {
+            color: #dbeafe;
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+        .action-guide-actions {
+            display: grid;
+            gap: 8px;
+        }
+        .guide-focus-target {
+            box-shadow: 0 0 0 3px rgba(34,211,238,.48), 0 0 30px rgba(34,197,94,.42);
+            animation: guidePulse 1.1s ease-in-out 2;
+        }
+        @keyframes guidePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
         .module-loader.hidden,
         .boot-screen.hidden {
+            display: none !important;
+        }
+        .action-guide-modal.hidden {
             display: none !important;
         }
         .module-loader-content {
@@ -1469,9 +1530,23 @@
     </div>
 </div>
 
+<div id="action-guide-modal" class="action-guide-modal hidden" aria-hidden="true">
+    <button type="button" class="action-guide-backdrop" data-action-guide-dismiss aria-label="Cerrar guía"></button>
+    <article class="action-guide-panel" role="dialog" aria-modal="true" aria-labelledby="action-guide-title">
+        <p class="action-guide-eyebrow">Guía rápida</p>
+        <h3 id="action-guide-title" class="action-guide-title">Te guiamos paso a paso</h3>
+        <p id="action-guide-text" class="action-guide-text">Sigue esta indicación para completar tu entrenamiento de hoy.</p>
+        <div class="action-guide-actions">
+            <button id="action-guide-cta" type="button" class="module-action module-action-primary">Entendido</button>
+            <button id="action-guide-dismiss" type="button" class="module-action">Cerrar</button>
+        </div>
+    </article>
+</div>
+
 <main
     class="mobile-shell px-4 pt-6 pb-6"
     data-screen="{{ $screen }}"
+    data-app-url="{{ route('client-mobile.app', ['gymSlug' => $gym->slug]) }}"
     data-checkin-url="{{ route('client-mobile.check-in', ['gymSlug' => $gym->slug]) }}"
     data-progress-url="{{ route('client-mobile.progress', ['gymSlug' => $gym->slug]) }}"
     data-training-start-url="{{ route('client-mobile.training.start', ['gymSlug' => $gym->slug]) }}"
@@ -2446,6 +2521,7 @@
 
     const checkinUrl = shell.dataset.checkinUrl || '';
     const progressUrl = shell.dataset.progressUrl || '';
+    const appUrl = shell.dataset.appUrl || window.location.href;
     const trainingStartUrl = shell.dataset.trainingStartUrl || '';
     const trainingFinishUrl = shell.dataset.trainingFinishUrl || '';
     const pushStatusUrl = shell.dataset.pushStatusUrl || '';
@@ -2455,11 +2531,18 @@
     const currentScreen = shell.dataset.screen || 'home';
     const bootStateKey = 'client-mobile-boot-seen';
     const csrfMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const initialProgressPayload = @json($progress);
 
     const bootScreen = document.getElementById('boot-screen');
     const bootBar = document.getElementById('boot-progress-bar');
     const bootValue = document.getElementById('boot-progress-value');
     const moduleLoader = document.getElementById('module-loader');
+    const actionGuideModal = document.getElementById('action-guide-modal');
+    const actionGuideTitleEl = document.getElementById('action-guide-title');
+    const actionGuideTextEl = document.getElementById('action-guide-text');
+    const actionGuideCtaBtn = document.getElementById('action-guide-cta');
+    const actionGuideDismissBtn = document.getElementById('action-guide-dismiss');
+    const actionGuideDismissEls = Array.from(document.querySelectorAll('[data-action-guide-dismiss]'));
 
     const userMenuToggle = document.getElementById('user-menu-toggle');
     const userMenuPanel = document.getElementById('user-menu-panel');
@@ -2560,6 +2643,9 @@
     let trainingActionBusy = false;
     let trainingCountdownTimer = null;
     let moduleLoaderFailSafeTimer = null;
+    let actionGuideMode = '';
+    let actionGuideDismissedMode = '';
+    let actionGuideCtaHandler = null;
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
     let sectionCollapseState = {};
 
@@ -2741,6 +2827,207 @@
                 hideModuleLoader();
             }
         }, 12000);
+    }
+
+    function setActionGuideOpen(isOpen) {
+        if (!actionGuideModal) return;
+        actionGuideModal.classList.toggle('hidden', !isOpen);
+        actionGuideModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    function closeActionGuide(markDismissed = true) {
+        if (markDismissed && actionGuideMode !== '') {
+            actionGuideDismissedMode = actionGuideMode;
+        }
+        setActionGuideOpen(false);
+    }
+
+    function openActionGuide(mode, title, text, ctaLabel, ctaHandler) {
+        if (!actionGuideModal || !actionGuideTitleEl || !actionGuideTextEl || !actionGuideCtaBtn) return;
+
+        actionGuideMode = mode;
+        actionGuideTitleEl.textContent = String(title || 'Guía rápida');
+        actionGuideTextEl.textContent = String(text || 'Sigue esta indicación para continuar.');
+        actionGuideCtaBtn.textContent = String(ctaLabel || 'Entendido');
+        actionGuideCtaHandler = typeof ctaHandler === 'function' ? ctaHandler : null;
+        setActionGuideOpen(true);
+    }
+
+    function buildAppScreenUrl(screen, extraParams) {
+        let target;
+        try {
+            target = new URL(appUrl, window.location.href);
+        } catch (error) {
+            target = new URL(window.location.href);
+        }
+
+        target.searchParams.set('screen', String(screen || 'home'));
+        if (extraParams && typeof extraParams === 'object') {
+            Object.keys(extraParams).forEach((key) => {
+                const value = extraParams[key];
+                if (value === null || value === undefined || String(value).trim() === '') return;
+                target.searchParams.set(String(key), String(value));
+            });
+        }
+
+        return target.toString();
+    }
+
+    function navigateToAppScreen(screen, extraParams) {
+        const url = buildAppScreenUrl(screen, extraParams || {});
+        showModuleLoader();
+        window.location.assign(url);
+    }
+
+    function focusTrainingActionButton(preferFinish) {
+        if (currentScreen !== 'progress') return false;
+
+        setSectionCollapsed('training', false, true);
+        const targetBtn = preferFinish
+            ? (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden') ? trainingFinishBtn : null)
+            : (trainingStartBtn && !trainingStartBtn.classList.contains('hidden')
+                ? trainingStartBtn
+                : (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden') ? trainingFinishBtn : null));
+
+        if (!targetBtn) return false;
+        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetBtn.classList.remove('guide-focus-target');
+        void targetBtn.offsetWidth;
+        targetBtn.classList.add('guide-focus-target');
+        window.setTimeout(() => targetBtn.classList.remove('guide-focus-target'), 2800);
+        return true;
+    }
+
+    function consumeFocusParamsFromUrl() {
+        let currentUrl;
+        try {
+            currentUrl = new URL(window.location.href);
+        } catch (error) {
+            return { focusStart: false, focusFinish: false };
+        }
+
+        const focusStart = currentUrl.searchParams.get('focus_training_start') === '1';
+        const focusFinish = currentUrl.searchParams.get('focus_training_finish') === '1';
+        if (!focusStart && !focusFinish) {
+            return { focusStart: false, focusFinish: false };
+        }
+
+        currentUrl.searchParams.delete('focus_training_start');
+        currentUrl.searchParams.delete('focus_training_finish');
+        window.history.replaceState({}, '', currentUrl.toString());
+        return { focusStart, focusFinish };
+    }
+
+    function resolveGuideMode(progressPayload) {
+        const payload = progressPayload && typeof progressPayload === 'object' ? progressPayload : {};
+        const trainingStatus = payload.training_status && typeof payload.training_status === 'object'
+            ? payload.training_status
+            : {};
+        const canStart = Boolean(trainingStatus.can_start);
+        const canFinish = Boolean(trainingStatus.can_finish);
+        const isActive = Boolean(trainingStatus.is_active);
+        const hasAttendanceToday = Boolean(trainingStatus.has_attendance_today);
+        const completedToday = Boolean(trainingStatus.completed_today);
+
+        if (canStart) {
+            return currentScreen === 'progress' ? 'start_here' : 'start_redirect';
+        }
+        if (isActive && canFinish) {
+            return currentScreen === 'progress' ? 'finish_here' : 'finish_redirect';
+        }
+        if (!hasAttendanceToday && !isActive && !completedToday) {
+            return currentScreen === 'checkin' ? 'attendance_here' : 'attendance_redirect';
+        }
+
+        return '';
+    }
+
+    function updateActionGuide(progressPayload, force = false) {
+        const mode = resolveGuideMode(progressPayload);
+        if (mode === '') {
+            actionGuideMode = '';
+            closeActionGuide(false);
+            return;
+        }
+
+        if (!force && actionGuideDismissedMode === mode) {
+            return;
+        }
+
+        if (!force && actionGuideMode === mode && !actionGuideModal?.classList.contains('hidden')) {
+            return;
+        }
+
+        if (mode === 'attendance_redirect') {
+            openActionGuide(
+                mode,
+                'Paso 1: registra asistencia',
+                'Primero valida tu ingreso por QR, RFID o documento en recepción.',
+                'Ir a registrar asistencia',
+                () => navigateToAppScreen('checkin')
+            );
+            return;
+        }
+
+        if (mode === 'attendance_here') {
+            openActionGuide(
+                mode,
+                'Escanea para habilitar entrenamiento',
+                'Registra tu asistencia en esta pantalla. Luego te llevamos al botón para comenzar entrenamiento.',
+                'Entendido',
+                () => closeActionGuide(true)
+            );
+            return;
+        }
+
+        if (mode === 'start_redirect') {
+            openActionGuide(
+                mode,
+                'Entrenamiento listo',
+                'Tu ingreso ya fue validado. Ahora pulsa el botón para comenzar entrenamiento.',
+                'Ir al botón de entrenamiento',
+                () => navigateToAppScreen('progress', { focus_training_start: '1' })
+            );
+            return;
+        }
+
+        if (mode === 'start_here') {
+            openActionGuide(
+                mode,
+                'Pulsa comenzar entrenamiento',
+                'Desliza hacia abajo y pulsa "Comenzar entrenamiento" para activar el progreso de hoy.',
+                'Bajar al botón',
+                () => {
+                    focusTrainingActionButton(false);
+                    closeActionGuide(true);
+                }
+            );
+            return;
+        }
+
+        if (mode === 'finish_redirect') {
+            openActionGuide(
+                mode,
+                'Sesión en curso',
+                'Tu entrenamiento está activo. Ve a la sección de entrenamiento para finalizar cuando termines.',
+                'Ir a finalizar entrenamiento',
+                () => navigateToAppScreen('progress', { focus_training_finish: '1' })
+            );
+            return;
+        }
+
+        if (mode === 'finish_here') {
+            openActionGuide(
+                mode,
+                'Finaliza tu entrenamiento',
+                'Ya tienes una sesión activa. Baja y pulsa "Finalizar entrenamiento" al terminar.',
+                'Bajar al botón',
+                () => {
+                    focusTrainingActionButton(true);
+                    closeActionGuide(true);
+                }
+            );
+        }
     }
 
     function markBootSeen() {
@@ -3438,6 +3725,7 @@
         renderBodyState(payload);
         renderTrainingPlan(payload);
         renderTrainingStatus(payload);
+        updateActionGuide(payload);
 
         if (liveCountEl) {
             const next = String(payload.live_clients_count ?? 0);
@@ -3893,6 +4181,27 @@
             dismissFitnessModal();
         }
         setWeeklyGoalEditOpen(false);
+        if (actionGuideModal && !actionGuideModal.classList.contains('hidden')) {
+            closeActionGuide(true);
+        }
+    });
+
+    actionGuideDismissEls.forEach((element) => {
+        element.addEventListener('click', () => {
+            closeActionGuide(true);
+        });
+    });
+
+    actionGuideDismissBtn?.addEventListener('click', () => {
+        closeActionGuide(true);
+    });
+
+    actionGuideCtaBtn?.addEventListener('click', () => {
+        if (typeof actionGuideCtaHandler !== 'function') {
+            closeActionGuide(true);
+            return;
+        }
+        actionGuideCtaHandler();
     });
 
     openFitnessModalTrigger?.addEventListener('click', () => {
@@ -3986,6 +4295,13 @@
     refreshClientPushStatus();
     initBootScreen();
     hideModuleLoader();
+    const focusFlags = consumeFocusParamsFromUrl();
+    if (currentScreen === 'progress' && (focusFlags.focusStart || focusFlags.focusFinish)) {
+        window.setTimeout(() => {
+            focusTrainingActionButton(Boolean(focusFlags.focusFinish));
+        }, 380);
+    }
+    updateActionGuide(initialProgressPayload, true);
     if (fitnessModal && !fitnessModal.classList.contains('hidden')) {
         setFitnessModalOpen(true);
     }
