@@ -1731,13 +1731,13 @@ class ClientMobileController extends Controller
 
         $timeline = [];
         $dayLabels = [
-            1 => 'L',
-            2 => 'M',
-            3 => 'X',
-            4 => 'J',
-            5 => 'V',
-            6 => 'S',
-            7 => 'D',
+            1 => 'Lun',
+            2 => 'Mar',
+            3 => 'Mie',
+            4 => 'Jue',
+            5 => 'Vie',
+            6 => 'Sab',
+            7 => 'Dom',
         ];
 
         for ($offset = 29; $offset >= 0; $offset--) {
@@ -1747,7 +1747,8 @@ class ClientMobileController extends Controller
 
             $timeline[] = [
                 'date' => $dateString,
-                'label' => $dayLabels[$dayOfWeek] ?? 'N',
+                'label' => (string) $date->format('j'),
+                'weekday_short' => $dayLabels[$dayOfWeek] ?? '',
                 'attended' => $attendanceDateSet->has($dateString),
                 'is_today' => $offset === 0,
             ];

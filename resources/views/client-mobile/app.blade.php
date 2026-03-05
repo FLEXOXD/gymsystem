@@ -491,16 +491,30 @@
         .timeline-grid {
             margin-top: 10px;
             display: grid;
-            grid-template-columns: repeat(10, minmax(0, 1fr));
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 5px;
         }
+        .timeline-weekdays {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .timeline-weekday {
+            text-align: center;
+            color: #86efac;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+        }
         .timeline-cell {
-            min-height: 26px;
+            min-height: 28px;
             border-radius: 8px;
             border: 1px solid rgba(148,163,184,.34);
             background: rgba(2,6,23,.56);
             color: #94a3b8;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             display: inline-flex;
             align-items: center;
@@ -918,7 +932,10 @@
                 grid-template-columns: 1fr;
             }
             .timeline-grid {
-                grid-template-columns: repeat(8, minmax(0, 1fr));
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+            }
+            .timeline-weekdays {
+                grid-template-columns: repeat(7, minmax(0, 1fr));
             }
         }
         .period-summary {
@@ -1700,15 +1717,28 @@
 
                 <article class="weekly-history-card">
                     <p class="weekly-history-title">Historico ultimos 30 dias</p>
-                    <p class="weekly-history-text">Cada celda representa un dia. Verde: entrenaste, oscuro: descanso.</p>
+                    <p class="weekly-history-text">Ordenado de mas antiguo a hoy. Verde: entrenaste, oscuro: descanso.</p>
+                    <div class="timeline-weekdays" aria-hidden="true">
+                        @foreach (['L', 'M', 'M', 'J', 'V', 'S', 'D'] as $weekdayLabel)
+                            <span class="timeline-weekday">{{ $weekdayLabel }}</span>
+                        @endforeach
+                    </div>
                     <div id="timeline-grid" class="timeline-grid">
                         @foreach ($weeklyTimeline as $timelineItem)
                             @php
-                                $timelineLabel = trim((string) ($timelineItem['label'] ?? 'N'));
+                                $timelineLabel = trim((string) ($timelineItem['label'] ?? '--'));
+                                $timelineDate = trim((string) ($timelineItem['date'] ?? ''));
+                                $timelineWeekday = trim((string) ($timelineItem['weekday_short'] ?? ''));
                                 $timelineAttended = (bool) ($timelineItem['attended'] ?? false);
                                 $timelineIsToday = (bool) ($timelineItem['is_today'] ?? false);
+                                $timelineStatusLabel = $timelineAttended ? 'entrenaste' : 'descanso';
+                                $timelineTitle = trim(($timelineWeekday !== '' ? $timelineWeekday.' ' : '').$timelineDate.' - '.$timelineStatusLabel.($timelineIsToday ? ' (hoy)' : ''));
                             @endphp
-                            <span class="timeline-cell {{ $timelineAttended ? 'timeline-cell-attended' : '' }} {{ $timelineIsToday ? 'timeline-cell-today' : '' }}">{{ $timelineLabel }}</span>
+                            <span
+                                class="timeline-cell {{ $timelineAttended ? 'timeline-cell-attended' : '' }} {{ $timelineIsToday ? 'timeline-cell-today' : '' }}"
+                                title="{{ $timelineTitle }}"
+                                aria-label="{{ $timelineTitle }}"
+                            >{{ $timelineLabel }}</span>
                         @endforeach
                     </div>
                 </article>
@@ -2855,15 +2885,21 @@
         if (timelineGridEl) {
             timelineGridEl.textContent = '';
             timeline.slice(0, 30).forEach((dayItem) => {
-                const label = String(dayItem && dayItem.label ? dayItem.label : 'N');
+                const label = String(dayItem && dayItem.label ? dayItem.label : '--');
+                const date = String(dayItem && dayItem.date ? dayItem.date : '');
+                const weekday = String(dayItem && dayItem.weekday_short ? dayItem.weekday_short : '');
                 const attended = Boolean(dayItem && dayItem.attended);
                 const isToday = Boolean(dayItem && dayItem.is_today);
+                const status = attended ? 'entrenaste' : 'descanso';
+                const title = ((weekday !== '' ? (weekday + ' ') : '') + date + ' - ' + status + (isToday ? ' (hoy)' : '')).trim();
 
                 const cellEl = document.createElement('span');
                 cellEl.className = 'timeline-cell';
                 if (attended) cellEl.classList.add('timeline-cell-attended');
                 if (isToday) cellEl.classList.add('timeline-cell-today');
                 cellEl.textContent = label;
+                cellEl.title = title;
+                cellEl.setAttribute('aria-label', title);
                 timelineGridEl.appendChild(cellEl);
             });
         }
