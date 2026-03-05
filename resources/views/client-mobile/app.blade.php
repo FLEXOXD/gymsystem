@@ -1028,6 +1028,12 @@
             color: #ecfeff;
             box-shadow: inset 0 0 0 1px rgba(134,239,172,.26);
         }
+        .fitness-chip.is-invalid .fitness-chip-label {
+            border-color: rgba(248,113,113,.82);
+            background: rgba(127,29,29,.35);
+            color: #fee2e2;
+            box-shadow: inset 0 0 0 1px rgba(248,113,113,.42);
+        }
         .fitness-inline-help {
             margin-top: 8px;
             color: #bbf7d0;
@@ -2739,6 +2745,7 @@
         document.body.style.overflow = isOpen ? 'hidden' : '';
 
         if (isOpen) {
+            resetFitnessFormSubmitState();
             const firstInput = fitnessModal.querySelector('input, button, select, textarea');
             if (firstInput instanceof HTMLElement) {
                 window.setTimeout(() => firstInput.focus(), 30);
@@ -2764,40 +2771,156 @@
         setFitnessModalOpen(false);
     }
 
+    function resetFitnessFormSubmitState() {
+        const fitnessForms = document.querySelectorAll('form[data-fitness-form]');
+        if (!fitnessForms.length) return;
+
+        fitnessForms.forEach((form) => {
+            form.dataset.submitting = '0';
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn instanceof HTMLButtonElement) {
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
     function initFitnessForms() {
         const fitnessForms = document.querySelectorAll('form[data-fitness-form]');
         if (!fitnessForms.length) return;
 
         fitnessForms.forEach((form) => {
+            form.dataset.submitting = '0';
             const noneInput = form.querySelector('input[name="limitations[]"][value="ninguna"]');
             const limitationInputs = form.querySelectorAll('input[name="limitations[]"]');
-            if (!noneInput || !limitationInputs.length) return;
+            const escapeSelectorId = (rawId) => {
+                const candidate = String(rawId || '');
+                if (window.CSS && typeof window.CSS.escape === 'function') {
+                    return window.CSS.escape(candidate);
+                }
+                return candidate.replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+            };
+            const getSubmitButton = () => {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                return submitBtn instanceof HTMLButtonElement ? submitBtn : null;
+            };
+            const getFirstInvalidField = () => {
+                const controls = form.querySelectorAll('input, select, textarea');
+                for (const control of controls) {
+                    if (
+                        !(
+                            control instanceof HTMLInputElement
+                            || control instanceof HTMLSelectElement
+                            || control instanceof HTMLTextAreaElement
+                        )
+                    ) {
+                        continue;
+                    }
+
+                    if (control.disabled) continue;
+                    if (control instanceof HTMLInputElement && control.type === 'hidden') continue;
+
+                    if (!control.checkValidity()) {
+                        return control;
+                    }
+                }
+                return null;
+            };
+
+            if (noneInput && limitationInputs.length) {
+                form.addEventListener('change', (event) => {
+                    const target = event.target;
+                    if (!(target instanceof HTMLInputElement)) return;
+                    if (target.name !== 'limitations[]') return;
+
+                    if (target.value === 'ninguna' && target.checked) {
+                        limitationInputs.forEach((input) => {
+                            if (!(input instanceof HTMLInputElement)) return;
+                            if (input.value === 'ninguna') return;
+                            input.checked = false;
+                        });
+                        return;
+                    }
+
+                    if (target.value !== 'ninguna' && target.checked) {
+                        noneInput.checked = false;
+                    }
+
+                    const hasSelection = Array.from(limitationInputs).some((input) => {
+                        return input instanceof HTMLInputElement && input.checked;
+                    });
+
+                    if (!hasSelection) {
+                        noneInput.checked = true;
+                    }
+                });
+            }
 
             form.addEventListener('change', (event) => {
                 const target = event.target;
-                if (!(target instanceof HTMLInputElement)) return;
-                if (target.name !== 'limitations[]') return;
+                if (!(target instanceof HTMLElement)) return;
+                const chip = target.closest('.fitness-chip');
+                if (chip) {
+                    chip.classList.remove('is-invalid');
+                }
+            });
 
-                if (target.value === 'ninguna' && target.checked) {
-                    limitationInputs.forEach((input) => {
-                        if (!(input instanceof HTMLInputElement)) return;
-                        if (input.value === 'ninguna') return;
-                        input.checked = false;
-                    });
+            form.addEventListener('submit', (event) => {
+                const submitBtn = getSubmitButton();
+                if (form.dataset.submitting === '1') {
+                    event.preventDefault();
                     return;
                 }
 
-                if (target.value !== 'ninguna' && target.checked) {
-                    noneInput.checked = false;
+                const firstInvalid = getFirstInvalidField();
+                if (firstInvalid instanceof HTMLElement) {
+                    form.dataset.submitting = '0';
+                    if (submitBtn instanceof HTMLButtonElement) {
+                        submitBtn.disabled = false;
+                    }
+
+                    let visualTarget = firstInvalid;
+                    if (firstInvalid instanceof HTMLInputElement && firstInvalid.id !== '') {
+                        const linkedLabel = form.querySelector(`label[for="${escapeSelectorId(firstInvalid.id)}"]`);
+                        if (linkedLabel instanceof HTMLElement) {
+                            visualTarget = linkedLabel;
+                            const chip = linkedLabel.closest('.fitness-chip');
+                            if (chip) {
+                                chip.classList.add('is-invalid');
+                            }
+                        }
+                    }
+
+                    try {
+                        visualTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (error) {
+                        visualTarget.scrollIntoView();
+                    }
+                    visualTarget.classList.remove('guide-focus-target');
+                    void visualTarget.offsetWidth;
+                    visualTarget.classList.add('guide-focus-target');
+                    window.setTimeout(() => {
+                        visualTarget.classList.remove('guide-focus-target');
+                    }, 1600);
+
+                    if (
+                        firstInvalid instanceof HTMLInputElement
+                        || firstInvalid instanceof HTMLTextAreaElement
+                        || firstInvalid instanceof HTMLSelectElement
+                    ) {
+                        if (typeof firstInvalid.reportValidity === 'function') {
+                            firstInvalid.reportValidity();
+                        } else {
+                            firstInvalid.focus();
+                        }
+                    }
+                    return;
                 }
 
-                const hasSelection = Array.from(limitationInputs).some((input) => {
-                    return input instanceof HTMLInputElement && input.checked;
-                });
-
-                if (!hasSelection) {
-                    noneInput.checked = true;
+                form.dataset.submitting = '1';
+                if (submitBtn instanceof HTMLButtonElement) {
+                    submitBtn.disabled = true;
                 }
+                showModuleLoader();
             });
         });
     }
@@ -4279,18 +4402,22 @@
 
     window.addEventListener('pageshow', () => {
         hideModuleLoader();
+        resetFitnessFormSubmitState();
     });
 
     window.addEventListener('popstate', () => {
         hideModuleLoader();
+        resetFitnessFormSubmitState();
     });
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible') return;
         hideModuleLoader();
+        resetFitnessFormSubmitState();
     });
 
     initFitnessForms();
+    resetFitnessFormSubmitState();
     initializeSectionCollapseState();
     refreshClientPushStatus();
     initBootScreen();
