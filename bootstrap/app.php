@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(\App\Http\Middleware\SetBrowserPermissionsPolicyMiddleware::class);
+
         $middleware->alias([
             'check.subscription' => \App\Http\Middleware\CheckSubscriptionMiddleware::class,
             'plan.feature' => \App\Http\Middleware\EnsurePlanFeatureMiddleware::class,

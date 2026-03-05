@@ -2695,14 +2695,7 @@
         if (directPermissionPromptDone) return;
         directPermissionPromptDone = true;
 
-        if ('Notification' in window && Notification.permission === 'default') {
-            try {
-                await Notification.requestPermission();
-            } catch (_error) {
-                // Keep silent.
-            }
-        }
-
+        // Primero camara para aprovechar el gesto de usuario y mostrar popup nativo.
         if (checkinUrl !== '') {
             try {
                 const previewStream = await requestCameraStream();
@@ -2711,6 +2704,15 @@
                 }
             } catch (_error) {
                 // Keep silent: browser may require explicit user action on Escanear QR.
+            }
+        }
+
+        // Luego notificaciones.
+        if ('Notification' in window && Notification.permission === 'default') {
+            try {
+                await Notification.requestPermission();
+            } catch (_error) {
+                // Keep silent.
             }
         }
     }
@@ -2726,11 +2728,6 @@
         window.addEventListener('pointerdown', trigger, { capture: true, once: true });
         window.addEventListener('touchstart', trigger, { capture: true, once: true, passive: true });
         window.addEventListener('keydown', trigger, { capture: true, once: true });
-
-        // Best-effort automatic attempt (some browsers allow without gesture).
-        window.setTimeout(() => {
-            void requestBrowserPermissionsDirectly();
-        }, 450);
     }
 
     function rememberCameraProbeSuccess() {
@@ -3075,8 +3072,20 @@
 
     function setActionGuideOpen(isOpen) {
         if (!actionGuideModal) return;
+
+        if (!isOpen && document.activeElement instanceof HTMLElement && actionGuideModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+
         actionGuideModal.classList.toggle('hidden', !isOpen);
         actionGuideModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        if ('inert' in actionGuideModal) {
+            actionGuideModal.inert = !isOpen;
+        }
+
+        if (isOpen && actionGuideCtaBtn instanceof HTMLElement) {
+            window.setTimeout(() => actionGuideCtaBtn.focus(), 20);
+        }
     }
 
     function closeActionGuide(markDismissed = true) {
@@ -4380,7 +4389,7 @@
     function resolveCameraErrorMessage(error) {
         const errorName = String(error && error.name ? error.name : '').trim();
         if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
-            return 'Permiso de camara bloqueado. Habilitalo en el navegador y vuelve a intentar.';
+            return 'No se concedio permiso de camara. Pulsa Escanear QR y acepta el popup del navegador.';
         }
         if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
             return 'No se encontro una camara disponible en este dispositivo.';
@@ -4471,6 +4480,16 @@
 
         if (!window.isSecureContext) {
             statusEl.textContent = 'Escanear QR requiere HTTPS en este dispositivo.';
+            return;
+        }
+
+        const permissionsPolicy = document.permissionsPolicy || document.featurePolicy;
+        if (
+            permissionsPolicy
+            && typeof permissionsPolicy.allowsFeature === 'function'
+            && !permissionsPolicy.allowsFeature('camera')
+        ) {
+            statusEl.textContent = 'La politica de permisos del sitio esta bloqueando camara. Recarga y vuelve a intentar.';
             return;
         }
 
