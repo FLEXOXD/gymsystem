@@ -2736,6 +2736,9 @@
     let actionGuideDismissedMode = '';
     let actionGuideCtaHandler = null;
     let permissionGateBusy = false;
+    let permissionAutoRequestAttempted = false;
+    let permissionGestureHooked = false;
+    let permissionGestureTriggered = false;
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
@@ -2847,7 +2850,7 @@
             } else if (cameraState === 'denied' || notificationState === 'denied') {
                 permissionGateHintEl.textContent = 'Tienes permisos bloqueados. Habilitalos en ajustes del navegador.';
             } else {
-                permissionGateHintEl.textContent = 'Pulsa habilitar y acepta todos los permisos.';
+                permissionGateHintEl.textContent = 'Intentaremos pedir permisos automaticamente. Si no aparece popup, pulsa Habilitar permisos.';
             }
         }
 
@@ -2857,6 +2860,47 @@
             notificationState,
             requirements,
         };
+    }
+
+    async function updatePermissionGateVisibility() {
+        const state = await refreshPermissionGateState();
+        setPermissionGateOpen(state.hasMissing);
+        return state;
+    }
+
+    function ensurePermissionAutoRequestOnGesture() {
+        if (permissionGestureHooked) return;
+        permissionGestureHooked = true;
+
+        const trigger = async () => {
+            if (permissionGestureTriggered) return;
+            permissionGestureTriggered = true;
+            await requestClientPermissions();
+            await updatePermissionGateVisibility();
+        };
+
+        const listener = () => {
+            void trigger();
+        };
+
+        window.addEventListener('pointerdown', listener, { capture: true, once: true });
+        window.addEventListener('touchstart', listener, { capture: true, once: true, passive: true });
+        window.addEventListener('keydown', listener, { capture: true, once: true });
+    }
+
+    async function bootstrapPermissionFlow(autoRequest) {
+        const state = await updatePermissionGateVisibility();
+        if (!state.hasMissing) return state;
+
+        ensurePermissionAutoRequestOnGesture();
+
+        if (autoRequest && !permissionAutoRequestAttempted) {
+            permissionAutoRequestAttempted = true;
+            await requestClientPermissions();
+            return updatePermissionGateVisibility();
+        }
+
+        return state;
     }
 
     async function requestClientPermissions() {
@@ -4926,11 +4970,7 @@
         moduleLoaderLocked = false;
         hideModuleLoader();
         resetFitnessFormSubmitState();
-        refreshPermissionGateState().then((state) => {
-            if (state.hasMissing) {
-                setPermissionGateOpen(true);
-            }
-        }).catch(() => {
+        bootstrapPermissionFlow(false).catch(() => {
             // Keep silent.
         });
     });
@@ -4962,11 +5002,7 @@
     initFitnessForms();
     resetFitnessFormSubmitState();
     initializeSectionCollapseState();
-    refreshPermissionGateState().then((state) => {
-        if (state.hasMissing) {
-            setPermissionGateOpen(true);
-        }
-    }).catch(() => {
+    bootstrapPermissionFlow(true).catch(() => {
         // Keep silent.
     });
     refreshClientPushStatus();
