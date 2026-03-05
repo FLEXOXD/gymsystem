@@ -4307,6 +4307,92 @@
         fallbackScannerReader = null;
     }
 
+    function resolveCameraErrorMessage(error) {
+        const errorName = String(error && error.name ? error.name : '').trim();
+        if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+            return 'Permiso de camara bloqueado. Habilitalo en el navegador y vuelve a intentar.';
+        }
+        if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+            return 'No se encontro una camara disponible en este dispositivo.';
+        }
+        if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
+            return 'La camara esta en uso por otra app o pestana. Cierra la otra app e intenta de nuevo.';
+        }
+        if (errorName === 'OverconstrainedError' || errorName === 'ConstraintNotSatisfiedError') {
+            return 'No se pudo usar la camara trasera. Intenta otra vez y usa la camara principal.';
+        }
+        if (errorName === 'SecurityError') {
+            return 'El navegador bloqueo la camara por seguridad.';
+        }
+        if (errorName === 'AbortError') {
+            return 'Se interrumpio la apertura de la camara. Intenta nuevamente.';
+        }
+        return mobileI18n.camera_open_failed;
+    }
+
+    async function requestCameraStream() {
+        const constraintsAttempts = [
+            { video: { facingMode: { ideal: 'environment' } }, audio: false },
+            { video: { facingMode: 'environment' }, audio: false },
+            { video: true, audio: false },
+        ];
+
+        let lastError = null;
+        for (const constraints of constraintsAttempts) {
+            try {
+                return await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (error) {
+                lastError = error;
+                const errorName = String(error && error.name ? error.name : '').trim();
+                if (
+                    errorName === 'NotAllowedError'
+                    || errorName === 'PermissionDeniedError'
+                    || errorName === 'SecurityError'
+                ) {
+                    break;
+                }
+            }
+        }
+
+        throw (lastError || new Error('camera_unavailable'));
+    }
+
+    async function startFallbackScan() {
+        const zxingBrowser = await loadFallbackScannerLibrary();
+        const ReaderCtor = zxingBrowser && (
+            (typeof zxingBrowser.BrowserQRCodeReader === 'function' && zxingBrowser.BrowserQRCodeReader)
+            || (typeof zxingBrowser.BrowserMultiFormatReader === 'function' && zxingBrowser.BrowserMultiFormatReader)
+        );
+        if (!ReaderCtor) {
+            throw new Error('Fallback QR reader unavailable');
+        }
+
+        fallbackScannerReader = new ReaderCtor();
+        fallbackScannerControls = await fallbackScannerReader.decodeFromVideoDevice(undefined, video, async (result) => {
+            if (!result || scanBusy) return;
+
+            const raw = String(typeof result.getText === 'function' ? result.getText() : (result.text || '')).trim();
+            if (raw === '') return;
+
+            const now = Date.now();
+            if (raw === lastScanToken && (now - lastScanAt) < 1600) return;
+            lastScanToken = raw;
+            lastScanAt = now;
+
+            scanBusy = true;
+            try {
+                await submitToken(raw);
+            } finally {
+                scanBusy = false;
+            }
+        });
+
+        video.classList.remove('hidden');
+        stopBtn.classList.remove('hidden');
+        startBtn.classList.add('hidden');
+        statusEl.textContent = mobileI18n.scan_in_progress;
+    }
+
     async function startScan() {
         if (!statusEl || !startBtn || !stopBtn || !video) return;
 
@@ -4330,7 +4416,7 @@
             detector = new BarcodeDetector({ formats: ['qr_code'] });
 
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                stream = await requestCameraStream();
                 video.srcObject = stream;
                 await video.play();
                 video.classList.remove('hidden');
@@ -4361,9 +4447,19 @@
                         // ignore decode errors
                     }
                 }, 320);
-            } catch (_error) {
-                statusEl.textContent = mobileI18n.camera_open_failed;
+            } catch (nativeError) {
                 stopScan();
+                try {
+                    await startFallbackScan();
+                } catch (fallbackError) {
+                    const fallbackMessage = String(fallbackError && fallbackError.message ? fallbackError.message : '').trim();
+                    if (fallbackMessage.includes('No se pudo cargar el lector QR alternativo')) {
+                        statusEl.textContent = 'No se pudo cargar el lector QR alternativo. Verifica internet y vuelve a intentar.';
+                    } else {
+                        statusEl.textContent = resolveCameraErrorMessage(nativeError);
+                    }
+                    stopScan();
+                }
             } finally {
                 startBtn.disabled = false;
             }
@@ -4372,41 +4468,14 @@
         }
 
         try {
-            const zxingBrowser = await loadFallbackScannerLibrary();
-            const ReaderCtor = zxingBrowser && (
-                (typeof zxingBrowser.BrowserQRCodeReader === 'function' && zxingBrowser.BrowserQRCodeReader)
-                || (typeof zxingBrowser.BrowserMultiFormatReader === 'function' && zxingBrowser.BrowserMultiFormatReader)
-            );
-            if (!ReaderCtor) {
-                throw new Error('Fallback QR reader unavailable');
+            await startFallbackScan();
+        } catch (fallbackError) {
+            const fallbackMessage = String(fallbackError && fallbackError.message ? fallbackError.message : '').trim();
+            if (fallbackMessage.includes('No se pudo cargar el lector QR alternativo')) {
+                statusEl.textContent = 'No se pudo cargar el lector QR alternativo. Verifica internet y vuelve a intentar.';
+            } else {
+                statusEl.textContent = resolveCameraErrorMessage(fallbackError);
             }
-
-            fallbackScannerReader = new ReaderCtor();
-            fallbackScannerControls = await fallbackScannerReader.decodeFromVideoDevice(undefined, video, async (result) => {
-                if (!result || scanBusy) return;
-
-                const raw = String(typeof result.getText === 'function' ? result.getText() : (result.text || '')).trim();
-                if (raw === '') return;
-
-                const now = Date.now();
-                if (raw === lastScanToken && (now - lastScanAt) < 1600) return;
-                lastScanToken = raw;
-                lastScanAt = now;
-
-                scanBusy = true;
-                try {
-                    await submitToken(raw);
-                } finally {
-                    scanBusy = false;
-                }
-            });
-
-            video.classList.remove('hidden');
-            stopBtn.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-            statusEl.textContent = mobileI18n.scan_in_progress;
-        } catch (_error) {
-            statusEl.textContent = mobileI18n.scan_qr_unsupported;
             stopScan();
         } finally {
             startBtn.disabled = false;
@@ -4626,6 +4695,10 @@
         resetFitnessFormSubmitState();
     });
 
+    window.addEventListener('pagehide', () => {
+        stopScan();
+    });
+
     window.addEventListener('popstate', () => {
         moduleLoaderLocked = false;
         hideModuleLoader();
@@ -4637,6 +4710,11 @@
         if (moduleLoaderLocked) return;
         hideModuleLoader();
         resetFitnessFormSubmitState();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'hidden') return;
+        stopScan();
     });
 
     syncPwaModeCookie();
