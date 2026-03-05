@@ -113,6 +113,12 @@ Route::prefix('cliente/{gymSlug}')
             Route::post('/check-in', [ClientMobileController::class, 'checkIn'])
                 ->middleware('throttle:120,1')
                 ->name('check-in');
+            Route::post('/training/start', [ClientMobileController::class, 'startTraining'])
+                ->middleware('throttle:60,1')
+                ->name('training.start');
+            Route::post('/training/finish', [ClientMobileController::class, 'finishTraining'])
+                ->middleware('throttle:60,1')
+                ->name('training.finish');
             Route::match(['GET', 'POST'], '/logout', [ClientMobileController::class, 'logout'])->name('logout');
         });
     });

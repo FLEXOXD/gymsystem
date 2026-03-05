@@ -2,6 +2,9 @@
 
 use App\Models\Client;
 use App\Models\ClientCredential;
+use App\Models\ClientFitnessProfile;
+use App\Models\ClientPushSubscription;
+use App\Models\ClientTrainingSession;
 use App\Models\Gym;
 use App\Models\GymBranchLink;
 use App\Models\Membership;
@@ -234,6 +237,239 @@ it('registers check-in from client app using dynamic qr token', function () {
         'token' => $token,
     ])->assertStatus(422)
         ->assertJsonPath('reason', 'token_invalid');
+});
+
+it('requires attendance and completed training session before updating progress sections', function () {
+    $gym = phase6MakeGym('training-progress');
+    $owner = phase6MakeOwner($gym, 'phase6-training-progress@example.test');
+    phase6SetPlan($gym, 'premium');
+
+    $client = phase6CreateActiveClientWithMembership($gym, 'P6-TRAIN-DOC-001', 'Training');
+    ClientFitnessProfile::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'age' => 28,
+        'sex' => 'masculino',
+        'height_cm' => 175,
+        'weight_kg' => 78,
+        'goal' => 'ganar_musculo',
+        'experience_level' => 'intermedio',
+        'days_per_week' => 4,
+        'session_minutes' => 45,
+        'limitations' => ['ninguna'],
+        'body_metrics' => ['bmi' => 25.5],
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $mobileSession = [
+        'client_mobile' => [
+            'client_id' => (int) $client->id,
+            'gym_id' => (int) $gym->id,
+            'login_at' => now()->toIso8601String(),
+        ],
+    ];
+
+    $this->withSession($mobileSession)->postJson(route('client-mobile.training.start', [
+        'gymSlug' => $gym->slug,
+    ]))
+        ->assertStatus(422)
+        ->assertJsonPath('ok', false)
+        ->assertJsonPath('training_status.can_start', false);
+
+    $qrResponse = $this->actingAs($owner)->getJson(route('reception.mobile-qr', [
+        'contextGym' => $gym->slug,
+        'force' => 1,
+        'rotate_seconds' => 60,
+    ]));
+    $token = (string) $qrResponse->json('token');
+    expect($token)->not->toBe('');
+
+    $this->withSession($mobileSession)->postJson(route('client-mobile.check-in', [
+        'gymSlug' => $gym->slug,
+    ]), [
+        'token' => 'GYMSYS-MOBILE|'.$token,
+    ])->assertOk()->assertJsonPath('ok', true);
+
+    $start = $this->withSession($mobileSession)->postJson(route('client-mobile.training.start', [
+        'gymSlug' => $gym->slug,
+    ]));
+    $start->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('training_status.is_active', true)
+        ->assertJsonPath('training_status.can_finish', true)
+        ->assertJsonPath('training_status.progress_unlocked', true);
+
+    $finish = $this->withSession($mobileSession)->postJson(route('client-mobile.training.finish', [
+        'gymSlug' => $gym->slug,
+    ]));
+    $finish->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('training_status.completed_today', true)
+        ->assertJsonPath('training_status.progress_unlocked', true);
+
+    $this->assertDatabaseHas('client_training_sessions', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'status' => 'completed',
+        'finish_reason' => 'manual',
+    ]);
+
+    $progress = $this->withSession($mobileSession)->getJson(route('client-mobile.progress', [
+        'gymSlug' => $gym->slug,
+    ]));
+    $progress->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('progress.training_status.completed_today', true)
+        ->assertJsonPath('progress.training_status.progress_unlocked', true);
+
+    $timeline = $progress->json('progress.last30_timeline');
+    expect(is_array($timeline))->toBeTrue();
+    $hasTrainingMark = collect($timeline)->contains(static function ($item): bool {
+        if (! is_array($item) || trim((string) ($item['date'] ?? '')) === '') {
+            return false;
+        }
+
+        return ($item['status'] ?? '') === 'trained'
+            || (bool) ($item['attended'] ?? false);
+    });
+    expect($hasTrainingMark)->toBeTrue();
+    $visibleDates = collect($timeline)
+        ->filter(static function ($item): bool {
+            if (! is_array($item)) {
+                return false;
+            }
+
+            if ((bool) ($item['is_placeholder'] ?? false)) {
+                return false;
+            }
+
+            return trim((string) ($item['date'] ?? '')) !== '';
+        })
+        ->pluck('date')
+        ->map(static fn ($value): string => (string) $value)
+        ->sort()
+        ->values();
+    expect($visibleDates->isNotEmpty())->toBeTrue();
+
+    $expectedMonthStart = Carbon::now()->startOfMonth()->toDateString();
+    expect((string) $visibleDates->first())->toBe($expectedMonthStart);
+});
+
+it('accepts 120 minutes in fitness profile session duration', function () {
+    $gym = phase6MakeGym('fitness-120');
+    phase6SetPlan($gym, 'premium');
+    $client = phase6CreateActiveClientWithMembership($gym, 'P6-FIT-120-001', 'Fit120');
+
+    $mobileSession = [
+        'client_mobile' => [
+            'client_id' => (int) $client->id,
+            'gym_id' => (int) $gym->id,
+            'login_at' => now()->toIso8601String(),
+        ],
+    ];
+
+    $response = $this->withSession($mobileSession)->post(route('client-mobile.fitness-profile.save', [
+        'gymSlug' => $gym->slug,
+    ]), [
+        'age' => 29,
+        'sex' => 'masculino',
+        'height_cm' => 173,
+        'weight_kg' => 77,
+        'goal' => 'mantener_forma',
+        'experience_level' => 'intermedio',
+        'days_per_week' => 5,
+        'session_minutes' => 120,
+        'limitations' => ['ninguna'],
+        'next_screen' => 'progress',
+    ]);
+
+    $response->assertRedirect(route('client-mobile.app', [
+        'gymSlug' => $gym->slug,
+        'screen' => 'progress',
+    ]));
+
+    $this->assertDatabaseHas('client_fitness_profiles', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'session_minutes' => 120,
+    ]);
+});
+
+it('writes a dedupe cache key when training completion push is dispatched', function () {
+    $gym = phase6MakeGym('training-push-dedupe');
+    $owner = phase6MakeOwner($gym, 'phase6-training-push@example.test');
+    phase6SetPlan($gym, 'premium');
+
+    $client = phase6CreateActiveClientWithMembership($gym, 'P6-TRAIN-PUSH-001', 'Push');
+    ClientFitnessProfile::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'age' => 30,
+        'sex' => 'masculino',
+        'height_cm' => 176,
+        'weight_kg' => 79,
+        'goal' => 'ganar_musculo',
+        'experience_level' => 'intermedio',
+        'days_per_week' => 4,
+        'session_minutes' => 40,
+        'limitations' => ['ninguna'],
+        'body_metrics' => ['bmi' => 25.5],
+        'onboarding_completed_at' => now(),
+    ]);
+
+    ClientPushSubscription::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'endpoint' => 'https://push.example.test/client/'.$client->id,
+        'endpoint_hash' => hash('sha256', 'https://push.example.test/client/'.$gym->id.'-'.$client->id),
+        'public_key' => 'test-public-key',
+        'auth_token' => 'test-auth-token',
+        'content_encoding' => 'aesgcm',
+        'user_agent' => 'Pest/Feature',
+        'device_name' => 'Test Device',
+        'revoked_at' => null,
+    ]);
+
+    $mobileSession = [
+        'client_mobile' => [
+            'client_id' => (int) $client->id,
+            'gym_id' => (int) $gym->id,
+            'login_at' => now()->toIso8601String(),
+        ],
+    ];
+
+    $qrResponse = $this->actingAs($owner)->getJson(route('reception.mobile-qr', [
+        'contextGym' => $gym->slug,
+        'force' => 1,
+        'rotate_seconds' => 60,
+    ]));
+    $token = (string) $qrResponse->json('token');
+    expect($token)->not->toBe('');
+
+    $this->withSession($mobileSession)->postJson(route('client-mobile.check-in', [
+        'gymSlug' => $gym->slug,
+    ]), [
+        'token' => 'GYMSYS-MOBILE|'.$token,
+    ])->assertOk()->assertJsonPath('ok', true);
+
+    $this->withSession($mobileSession)->postJson(route('client-mobile.training.start', [
+        'gymSlug' => $gym->slug,
+    ]))->assertOk()->assertJsonPath('ok', true);
+
+    $this->withSession($mobileSession)->postJson(route('client-mobile.training.finish', [
+        'gymSlug' => $gym->slug,
+    ]))->assertOk()->assertJsonPath('ok', true);
+
+    $sessionDate = (string) (ClientTrainingSession::query()
+        ->where('gym_id', $gym->id)
+        ->where('client_id', $client->id)
+        ->where('status', 'completed')
+        ->value('session_date') ?? '');
+    expect($sessionDate)->not->toBe('');
+    $normalizedSessionDate = Carbon::parse($sessionDate)->toDateString();
+
+    $cacheKey = 'client-mobile:push:training-completed:g'.$gym->id.':c'.$client->id.':d'.$normalizedSessionDate;
+    expect(Cache::has($cacheKey))->toBeTrue();
 });
 
 it('blocks dynamic qr feature when plan does not include client accounts', function () {

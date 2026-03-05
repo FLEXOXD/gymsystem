@@ -10,9 +10,9 @@
     }
 
     $isModalForm = (bool) ($isModalForm ?? false);
-    $submitLabel = trim((string) ($submitLabel ?? 'Guardar datos fisicos'));
+    $submitLabel = trim((string) ($submitLabel ?? 'Guardar datos físicos'));
     if ($submitLabel === '') {
-        $submitLabel = 'Guardar datos fisicos';
+        $submitLabel = 'Guardar datos físicos';
     }
 
     $ageValue = old('age', $fitnessProfileModel?->age);
@@ -131,7 +131,7 @@
     </div>
 
     <div class="space-y-1">
-        <p class="fitness-field-label">Dias por semana</p>
+        <p class="fitness-field-label">Días por semana</p>
         <div class="fitness-chip-grid">
             @foreach ([3, 4, 5, 6, 7] as $daysOption)
                 @php
@@ -141,7 +141,7 @@
                 @endphp
                 <label for="{{ $inputId }}" class="fitness-chip">
                     <input id="{{ $inputId }}" type="radio" name="days_per_week" value="{{ $optionValue }}" class="fitness-chip-input" {{ $isChecked ? 'checked' : '' }} required>
-                    <span class="fitness-chip-label">{{ $optionValue }} dias</span>
+                    <span class="fitness-chip-label">{{ $optionValue }} días</span>
                 </label>
             @endforeach
         </div>
@@ -149,9 +149,9 @@
     </div>
 
     <div class="space-y-1">
-        <p class="fitness-field-label">Duracion de sesion</p>
+        <p class="fitness-field-label">Duración de sesión</p>
         <div class="fitness-chip-grid">
-            @foreach ([45, 60, 90] as $minutesOption)
+            @foreach ([45, 60, 90, 120] as $minutesOption)
                 @php
                     $optionValue = (string) $minutesOption;
                     $inputId = $formIdPrefix.'-minutes-'.$optionValue;
@@ -183,7 +183,7 @@
         @if ($errors->has('limitations') || $errors->has('limitations.*'))
             <p class="profile-field-error">{{ (string) ($errors->first('limitations') ?: $errors->first('limitations.*')) }}</p>
         @endif
-        <p class="fitness-inline-help">Si eliges "Ninguna", se desmarcan automaticamente las demas opciones.</p>
+        <p class="fitness-inline-help">Si eliges "Ninguna", se desmarcan automáticamente las demás opciones.</p>
     </div>
 
     <button type="submit" class="module-action module-action-primary w-full">{{ $submitLabel }}</button>

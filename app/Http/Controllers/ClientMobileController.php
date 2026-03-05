@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Client;
 use App\Models\ClientFitnessProfile;
+use App\Models\ClientProgressSnapshot;
 use App\Models\ClientPushSubscription;
+use App\Models\ClientTrainingSession;
 use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\PresenceSession;
@@ -22,6 +24,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -210,6 +213,206 @@ class ClientMobileController extends Controller
         ], (bool) ($result['ok'] ?? false) ? 200 : 422);
     }
 
+    public function startTraining(Request $request, string $gymSlug): JsonResponse
+    {
+        $gym = $this->resolveGymBySlug($gymSlug);
+        $this->abortIfFeatureUnavailable((int) $gym->id);
+
+        $client = $this->resolveSessionClient($request, $gym);
+        if (! $client) {
+            return response()->json([
+                'ok' => false,
+                'message' => __('messages.client_mobile.invalid_session'),
+            ], 401);
+        }
+
+        if (! $this->supportsTrainingSessions()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'El modo entrenamiento aún no está habilitado en el servidor.',
+            ], 503);
+        }
+
+        $fitnessProfile = $this->resolveFitnessProfile((int) $gym->id, (int) $client->id);
+        if (! $this->isFitnessProfileCompleted($fitnessProfile)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Completa tus datos físicos antes de iniciar entrenamiento.',
+            ], 422);
+        }
+
+        $timezone = $this->resolveTimezone((string) ($gym->timezone ?? ''));
+        $nowAtGym = Carbon::now($timezone);
+        $today = $nowAtGym->toDateString();
+
+        $this->finalizeExpiredTrainingSession((int) $gym->id, (int) $client->id, $nowAtGym, (string) ($gym->slug ?? ''));
+
+        $activeSession = $this->resolveActiveTrainingSession((int) $gym->id, (int) $client->id);
+        if ($activeSession) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Ya tienes un entrenamiento en curso.',
+                'training_status' => $this->resolveTrainingStatusPayload(
+                    gymId: (int) $gym->id,
+                    clientId: (int) $client->id,
+                    fitnessProfile: $fitnessProfile,
+                    nowAtGym: $nowAtGym,
+                    gymSlug: (string) ($gym->slug ?? '')
+                ),
+                'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+            ], 422);
+        }
+
+        $existingTodaySession = ClientTrainingSession::query()
+            ->forGym((int) $gym->id)
+            ->where('client_id', (int) $client->id)
+            ->whereDate('session_date', $today)
+            ->orderByDesc('id')
+            ->first(['id', 'status']);
+        if ($existingTodaySession && (string) $existingTodaySession->status === ClientTrainingSession::STATUS_COMPLETED) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Tu entrenamiento de hoy ya esta completado.',
+                'training_status' => $this->resolveTrainingStatusPayload(
+                    gymId: (int) $gym->id,
+                    clientId: (int) $client->id,
+                    fitnessProfile: $fitnessProfile,
+                    nowAtGym: $nowAtGym,
+                    gymSlug: (string) ($gym->slug ?? '')
+                ),
+                'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+            ], 422);
+        }
+
+        $todayAttendance = Attendance::query()
+            ->forGym((int) $gym->id)
+            ->where('client_id', (int) $client->id)
+            ->whereDate('date', $today)
+            ->orderByDesc('id')
+            ->first(['id']);
+        if (! $todayAttendance) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Primero registra tu asistencia para habilitar entrenamiento.',
+                'training_status' => $this->resolveTrainingStatusPayload(
+                    gymId: (int) $gym->id,
+                    clientId: (int) $client->id,
+                    fitnessProfile: $fitnessProfile,
+                    nowAtGym: $nowAtGym,
+                    gymSlug: (string) ($gym->slug ?? '')
+                ),
+                'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+            ], 422);
+        }
+
+        $plannedMinutes = max(30, min(180, (int) ($fitnessProfile?->session_minutes ?? 60)));
+
+        ClientTrainingSession::query()->create([
+            'gym_id' => (int) $gym->id,
+            'client_id' => (int) $client->id,
+            'attendance_id' => (int) $todayAttendance->id,
+            'session_date' => $today,
+            'planned_minutes' => $plannedMinutes,
+            'status' => ClientTrainingSession::STATUS_ACTIVE,
+            'started_at' => $nowAtGym,
+            'finished_at' => null,
+            'finish_reason' => null,
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Entrenamiento iniciado. Al finalizar se actualizara tu progreso.',
+            'training_status' => $this->resolveTrainingStatusPayload(
+                gymId: (int) $gym->id,
+                clientId: (int) $client->id,
+                fitnessProfile: $fitnessProfile,
+                nowAtGym: $nowAtGym,
+                gymSlug: (string) ($gym->slug ?? '')
+            ),
+            'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+        ]);
+    }
+
+    public function finishTraining(Request $request, string $gymSlug): JsonResponse
+    {
+        $gym = $this->resolveGymBySlug($gymSlug);
+        $this->abortIfFeatureUnavailable((int) $gym->id);
+
+        $client = $this->resolveSessionClient($request, $gym);
+        if (! $client) {
+            return response()->json([
+                'ok' => false,
+                'message' => __('messages.client_mobile.invalid_session'),
+            ], 401);
+        }
+
+        if (! $this->supportsTrainingSessions()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'El modo entrenamiento aún no está habilitado en el servidor.',
+            ], 503);
+        }
+
+        $timezone = $this->resolveTimezone((string) ($gym->timezone ?? ''));
+        $nowAtGym = Carbon::now($timezone);
+        $this->finalizeExpiredTrainingSession((int) $gym->id, (int) $client->id, $nowAtGym, (string) ($gym->slug ?? ''));
+
+        $fitnessProfile = $this->resolveFitnessProfile((int) $gym->id, (int) $client->id);
+        $activeSession = $this->resolveActiveTrainingSession((int) $gym->id, (int) $client->id);
+        if (! $activeSession) {
+            $trainingStatus = $this->resolveTrainingStatusPayload(
+                gymId: (int) $gym->id,
+                clientId: (int) $client->id,
+                fitnessProfile: $fitnessProfile,
+                nowAtGym: $nowAtGym,
+                gymSlug: (string) ($gym->slug ?? '')
+            );
+
+            $alreadyCompletedToday = (bool) ($trainingStatus['completed_today'] ?? false);
+
+            return response()->json([
+                'ok' => $alreadyCompletedToday,
+                'message' => $alreadyCompletedToday
+                    ? 'Tu entrenamiento ya fue finalizado hoy.'
+                    : 'No tienes un entrenamiento activo para finalizar.',
+                'training_status' => $trainingStatus,
+                'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+            ], $alreadyCompletedToday ? 200 : 422);
+        }
+
+        $activeSession->update([
+            'status' => ClientTrainingSession::STATUS_COMPLETED,
+            'finished_at' => $nowAtGym,
+            'finish_reason' => 'manual',
+        ]);
+
+        $sessionDate = $this->normalizeDateString((string) ($activeSession->session_date?->toDateString() ?? ''));
+        if ($sessionDate === '') {
+            $sessionDate = $nowAtGym->toDateString();
+        }
+        $this->dispatchTrainingCompletedPushNotification(
+            gymId: (int) $gym->id,
+            clientId: (int) $client->id,
+            gymSlug: (string) ($gym->slug ?? ''),
+            sessionDate: $sessionDate,
+            finishReason: 'manual',
+            finishedAt: $nowAtGym
+        );
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Entrenamiento finalizado. Tu progreso fue actualizado.',
+            'training_status' => $this->resolveTrainingStatusPayload(
+                gymId: (int) $gym->id,
+                clientId: (int) $client->id,
+                fitnessProfile: $fitnessProfile,
+                nowAtGym: $nowAtGym,
+                gymSlug: (string) ($gym->slug ?? '')
+            ),
+            'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
+        ]);
+    }
+
     public function updateProfile(Request $request, string $gymSlug): RedirectResponse
     {
         $gym = $this->resolveGymBySlug($gymSlug);
@@ -313,7 +516,7 @@ class ClientMobileController extends Controller
             'goal' => ['required', 'string', 'in:ganar_musculo,perder_grasa,mantener_forma,definir,aumentar_fuerza,mejorar_resistencia'],
             'experience_level' => ['required', 'string', 'in:principiante,intermedio,avanzado'],
             'days_per_week' => ['required', 'integer', 'in:3,4,5,6,7'],
-            'session_minutes' => ['required', 'integer', 'in:45,60,90'],
+            'session_minutes' => ['required', 'integer', 'in:45,60,90,120'],
             'limitations' => ['nullable', 'array', 'max:5'],
             'limitations.*' => ['string', 'in:ninguna,rodilla,espalda,hombro,codo,cuello,tobillo'],
             'next_screen' => ['nullable', 'string', 'in:home,progress,physical'],
@@ -323,7 +526,7 @@ class ClientMobileController extends Controller
             'age.min' => 'Edad minima permitida: 12.',
             'age.max' => 'Edad maxima permitida: 90.',
             'sex.required' => 'Selecciona tu sexo.',
-            'sex.in' => 'Selecciona una opcion valida de sexo.',
+            'sex.in' => 'Selecciona una opción válida de sexo.',
             'height_cm.numeric' => 'La altura debe ser numerica.',
             'height_cm.min' => 'La altura minima es 120 cm.',
             'height_cm.max' => 'La altura maxima es 250 cm.',
@@ -334,10 +537,10 @@ class ClientMobileController extends Controller
             'goal.in' => 'Selecciona un objetivo valido.',
             'experience_level.required' => 'Selecciona tu nivel.',
             'experience_level.in' => 'Selecciona un nivel valido.',
-            'days_per_week.required' => 'Selecciona tus dias por semana.',
-            'days_per_week.in' => 'Selecciona 3, 4, 5, 6 o 7 dias.',
+            'days_per_week.required' => 'Selecciona tus días por semana.',
+            'days_per_week.in' => 'Selecciona 3, 4, 5, 6 o 7 días.',
             'session_minutes.required' => 'Selecciona el tiempo por entrenamiento.',
-            'session_minutes.in' => 'Selecciona 45, 60 o 90 minutos.',
+            'session_minutes.in' => 'Selecciona 45, 60, 90 o 120 minutos.',
             'limitations.array' => 'Las limitaciones deben enviarse como lista.',
             'limitations.max' => 'Puedes seleccionar maximo 5 limitaciones.',
             'limitations.*.in' => 'Hay una limitacion no valida.',
@@ -393,7 +596,7 @@ class ClientMobileController extends Controller
 
         return redirect()
             ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => $nextScreen])
-            ->with('fitness_status', 'Datos fisicos guardados correctamente.');
+            ->with('fitness_status', 'Datos físicos guardados correctamente.');
     }
 
     public function updateWeeklyGoal(Request $request, string $gymSlug): RedirectResponse
@@ -411,13 +614,13 @@ class ClientMobileController extends Controller
         ], [
             'weekly_goal.required' => 'Selecciona una meta semanal.',
             'weekly_goal.integer' => 'La meta semanal debe ser numerica.',
-            'weekly_goal.in' => 'Selecciona entre 3 y 7 dias por semana.',
+            'weekly_goal.in' => 'Selecciona entre 3 y 7 días por semana.',
         ]);
 
         $fitnessProfile = $this->resolveFitnessProfile((int) $gym->id, (int) $sessionClient->id);
         if (! $fitnessProfile) {
             return back()
-                ->withErrors(['weekly_goal_profile' => 'Primero completa tus datos fisicos para ajustar la meta semanal.'])
+                ->withErrors(['weekly_goal_profile' => 'Primero completa tus datos físicos para ajustar la meta semanal.'])
                 ->withInput([
                     '_weekly_goal_form' => '1',
                     'weekly_goal' => (int) $data['weekly_goal'],
@@ -504,7 +707,7 @@ class ClientMobileController extends Controller
         if ($endpoint === '') {
             return response()->json([
                 'ok' => false,
-                'message' => 'Endpoint de push invalido.',
+                'message' => 'Endpoint de push inválido.',
             ], 422);
         }
 
@@ -584,7 +787,7 @@ class ClientMobileController extends Controller
                 ->count(),
             'message' => $revoked > 0
                 ? 'Notificaciones desactivadas para este dispositivo.'
-                : 'No se encontro una suscripcion activa para revocar.',
+                : 'No se encontró una suscripción activa para revocar.',
         ]);
     }
 
@@ -783,7 +986,7 @@ class ClientMobileController extends Controller
             'definir' => 'Enfoque en recomposicion corporal y volumen de entrenamiento.',
             'aumentar_fuerza' => 'Enfoque en ejercicios compuestos y cargas progresivas.',
             'mejorar_resistencia' => 'Enfoque en volumen semanal y capacidad cardiovascular.',
-            default => 'Enfoque general de acondicionamiento fisico.',
+            default => 'Enfoque general de acondicionamiento físico.',
         };
     }
 
@@ -921,46 +1124,327 @@ class ClientMobileController extends Controller
         }
 
         $fitnessProfile = $this->resolveFitnessProfile($gymId, $clientId);
+        $daysPerWeek = max(1, min(7, (int) ($fitnessProfile?->days_per_week ?? 3)));
+
+        $supportsTrainingSessions = $this->supportsTrainingSessions();
+        if ($supportsTrainingSessions) {
+            $this->finalizeExpiredTrainingSession($gymId, $clientId, $nowAtGym, $gymSlug);
+        }
+
+        $monthCompletedTrainings = 0;
+        $periodCompletedTrainings = 0;
+        $totalCompletedTrainings = 0;
+        $recentCompletedTrainings = $recentAttendances;
+        $latestCompletedTrainingDate = trim((string) ($lastAttendance?->date?->toDateString() ?? ''));
+        $membershipStartDate = $this->normalizeDateString((string) ($latestMembership?->starts_at?->toDateString() ?? ''));
+
+        if ($supportsTrainingSessions) {
+            $monthCompletedTrainings = ClientTrainingSession::query()
+                ->forGym($gymId)
+                ->where('client_id', $clientId)
+                ->completed()
+                ->whereDate('session_date', '>=', $monthStart)
+                ->whereDate('session_date', '<=', $monthEnd)
+                ->count();
+            $recentCompletedTrainings = $this->loadCompletedTrainingDateSeries(
+                gymId: $gymId,
+                clientId: $clientId,
+                fromDate: $nowAtGym->copy()->subDays(45)->toDateString(),
+                toDate: $today
+            );
+            $totalCompletedTrainings = ClientTrainingSession::query()
+                ->forGym($gymId)
+                ->where('client_id', $clientId)
+                ->completed()
+                ->count();
+
+            if (
+                $latestMembership?->starts_at
+                && $latestMembership?->ends_at
+                && (string) ($latestMembership->status ?? '') === 'active'
+            ) {
+                $periodStart = Carbon::parse((string) $latestMembership->starts_at, $timezone)->startOfDay();
+                $periodEnd = Carbon::parse((string) $latestMembership->ends_at, $timezone)->endOfDay();
+
+                if ($nowAtGym->between($periodStart, $periodEnd, true)) {
+                    $periodCompletedTrainings = ClientTrainingSession::query()
+                        ->forGym($gymId)
+                        ->where('client_id', $clientId)
+                        ->completed()
+                        ->whereDate('session_date', '>=', $periodStart->toDateString())
+                        ->whereDate('session_date', '<=', $nowAtGym->toDateString())
+                        ->count();
+                }
+            }
+
+            $latestCompletedTrainingDate = $this->normalizeDateString((string) (
+                ClientTrainingSession::query()
+                    ->forGym($gymId)
+                    ->where('client_id', $clientId)
+                    ->completed()
+                    ->orderByDesc('session_date')
+                    ->orderByDesc('finished_at')
+                    ->orderByDesc('id')
+                    ->value('session_date') ?? ''
+            ));
+        } else {
+            $monthCompletedTrainings = (int) $monthVisits;
+            $periodCompletedTrainings = (int) $periodVisits;
+            $totalCompletedTrainings = (int) $totalVisits;
+        }
+
         $progressPrediction = $this->buildProgressPrediction(
             fitnessProfile: $fitnessProfile,
-            monthVisits: (int) $monthVisits,
-            periodVisits: (int) $periodVisits,
-            totalVisits: (int) $totalVisits,
+            monthVisits: (int) $monthCompletedTrainings,
+            periodVisits: (int) $periodCompletedTrainings,
+            totalVisits: (int) $totalCompletedTrainings,
         );
         $bodyState = $this->buildBodyState(
             fitnessProfile: $fitnessProfile,
-            recentAttendances: $recentAttendances->all(),
-            monthVisits: (int) $monthVisits,
+            recentAttendances: $recentCompletedTrainings->all(),
+            monthVisits: (int) $monthCompletedTrainings,
             nowAtGym: $nowAtGym,
         );
         $trainingPlan = $this->buildAutoTrainingPlan(
             fitnessProfile: $fitnessProfile,
-            recentAttendances: $recentAttendances->all(),
+            recentAttendances: $recentCompletedTrainings->all(),
             nowAtGym: $nowAtGym,
         );
         $personalMessage = $this->buildPersonalMessage(
             fitnessProfile: $fitnessProfile,
             bodyState: $bodyState,
-            monthVisits: (int) $monthVisits,
+            monthVisits: (int) $monthCompletedTrainings,
             nowAtGym: $nowAtGym,
         );
         $weeklyGoalSummary = $this->buildWeeklyGoalSummary(
             fitnessProfile: $fitnessProfile,
-            recentAttendances: $recentAttendances->all(),
+            recentAttendances: $recentCompletedTrainings->all(),
             nowAtGym: $nowAtGym,
             bodyState: $bodyState,
+            membershipStartDate: $membershipStartDate,
         );
         $last30Timeline = $this->buildLast30Timeline(
-            recentAttendances: $recentAttendances->all(),
+            recentAttendances: $recentCompletedTrainings->all(),
             nowAtGym: $nowAtGym,
+            daysPerWeek: $daysPerWeek,
+            visibleFromDate: $membershipStartDate,
         );
 
-        $this->dispatchWeeklyGoalPushNotifications(
+        if ($latestCompletedTrainingDate !== '') {
+            $latestCompletedTrainingDate = $this->normalizeDateString($latestCompletedTrainingDate);
+        }
+
+        $supportsSnapshots = Schema::hasTable('client_progress_snapshots');
+        $snapshot = $supportsSnapshots
+            ? ClientProgressSnapshot::query()
+                ->forGym($gymId)
+                ->where('client_id', $clientId)
+                ->first(['id', 'gym_id', 'client_id', 'snapshot_for_date', 'source_attendance_date', 'sections'])
+            : null;
+        $snapshotSourceDate = trim((string) ($snapshot?->source_attendance_date?->toDateString() ?? ''));
+        $didRefreshSnapshot = false;
+
+        if ($supportsSnapshots && $latestCompletedTrainingDate !== '' && $snapshotSourceDate !== $latestCompletedTrainingDate) {
+            $monthVisitsForSnapshot = 0;
+            $periodVisitsForSnapshot = 0;
+            $totalVisitsForSnapshot = 0;
+            $recentAttendancesForSnapshot = $recentCompletedTrainings;
+
+            if ($supportsTrainingSessions) {
+                $monthSnapshotEnd = $monthEnd;
+                if ($latestCompletedTrainingDate < $monthSnapshotEnd) {
+                    $monthSnapshotEnd = $latestCompletedTrainingDate;
+                }
+                $monthSnapshotEnd = $this->normalizeDateString($monthSnapshotEnd);
+
+                if ($monthSnapshotEnd >= $monthStart) {
+                    $monthVisitsForSnapshot = ClientTrainingSession::query()
+                        ->forGym($gymId)
+                        ->where('client_id', $clientId)
+                        ->completed()
+                        ->whereDate('session_date', '>=', $monthStart)
+                        ->whereDate('session_date', '<=', $monthSnapshotEnd)
+                        ->count();
+                }
+
+                $recentAttendancesForSnapshot = $this->loadCompletedTrainingDateSeries(
+                    gymId: $gymId,
+                    clientId: $clientId,
+                    fromDate: $nowAtGym->copy()->subDays(45)->toDateString(),
+                    toDate: $latestCompletedTrainingDate
+                );
+                $totalVisitsForSnapshot = ClientTrainingSession::query()
+                    ->forGym($gymId)
+                    ->where('client_id', $clientId)
+                    ->completed()
+                    ->whereDate('session_date', '<=', $latestCompletedTrainingDate)
+                    ->count();
+
+                if (
+                    $latestMembership?->starts_at
+                    && $latestMembership?->ends_at
+                    && (string) ($latestMembership->status ?? '') === 'active'
+                ) {
+                    $periodStart = Carbon::parse((string) $latestMembership->starts_at, $timezone)->startOfDay();
+                    $periodEnd = Carbon::parse((string) $latestMembership->ends_at, $timezone)->endOfDay();
+                    $snapshotCutoff = $latestCompletedTrainingDate;
+                    if ($snapshotCutoff > $periodEnd->toDateString()) {
+                        $snapshotCutoff = $periodEnd->toDateString();
+                    }
+
+                    if ($snapshotCutoff >= $periodStart->toDateString()) {
+                        $periodVisitsForSnapshot = ClientTrainingSession::query()
+                            ->forGym($gymId)
+                            ->where('client_id', $clientId)
+                            ->completed()
+                            ->whereDate('session_date', '>=', $periodStart->toDateString())
+                            ->whereDate('session_date', '<=', $snapshotCutoff)
+                            ->count();
+                    }
+                }
+            } else {
+                $monthVisitsForSnapshot = (int) $monthAttendances
+                    ->filter(function ($attendance) use ($latestCompletedTrainingDate): bool {
+                        $dateValue = trim((string) ($attendance?->date?->toDateString() ?? ''));
+                        return $dateValue !== '' && $dateValue <= $latestCompletedTrainingDate;
+                    })
+                    ->count();
+                $recentAttendancesForSnapshot = $recentAttendances
+                    ->filter(function ($attendance) use ($latestCompletedTrainingDate): bool {
+                        $dateValue = trim((string) ($attendance?->date?->toDateString() ?? ''));
+                        return $dateValue !== '' && $dateValue <= $latestCompletedTrainingDate;
+                    })
+                    ->values();
+                $totalVisitsForSnapshot = Attendance::query()
+                    ->forGym($gymId)
+                    ->where('client_id', $clientId)
+                    ->whereDate('date', '<=', $latestCompletedTrainingDate)
+                    ->count();
+
+                if (
+                    $latestMembership?->starts_at
+                    && $latestMembership?->ends_at
+                    && (string) ($latestMembership->status ?? '') === 'active'
+                ) {
+                    $periodStart = Carbon::parse((string) $latestMembership->starts_at, $timezone)->startOfDay();
+                    $periodEnd = Carbon::parse((string) $latestMembership->ends_at, $timezone)->endOfDay();
+                    $snapshotCutoff = $latestCompletedTrainingDate;
+                    if ($snapshotCutoff > $periodEnd->toDateString()) {
+                        $snapshotCutoff = $periodEnd->toDateString();
+                    }
+
+                    if ($snapshotCutoff >= $periodStart->toDateString()) {
+                        $periodVisitsForSnapshot = Attendance::query()
+                            ->forGym($gymId)
+                            ->where('client_id', $clientId)
+                            ->whereBetween('date', [$periodStart->toDateString(), $snapshotCutoff])
+                            ->count();
+                    }
+                }
+            }
+
+            $progressPrediction = $this->buildProgressPrediction(
+                fitnessProfile: $fitnessProfile,
+                monthVisits: $monthVisitsForSnapshot,
+                periodVisits: (int) $periodVisitsForSnapshot,
+                totalVisits: (int) $totalVisitsForSnapshot,
+            );
+            $bodyState = $this->buildBodyState(
+                fitnessProfile: $fitnessProfile,
+                recentAttendances: $recentAttendancesForSnapshot->all(),
+                monthVisits: $monthVisitsForSnapshot,
+                nowAtGym: $nowAtGym,
+            );
+            $trainingPlan = $this->buildAutoTrainingPlan(
+                fitnessProfile: $fitnessProfile,
+                recentAttendances: $recentAttendancesForSnapshot->all(),
+                nowAtGym: $nowAtGym,
+            );
+            $weeklyGoalSummary = $this->buildWeeklyGoalSummary(
+                fitnessProfile: $fitnessProfile,
+                recentAttendances: $recentAttendancesForSnapshot->all(),
+                nowAtGym: $nowAtGym,
+                bodyState: $bodyState,
+                membershipStartDate: $membershipStartDate,
+            );
+            $last30Timeline = $this->buildLast30Timeline(
+                recentAttendances: $recentAttendancesForSnapshot->all(),
+                nowAtGym: $nowAtGym,
+                daysPerWeek: $daysPerWeek,
+                visibleFromDate: $membershipStartDate,
+            );
+
+            $snapshotPayload = [
+                'prediction' => $progressPrediction,
+                'weekly_goal' => $weeklyGoalSummary,
+                'last30_timeline' => $last30Timeline,
+                'body_state' => $bodyState,
+                'training_plan' => $trainingPlan,
+            ];
+
+            ClientProgressSnapshot::query()->updateOrCreate(
+                [
+                    'gym_id' => $gymId,
+                    'client_id' => $clientId,
+                ],
+                [
+                    'snapshot_for_date' => $today,
+                    'source_attendance_date' => $latestCompletedTrainingDate,
+                    'sections' => $snapshotPayload,
+                ]
+            );
+            $didRefreshSnapshot = true;
+        } elseif ($snapshot !== null) {
+            $snapshotSections = is_array($snapshot->sections ?? null) ? $snapshot->sections : [];
+            if (is_array($snapshotSections['prediction'] ?? null)) {
+                $progressPrediction = $snapshotSections['prediction'];
+            }
+            if (is_array($snapshotSections['weekly_goal'] ?? null)) {
+                $weeklyGoalSummary = $snapshotSections['weekly_goal'];
+            }
+            if (is_array($snapshotSections['last30_timeline'] ?? null)) {
+                $last30Timeline = $snapshotSections['last30_timeline'];
+            }
+            if (is_array($snapshotSections['body_state'] ?? null)) {
+                $bodyState = $snapshotSections['body_state'];
+            }
+            if (is_array($snapshotSections['training_plan'] ?? null)) {
+                $trainingPlan = $snapshotSections['training_plan'];
+            }
+        }
+
+        if ($didRefreshSnapshot && $latestCompletedTrainingDate !== '') {
+            $this->dispatchWeeklyGoalPushNotifications(
+                gymId: $gymId,
+                clientId: $clientId,
+                gymSlug: $gymSlug,
+                weeklyGoalSummary: $weeklyGoalSummary,
+                nowAtGym: $nowAtGym
+            );
+        }
+
+        // Keep weekly summary and timeline aligned to membership start,
+        // even when other sections are read from snapshots.
+        $weeklyGoalSummary = $this->buildWeeklyGoalSummary(
+            fitnessProfile: $fitnessProfile,
+            recentAttendances: $recentCompletedTrainings->all(),
+            nowAtGym: $nowAtGym,
+            bodyState: $bodyState,
+            membershipStartDate: $membershipStartDate,
+        );
+        $last30Timeline = $this->buildLast30Timeline(
+            recentAttendances: $recentCompletedTrainings->all(),
+            nowAtGym: $nowAtGym,
+            daysPerWeek: $daysPerWeek,
+            visibleFromDate: $membershipStartDate,
+        );
+
+        $trainingStatus = $this->resolveTrainingStatusPayload(
             gymId: $gymId,
             clientId: $clientId,
-            gymSlug: $gymSlug,
-            weeklyGoalSummary: $weeklyGoalSummary,
-            nowAtGym: $nowAtGym
+            fitnessProfile: $fitnessProfile,
+            nowAtGym: $nowAtGym,
+            gymSlug: $gymSlug
         );
 
         return [
@@ -983,6 +1467,7 @@ class ClientMobileController extends Controller
             'personal_message' => $personalMessage,
             'weekly_goal' => $weeklyGoalSummary,
             'last30_timeline' => $last30Timeline,
+            'training_status' => $trainingStatus,
             'today' => $today,
         ];
     }
@@ -998,9 +1483,9 @@ class ClientMobileController extends Controller
                 'ready' => false,
                 'rhythm_label' => 'Sin datos',
                 'consistency_percent' => 0,
-                'primary_line' => 'Completa tus datos fisicos para activar tu prediccion.',
-                'secondary_line' => 'Cuando registres asistencias veremos tu proyeccion de 30 dias.',
-                'context_line' => 'Aun no existe perfil fisico asociado.',
+                'primary_line' => 'Completa tus datos físicos para activar tu predicción.',
+                'secondary_line' => 'Cuando registres asistencias veremos tu proyección de 30 días.',
+                'context_line' => 'Aún no existe perfil físico asociado.',
             ];
         }
 
@@ -1041,39 +1526,39 @@ class ClientMobileController extends Controller
                 $fatLossKg = 0.7 + ($adherenceRatio * 2.0);
                 $fatLossKg = max(0.5, min(3.6, $fatLossKg));
 
-                $primaryLine = 'Podrias perder '.number_format($fatLossKg, 1, '.', '').' kg de grasa en 30 dias.';
+                $primaryLine = 'Podrías perder '.number_format($fatLossKg, 1, '.', '').' kg de grasa en 30 días.';
                 $secondaryLine = 'Tambien podrias mejorar +'.(int) round($strengthGainPct).'% tu fuerza base.';
                 break;
             case 'ganar_musculo':
                 $muscleGainKg = 0.25 + ($adherenceRatio * 0.75 * $experienceMultiplier);
                 $muscleGainKg = max(0.2, min(1.4, $muscleGainKg));
 
-                $primaryLine = 'Podrias ganar '.number_format($muscleGainKg, 1, '.', '').' kg de masa muscular en 30 dias.';
+                $primaryLine = 'Podrías ganar '.number_format($muscleGainKg, 1, '.', '').' kg de masa muscular en 30 días.';
                 $secondaryLine = 'Tu fuerza podria subir +'.(int) round($strengthGainPct).'% en ejercicios principales.';
                 break;
             case 'mantener_forma':
                 $variationKg = max(0.3, min(0.8, 0.9 - ($adherenceRatio * 0.45)));
 
-                $primaryLine = 'Podrias mantener tu peso dentro de ±'.number_format($variationKg, 1, '.', '').' kg en 30 dias.';
+                $primaryLine = 'Podrías mantener tu peso dentro de ±'.number_format($variationKg, 1, '.', '').' kg en 30 días.';
                 $secondaryLine = 'Tu resistencia podria mejorar +'.(int) round($resistanceGainPct).'% con este ritmo.';
                 break;
             case 'definir':
                 $fatLossKg = 0.5 + ($adherenceRatio * 1.3);
                 $fatLossKg = max(0.4, min(2.4, $fatLossKg));
 
-                $primaryLine = 'Podrias bajar '.number_format($fatLossKg, 1, '.', '').' kg de grasa manteniendo masa muscular.';
+                $primaryLine = 'Podrías bajar '.number_format($fatLossKg, 1, '.', '').' kg de grasa manteniendo masa muscular.';
                 $secondaryLine = 'Se proyecta +'.(int) round($strengthGainPct * 0.8).'% en fuerza y control tecnico.';
                 break;
             case 'aumentar_fuerza':
-                $primaryLine = 'Podrias aumentar +'.(int) round($strengthGainPct + 1.5).'% tu fuerza en 30 dias.';
+                $primaryLine = 'Podrías aumentar +'.(int) round($strengthGainPct + 1.5).'% tu fuerza en 30 días.';
                 $secondaryLine = 'Tu capacidad de trabajo podria subir +'.(int) round($resistanceGainPct * 0.7).'%.';
                 break;
             case 'mejorar_resistencia':
-                $primaryLine = 'Podrias mejorar +'.(int) round($resistanceGainPct + 1.2).'% tu resistencia en 30 dias.';
+                $primaryLine = 'Podrías mejorar +'.(int) round($resistanceGainPct + 1.2).'% tu resistencia en 30 días.';
                 $secondaryLine = 'Con eso podrias sostener +'.(int) round($strengthGainPct * 0.6).'% de volumen efectivo.';
                 break;
             default:
-                $primaryLine = 'Manteniendo este ritmo, tu condicion fisica puede mejorar en 30 dias.';
+                $primaryLine = 'Manteniendo este ritmo, tu condición física puede mejorar en 30 días.';
                 $secondaryLine = 'Tu fuerza podria subir alrededor de +'.(int) round($strengthGainPct).'%';
                 break;
         }
@@ -1121,26 +1606,14 @@ class ClientMobileController extends Controller
                 'streak_days' => 0,
                 'week_visits' => 0,
                 'days_since_last' => null,
-                'summary_line' => 'Completa tus datos fisicos para activar este estado.',
+                'summary_line' => 'Completa tus datos físicos para activar este estado.',
                 'context_line' => 'Se calcula con racha, descanso e intensidad semanal.',
             ];
         }
 
         $attendanceDates = collect($recentAttendances)
-            ->map(static function ($attendance): string {
-                $dateValue = '';
-                if (is_object($attendance) && isset($attendance->date) && $attendance->date !== null) {
-                    $rawDate = $attendance->date;
-                    if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
-                        $dateValue = trim((string) $rawDate->toDateString());
-                    } else {
-                        $dateValue = trim((string) $rawDate);
-                    }
-                } elseif (is_array($attendance)) {
-                    $dateValue = trim((string) ($attendance['date'] ?? ''));
-                }
-
-                return $dateValue;
+            ->map(function ($attendance): string {
+                return $this->extractDateValue($attendance);
             })
             ->filter(static fn (string $date): bool => $date !== '')
             ->unique()
@@ -1245,10 +1718,10 @@ class ClientMobileController extends Controller
         }
         $recovery = (int) round(max(10, min(98, $recovery)));
 
-        $summaryLine = 'Racha actual: '.$streakDays.' dias | Semana: '.$weekVisits.' entrenamientos.';
-        $contextLine = 'Calculado con descanso, intensidad y constancia de los ultimos 45 dias.';
+        $summaryLine = 'Racha actual: '.$streakDays.' días | Semana: '.$weekVisits.' entrenamientos.';
+        $contextLine = 'Calculado con descanso, intensidad y constancia de los últimos 45 días.';
         if ($daysSinceLast !== null) {
-            $contextLine = $contextLine.' Ultimo entrenamiento: hace '.$daysSinceLast.' dias.';
+            $contextLine = $contextLine.' Último entrenamiento: hace '.$daysSinceLast.' días.';
         }
 
         return [
@@ -1278,10 +1751,10 @@ class ClientMobileController extends Controller
             return [
                 'ready' => false,
                 'title' => 'Entrenamiento de hoy',
-                'objective_line' => 'Completa tus datos fisicos para crear tu rutina.',
-                'focus_line' => 'Aun no hay enfoque disponible.',
+                'objective_line' => 'Completa tus datos físicos para crear tu rutina.',
+                'focus_line' => 'Aún no hay enfoque disponible.',
                 'rhythm_line' => 'Sin frecuencia configurada.',
-                'adaptation_line' => 'Cuando completes tu perfil activaremos tu rutina automatica.',
+                'adaptation_line' => 'Cuando completes tu perfil activaremos tu rutina automática.',
                 'context_line' => 'Plan basado en objetivo, nivel y frecuencia semanal.',
                 'exercises' => [],
             ];
@@ -1290,7 +1763,7 @@ class ClientMobileController extends Controller
         $goal = trim((string) ($fitnessProfile->goal ?? ''));
         $experienceLevel = trim((string) ($fitnessProfile->experience_level ?? ''));
         $daysPerWeek = max(1, min(7, (int) ($fitnessProfile->days_per_week ?? 3)));
-        $sessionMinutes = max(45, min(90, (int) ($fitnessProfile->session_minutes ?? 60)));
+        $sessionMinutes = max(45, min(120, (int) ($fitnessProfile->session_minutes ?? 60)));
         $limitations = is_array($fitnessProfile->limitations ?? null)
             ? array_values(array_unique(array_filter(array_map(
                 static fn ($item): string => mb_strtolower(trim((string) $item)),
@@ -1301,20 +1774,8 @@ class ClientMobileController extends Controller
         $today = $nowAtGym->copy()->startOfDay();
         $weekStart = $today->copy()->subDays(6)->toDateString();
         $attendanceDates = collect($recentAttendances)
-            ->map(static function ($attendance): string {
-                if (is_object($attendance) && isset($attendance->date) && $attendance->date !== null) {
-                    $rawDate = $attendance->date;
-                    if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
-                        return trim((string) $rawDate->toDateString());
-                    }
-
-                    return trim((string) $rawDate);
-                }
-                if (is_array($attendance)) {
-                    return trim((string) ($attendance['date'] ?? ''));
-                }
-
-                return '';
+            ->map(function ($attendance): string {
+                return $this->extractDateValue($attendance);
             })
             ->filter(static fn (string $date): bool => $date !== '')
             ->unique()
@@ -1345,13 +1806,13 @@ class ClientMobileController extends Controller
                 ]],
             ],
             'perder_grasa' => [
-                ['focus' => 'Circuito metabolico A', 'exercises' => [
+                ['focus' => 'Circuito metabólico A', 'exercises' => [
                     ['name' => 'Sentadilla goblet', 'prescription' => '4 x 12'],
                     ['name' => 'Remo en polea', 'prescription' => '4 x 12'],
                     ['name' => 'Press inclinado con mancuernas', 'prescription' => '3 x 12'],
                     ['name' => 'Bicicleta estatica', 'prescription' => '12 min'],
                 ]],
-                ['focus' => 'Circuito metabolico B', 'exercises' => [
+                ['focus' => 'Circuito metabólico B', 'exercises' => [
                     ['name' => 'Peso muerto rumano', 'prescription' => '4 x 10'],
                     ['name' => 'Desplantes alternos', 'prescription' => '3 x 12'],
                     ['name' => 'Press militar', 'prescription' => '3 x 10'],
@@ -1515,7 +1976,7 @@ class ClientMobileController extends Controller
 
         $adaptationLine = 'Semana equilibrada. Mantiene este volumen.';
         if ($weekVisits < max(1, $daysPerWeek - 1)) {
-            $adaptationLine = 'Vas por debajo de tu frecuencia. Intenta sumar una sesion extra.';
+            $adaptationLine = 'Vas por debajo de tu frecuencia. Intenta sumar una sesión extra.';
         } elseif ($weekVisits > $daysPerWeek) {
             $adaptationLine = 'Semana intensa. Prioriza descanso y tecnica limpia.';
         }
@@ -1531,7 +1992,7 @@ class ClientMobileController extends Controller
             'title' => 'Entrenamiento de hoy',
             'objective_line' => 'Objetivo: '.$goalLabel,
             'focus_line' => 'Enfoque: '.(string) ($selectedTemplate['focus'] ?? 'General'),
-            'rhythm_line' => 'Frecuencia: '.$daysPerWeek.' dias/semana | Sesion sugerida: '.$sessionMinutes.' min | Estimada: '.$estimatedMinutes.' min',
+            'rhythm_line' => 'Frecuencia: '.$daysPerWeek.' días/semana | Sesión sugerida: '.$sessionMinutes.' min | Estimada: '.$estimatedMinutes.' min',
             'adaptation_line' => $adaptationLine,
             'context_line' => $limitationsLine,
             'exercises' => $adjustedExercises,
@@ -1553,9 +2014,9 @@ class ClientMobileController extends Controller
             return [
                 'ready' => false,
                 'tag' => 'Mensaje personal',
-                'line_1' => 'Completa tus datos fisicos para activar tus recomendaciones.',
-                'line_2' => 'Con tu perfil listo veremos metas, rachas y alertas utiles.',
-                'context_line' => 'Se personaliza segun objetivo, ritmo y recuperacion.',
+                'line_1' => 'Completa tus datos físicos para activar tus recomendaciones.',
+                'line_2' => 'Con tu perfil listo veremos metas, rachas y alertas útiles.',
+                'context_line' => 'Se personaliza según objetivo, ritmo y recuperación.',
             ];
         }
 
@@ -1580,18 +2041,18 @@ class ClientMobileController extends Controller
         $line2 = '';
 
         if ($streakDays >= 3 && $daysSinceLast !== null && $daysSinceLast <= 1) {
-            $line1 = 'Si entrenas hoy, mantendras tu racha de '.$streakDays.' dias.';
+            $line1 = 'Si entrenas hoy, mantendrás tu racha de '.$streakDays.' días.';
             $line2 = 'No la rompas. Estas cerca de un nuevo record personal.';
         } elseif ($weekVisits < $daysPerWeek) {
             $missing = max(0, $daysPerWeek - $weekVisits);
             $line1 = 'Te faltan '.$missing.' entrenamientos para cumplir tu meta semanal.';
             $line2 = 'Tu objetivo es '.$goalLabel.'. Este es buen momento para avanzar.';
         } elseif ($daysSinceLast !== null && $daysSinceLast >= 3) {
-            $line1 = 'Llevas '.$daysSinceLast.' dias sin entrenar.';
-            $line2 = 'Vuelve hoy con una sesion corta para retomar el ritmo.';
+            $line1 = 'Llevas '.$daysSinceLast.' días sin entrenar.';
+            $line2 = 'Vuelve hoy con una sesión corta para retomar el ritmo.';
         } else {
             $line1 = 'Vas bien: '.$weekVisits.' sesiones esta semana para '.$goalLabel.'.';
-            $line2 = 'Manten constancia para consolidar resultados en los proximos dias.';
+            $line2 = 'Mantén constancia para consolidar resultados en los próximos días.';
         }
 
         $contextLine = 'Mes actual: '.$monthVisits.' visitas | Recuperacion estimada: '.$recoveryScore.'/100.';
@@ -1617,24 +2078,12 @@ class ClientMobileController extends Controller
         ?ClientFitnessProfile $fitnessProfile,
         array $recentAttendances,
         Carbon $nowAtGym,
-        array $bodyState = []
+        array $bodyState = [],
+        string $membershipStartDate = ''
     ): array {
         $attendanceDates = collect($recentAttendances)
-            ->map(static function ($attendance): string {
-                if (is_object($attendance) && isset($attendance->date) && $attendance->date !== null) {
-                    $rawDate = $attendance->date;
-                    if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
-                        return trim((string) $rawDate->toDateString());
-                    }
-
-                    return trim((string) $rawDate);
-                }
-
-                if (is_array($attendance)) {
-                    return trim((string) ($attendance['date'] ?? ''));
-                }
-
-                return '';
+            ->map(function ($attendance): string {
+                return $this->extractDateValue($attendance);
             })
             ->filter(static fn (string $date): bool => $date !== '')
             ->unique()
@@ -1642,17 +2091,42 @@ class ClientMobileController extends Controller
 
         $weekStart = $nowAtGym->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
         $weekEnd = $nowAtGym->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+        $membershipStartDate = $this->normalizeDateString($membershipStartDate);
+        $evaluationStart = $weekStart;
+        if ($membershipStartDate !== '' && $membershipStartDate > $evaluationStart) {
+            $evaluationStart = $membershipStartDate;
+        }
+
+        $evaluableDays = 0;
+        if ($evaluationStart <= $weekEnd) {
+            $evaluableDays = Carbon::parse($evaluationStart)->diffInDays(Carbon::parse($weekEnd)) + 1;
+        }
+
+        $configuredWeeklyGoal = max(3, min(7, (int) ($fitnessProfile?->days_per_week ?? 3)));
+        $effectiveWeeklyGoal = $evaluableDays > 0
+            ? min($configuredWeeklyGoal, $evaluableDays)
+            : 0;
         $weekVisits = (int) $attendanceDates
-            ->filter(static fn (string $date): bool => $date >= $weekStart && $date <= $weekEnd)
+            ->filter(static fn (string $date): bool => $date >= $evaluationStart && $date <= $weekEnd)
             ->count();
 
-        $weeklyGoal = max(3, min(7, (int) ($fitnessProfile?->days_per_week ?? 3)));
-        $remaining = max(0, $weeklyGoal - $weekVisits);
-        $completionPercent = (int) round(min(100, ($weekVisits / max(1, $weeklyGoal)) * 100));
+        $remaining = max(0, $effectiveWeeklyGoal - $weekVisits);
+        $completionPercent = (int) round(min(100, ($weekVisits / max(1, $effectiveWeeklyGoal)) * 100));
         $daysLeftWeek = (int) $nowAtGym->copy()->startOfDay()->diffInDays($nowAtGym->copy()->endOfWeek(Carbon::SUNDAY)->startOfDay());
+        $isSundayClose = (int) $nowAtGym->format('N') === 7;
 
         $alerts = [];
-        if ($weekVisits >= $weeklyGoal) {
+        if (! $isSundayClose) {
+            $alerts[] = [
+                'type' => 'info',
+                'text' => 'El resumen semanal final se calcula al cierre del domingo.',
+            ];
+        } elseif ($effectiveWeeklyGoal <= 0) {
+            $alerts[] = [
+                'type' => 'info',
+                'text' => 'No hubo días evaluables esta semana por inicio de membresía.',
+            ];
+        } elseif ($weekVisits >= $effectiveWeeklyGoal) {
             $alerts[] = [
                 'type' => 'success',
                 'text' => 'Meta semanal completada. Excelente consistencia.',
@@ -1660,12 +2134,12 @@ class ClientMobileController extends Controller
         } elseif ($remaining === 1) {
             $alerts[] = [
                 'type' => 'warning',
-                'text' => 'Te falta 1 sesion para cumplir tu meta semanal.',
+                'text' => 'Te falta 1 sesión para cumplir tu meta semanal.',
             ];
         } else {
             $alerts[] = [
                 'type' => 'info',
-                'text' => 'Aun te faltan '.$remaining.' sesiones para completar la semana.',
+                'text' => 'Aún te faltan '.$remaining.' sesiones para completar la semana.',
             ];
         }
 
@@ -1674,7 +2148,7 @@ class ClientMobileController extends Controller
         if ($streakDays >= 2 && $daysSinceLast !== null && $daysSinceLast >= 2) {
             $alerts[] = [
                 'type' => 'danger',
-                'text' => 'Racha en riesgo: llevas '.$daysSinceLast.' dias sin entrenar.',
+                'text' => 'Racha en riesgo: llevas '.$daysSinceLast.' días sin entrenar.',
             ];
         }
 
@@ -1690,14 +2164,37 @@ class ClientMobileController extends Controller
             $alerts = array_slice($alerts, 0, 3);
         }
 
+        $restDaysPlanned = max(0, $evaluableDays - $effectiveWeeklyGoal);
+        if (! $isSundayClose) {
+            $commitmentLine = 'Resumen semanal disponible el domingo. Avance actual: '.$weekVisits.' de '.$effectiveWeeklyGoal.'.';
+            $restLine = 'Dias evaluables esta semana: '.$evaluableDays.'.';
+        } elseif ($effectiveWeeklyGoal <= 0) {
+            $commitmentLine = 'Esta semana no tuvo días evaluables por inicio de suscripción.';
+            $restLine = 'Dias evaluables esta semana: '.$evaluableDays.'.';
+        } else {
+            $commitmentLine = $weekVisits >= $effectiveWeeklyGoal
+                ? 'Has asistido los '.$effectiveWeeklyGoal.' días que prometiste. Excelente.'
+                : 'Esta semana asististe '.$weekVisits.' de los '.$effectiveWeeklyGoal.' días que prometiste.';
+            $restLine = $restDaysPlanned > 0
+                ? 'Dias de descanso planificados: '.$restDaysPlanned.'.'
+                : 'Sin días de descanso planificados esta semana.';
+        }
+
         return [
-            'target' => $weeklyGoal,
+            'target' => $effectiveWeeklyGoal,
+            'configured_target' => $configuredWeeklyGoal,
             'visits' => $weekVisits,
             'remaining' => $remaining,
             'completion_percent' => $completionPercent,
             'days_left_week' => $daysLeftWeek,
             'week_start' => $weekStart,
             'week_end' => $weekEnd,
+            'evaluation_start' => $evaluationStart,
+            'evaluable_days' => $evaluableDays,
+            'is_week_closed' => $isSundayClose,
+            'commitment_line' => $commitmentLine,
+            'rest_days' => $restDaysPlanned,
+            'rest_line' => $restLine,
             'alerts' => $alerts,
         ];
     }
@@ -1706,24 +2203,16 @@ class ClientMobileController extends Controller
      * @param array<int, mixed> $recentAttendances
      * @return array<int, array<string, mixed>>
      */
-    private function buildLast30Timeline(array $recentAttendances, Carbon $nowAtGym): array
+    private function buildLast30Timeline(
+        array $recentAttendances,
+        Carbon $nowAtGym,
+        int $daysPerWeek = 3,
+        string $visibleFromDate = ''
+    ): array
     {
         $attendanceDateSet = collect($recentAttendances)
-            ->map(static function ($attendance): string {
-                if (is_object($attendance) && isset($attendance->date) && $attendance->date !== null) {
-                    $rawDate = $attendance->date;
-                    if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
-                        return trim((string) $rawDate->toDateString());
-                    }
-
-                    return trim((string) $rawDate);
-                }
-
-                if (is_array($attendance)) {
-                    return trim((string) ($attendance['date'] ?? ''));
-                }
-
-                return '';
+            ->map(function ($attendance): string {
+                return $this->extractDateValue($attendance);
             })
             ->filter(static fn (string $date): bool => $date !== '')
             ->unique()
@@ -1739,22 +2228,473 @@ class ClientMobileController extends Controller
             6 => 'Sab',
             7 => 'Dom',
         ];
+        $visibleFromDate = $this->normalizeDateString($visibleFromDate);
+        $hasVisibleStart = $visibleFromDate !== '';
+        $daysPerWeek = max(3, min(7, $daysPerWeek));
+        $todayDate = $nowAtGym->copy()->startOfDay()->toDateString();
+        $placeholderCell = [
+            'date' => '',
+            'label' => '',
+            'weekday_short' => '',
+            'attended' => false,
+            'is_today' => false,
+            'is_placeholder' => true,
+        ];
 
-        for ($offset = 29; $offset >= 0; $offset--) {
-            $date = $nowAtGym->copy()->subDays($offset)->startOfDay();
+        // Keep the calendar in the current month (all weeks of the month).
+        $rangeStart = $nowAtGym->copy()->startOfMonth()->toDateString();
+        $rangeEnd = $nowAtGym->copy()->endOfMonth()->toDateString();
+        if ($rangeStart > $rangeEnd) {
+            return [];
+        }
+        $expectedTrainingDateSet = [];
+
+        $cursorWeekStart = Carbon::parse($rangeStart)->startOfWeek(Carbon::MONDAY);
+        $lastWeekStart = Carbon::parse($rangeEnd)->startOfWeek(Carbon::MONDAY);
+        while ($cursorWeekStart->lte($lastWeekStart)) {
+            $weekStartDate = $cursorWeekStart->toDateString();
+            $weekEndDate = $cursorWeekStart->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+            $evaluationStart = $weekStartDate;
+            if ($hasVisibleStart && $visibleFromDate > $evaluationStart) {
+                $evaluationStart = $visibleFromDate;
+            }
+
+            $evaluationWindowEnd = min($weekEndDate, $todayDate);
+            if ($evaluationStart <= $evaluationWindowEnd) {
+                $evaluationDates = [];
+                $dayCursor = Carbon::parse($evaluationStart)->startOfDay();
+                $weekEndCarbon = Carbon::parse($evaluationWindowEnd)->startOfDay();
+                while ($dayCursor->lte($weekEndCarbon)) {
+                    $currentDate = $dayCursor->toDateString();
+                    if ($currentDate >= $rangeStart && $currentDate <= $rangeEnd) {
+                        $evaluationDates[] = $currentDate;
+                    }
+                    $dayCursor->addDay();
+                }
+
+                $effectiveGoal = min($daysPerWeek, count($evaluationDates));
+                for ($index = 0; $index < $effectiveGoal; $index++) {
+                    $expectedDate = $evaluationDates[$index] ?? '';
+                    if ($expectedDate !== '') {
+                        $expectedTrainingDateSet[$expectedDate] = true;
+                    }
+                }
+            }
+
+            $cursorWeekStart->addWeek();
+        }
+
+        $startDate = Carbon::parse($rangeStart)->startOfDay();
+        $startDayOfWeek = (int) $startDate->format('N');
+        for ($padding = 1; $padding < $startDayOfWeek; $padding++) {
+            $timeline[] = $placeholderCell;
+        }
+
+        $totalDays = (int) Carbon::parse($rangeStart)->diffInDays(Carbon::parse($rangeEnd));
+
+        for ($offset = 0; $offset <= $totalDays; $offset++) {
+            $date = $startDate->copy()->addDays($offset);
             $dateString = $date->toDateString();
             $dayOfWeek = (int) $date->format('N');
+            $isToday = $dateString === $todayDate;
+            $trained = $attendanceDateSet->has($dateString);
+            $isExpectedTrainingDay = isset($expectedTrainingDateSet[$dateString]);
+            $isBeforeMembership = $hasVisibleStart && $dateString < $visibleFromDate;
+            $isFutureDate = $dateString > $todayDate;
+            $status = 'pending';
+            if (! $isBeforeMembership && ! $isFutureDate) {
+                $status = 'rest';
+                if ($trained) {
+                    $status = 'trained';
+                } elseif (! $isToday && $isExpectedTrainingDay) {
+                    $status = 'missed';
+                }
+            }
 
             $timeline[] = [
                 'date' => $dateString,
                 'label' => (string) $date->format('j'),
                 'weekday_short' => $dayLabels[$dayOfWeek] ?? '',
-                'attended' => $attendanceDateSet->has($dateString),
-                'is_today' => $offset === 0,
+                'status' => $status,
+                'attended' => $trained,
+                'expected' => $isExpectedTrainingDay,
+                'is_today' => $isToday,
+                'is_placeholder' => false,
             ];
         }
 
+        while (count($timeline) % 7 !== 0) {
+            $timeline[] = $placeholderCell;
+        }
+
         return $timeline;
+    }
+
+    private function extractDateValue(mixed $attendance): string
+    {
+        if (is_object($attendance)) {
+            foreach (['date', 'session_date'] as $candidateKey) {
+                $rawDate = data_get($attendance, $candidateKey);
+                if ($rawDate === null || $rawDate === '') {
+                    continue;
+                }
+                if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
+                    return trim((string) $rawDate->toDateString());
+                }
+
+                return $this->normalizeDateString((string) $rawDate);
+            }
+        }
+
+        if (is_array($attendance)) {
+            foreach (['date', 'session_date'] as $candidateKey) {
+                $rawDate = $attendance[$candidateKey] ?? null;
+                if ($rawDate === null || $rawDate === '') {
+                    continue;
+                }
+
+                if (is_object($rawDate) && method_exists($rawDate, 'toDateString')) {
+                    return trim((string) $rawDate->toDateString());
+                }
+
+                return $this->normalizeDateString((string) $rawDate);
+            }
+        }
+
+        return '';
+    }
+
+    private function normalizeDateString(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value, $matches) === 1) {
+            return (string) $matches[0];
+        }
+
+        try {
+            return Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array{date: string}>
+     */
+    private function loadCompletedTrainingDateSeries(int $gymId, int $clientId, string $fromDate, string $toDate): \Illuminate\Support\Collection
+    {
+        $fromDate = $this->normalizeDateString($fromDate);
+        $toDate = $this->normalizeDateString($toDate);
+        if ($fromDate === '' || $toDate === '') {
+            return collect();
+        }
+
+        if ($fromDate > $toDate) {
+            [$fromDate, $toDate] = [$toDate, $fromDate];
+        }
+
+        $dateValues = ClientTrainingSession::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->completed()
+            ->whereDate('session_date', '>=', $fromDate)
+            ->whereDate('session_date', '<=', $toDate)
+            ->orderByDesc('session_date')
+            ->orderByDesc('id')
+            ->pluck('session_date');
+
+        return $dateValues
+            ->map(function ($value): array {
+                return ['date' => $this->normalizeDateString((string) $value)];
+            })
+            ->filter(static function (array $entry): bool {
+                return trim((string) ($entry['date'] ?? '')) !== '';
+            })
+            ->unique('date')
+            ->values();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function resolveExpectedTrainingWeekdays(int $daysPerWeek): array
+    {
+        $daysPerWeek = max(3, min(7, $daysPerWeek));
+
+        return match ($daysPerWeek) {
+            3 => [1, 3, 5],
+            4 => [1, 2, 4, 5],
+            5 => [1, 2, 3, 5, 6],
+            6 => [1, 2, 3, 4, 5, 6],
+            default => [1, 2, 3, 4, 5, 6, 7],
+        };
+    }
+
+    private function supportsTrainingSessions(): bool
+    {
+        static $supports = null;
+        if ($supports === null) {
+            $supports = Schema::hasTable('client_training_sessions');
+        }
+
+        return (bool) $supports;
+    }
+
+    private function resolveActiveTrainingSession(int $gymId, int $clientId): ?ClientTrainingSession
+    {
+        if (! $this->supportsTrainingSessions()) {
+            return null;
+        }
+
+        return ClientTrainingSession::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->where('status', ClientTrainingSession::STATUS_ACTIVE)
+            ->orderByDesc('started_at')
+            ->orderByDesc('id')
+            ->first([
+                'id',
+                'gym_id',
+                'client_id',
+                'attendance_id',
+                'session_date',
+                'planned_minutes',
+                'status',
+                'started_at',
+                'finished_at',
+                'finish_reason',
+            ]);
+    }
+
+    private function finalizeExpiredTrainingSession(int $gymId, int $clientId, Carbon $nowAtGym, string $gymSlug = ''): void
+    {
+        if (! $this->supportsTrainingSessions()) {
+            return;
+        }
+
+        $activeSession = $this->resolveActiveTrainingSession($gymId, $clientId);
+        if (! $activeSession) {
+            return;
+        }
+
+        $startedAt = $activeSession->started_at instanceof Carbon
+            ? $activeSession->started_at->copy()->setTimezone($nowAtGym->getTimezone())
+            : Carbon::parse((string) ($activeSession->started_at ?? $activeSession->session_date), $nowAtGym->getTimezone());
+
+        $plannedMinutes = max(30, min(180, (int) ($activeSession->planned_minutes ?? 60)));
+        $scheduledEndAt = $startedAt->copy()->addMinutes($plannedMinutes);
+        if ($nowAtGym->lt($scheduledEndAt)) {
+            return;
+        }
+
+        $activeSession->update([
+            'status' => ClientTrainingSession::STATUS_COMPLETED,
+            'finished_at' => $scheduledEndAt,
+            'finish_reason' => 'auto',
+        ]);
+
+        $sessionDate = $this->normalizeDateString((string) ($activeSession->session_date?->toDateString() ?? ''));
+        if ($sessionDate === '') {
+            $sessionDate = $nowAtGym->toDateString();
+        }
+        $this->dispatchTrainingCompletedPushNotification(
+            gymId: $gymId,
+            clientId: $clientId,
+            gymSlug: $gymSlug,
+            sessionDate: $sessionDate,
+            finishReason: 'auto',
+            finishedAt: $scheduledEndAt
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveTrainingStatusPayload(
+        int $gymId,
+        int $clientId,
+        ?ClientFitnessProfile $fitnessProfile,
+        Carbon $nowAtGym,
+        string $gymSlug = ''
+    ): array {
+        $today = $nowAtGym->toDateString();
+        $isFitnessProfileCompleted = $this->isFitnessProfileCompleted($fitnessProfile);
+        $plannedMinutes = max(30, min(180, (int) ($fitnessProfile?->session_minutes ?? 60)));
+        $hasAttendanceToday = Attendance::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->whereDate('date', $today)
+            ->exists();
+
+        if (! $this->supportsTrainingSessions()) {
+            return [
+                'enabled' => false,
+                'can_start' => false,
+                'can_finish' => false,
+                'is_active' => false,
+                'has_attendance_today' => $hasAttendanceToday,
+                'completed_today' => false,
+                'progress_unlocked' => true,
+                'lock_reason' => 'Tu progreso está disponible porque el entrenamiento diario aún no está habilitado.',
+                'planned_minutes' => $plannedMinutes,
+                'remaining_seconds' => 0,
+                'started_at' => null,
+                'scheduled_end_at' => null,
+                'completed_at' => null,
+                'finish_reason' => null,
+                'status_label' => 'Entrenamiento no disponible.',
+                'hint_line' => 'El servidor aún no habilita esta función.',
+            ];
+        }
+
+        $this->finalizeExpiredTrainingSession($gymId, $clientId, $nowAtGym, $gymSlug);
+
+        $activeSession = $this->resolveActiveTrainingSession($gymId, $clientId);
+        $completedTodaySession = ClientTrainingSession::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->completed()
+            ->whereDate('session_date', $today)
+            ->orderByDesc('finished_at')
+            ->orderByDesc('id')
+            ->first(['id', 'planned_minutes', 'started_at', 'finished_at', 'finish_reason']);
+
+        $isActive = $activeSession !== null;
+        $completedToday = $completedTodaySession !== null;
+        $canStart = $isFitnessProfileCompleted && $hasAttendanceToday && ! $isActive && ! $completedToday;
+        $canFinish = $isActive;
+
+        $remainingSeconds = 0;
+        $startedAtIso = null;
+        $scheduledEndAtIso = null;
+        $completedAtIso = $completedTodaySession?->finished_at?->toIso8601String();
+        $finishReason = trim((string) ($completedTodaySession?->finish_reason ?? ''));
+        $progressUnlocked = false;
+        $lockReason = 'Inicia tu entrenamiento de hoy para desbloquear el panel.';
+        $statusLabel = '';
+        $hintLine = '';
+
+        if (! $isFitnessProfileCompleted) {
+            $statusLabel = 'Completa tus datos físicos para habilitar entrenamiento.';
+            $hintLine = 'Cuando completes tu perfil podrás iniciar y finalizar sesiones desde esta pantalla.';
+            $lockReason = 'Primero completa tus datos físicos para activar tu plan diario.';
+        } elseif ($isActive) {
+            $startedAt = $activeSession->started_at instanceof Carbon
+                ? $activeSession->started_at->copy()->setTimezone($nowAtGym->getTimezone())
+                : Carbon::parse((string) ($activeSession->started_at ?? $today), $nowAtGym->getTimezone());
+            $plannedMinutes = max(30, min(180, (int) ($activeSession->planned_minutes ?? $plannedMinutes)));
+            $scheduledEndAt = $startedAt->copy()->addMinutes($plannedMinutes);
+            $remainingSeconds = max(0, $nowAtGym->diffInSeconds($scheduledEndAt, false));
+            $startedAtIso = $startedAt->toIso8601String();
+            $scheduledEndAtIso = $scheduledEndAt->toIso8601String();
+
+            $statusLabel = 'Entrenamiento activo.';
+            $hintLine = 'Finaliza manualmente o espera el cierre automático al terminar tu tiempo.';
+            $progressUnlocked = true;
+            $lockReason = 'Entrenamiento en curso. Panel desbloqueado.';
+        } elseif (! $hasAttendanceToday) {
+            $statusLabel = 'Registra asistencia para habilitar entrenamiento.';
+            $hintLine = 'Valida tu ingreso por QR, RFID o documento en recepción.';
+            $lockReason = 'Registra asistencia e inicia tu sesión para desbloquear el panel.';
+        } elseif ($completedToday) {
+            $statusLabel = 'Entrenamiento de hoy completado.';
+            $hintLine = $finishReason === 'auto'
+                ? 'Se finalizó automáticamente según la duración elegida.'
+                : 'Se finalizó manualmente. Vuelve mañana para una nueva sesión.';
+            $progressUnlocked = true;
+            $lockReason = 'Excelente. Ya completaste tu entrenamiento de hoy.';
+        } else {
+            $statusLabel = 'Listo para comenzar entrenamiento.';
+            $hintLine = 'Al completar la sesión se actualizará tu progreso físico.';
+            $lockReason = 'Inicia tu entrenamiento de hoy para desbloquear el panel.';
+        }
+
+        return [
+            'enabled' => true,
+            'can_start' => $canStart,
+            'can_finish' => $canFinish,
+            'is_active' => $isActive,
+            'has_attendance_today' => $hasAttendanceToday,
+            'completed_today' => $completedToday,
+            'progress_unlocked' => $progressUnlocked,
+            'lock_reason' => $lockReason,
+            'planned_minutes' => $plannedMinutes,
+            'remaining_seconds' => $remainingSeconds,
+            'started_at' => $startedAtIso,
+            'scheduled_end_at' => $scheduledEndAtIso,
+            'completed_at' => $completedAtIso,
+            'finish_reason' => $finishReason !== '' ? $finishReason : null,
+            'status_label' => $statusLabel,
+            'hint_line' => $hintLine,
+        ];
+    }
+
+    private function dispatchTrainingCompletedPushNotification(
+        int $gymId,
+        int $clientId,
+        string $gymSlug,
+        string $sessionDate,
+        string $finishReason,
+        Carbon $finishedAt
+    ): void {
+        if ($gymId <= 0 || $clientId <= 0) {
+            return;
+        }
+
+        $gymSlug = trim($gymSlug);
+        if ($gymSlug === '') {
+            return;
+        }
+
+        $normalizedSessionDate = $this->normalizeDateString($sessionDate);
+        if ($normalizedSessionDate === '') {
+            $normalizedSessionDate = $finishedAt->toDateString();
+        }
+
+        $hasActiveSubscription = ClientPushSubscription::query()
+            ->active()
+            ->where('gym_id', $gymId)
+            ->where('client_id', $clientId)
+            ->exists();
+        if (! $hasActiveSubscription) {
+            return;
+        }
+
+        $cacheKey = 'client-mobile:push:training-completed:g'.$gymId.':c'.$clientId.':d'.$normalizedSessionDate;
+        if (! Cache::add($cacheKey, 1, now()->addDays(5))) {
+            return;
+        }
+
+        $progressUrl = route('client-mobile.app', [
+            'gymSlug' => $gymSlug,
+            'screen' => 'progress',
+        ]);
+
+        $body = $finishReason === 'auto'
+            ? 'Tu sesión se cerró por tiempo. Tu progreso de hoy ya se actualizó.'
+            : 'Excelente trabajo. Tu progreso de hoy ya se actualizó.';
+
+        $this->clientPushNotificationService->sendToClient($gymId, $clientId, [
+            'title' => 'Sesion de hoy completada',
+            'body' => $body,
+            'tag' => 'client-training-completed-'.$clientId.'-'.$normalizedSessionDate,
+            'url' => $progressUrl,
+            'data' => [
+                'kind' => 'training_completed',
+                'event' => 'training_completed',
+                'session_date' => $normalizedSessionDate,
+                'finish_reason' => $finishReason === 'auto' ? 'auto' : 'manual',
+                'finished_at' => $finishedAt->toIso8601String(),
+                'sent_at' => now()->toIso8601String(),
+            ],
+            'renotify' => false,
+            'requireInteraction' => false,
+        ]);
     }
 
     /**
@@ -1874,14 +2814,14 @@ class ClientMobileController extends Controller
         $daysLeftWeek = max(0, $daysLeftWeek);
 
         if ($daysLeftWeek <= 0) {
-            return 'Hoy cierra la semana y aun faltan '.$remaining.' sesiones. Revisa tu plan.';
+            return 'Hoy cierra la semana y aún faltan '.$remaining.' sesiones. Revisa tu plan.';
         }
 
         if ($daysLeftWeek === 1) {
-            return 'Solo queda 1 dia y aun faltan '.$remaining.' sesiones para tu meta semanal.';
+            return 'Solo queda 1 día y aún faltan '.$remaining.' sesiones para tu meta semanal.';
         }
 
-        return 'Faltan '.$remaining.' sesiones y '.$daysLeftWeek.' dias para cerrar tu meta semanal.';
+        return 'Faltan '.$remaining.' sesiones y '.$daysLeftWeek.' días para cerrar tu meta semanal.';
     }
 
     private function resolveTimezone(string $timezone): string

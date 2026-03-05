@@ -383,6 +383,44 @@
             font-size: 11px;
             line-height: 1.35;
         }
+        .training-session-box {
+            margin-top: 12px;
+            border: 1px solid rgba(56,189,248,.28);
+            border-radius: 12px;
+            background: rgba(2,6,23,.58);
+            padding: 10px;
+            display: grid;
+            gap: 8px;
+        }
+        .training-session-status {
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+        .training-session-timer {
+            color: #67e8f9;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .training-session-actions {
+            display: grid;
+            gap: 8px;
+        }
+        .training-session-hint {
+            color: #bae6fd;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .training-session-feedback {
+            color: #bbf7d0;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .training-session-feedback.is-error {
+            color: #fecaca;
+        }
         .weekly-goal-card {
             border: 1px solid rgba(56,189,248,.3);
             background: linear-gradient(145deg, rgba(2,6,23,.92), rgba(12,74,110,.48));
@@ -482,11 +520,49 @@
             letter-spacing: .14em;
             text-transform: uppercase;
         }
+        .weekly-history-month {
+            margin-top: 2px;
+            color: #a7f3d0;
+            font-size: 11px;
+            font-weight: 800;
+        }
         .weekly-history-text {
             margin-top: 7px;
             color: #d1fae5;
             font-size: 11px;
             line-height: 1.35;
+        }
+        .timeline-legend {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .timeline-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cbd5e1;
+        }
+        .timeline-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+        .timeline-legend-trained {
+            background: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34,197,94,.4);
+        }
+        .timeline-legend-neutral {
+            background: #cbd5e1;
+            box-shadow: 0 0 0 1px rgba(148,163,184,.65);
+        }
+        .timeline-legend-pending {
+            background: rgba(148,163,184,.5);
+            box-shadow: 0 0 0 1px rgba(71,85,105,.7);
         }
         .timeline-grid {
             margin-top: 10px;
@@ -521,13 +597,141 @@
             justify-content: center;
             line-height: 1;
         }
-        .timeline-cell-attended {
+        .timeline-cell-attended,
+        .timeline-cell-trained {
             border-color: rgba(34,197,94,.48);
             background: rgba(22,163,74,.34);
             color: #dcfce7;
         }
+        .timeline-cell-missed {
+            border-color: rgba(148,163,184,.55);
+            background: rgba(203,213,225,.2);
+            color: #e2e8f0;
+        }
+        .timeline-cell-neutral {
+            border-color: rgba(148,163,184,.55);
+            background: rgba(203,213,225,.2);
+            color: #e2e8f0;
+        }
+        .timeline-cell-pending {
+            border-style: dashed;
+            border-color: rgba(71,85,105,.55);
+            background: rgba(15,23,42,.28);
+            color: rgba(148,163,184,.72);
+        }
         .timeline-cell-today {
             box-shadow: inset 0 0 0 1px rgba(34,211,238,.5);
+        }
+        .timeline-cell-placeholder {
+            border-style: dashed;
+            border-color: rgba(71,85,105,.28);
+            background: rgba(2,6,23,.22);
+            color: transparent;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        .weekly-history-insight {
+            margin-top: 8px;
+            border: 1px solid rgba(56,189,248,.28);
+            border-radius: 10px;
+            background: rgba(2,6,23,.5);
+            padding: 8px 10px;
+            color: #dbeafe;
+            font-size: 11px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        .section-card {
+            position: relative;
+        }
+        .section-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .section-toolbar-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .section-toggle-btn {
+            border: 1px solid rgba(56,189,248,.36);
+            background: rgba(2,6,23,.66);
+            color: #cbd5e1;
+            border-radius: 9999px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .section-toggle-btn:active {
+            transform: translateY(1px);
+        }
+        .section-card.is-section-collapsed [data-section-body] {
+            display: none;
+        }
+        .section-card.is-section-collapsed .progress-lock-overlay {
+            display: none !important;
+        }
+        .progress-lock-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-lock-content {
+            transition: opacity .2s ease, filter .2s ease;
+        }
+        .progress-lock-card.is-locked .progress-lock-content {
+            opacity: .34;
+            filter: saturate(.45) blur(1px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .progress-lock-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            text-align: center;
+            border-radius: inherit;
+            background: linear-gradient(155deg, rgba(2,6,23,.9), rgba(15,23,42,.84));
+            border: 1px solid rgba(56,189,248,.45);
+            box-shadow: inset 0 0 0 1px rgba(34,211,238,.22);
+            z-index: 5;
+            pointer-events: none;
+        }
+        .progress-lock-card.is-locked .progress-lock-overlay {
+            display: flex;
+        }
+        .progress-lock-overlay-content {
+            max-width: 260px;
+            display: grid;
+            gap: 6px;
+        }
+        .progress-lock-title {
+            color: #e0f2fe;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .progress-lock-text {
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.45;
+            font-weight: 700;
+        }
+        .training-lockable {
+            position: relative;
+            border-radius: 12px;
+        }
+        .training-lockable .progress-lock-overlay {
+            border-radius: 12px;
         }
         .live-dot {
             position: relative;
@@ -1188,6 +1392,10 @@
             width: 100%;
             font-weight: 700;
         }
+        .module-action[disabled] {
+            opacity: .64;
+            cursor: not-allowed;
+        }
         .module-action-primary {
             border: 0;
             background: linear-gradient(120deg, #1d4ed8, #0891b2 58%, #16a34a);
@@ -1266,6 +1474,8 @@
     data-screen="{{ $screen }}"
     data-checkin-url="{{ route('client-mobile.check-in', ['gymSlug' => $gym->slug]) }}"
     data-progress-url="{{ route('client-mobile.progress', ['gymSlug' => $gym->slug]) }}"
+    data-training-start-url="{{ route('client-mobile.training.start', ['gymSlug' => $gym->slug]) }}"
+    data-training-finish-url="{{ route('client-mobile.training.finish', ['gymSlug' => $gym->slug]) }}"
     data-push-status-url="{{ route('client-mobile.push.status', ['gymSlug' => $gym->slug]) }}"
     data-push-subscribe-url="{{ route('client-mobile.push.subscribe', ['gymSlug' => $gym->slug]) }}"
     data-push-unsubscribe-url="{{ route('client-mobile.push.unsubscribe', ['gymSlug' => $gym->slug]) }}"
@@ -1377,8 +1587,8 @@
         $fitnessGoalLabel = $fitnessGoalOptions[(string) ($fitnessProfileModel?->goal ?? '')] ?? '-';
         $fitnessLevelLabel = $fitnessLevelOptions[(string) ($fitnessProfileModel?->experience_level ?? '')] ?? '-';
         $fitnessSexLabel = $fitnessSexOptions[(string) ($fitnessProfileModel?->sex ?? '')] ?? '-';
-        $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' dias/semana' : '-';
-        $fitnessMinutesLabel = $fitnessProfileModel?->session_minutes ? ((int) $fitnessProfileModel->session_minutes).' min/sesion' : '-';
+        $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' días/semana' : '-';
+        $fitnessMinutesLabel = $fitnessProfileModel?->session_minutes ? ((int) $fitnessProfileModel->session_minutes).' min/sesión' : '-';
         $fitnessLimitationsLabel = collect($fitnessLimitations)
             ->map(static fn ($item) => $fitnessLimitationsOptions[(string) $item] ?? ucfirst((string) $item))
             ->implode(', ');
@@ -1401,9 +1611,9 @@
             || is_numeric($fitnessBodyMetrics['target_kcal'] ?? null);
         $progressPrediction = is_array($progress['prediction'] ?? null) ? $progress['prediction'] : [];
         $predictionRhythmLabel = trim((string) ($progressPrediction['rhythm_label'] ?? 'Sin datos'));
-        $predictionPrimaryLine = trim((string) ($progressPrediction['primary_line'] ?? 'Completa tus datos fisicos para activar tu prediccion.'));
-        $predictionSecondaryLine = trim((string) ($progressPrediction['secondary_line'] ?? 'Registra asistencias para mejorar la precision.'));
-        $predictionContextLine = trim((string) ($progressPrediction['context_line'] ?? 'Sin datos de progreso todavia.'));
+        $predictionPrimaryLine = trim((string) ($progressPrediction['primary_line'] ?? 'Completa tus datos físicos para activar tu predicción.'));
+        $predictionSecondaryLine = trim((string) ($progressPrediction['secondary_line'] ?? 'Registra asistencias para mejorar la precisión.'));
+        $predictionContextLine = trim((string) ($progressPrediction['context_line'] ?? 'Sin datos de progreso todavía.'));
         $predictionConsistencyPct = (int) ($progressPrediction['consistency_percent'] ?? 0);
         $progressBodyState = is_array($progress['body_state'] ?? null) ? $progress['body_state'] : [];
         $bodyStateForce = max(0, min(100, (int) ($progressBodyState['force'] ?? 0)));
@@ -1411,7 +1621,7 @@
         $bodyStateDiscipline = max(0, min(100, (int) ($progressBodyState['discipline'] ?? 0)));
         $bodyStateRecovery = max(0, min(100, (int) ($progressBodyState['recovery'] ?? 0)));
         $bodyStateSummaryLine = trim((string) ($progressBodyState['summary_line'] ?? 'Sin datos para estado corporal.'));
-        $bodyStateContextLine = trim((string) ($progressBodyState['context_line'] ?? 'Registra mas entrenamientos para estimar este estado.'));
+        $bodyStateContextLine = trim((string) ($progressBodyState['context_line'] ?? 'Registra más entrenamientos para estimar este estado.'));
         $progressTrainingPlan = is_array($progress['training_plan'] ?? null) ? $progress['training_plan'] : [];
         $trainingTitle = trim((string) ($progressTrainingPlan['title'] ?? 'Entrenamiento de hoy'));
         $trainingObjectiveLine = trim((string) ($progressTrainingPlan['objective_line'] ?? 'Sin objetivo disponible.'));
@@ -1420,17 +1630,47 @@
         $trainingAdaptationLine = trim((string) ($progressTrainingPlan['adaptation_line'] ?? 'Sin ajustes por ahora.'));
         $trainingContextLine = trim((string) ($progressTrainingPlan['context_line'] ?? 'Sin contexto disponible.'));
         $trainingExercises = is_array($progressTrainingPlan['exercises'] ?? null) ? $progressTrainingPlan['exercises'] : [];
+        $trainingStatus = is_array($progress['training_status'] ?? null) ? $progress['training_status'] : [];
+        $trainingCanStart = (bool) ($trainingStatus['can_start'] ?? false);
+        $trainingCanFinish = (bool) ($trainingStatus['can_finish'] ?? false);
+        $trainingIsActive = (bool) ($trainingStatus['is_active'] ?? false);
+        $progressUnlocked = (bool) ($trainingStatus['progress_unlocked'] ?? false);
+        $progressLockReason = trim((string) ($trainingStatus['lock_reason'] ?? 'Inicia tu entrenamiento de hoy para desbloquear el panel.'));
+        if ($progressLockReason === '') {
+            $progressLockReason = 'Inicia tu entrenamiento de hoy para desbloquear el panel.';
+        }
+        $trainingStatusLabel = trim((string) ($trainingStatus['status_label'] ?? 'Registra asistencia para habilitar entrenamiento.'));
+        $trainingHintLine = trim((string) ($trainingStatus['hint_line'] ?? 'Escanea tu asistencia y luego inicia tu entrenamiento.'));
+        $trainingRemainingSeconds = max(0, (int) ($trainingStatus['remaining_seconds'] ?? 0));
+        $trainingTimerLabel = $trainingIsActive
+            ? sprintf(
+                '%02d:%02d',
+                (int) floor($trainingRemainingSeconds / 60),
+                $trainingRemainingSeconds % 60
+            )
+            : '--:--';
         $personalMessage = is_array($progress['personal_message'] ?? null) ? $progress['personal_message'] : [];
         $personalMessageTag = trim((string) ($personalMessage['tag'] ?? 'Mensaje personal'));
         $personalMessageLine1 = trim((string) ($personalMessage['line_1'] ?? 'Completa tus datos para activar tu mensaje personal.'));
-        $personalMessageLine2 = trim((string) ($personalMessage['line_2'] ?? 'Tu progreso diario aparecera aqui.'));
-        $personalMessageContext = trim((string) ($personalMessage['context_line'] ?? 'Mensaje generado segun tu actividad reciente.'));
+        $personalMessageLine2 = trim((string) ($personalMessage['line_2'] ?? 'Tu progreso diario aparecerá aquí.'));
+        $personalMessageContext = trim((string) ($personalMessage['context_line'] ?? 'Mensaje generado según tu actividad reciente.'));
         $weeklyGoalSummary = is_array($progress['weekly_goal'] ?? null) ? $progress['weekly_goal'] : [];
-        $weeklyGoalTarget = max(3, min(7, (int) ($weeklyGoalSummary['target'] ?? 3)));
+        $weeklyGoalTarget = max(0, min(7, (int) ($weeklyGoalSummary['target'] ?? 3)));
+        $weeklyGoalConfiguredTarget = max(3, min(7, (int) ($weeklyGoalSummary['configured_target'] ?? $weeklyGoalTarget)));
         $weeklyGoalVisits = max(0, (int) ($weeklyGoalSummary['visits'] ?? 0));
         $weeklyGoalRemaining = max(0, (int) ($weeklyGoalSummary['remaining'] ?? max(0, $weeklyGoalTarget - $weeklyGoalVisits)));
         $weeklyGoalCompletion = max(0, min(100, (int) ($weeklyGoalSummary['completion_percent'] ?? 0)));
         $weeklyGoalDaysLeft = max(0, (int) ($weeklyGoalSummary['days_left_week'] ?? 0));
+        $weeklyCommitmentLine = trim((string) ($weeklyGoalSummary['commitment_line'] ?? ''));
+        if ($weeklyCommitmentLine === '') {
+            $weeklyCommitmentLine = $weeklyGoalVisits >= $weeklyGoalTarget
+                ? 'Has asistido los '.$weeklyGoalTarget.' días que prometiste. Excelente.'
+                : 'Esta semana asististe '.$weeklyGoalVisits.' de los '.$weeklyGoalTarget.' días que prometiste.';
+        }
+        $weeklyRestLine = trim((string) ($weeklyGoalSummary['rest_line'] ?? ''));
+        if ($weeklyRestLine === '') {
+            $weeklyRestLine = 'Días de descanso planificados: '.max(0, 7 - $weeklyGoalTarget).'.';
+        }
         $weeklyGoalAlerts = is_array($weeklyGoalSummary['alerts'] ?? null) ? $weeklyGoalSummary['alerts'] : [];
         if ($weeklyGoalAlerts === []) {
             $weeklyGoalAlerts = [[
@@ -1439,17 +1679,21 @@
             ]];
         }
         $weeklyTimeline = is_array($progress['last30_timeline'] ?? null) ? $progress['last30_timeline'] : [];
+        $timelineMonthLabel = trim((string) ($progress['month_label'] ?? ''));
+        if ($timelineMonthLabel === '') {
+            $timelineMonthLabel = '-';
+        }
         $weeklyGoalFormOpen = old('_weekly_goal_form') === '1'
             || $errors->has('weekly_goal')
             || $errors->has('weekly_goal_profile');
-        $weeklyGoalSelectedValue = (string) old('weekly_goal', $weeklyGoalTarget);
+        $weeklyGoalSelectedValue = (string) old('weekly_goal', $weeklyGoalConfiguredTarget);
     @endphp
     <section class="mx-auto max-w-md space-y-4 relative z-10">
         <div class="top-user-menu">
             @if ($screen !== 'home')
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home']) }}" class="menu-back menu-back-top" aria-label="Volver al inicio">
                     <span class="menu-back-icon" aria-hidden="true">&larr;</span>
-                    <span>Atras</span>
+                    <span>Atrás</span>
                 </a>
             @endif
             <button id="user-menu-toggle" type="button" class="user-chip" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu-panel">
@@ -1465,23 +1709,23 @@
             </button>
             <div id="user-menu-panel" class="user-dropdown hidden" role="menu" aria-hidden="true">
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos fisicos</a>
+                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
                 <form id="client-mobile-logout-form" method="POST" action="{{ route('client-mobile.logout', ['gymSlug' => $gym->slug]) }}">
                     @csrf
-                    <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesion</button>
+                    <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesión</button>
                 </form>
             </div>
         </div>
         <header class="hero-card home-clean home-welcome rounded-3xl p-4">
             <p class="text-xs font-black uppercase tracking-[.18em] text-emerald-100">{{ (string) $gym->name }}</p>
             <h1 class="mt-1 text-xl font-black text-white">Hola, {{ (string) $client->full_name }}</h1>
-            <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opcion para continuar.</p>
+            <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opción para continuar.</p>
         </header>
 
         @if ($screen === 'home')
             <section id="home-view" class="home-stage">
                 <article class="glass-card home-clean home-intro rounded-3xl p-4">
-                    <h2 class="home-intro-title">Que deseas hacer hoy?</h2>
+                    <h2 class="home-intro-title">¿Qué deseas hacer hoy?</h2>
                     <p class="home-intro-text">Registra tu asistencia o revisa tu rendimiento en el gimnasio.</p>
                 </article>
 
@@ -1500,10 +1744,10 @@
                         </div>
                         <button id="client-push-toggle" type="button" class="module-action module-action-secondary">Activar</button>
                     </div>
-                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal este en riesgo o cuando lo completes.</p>
+                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal esté en riesgo o cuando lo completes.</p>
                 </article>
 
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o codigo">
+                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o código">
                     <span class="action-badge" aria-hidden="true">
                         <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3.5" y="3.5" width="6" height="6" rx="1"></rect>
@@ -1517,7 +1761,7 @@
                     </span>
                     <span class="action-copy">
                         <span class="action-title">Registrar asistencia</span>
-                        <span class="action-hint">Escanea QR o escribe tu codigo</span>
+                        <span class="action-hint">Escanea QR o escribe tu código</span>
                     </span>
                     <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                 </a>
@@ -1535,12 +1779,12 @@
                         </span>
                         <span class="action-copy">
                             <span class="action-title">Ver mi rendimiento</span>
-                            <span class="action-hint">Estado de membresia y visitas</span>
+                            <span class="action-hint">Estado de membresía y visitas</span>
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                 @else
-                    <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos fisicos para ver rendimiento">
+                    <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos físicos para ver rendimiento">
                         <span class="action-badge" aria-hidden="true">
                             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 10v4"></path>
@@ -1552,7 +1796,7 @@
                         </span>
                         <span class="action-copy">
                             <span class="action-title">Ver mi rendimiento</span>
-                            <span class="action-hint">Primero completa tus datos fisicos</span>
+                            <span class="action-hint">Primero completa tus datos físicos</span>
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </button>
@@ -1569,7 +1813,7 @@
                     <div class="flex items-center">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Registrar asistencia</h2>
                     </div>
-                    <p class="text-xs text-slate-300">Escanea el QR de recepcion o escribe el codigo manual.</p>
+                    <p class="text-xs text-slate-300">Escanea el QR de recepción o escribe el código manual.</p>
 
                     <video id="scan-video" playsinline muted class="hidden"></video>
 
@@ -1579,26 +1823,26 @@
                     </div>
 
                     <label class="block space-y-1 text-sm">
-                        <span class="text-slate-300">Codigo manual (fallback)</span>
+                        <span class="text-slate-300">Código manual (fallback)</span>
                         <input id="manual-token" type="text" class="module-input" placeholder="Pega token o contenido QR">
                     </label>
-                    <button id="send-manual" type="button" class="module-action module-action-secondary">Validar codigo</button>
+                    <button id="send-manual" type="button" class="module-action module-action-secondary">Validar código</button>
                     <p id="checkin-status" class="status-box">{{ __('messages.client_mobile.ready_to_scan') }}</p>
                 </article>
 
                 <article class="period-summary">
                     <div class="flex items-end justify-between gap-3">
                         <div>
-                            <p class="period-label">Asistencias del periodo</p>
+                            <p class="period-label">Asistencias del período</p>
                             <p id="period-visits" class="period-count">{{ (int) ($progress['period_visits'] ?? 0) }}</p>
                         </div>
                         <div>
-                            <p class="period-total-label">Total historico</p>
+                            <p class="period-total-label">Total histórico</p>
                             <p id="period-total" class="period-total-value">{{ (int) ($progress['total_visits'] ?? 0) }}</p>
                         </div>
                     </div>
                     <p class="period-note">Las asistencias solo duran el tiempo que te suscribiste.</p>
-                    <p id="period-window-label" class="period-window">Periodo: {{ (string) ($progress['period_window_label'] ?? 'Sin membresia activa') }}</p>
+                    <p id="period-window-label" class="period-window">Período: {{ (string) ($progress['period_window_label'] ?? 'Sin membresía activa') }}</p>
                 </article>
 
                 <article class="month-log">
@@ -1630,7 +1874,7 @@
                     <div class="flex items-center">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Mi rendimiento</h2>
                     </div>
-                    <p class="mt-2 text-xs text-slate-300">Estado de tu membresia y progreso en el gimnasio.</p>
+                    <p class="mt-2 text-xs text-slate-300">Estado de tu membresía y progreso en el gimnasio.</p>
                 </article>
 
                 <article class="live-mobile-card rounded-3xl p-4">
@@ -1645,166 +1889,271 @@
                         <p class="text-4xl font-black leading-none text-white" id="live-clients-count">{{ (int) ($progress['live_clients_count'] ?? 0) }}</p>
                         <p class="pb-1 text-xs font-semibold text-emerald-100/90">en tu gimnasio</p>
                     </div>
-                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automatico.</p>
+                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automático.</p>
                 </article>
 
                 @if (session('goal_status'))
                     <p class="profile-message profile-message-success">{{ (string) session('goal_status') }}</p>
                 @endif
 
-                <article class="prediction-card">
-                    <p class="prediction-title">Prediccion de progreso</p>
-                    <p id="prediction-rhythm" class="prediction-rhythm">{{ $predictionRhythmLabel }} | Constancia: {{ $predictionConsistencyPct }}%</p>
-                    <p id="prediction-primary" class="prediction-line">{{ $predictionPrimaryLine }}</p>
-                    <p id="prediction-secondary" class="prediction-line">{{ $predictionSecondaryLine }}</p>
-                    <p id="prediction-context" class="prediction-context">{{ $predictionContextLine }}</p>
+                <article class="prediction-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="prediction">
+                    <div class="section-toolbar">
+                        <p class="prediction-title">Prediccion de progreso</p>
+                        <button type="button" class="section-toggle-btn" data-section-toggle="prediction" aria-expanded="true">Ocultar</button>
+                    </div>
+                    <div class="progress-lock-content" data-section-body>
+                        <p id="prediction-rhythm" class="prediction-rhythm">{{ $predictionRhythmLabel }} | Constancia: {{ $predictionConsistencyPct }}%</p>
+                        <p id="prediction-primary" class="prediction-line">{{ $predictionPrimaryLine }}</p>
+                        <p id="prediction-secondary" class="prediction-line">{{ $predictionSecondaryLine }}</p>
+                        <p id="prediction-context" class="prediction-context">{{ $predictionContextLine }}</p>
+                    </div>
+                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                        <div class="progress-lock-overlay-content">
+                            <p class="progress-lock-title">Progreso en espera</p>
+                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                        </div>
+                    </div>
                 </article>
 
-                <article class="weekly-goal-card">
-                    <div class="flex items-center justify-between gap-2">
+                <article class="weekly-goal-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="weekly-goal">
+                    <div class="section-toolbar">
                         <p class="weekly-goal-title">Meta semanal</p>
-                        <button id="open-weekly-goal-edit" type="button" class="profile-edit-toggle">Ajustar objetivo</button>
-                    </div>
-                    <p id="weekly-goal-summary" class="weekly-goal-summary">{{ $weeklyGoalVisits }} de {{ $weeklyGoalTarget }} sesiones esta semana.</p>
-                    <div class="weekly-progress-track" aria-hidden="true">
-                        <span id="weekly-goal-progress-fill" class="weekly-progress-fill" style="width: {{ $weeklyGoalCompletion }}%;"></span>
-                    </div>
-                    <div class="weekly-progress-meta">
-                        <span id="weekly-goal-progress-label">Completado: {{ $weeklyGoalCompletion }}%</span>
-                        <span id="weekly-goal-remaining-label">Faltan: {{ $weeklyGoalRemaining }}</span>
-                        <span id="weekly-goal-days-left-label">Dias restantes: {{ $weeklyGoalDaysLeft }}</span>
-                    </div>
-
-                    <div id="weekly-alert-list" class="weekly-alert-list">
-                        @foreach ($weeklyGoalAlerts as $alert)
-                            @php
-                                $alertTypeRaw = mb_strtolower(trim((string) ($alert['type'] ?? 'info')));
-                                $alertType = in_array($alertTypeRaw, ['info', 'success', 'warning', 'danger'], true) ? $alertTypeRaw : 'info';
-                                $alertText = trim((string) ($alert['text'] ?? 'Sin alertas por ahora.'));
-                            @endphp
-                            <p class="weekly-alert-item weekly-alert-{{ $alertType }}">{{ $alertText !== '' ? $alertText : 'Sin alertas por ahora.' }}</p>
-                        @endforeach
-                    </div>
-
-                    <div id="weekly-goal-edit-panel" class="weekly-goal-edit-panel {{ $weeklyGoalFormOpen ? '' : 'hidden' }}">
-                        @if ($errors->has('weekly_goal_profile'))
-                            <p class="profile-message profile-message-error">{{ (string) $errors->first('weekly_goal_profile') }}</p>
-                        @endif
-                        <form method="POST" action="{{ route('client-mobile.weekly-goal.update', ['gymSlug' => $gym->slug]) }}" class="space-y-2">
-                            @csrf
-                            <input type="hidden" name="_weekly_goal_form" value="1">
-
-                            <label class="block space-y-1 text-sm">
-                                <span class="profile-field-label">Objetivo semanal de entrenamientos</span>
-                                <select name="weekly_goal" class="module-input">
-                                    @foreach ([3, 4, 5, 6, 7] as $goalOption)
-                                        @php
-                                            $goalOptionValue = (string) $goalOption;
-                                        @endphp
-                                        <option value="{{ $goalOptionValue }}" {{ $weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : '' }}>{{ $goalOptionValue }} dias por semana</option>
-                                    @endforeach
-                                </select>
-                                @error('weekly_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
-                            </label>
-
-                            <div class="flex gap-2">
-                                <button type="submit" class="module-action module-action-primary">Guardar meta</button>
-                                <button id="close-weekly-goal-edit" type="button" class="module-action">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </article>
-
-                <article class="weekly-history-card">
-                    <p class="weekly-history-title">Historico ultimos 30 dias</p>
-                    <p class="weekly-history-text">Ordenado de mas antiguo a hoy. Verde: entrenaste, oscuro: descanso.</p>
-                    <div class="timeline-weekdays" aria-hidden="true">
-                        @foreach (['L', 'M', 'M', 'J', 'V', 'S', 'D'] as $weekdayLabel)
-                            <span class="timeline-weekday">{{ $weekdayLabel }}</span>
-                        @endforeach
-                    </div>
-                    <div id="timeline-grid" class="timeline-grid">
-                        @foreach ($weeklyTimeline as $timelineItem)
-                            @php
-                                $timelineLabel = trim((string) ($timelineItem['label'] ?? '--'));
-                                $timelineDate = trim((string) ($timelineItem['date'] ?? ''));
-                                $timelineWeekday = trim((string) ($timelineItem['weekday_short'] ?? ''));
-                                $timelineAttended = (bool) ($timelineItem['attended'] ?? false);
-                                $timelineIsToday = (bool) ($timelineItem['is_today'] ?? false);
-                                $timelineStatusLabel = $timelineAttended ? 'entrenaste' : 'descanso';
-                                $timelineTitle = trim(($timelineWeekday !== '' ? $timelineWeekday.' ' : '').$timelineDate.' - '.$timelineStatusLabel.($timelineIsToday ? ' (hoy)' : ''));
-                            @endphp
-                            <span
-                                class="timeline-cell {{ $timelineAttended ? 'timeline-cell-attended' : '' }} {{ $timelineIsToday ? 'timeline-cell-today' : '' }}"
-                                title="{{ $timelineTitle }}"
-                                aria-label="{{ $timelineTitle }}"
-                            >{{ $timelineLabel }}</span>
-                        @endforeach
-                    </div>
-                </article>
-
-                <article class="body-state-card">
-                    <p class="body-state-title">Estado del cuerpo</p>
-                    <p id="body-state-summary" class="body-state-summary">{{ $bodyStateSummaryLine }}</p>
-                    <div class="body-state-grid">
-                        <div class="body-state-row">
-                            <span class="body-state-label">Fuerza</span>
-                            <span class="body-state-track" aria-hidden="true">
-                                <span id="body-state-force-bar" class="body-state-fill body-state-fill-force" style="width: {{ $bodyStateForce }}%;"></span>
-                            </span>
-                            <span id="body-state-force-value" class="body-state-value">{{ $bodyStateForce }}</span>
-                        </div>
-                        <div class="body-state-row">
-                            <span class="body-state-label">Resistencia</span>
-                            <span class="body-state-track" aria-hidden="true">
-                                <span id="body-state-resistance-bar" class="body-state-fill body-state-fill-resistance" style="width: {{ $bodyStateResistance }}%;"></span>
-                            </span>
-                            <span id="body-state-resistance-value" class="body-state-value">{{ $bodyStateResistance }}</span>
-                        </div>
-                        <div class="body-state-row">
-                            <span class="body-state-label">Disciplina</span>
-                            <span class="body-state-track" aria-hidden="true">
-                                <span id="body-state-discipline-bar" class="body-state-fill body-state-fill-discipline" style="width: {{ $bodyStateDiscipline }}%;"></span>
-                            </span>
-                            <span id="body-state-discipline-value" class="body-state-value">{{ $bodyStateDiscipline }}</span>
-                        </div>
-                        <div class="body-state-row">
-                            <span class="body-state-label">Recuperacion</span>
-                            <span class="body-state-track" aria-hidden="true">
-                                <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: {{ $bodyStateRecovery }}%;"></span>
-                            </span>
-                            <span id="body-state-recovery-value" class="body-state-value">{{ $bodyStateRecovery }}</span>
+                        <div class="section-toolbar-actions">
+                            <button id="open-weekly-goal-edit" type="button" class="profile-edit-toggle">Ajustar objetivo</button>
+                            <button type="button" class="section-toggle-btn" data-section-toggle="weekly-goal" aria-expanded="true">Ocultar</button>
                         </div>
                     </div>
-                    <p id="body-state-context" class="body-state-context">{{ $bodyStateContextLine }}</p>
-                </article>
+                    <div class="progress-lock-content" data-section-body>
+                        <p id="weekly-goal-summary" class="weekly-goal-summary">{{ $weeklyGoalVisits }} de {{ $weeklyGoalTarget }} sesiones esta semana.</p>
+                        <div class="weekly-progress-track" aria-hidden="true">
+                            <span id="weekly-goal-progress-fill" class="weekly-progress-fill" style="width: {{ $weeklyGoalCompletion }}%;"></span>
+                        </div>
+                        <div class="weekly-progress-meta">
+                            <span id="weekly-goal-progress-label">Completado: {{ $weeklyGoalCompletion }}%</span>
+                            <span id="weekly-goal-remaining-label">Faltan: {{ $weeklyGoalRemaining }}</span>
+                            <span id="weekly-goal-days-left-label">Dias restantes: {{ $weeklyGoalDaysLeft }}</span>
+                        </div>
 
-                <article class="training-card">
-                    <p id="training-title" class="training-title">{{ $trainingTitle }}</p>
-                    <p id="training-objective" class="training-line">{{ $trainingObjectiveLine }}</p>
-                    <p id="training-focus" class="training-line">{{ $trainingFocusLine }}</p>
-                    <p id="training-rhythm" class="training-line">{{ $trainingRhythmLine }}</p>
-                    <ul id="training-plan-list" class="training-list">
-                        @if ($trainingExercises !== [])
-                            @foreach ($trainingExercises as $exercise)
+                        <div id="weekly-alert-list" class="weekly-alert-list">
+                            @foreach ($weeklyGoalAlerts as $alert)
                                 @php
-                                    $exerciseName = trim((string) ($exercise['name'] ?? 'Ejercicio'));
-                                    $exerciseDose = trim((string) ($exercise['prescription'] ?? '3 x 10'));
+                                    $alertTypeRaw = mb_strtolower(trim((string) ($alert['type'] ?? 'info')));
+                                    $alertType = in_array($alertTypeRaw, ['info', 'success', 'warning', 'danger'], true) ? $alertTypeRaw : 'info';
+                                    $alertText = trim((string) ($alert['text'] ?? 'Sin alertas por ahora.'));
                                 @endphp
-                                <li class="training-item">
-                                    <span class="training-item-name">{{ $exerciseName }}</span>
-                                    <span class="training-item-dose">{{ $exerciseDose }}</span>
-                                </li>
+                                <p class="weekly-alert-item weekly-alert-{{ $alertType }}">{{ $alertText !== '' ? $alertText : 'Sin alertas por ahora.' }}</p>
                             @endforeach
-                        @else
-                            <li class="training-item">
-                                <span class="training-item-name">No hay rutina disponible por ahora.</span>
-                                <span class="training-item-dose">-</span>
-                            </li>
-                        @endif
-                    </ul>
-                    <p id="training-adaptation" class="training-line">{{ $trainingAdaptationLine }}</p>
-                    <p id="training-context" class="training-context">{{ $trainingContextLine }}</p>
+                        </div>
+
+                        <div id="weekly-goal-edit-panel" class="weekly-goal-edit-panel {{ $weeklyGoalFormOpen ? '' : 'hidden' }}">
+                            @if ($errors->has('weekly_goal_profile'))
+                                <p class="profile-message profile-message-error">{{ (string) $errors->first('weekly_goal_profile') }}</p>
+                            @endif
+                            <form method="POST" action="{{ route('client-mobile.weekly-goal.update', ['gymSlug' => $gym->slug]) }}" class="space-y-2">
+                                @csrf
+                                <input type="hidden" name="_weekly_goal_form" value="1">
+
+                                <label class="block space-y-1 text-sm">
+                                    <span class="profile-field-label">Objetivo semanal de entrenamientos</span>
+                                    <select name="weekly_goal" class="module-input">
+                                        @foreach ([3, 4, 5, 6, 7] as $goalOption)
+                                            @php
+                                                $goalOptionValue = (string) $goalOption;
+                                            @endphp
+                                            <option value="{{ $goalOptionValue }}" {{ $weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : '' }}>{{ $goalOptionValue }} días por semana</option>
+                                        @endforeach
+                                    </select>
+                                    @error('weekly_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                                </label>
+
+                                <div class="flex gap-2">
+                                    <button type="submit" class="module-action module-action-primary">Guardar meta</button>
+                                    <button id="close-weekly-goal-edit" type="button" class="module-action">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                        <div class="progress-lock-overlay-content">
+                            <p class="progress-lock-title">Progreso en espera</p>
+                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="weekly-history-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="weekly-history">
+                    <div class="section-toolbar">
+                        <p class="weekly-history-title">Histórico días de suscripción</p>
+                        <button type="button" class="section-toggle-btn" data-section-toggle="weekly-history" aria-expanded="true">Ocultar</button>
+                    </div>
+                    <div class="progress-lock-content" data-section-body>
+                        <p id="timeline-month-label" class="weekly-history-month">Mes actual: {{ $timelineMonthLabel }}</p>
+                        <p class="weekly-history-text">Cada celda representa un día. Verde: entrenado, gris claro: descanso o falta, opaco: aún no marcado.</p>
+                        <div class="timeline-legend" aria-label="Leyenda de estados">
+                            <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-trained" aria-hidden="true"></span>Entrenado</span>
+                            <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-neutral" aria-hidden="true"></span>Descanso o falta</span>
+                            <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-pending" aria-hidden="true"></span>Aún no marcado</span>
+                        </div>
+                        <div class="timeline-weekdays" aria-hidden="true">
+                            @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $weekdayLabel)
+                                <span class="timeline-weekday">{{ $weekdayLabel }}</span>
+                            @endforeach
+                        </div>
+                        <div id="timeline-grid" class="timeline-grid">
+                            @foreach ($weeklyTimeline as $timelineItem)
+                                @php
+                                    $timelineLabel = trim((string) ($timelineItem['label'] ?? '--'));
+                                    $timelineDate = trim((string) ($timelineItem['date'] ?? ''));
+                                    $timelineWeekday = trim((string) ($timelineItem['weekday_short'] ?? ''));
+                                    $timelineStatusRaw = mb_strtolower(trim((string) ($timelineItem['status'] ?? 'rest')));
+                                    $timelineStatus = in_array($timelineStatusRaw, ['trained', 'rest', 'missed', 'pending'], true)
+                                        ? $timelineStatusRaw
+                                        : 'rest';
+                                    $timelineIsToday = (bool) ($timelineItem['is_today'] ?? false);
+                                    $timelineIsPlaceholder = (bool) ($timelineItem['is_placeholder'] ?? false);
+                                    $timelineStatusLabel = match ($timelineStatus) {
+                                        'trained' => 'entrenado',
+                                        'missed' => 'faltaste',
+                                        'pending' => 'aún no marcado',
+                                        default => 'descanso',
+                                    };
+                                    $timelineDisplayLabel = $timelineIsPlaceholder ? ' ' : $timelineLabel;
+                                    $timelineTitle = trim(($timelineWeekday !== '' ? $timelineWeekday.' ' : '').$timelineDate.' - '.$timelineStatusLabel.($timelineIsToday ? ' (hoy)' : ''));
+                                @endphp
+                                <span
+                                    class="timeline-cell {{ $timelineIsPlaceholder ? 'timeline-cell-placeholder' : '' }} {{ (! $timelineIsPlaceholder && $timelineStatus === 'trained') ? 'timeline-cell-trained' : '' }} {{ (! $timelineIsPlaceholder && $timelineStatus === 'pending') ? 'timeline-cell-pending' : '' }} {{ (! $timelineIsPlaceholder && in_array($timelineStatus, ['rest', 'missed'], true)) ? 'timeline-cell-neutral' : '' }} {{ (! $timelineIsPlaceholder && $timelineIsToday) ? 'timeline-cell-today' : '' }}"
+                                    @if (! $timelineIsPlaceholder)
+                                        title="{{ $timelineTitle }}"
+                                        aria-label="{{ $timelineTitle }}"
+                                    @else
+                                        aria-hidden="true"
+                                    @endif
+                                >{{ $timelineDisplayLabel }}</span>
+                            @endforeach
+                        </div>
+                        <p id="timeline-week-commitment" class="weekly-history-insight">{{ $weeklyCommitmentLine }}</p>
+                        <p id="timeline-week-rest" class="weekly-history-insight">{{ $weeklyRestLine }}</p>
+                    </div>
+                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                        <div class="progress-lock-overlay-content">
+                            <p class="progress-lock-title">Progreso en espera</p>
+                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="body-state-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="body-state">
+                    <div class="section-toolbar">
+                        <p class="body-state-title">Estado del cuerpo</p>
+                        <button type="button" class="section-toggle-btn" data-section-toggle="body-state" aria-expanded="true">Ocultar</button>
+                    </div>
+                    <div class="progress-lock-content" data-section-body>
+                        <p id="body-state-summary" class="body-state-summary">{{ $bodyStateSummaryLine }}</p>
+                        <div class="body-state-grid">
+                            <div class="body-state-row">
+                                <span class="body-state-label">Fuerza</span>
+                                <span class="body-state-track" aria-hidden="true">
+                                    <span id="body-state-force-bar" class="body-state-fill body-state-fill-force" style="width: {{ $bodyStateForce }}%;"></span>
+                                </span>
+                                <span id="body-state-force-value" class="body-state-value">{{ $bodyStateForce }}</span>
+                            </div>
+                            <div class="body-state-row">
+                                <span class="body-state-label">Resistencia</span>
+                                <span class="body-state-track" aria-hidden="true">
+                                    <span id="body-state-resistance-bar" class="body-state-fill body-state-fill-resistance" style="width: {{ $bodyStateResistance }}%;"></span>
+                                </span>
+                                <span id="body-state-resistance-value" class="body-state-value">{{ $bodyStateResistance }}</span>
+                            </div>
+                            <div class="body-state-row">
+                                <span class="body-state-label">Disciplina</span>
+                                <span class="body-state-track" aria-hidden="true">
+                                    <span id="body-state-discipline-bar" class="body-state-fill body-state-fill-discipline" style="width: {{ $bodyStateDiscipline }}%;"></span>
+                                </span>
+                                <span id="body-state-discipline-value" class="body-state-value">{{ $bodyStateDiscipline }}</span>
+                            </div>
+                            <div class="body-state-row">
+                                <span class="body-state-label">Recuperacion</span>
+                                <span class="body-state-track" aria-hidden="true">
+                                    <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: {{ $bodyStateRecovery }}%;"></span>
+                                </span>
+                                <span id="body-state-recovery-value" class="body-state-value">{{ $bodyStateRecovery }}</span>
+                            </div>
+                        </div>
+                        <p id="body-state-context" class="body-state-context">{{ $bodyStateContextLine }}</p>
+                    </div>
+                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                        <div class="progress-lock-overlay-content">
+                            <p class="progress-lock-title">Progreso en espera</p>
+                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="training-card section-card" data-section-card="training">
+                    <div class="section-toolbar">
+                        <p id="training-title" class="training-title">{{ $trainingTitle }}</p>
+                        <button type="button" class="section-toggle-btn" data-section-toggle="training" aria-expanded="true">Ocultar</button>
+                    </div>
+                    <div data-section-body class="space-y-3">
+                    <div class="training-lockable progress-lock-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card>
+                        <div class="progress-lock-content">
+                            <p id="training-objective" class="training-line">{{ $trainingObjectiveLine }}</p>
+                            <p id="training-focus" class="training-line">{{ $trainingFocusLine }}</p>
+                            <p id="training-rhythm" class="training-line">{{ $trainingRhythmLine }}</p>
+                            <ul id="training-plan-list" class="training-list">
+                                @if ($trainingExercises !== [])
+                                    @foreach ($trainingExercises as $exercise)
+                                        @php
+                                            $exerciseName = trim((string) ($exercise['name'] ?? 'Ejercicio'));
+                                            $exerciseDose = trim((string) ($exercise['prescription'] ?? '3 x 10'));
+                                        @endphp
+                                        <li class="training-item">
+                                            <span class="training-item-name">{{ $exerciseName }}</span>
+                                            <span class="training-item-dose">{{ $exerciseDose }}</span>
+                                        </li>
+                                    @endforeach
+                                @else
+                                    <li class="training-item">
+                                        <span class="training-item-name">No hay rutina disponible por ahora.</span>
+                                        <span class="training-item-dose">-</span>
+                                    </li>
+                                @endif
+                            </ul>
+                            <p id="training-adaptation" class="training-line">{{ $trainingAdaptationLine }}</p>
+                            <p id="training-context" class="training-context">{{ $trainingContextLine }}</p>
+                        </div>
+                        <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                            <div class="progress-lock-overlay-content">
+                                <p class="progress-lock-title">Progreso en espera</p>
+                                <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="training-session-box">
+                        <p id="training-session-status" class="training-session-status">{{ $trainingStatusLabel }}</p>
+                        <p id="training-session-timer" class="training-session-timer {{ $trainingIsActive ? '' : 'hidden' }}">
+                            Tiempo restante: <span id="training-session-timer-value">{{ $trainingTimerLabel }}</span>
+                        </p>
+                        <div class="training-session-actions">
+                            <button
+                                id="training-start-btn"
+                                type="button"
+                                class="module-action module-action-primary {{ $trainingCanStart ? '' : 'hidden' }}"
+                            >
+                                Comenzar entrenamiento
+                            </button>
+                            <button
+                                id="training-finish-btn"
+                                type="button"
+                                class="module-action module-action-secondary {{ $trainingCanFinish ? '' : 'hidden' }}"
+                            >
+                                Finalizar entrenamiento
+                            </button>
+                        </div>
+                        <p id="training-session-hint" class="training-session-hint">{{ $trainingHintLine }}</p>
+                        <p id="training-session-feedback" class="training-session-feedback hidden"></p>
+                    </div>
+                    </div>
                 </article>
             </section>
         @endif
@@ -1828,20 +2177,20 @@
                 <article id="profile-edit-panel" class="profile-edit-panel space-y-3 {{ $profileEditOpen ? '' : 'hidden' }}">
                     <div>
                         <p class="profile-edit-title">Editar seguridad y contacto</p>
-                        <p class="profile-edit-help">Para cambiar contrasena, telefono o foto debes validar tu contrasena actual.</p>
+                        <p class="profile-edit-help">Para cambiar contraseña, teléfono o foto debes validar tu contraseña actual.</p>
                     </div>
                     <form method="POST" action="{{ route('client-mobile.profile.update', ['gymSlug' => $gym->slug]) }}" enctype="multipart/form-data" class="space-y-3">
                         @csrf
                         <input type="hidden" name="_profile_form" value="1">
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Contrasena actual</span>
+                            <span class="profile-field-label">Contraseña actual</span>
                             <input id="profile-current-password" type="password" name="current_password" class="module-input" autocomplete="current-password" required>
                             @error('current_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Telefono (opcional)</span>
+                            <span class="profile-field-label">Teléfono (opcional)</span>
                             <input type="text" name="phone" value="{{ old('phone', $clientPhone) }}" class="module-input" placeholder="+593..." autocomplete="tel">
                             @error('phone')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
@@ -1860,13 +2209,13 @@
                         </div>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Nueva contrasena (opcional)</span>
+                            <span class="profile-field-label">Nueva contraseña (opcional)</span>
                             <input type="password" name="new_password" class="module-input" autocomplete="new-password">
                             @error('new_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Confirmar nueva contrasena</span>
+                            <span class="profile-field-label">Confirmar nueva contraseña</span>
                             <input type="password" name="new_password_confirmation" class="module-input" autocomplete="new-password">
                         </label>
 
@@ -1892,11 +2241,11 @@
                             <p class="profile-kpi-value">{{ $clientDocument !== '' ? $clientDocument : '-' }}</p>
                         </div>
                         <div class="profile-kpi">
-                            <p class="profile-kpi-label">Telefono</p>
+                            <p class="profile-kpi-label">Teléfono</p>
                             <p class="profile-kpi-value">{{ $clientPhone !== '' ? $clientPhone : '-' }}</p>
                         </div>
                         <div class="profile-kpi">
-                            <p class="profile-kpi-label">Membresia</p>
+                            <p class="profile-kpi-label">Membresía</p>
                             <p class="profile-kpi-value">{{ $membershipStatusLabel }}</p>
                         </div>
                         <div class="profile-kpi">
@@ -1913,7 +2262,7 @@
                         </div>
                     </div>
                     <div class="profile-kpi">
-                        <p class="profile-kpi-label">Ultimo ingreso</p>
+                        <p class="profile-kpi-label">Último ingreso</p>
                         <p class="profile-kpi-value">{{ $lastAttendanceLabel }}</p>
                     </div>
                 </article>
@@ -1924,10 +2273,10 @@
             <section id="physical-view" class="space-y-4">
                 <article class="glass-card rounded-3xl p-4">
                     <div class="profile-header-row">
-                        <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Datos fisicos</h2>
+                        <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Datos físicos</h2>
                         <button id="open-physical-edit" type="button" class="profile-edit-toggle">{{ $fitnessProfileCompleted ? 'Editar datos' : 'Completar ahora' }}</button>
                     </div>
-                    <p class="mt-2 text-xs text-slate-300">Resumen de tu estado fisico y calculos para seguimiento en el gimnasio.</p>
+                    <p class="mt-2 text-xs text-slate-300">Resumen de tu estado físico y cálculos para seguimiento en el gimnasio.</p>
                 </article>
 
                 @if (session('fitness_status'))
@@ -1937,7 +2286,7 @@
                 <article id="physical-edit-panel" class="profile-edit-panel space-y-3 {{ $fitnessEditOpen ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <p class="profile-edit-title">Editar datos fisicos</p>
+                            <p class="profile-edit-title">Editar datos físicos</p>
                             <p class="profile-edit-help">Estos datos se usan para IMC, metabolismo basal y metas de seguimiento.</p>
                         </div>
                         <button id="close-physical-edit" type="button" class="profile-edit-toggle">Cerrar</button>
@@ -1953,7 +2302,7 @@
                         'formIdPrefix' => 'physical-edit',
                         'nextScreen' => 'physical',
                         'isModalForm' => false,
-                        'submitLabel' => 'Guardar datos fisicos',
+                        'submitLabel' => 'Guardar datos físicos',
                     ])
                 </article>
 
@@ -1962,7 +2311,7 @@
                         <div class="fitness-meta-grid">
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Edad</p>
-                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' anios' : '-' }}</p>
+                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' años' : '-' }}</p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Sexo</p>
@@ -1989,7 +2338,7 @@
                                 <p class="fitness-meta-value">{{ $fitnessDaysLabel }}</p>
                             </div>
                             <div class="fitness-meta-card">
-                                <p class="fitness-meta-label">Duracion sesion</p>
+                                <p class="fitness-meta-label">Duración sesión</p>
                                 <p class="fitness-meta-value">{{ $fitnessMinutesLabel }}</p>
                             </div>
                         </div>
@@ -2001,7 +2350,7 @@
                                     <p class="fitness-meta-value">{{ $fitnessBmiValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Categoria IMC</p>
+                                    <p class="fitness-meta-label">Categoría IMC</p>
                                     <p class="fitness-meta-value">{{ $fitnessBmiCategory }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
@@ -2009,11 +2358,11 @@
                                     <p class="fitness-meta-value">{{ $fitnessBmrValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Calorias mantenimiento</p>
+                                    <p class="fitness-meta-label">Calorías mantenimiento</p>
                                     <p class="fitness-meta-value">{{ $fitnessMaintenanceValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Calorias objetivo</p>
+                                    <p class="fitness-meta-label">Calorías objetivo</p>
                                     <p class="fitness-meta-value">{{ $fitnessTargetCaloriesValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
@@ -2022,7 +2371,7 @@
                                 </div>
                             </div>
                         @else
-                            <p class="fitness-profile-note">Completa altura y peso para generar tus calculos de IMC y metabolismo.</p>
+                            <p class="fitness-profile-note">Completa altura y peso para generar tus cálculos de IMC y metabolismo.</p>
                         @endif
 
                         <div class="profile-kpi">
@@ -2032,16 +2381,16 @@
 
                         @if ($fitnessGoalTrackLabel !== '')
                             <div class="profile-kpi">
-                                <p class="profile-kpi-label">Enfoque segun objetivo</p>
+                                <p class="profile-kpi-label">Enfoque según objetivo</p>
                                 <p class="profile-kpi-value">{{ $fitnessGoalTrackLabel }}</p>
                             </div>
                         @endif
 
                         @if ($fitnessUpdatedLabel !== '')
-                            <p class="fitness-profile-note">Ultima actualizacion: {{ $fitnessUpdatedLabel }}</p>
+                            <p class="fitness-profile-note">Última actualización: {{ $fitnessUpdatedLabel }}</p>
                         @endif
                     @else
-                        <p class="text-xs text-slate-300">Aun no completas tus datos fisicos iniciales.</p>
+                        <p class="text-xs text-slate-300">Aún no completas tus datos físicos iniciales.</p>
                     @endif
                 </article>
             </section>
@@ -2064,7 +2413,7 @@
                     <article class="fitness-onboarding-card space-y-3">
                         <div class="flex items-start justify-between gap-2">
                             <div>
-                                <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos fisicos</h3>
+                                <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos físicos</h3>
                                 <p class="fitness-onboarding-help">Necesitamos estos datos para calcular IMC, metabolismo y habilitar tu pantalla de rendimiento.</p>
                             </div>
                             <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()]) }}" class="fitness-modal-close" aria-label="Volver al panel anterior">Cerrar</a>
@@ -2097,6 +2446,8 @@
 
     const checkinUrl = shell.dataset.checkinUrl || '';
     const progressUrl = shell.dataset.progressUrl || '';
+    const trainingStartUrl = shell.dataset.trainingStartUrl || '';
+    const trainingFinishUrl = shell.dataset.trainingFinishUrl || '';
     const pushStatusUrl = shell.dataset.pushStatusUrl || '';
     const pushSubscribeUrl = shell.dataset.pushSubscribeUrl || '';
     const pushUnsubscribeUrl = shell.dataset.pushUnsubscribeUrl || '';
@@ -2139,6 +2490,8 @@
     const predictionPrimaryEl = document.getElementById('prediction-primary');
     const predictionSecondaryEl = document.getElementById('prediction-secondary');
     const predictionContextEl = document.getElementById('prediction-context');
+    const progressLockCards = Array.from(document.querySelectorAll('[data-progress-lock-card]'));
+    const progressLockMessageEls = Array.from(document.querySelectorAll('[data-progress-lock-message]'));
     const bodyStateSummaryEl = document.getElementById('body-state-summary');
     const bodyStateContextEl = document.getElementById('body-state-context');
     const bodyStateForceBarEl = document.getElementById('body-state-force-bar');
@@ -2156,6 +2509,13 @@
     const trainingPlanListEl = document.getElementById('training-plan-list');
     const trainingAdaptationEl = document.getElementById('training-adaptation');
     const trainingContextEl = document.getElementById('training-context');
+    const trainingSessionStatusEl = document.getElementById('training-session-status');
+    const trainingSessionHintEl = document.getElementById('training-session-hint');
+    const trainingSessionTimerEl = document.getElementById('training-session-timer');
+    const trainingSessionTimerValueEl = document.getElementById('training-session-timer-value');
+    const trainingSessionFeedbackEl = document.getElementById('training-session-feedback');
+    const trainingStartBtn = document.getElementById('training-start-btn');
+    const trainingFinishBtn = document.getElementById('training-finish-btn');
     const openWeeklyGoalEditBtn = document.getElementById('open-weekly-goal-edit');
     const closeWeeklyGoalEditBtn = document.getElementById('close-weekly-goal-edit');
     const weeklyGoalEditPanel = document.getElementById('weekly-goal-edit-panel');
@@ -2165,7 +2525,12 @@
     const weeklyGoalRemainingLabelEl = document.getElementById('weekly-goal-remaining-label');
     const weeklyGoalDaysLeftLabelEl = document.getElementById('weekly-goal-days-left-label');
     const weeklyAlertListEl = document.getElementById('weekly-alert-list');
+    const timelineMonthLabelEl = document.getElementById('timeline-month-label');
     const timelineGridEl = document.getElementById('timeline-grid');
+    const timelineWeekCommitmentEl = document.getElementById('timeline-week-commitment');
+    const timelineWeekRestEl = document.getElementById('timeline-week-rest');
+    const sectionCardEls = Array.from(document.querySelectorAll('[data-section-card]'));
+    const sectionToggleBtnEls = Array.from(document.querySelectorAll('[data-section-toggle]'));
     const periodVisitsEl = document.getElementById('period-visits');
     const periodTotalEl = document.getElementById('period-total');
     const periodWindowLabelEl = document.getElementById('period-window-label');
@@ -2192,6 +2557,11 @@
     let detector = null;
     let clientPushBusy = false;
     let clientPushState = 'idle';
+    let trainingActionBusy = false;
+    let trainingCountdownTimer = null;
+    let moduleLoaderFailSafeTimer = null;
+    const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
+    let sectionCollapseState = {};
 
     function setUserMenuOpen(isOpen) {
         if (!userMenuPanel) return;
@@ -2216,6 +2586,63 @@
     function setWeeklyGoalEditOpen(isOpen) {
         if (!weeklyGoalEditPanel) return;
         weeklyGoalEditPanel.classList.toggle('hidden', !isOpen);
+    }
+
+    function readSectionCollapseState() {
+        try {
+            const raw = window.localStorage.getItem(sectionStateStorageKey);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function writeSectionCollapseState() {
+        try {
+            window.localStorage.setItem(sectionStateStorageKey, JSON.stringify(sectionCollapseState));
+        } catch (error) {
+            // ignore persistence errors
+        }
+    }
+
+    function setSectionCollapsed(sectionId, collapsed, persistState) {
+        const normalizedSectionId = String(sectionId || '').trim();
+        if (normalizedSectionId === '') return;
+
+        const cardEl = sectionCardEls.find((item) => String(item.dataset.sectionCard || '') === normalizedSectionId);
+        if (!cardEl) return;
+
+        const shouldCollapse = Boolean(collapsed);
+        cardEl.classList.toggle('is-section-collapsed', shouldCollapse);
+
+        const toggleButtons = sectionToggleBtnEls.filter((btn) => String(btn.dataset.sectionToggle || '') === normalizedSectionId);
+        toggleButtons.forEach((buttonEl) => {
+            buttonEl.textContent = shouldCollapse ? 'Mostrar' : 'Ocultar';
+            buttonEl.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
+        });
+
+        if (shouldCollapse && normalizedSectionId === 'weekly-goal') {
+            setWeeklyGoalEditOpen(false);
+        }
+
+        if (persistState !== false) {
+            sectionCollapseState[normalizedSectionId] = shouldCollapse;
+            writeSectionCollapseState();
+        }
+    }
+
+    function initializeSectionCollapseState() {
+        if (currentScreen !== 'progress') return;
+        sectionCollapseState = readSectionCollapseState();
+
+        sectionCardEls.forEach((cardEl) => {
+            const sectionId = String(cardEl.dataset.sectionCard || '').trim();
+            if (sectionId === '') return;
+            const isCollapsed = Boolean(sectionCollapseState[sectionId]);
+            setSectionCollapsed(sectionId, isCollapsed, false);
+        });
     }
 
     function setFitnessModalOpen(isOpen) {
@@ -2289,10 +2716,31 @@
         });
     }
 
+    function hideModuleLoader() {
+        if (!moduleLoader) return;
+        if (moduleLoaderFailSafeTimer) {
+            window.clearTimeout(moduleLoaderFailSafeTimer);
+            moduleLoaderFailSafeTimer = null;
+        }
+        moduleLoader.classList.add('hidden');
+        moduleLoader.setAttribute('aria-hidden', 'true');
+    }
+
     function showModuleLoader() {
         if (!moduleLoader) return;
+        if (moduleLoaderFailSafeTimer) {
+            window.clearTimeout(moduleLoaderFailSafeTimer);
+            moduleLoaderFailSafeTimer = null;
+        }
         moduleLoader.classList.remove('hidden');
         moduleLoader.setAttribute('aria-hidden', 'false');
+
+        // Fail-safe: if navigation is canceled/back-restored, prevent sticky overlay.
+        moduleLoaderFailSafeTimer = window.setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+                hideModuleLoader();
+            }
+        }, 12000);
     }
 
     function markBootSeen() {
@@ -2430,8 +2878,8 @@
 
         if (!response.ok || (data && data.ok === false)) {
             const fallbackMessage = response.status === 401
-                ? 'Tu sesion expiro. Recarga la app.'
-                : 'No se pudo guardar la configuracion push.';
+                ? 'Tu sesión expiró. Recarga la app.'
+                : 'No se pudo guardar la configuración push.';
             const message = data && data.message ? String(data.message) : fallbackMessage;
             throw new Error(message);
         }
@@ -2510,14 +2958,14 @@
         }
 
         if (String(pushVapidPublicKey || '').trim() === '') {
-            setClientPushUi('unsupported', 'Falta configurar llave publica VAPID en el servidor.');
+            setClientPushUi('unsupported', 'Falta configurar llave pública VAPID en el servidor.');
             return;
         }
 
         try {
             urlBase64ToUint8Array(pushVapidPublicKey);
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY invalida.';
+            const message = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY inválida.';
             setClientPushUi('unsupported', message);
             return;
         }
@@ -2533,7 +2981,7 @@
         }
 
         if (statusPayload && statusPayload.webpush_ready === false) {
-            setClientPushUi('unsupported', 'El servidor aun no tiene push habilitado.');
+            setClientPushUi('unsupported', 'El servidor aún no tiene push habilitado.');
             return;
         }
 
@@ -2705,9 +3153,9 @@
         const consistencyPct = Number.isFinite(Number(prediction.consistency_percent))
             ? Math.max(0, Math.min(100, Math.round(Number(prediction.consistency_percent))))
             : 0;
-        const primaryLine = String(prediction.primary_line || 'Completa tus datos fisicos para activar tu prediccion.');
-        const secondaryLine = String(prediction.secondary_line || 'Registra asistencias para mejorar la precision.');
-        const contextLine = String(prediction.context_line || 'Sin datos de progreso todavia.');
+        const primaryLine = String(prediction.primary_line || 'Completa tus datos físicos para activar tu predicción.');
+        const secondaryLine = String(prediction.secondary_line || 'Registra asistencias para mejorar la precisión.');
+        const contextLine = String(prediction.context_line || 'Sin datos de progreso todavía.');
 
         if (predictionRhythmEl) {
             predictionRhythmEl.textContent = rhythmLabel + ' | Constancia: ' + String(consistencyPct) + '%';
@@ -2745,7 +3193,7 @@
             : 0;
 
         const summaryLine = String(bodyState.summary_line || 'Sin datos para estado corporal.');
-        const contextLine = String(bodyState.context_line || 'Registra mas entrenamientos para estimar este estado.');
+        const contextLine = String(bodyState.context_line || 'Registra más entrenamientos para estimar este estado.');
 
         if (bodyStateSummaryEl) bodyStateSummaryEl.textContent = summaryLine;
         if (bodyStateContextEl) bodyStateContextEl.textContent = contextLine;
@@ -2824,6 +3272,302 @@
         });
     }
 
+    function formatSecondsAsClock(totalSeconds) {
+        const normalized = Math.max(0, Math.round(Number(totalSeconds) || 0));
+        const minutes = Math.floor(normalized / 60);
+        const seconds = normalized % 60;
+        const minuteLabel = String(minutes).padStart(2, '0');
+        const secondLabel = String(seconds).padStart(2, '0');
+        return minuteLabel + ':' + secondLabel;
+    }
+
+    function setTrainingFeedback(message, isError) {
+        if (!trainingSessionFeedbackEl) return;
+
+        const text = String(message || '').trim();
+        if (text === '') {
+            trainingSessionFeedbackEl.textContent = '';
+            trainingSessionFeedbackEl.classList.add('hidden');
+            trainingSessionFeedbackEl.classList.remove('is-error');
+            return;
+        }
+
+        trainingSessionFeedbackEl.textContent = text;
+        trainingSessionFeedbackEl.classList.remove('hidden');
+        trainingSessionFeedbackEl.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function setTrainingButtonsBusy(isBusy) {
+        if (trainingStartBtn && !trainingStartBtn.classList.contains('hidden')) {
+            trainingStartBtn.toggleAttribute('disabled', Boolean(isBusy));
+        }
+        if (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden')) {
+            trainingFinishBtn.toggleAttribute('disabled', Boolean(isBusy));
+        }
+    }
+
+    function clearTrainingCountdown() {
+        if (trainingCountdownTimer) {
+            window.clearInterval(trainingCountdownTimer);
+            trainingCountdownTimer = null;
+        }
+    }
+
+    function startTrainingCountdown(endIsoString) {
+        if (!trainingSessionTimerEl || !trainingSessionTimerValueEl) return;
+
+        const endMs = Date.parse(String(endIsoString || ''));
+        if (!Number.isFinite(endMs)) {
+            trainingSessionTimerEl.classList.add('hidden');
+            trainingSessionTimerValueEl.textContent = '--:--';
+            clearTrainingCountdown();
+            return;
+        }
+
+        clearTrainingCountdown();
+
+        const tick = () => {
+            const remainingSeconds = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+            trainingSessionTimerValueEl.textContent = formatSecondsAsClock(remainingSeconds);
+            trainingSessionTimerEl.classList.remove('hidden');
+
+            if (remainingSeconds > 0) return;
+
+            clearTrainingCountdown();
+            window.setTimeout(() => {
+                refreshProgress();
+            }, 350);
+        };
+
+        tick();
+        trainingCountdownTimer = window.setInterval(tick, 1000);
+    }
+
+    function renderProgressLock(trainingStatusPayload) {
+        if (!Array.isArray(progressLockCards) || progressLockCards.length === 0) return;
+
+        const trainingStatus = trainingStatusPayload && typeof trainingStatusPayload === 'object'
+            ? trainingStatusPayload
+            : {};
+        const progressUnlocked = Boolean(trainingStatus.progress_unlocked);
+        const reasonRaw = String(trainingStatus.lock_reason || '').trim();
+        const reason = reasonRaw !== ''
+            ? reasonRaw
+            : 'Inicia tu entrenamiento de hoy para desbloquear el panel.';
+
+        progressLockCards.forEach((cardEl) => {
+            cardEl.classList.toggle('is-locked', !progressUnlocked);
+            const overlayEl = cardEl.querySelector('.progress-lock-overlay');
+            if (overlayEl) {
+                overlayEl.setAttribute('aria-hidden', progressUnlocked ? 'true' : 'false');
+            }
+        });
+
+        progressLockMessageEls.forEach((messageEl) => {
+            messageEl.textContent = reason;
+        });
+
+        if (!progressUnlocked) {
+            setWeeklyGoalEditOpen(false);
+        }
+    }
+
+    function renderTrainingStatus(progressPayload) {
+        const payload = progressPayload && typeof progressPayload === 'object' ? progressPayload : {};
+        const trainingStatus = payload.training_status && typeof payload.training_status === 'object'
+            ? payload.training_status
+            : {};
+        renderProgressLock(trainingStatus);
+
+        const canStart = Boolean(trainingStatus.can_start);
+        const canFinish = Boolean(trainingStatus.can_finish);
+        const isActive = Boolean(trainingStatus.is_active);
+        const statusLabel = String(trainingStatus.status_label || 'Registra asistencia para habilitar entrenamiento.');
+        const hintLine = String(trainingStatus.hint_line || 'Escanea tu asistencia y luego inicia entrenamiento.');
+        const remainingSeconds = Number.isFinite(Number(trainingStatus.remaining_seconds))
+            ? Math.max(0, Math.round(Number(trainingStatus.remaining_seconds)))
+            : 0;
+        const scheduledEndAt = String(trainingStatus.scheduled_end_at || '').trim();
+
+        if (trainingSessionStatusEl) {
+            trainingSessionStatusEl.textContent = statusLabel;
+        }
+        if (trainingSessionHintEl) {
+            trainingSessionHintEl.textContent = hintLine;
+        }
+
+        if (trainingStartBtn) {
+            trainingStartBtn.classList.toggle('hidden', !canStart);
+        }
+        if (trainingFinishBtn) {
+            trainingFinishBtn.classList.toggle('hidden', !canFinish);
+        }
+
+        if (isActive) {
+            if (scheduledEndAt !== '') {
+                startTrainingCountdown(scheduledEndAt);
+            } else if (trainingSessionTimerEl && trainingSessionTimerValueEl) {
+                trainingSessionTimerValueEl.textContent = formatSecondsAsClock(remainingSeconds);
+                trainingSessionTimerEl.classList.remove('hidden');
+                clearTrainingCountdown();
+            }
+        } else if (trainingSessionTimerEl && trainingSessionTimerValueEl) {
+            clearTrainingCountdown();
+            trainingSessionTimerValueEl.textContent = '--:--';
+            trainingSessionTimerEl.classList.add('hidden');
+        }
+
+        if (!trainingActionBusy) {
+            setTrainingButtonsBusy(false);
+        }
+    }
+
+    function applyProgressPayload(progressPayload) {
+        const payload = progressPayload && typeof progressPayload === 'object' ? progressPayload : {};
+
+        if (periodVisitsEl) periodVisitsEl.textContent = String(payload.period_visits ?? 0);
+        if (periodTotalEl) periodTotalEl.textContent = String(payload.total_visits ?? 0);
+        if (periodWindowLabelEl) {
+            const windowLabel = String(payload.period_window_label || 'Sin membresía activa');
+            periodWindowLabelEl.textContent = 'Período: ' + windowLabel;
+        }
+
+        renderMonthAttendance(payload);
+        renderProgressPrediction(payload);
+        renderWeeklyGoal(payload);
+        renderBodyState(payload);
+        renderTrainingPlan(payload);
+        renderTrainingStatus(payload);
+
+        if (liveCountEl) {
+            const next = String(payload.live_clients_count ?? 0);
+            if (liveCountEl.textContent !== next) {
+                liveCountEl.classList.remove('live-count-pop');
+                void liveCountEl.offsetWidth;
+                liveCountEl.classList.add('live-count-pop');
+            }
+            liveCountEl.textContent = next;
+        }
+
+        if (liveWindowEl) {
+            const label = String(payload.live_window_label || 'En vivo');
+            liveWindowEl.textContent = 'Conteo de ' + label + '. Actualiza automático.';
+        }
+    }
+
+    async function postTrainingAction(url) {
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                ...resolveCsrfHeaders(),
+            },
+            body: JSON.stringify({}),
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = null;
+        }
+
+        if (!response.ok || (data && data.ok === false)) {
+            const fallback = response.status === 401
+                ? 'Tu sesión expiró. Recarga la app.'
+                : 'No se pudo ejecutar la acción de entrenamiento.';
+            const message = data && data.message ? String(data.message) : fallback;
+            throw new Error(message);
+        }
+
+        return data || {};
+    }
+
+    async function triggerTrainingAction(url, pendingMessage) {
+        if (trainingActionBusy) return;
+        if (!url) return;
+
+        trainingActionBusy = true;
+        setTrainingButtonsBusy(true);
+        setTrainingFeedback(pendingMessage, false);
+
+        try {
+            const payload = await postTrainingAction(url);
+            if (payload && payload.progress && typeof payload.progress === 'object') {
+                applyProgressPayload(payload.progress);
+            } else {
+                await refreshProgress();
+            }
+
+            const message = String(payload && payload.message ? payload.message : 'Acción completada.');
+            setTrainingFeedback(message, false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'No se pudo completar la acción.';
+            setTrainingFeedback(message, true);
+        } finally {
+            trainingActionBusy = false;
+            setTrainingButtonsBusy(false);
+        }
+    }
+
+    function compactTimelineForCurrentMonth(rawTimeline, progressPayload) {
+        const timeline = Array.isArray(rawTimeline) ? rawTimeline : [];
+        if (!timeline.length) return [];
+
+        const todayRaw = String(progressPayload && progressPayload.today ? progressPayload.today : '').trim();
+        const monthPrefix = /^\d{4}-\d{2}-\d{2}$/.test(todayRaw) ? todayRaw.slice(0, 7) : '';
+
+        const normalized = timeline.map((item) => {
+            const isPlaceholder = Boolean(item && item.is_placeholder);
+            if (isPlaceholder) {
+                return {
+                    date: '',
+                    label: '',
+                    weekday_short: '',
+                    attended: false,
+                    is_today: false,
+                    is_placeholder: true,
+                };
+            }
+
+            const date = String(item && item.date ? item.date : '').trim();
+            if (monthPrefix !== '' && date !== '' && !date.startsWith(monthPrefix)) {
+                return {
+                    date: '',
+                    label: '',
+                    weekday_short: '',
+                    attended: false,
+                    is_today: false,
+                    is_placeholder: true,
+                };
+            }
+
+            return item;
+        });
+
+        const weeks = [];
+        for (let index = 0; index < normalized.length; index += 7) {
+            weeks.push(normalized.slice(index, index + 7));
+        }
+
+        const weekHasVisibleDay = (week) => week.some((item) => {
+            if (!item || item.is_placeholder) return false;
+            return String(item.date || '').trim() !== '';
+        });
+
+        while (weeks.length && !weekHasVisibleDay(weeks[0])) {
+            weeks.shift();
+        }
+        while (weeks.length && !weekHasVisibleDay(weeks[weeks.length - 1])) {
+            weeks.pop();
+        }
+
+        if (!weeks.length) return [];
+        return weeks.flat();
+    }
+
     function renderWeeklyGoal(progressPayload) {
         if (!weeklyGoalSummaryEl && !weeklyGoalProgressFillEl) return;
 
@@ -2831,10 +3575,17 @@
         const weeklyGoal = payload.weekly_goal && typeof payload.weekly_goal === 'object'
             ? payload.weekly_goal
             : {};
-        const timeline = Array.isArray(payload.last30_timeline) ? payload.last30_timeline : [];
+        const timeline = compactTimelineForCurrentMonth(
+            Array.isArray(payload.last30_timeline) ? payload.last30_timeline : [],
+            payload
+        );
+        if (timelineMonthLabelEl) {
+            const monthLabel = String(payload.month_label || '').trim();
+            timelineMonthLabelEl.textContent = 'Mes actual: ' + (monthLabel !== '' ? monthLabel : '-');
+        }
 
         const target = Number.isFinite(Number(weeklyGoal.target))
-            ? Math.max(3, Math.min(7, Math.round(Number(weeklyGoal.target))))
+            ? Math.max(0, Math.min(7, Math.round(Number(weeklyGoal.target))))
             : 3;
         const visits = Number.isFinite(Number(weeklyGoal.visits))
             ? Math.max(0, Math.round(Number(weeklyGoal.visits)))
@@ -2848,6 +3599,19 @@
         const daysLeft = Number.isFinite(Number(weeklyGoal.days_left_week))
             ? Math.max(0, Math.round(Number(weeklyGoal.days_left_week)))
             : 0;
+        const commitmentLineRaw = String(weeklyGoal.commitment_line || '').trim();
+        const commitmentLine = commitmentLineRaw !== ''
+            ? commitmentLineRaw
+            : (visits >= target
+                ? ('Has asistido los ' + String(target) + ' días que prometiste. Excelente.')
+                : ('Esta semana asististe ' + String(visits) + ' de los ' + String(target) + ' días que prometiste.'));
+        const restDays = Number.isFinite(Number(weeklyGoal.rest_days))
+            ? Math.max(0, Math.round(Number(weeklyGoal.rest_days)))
+            : Math.max(0, 7 - target);
+        const restLineRaw = String(weeklyGoal.rest_line || '').trim();
+        const restLine = restLineRaw !== ''
+            ? restLineRaw
+            : ('Días de descanso planificados: ' + String(restDays) + '.');
 
         if (weeklyGoalSummaryEl) {
             weeklyGoalSummaryEl.textContent = String(visits) + ' de ' + String(target) + ' sesiones esta semana.';
@@ -2862,7 +3626,13 @@
             weeklyGoalRemainingLabelEl.textContent = 'Faltan: ' + String(remaining);
         }
         if (weeklyGoalDaysLeftLabelEl) {
-            weeklyGoalDaysLeftLabelEl.textContent = 'Dias restantes: ' + String(daysLeft);
+            weeklyGoalDaysLeftLabelEl.textContent = 'Días restantes: ' + String(daysLeft);
+        }
+        if (timelineWeekCommitmentEl) {
+            timelineWeekCommitmentEl.textContent = commitmentLine;
+        }
+        if (timelineWeekRestEl) {
+            timelineWeekRestEl.textContent = restLine;
         }
 
         if (weeklyAlertListEl) {
@@ -2884,18 +3654,40 @@
 
         if (timelineGridEl) {
             timelineGridEl.textContent = '';
-            timeline.slice(0, 30).forEach((dayItem) => {
+            timeline.slice(0, 42).forEach((dayItem) => {
                 const label = String(dayItem && dayItem.label ? dayItem.label : '--');
                 const date = String(dayItem && dayItem.date ? dayItem.date : '');
                 const weekday = String(dayItem && dayItem.weekday_short ? dayItem.weekday_short : '');
-                const attended = Boolean(dayItem && dayItem.attended);
+                const statusRaw = String(dayItem && dayItem.status ? dayItem.status : '').toLowerCase();
+                const status = ['trained', 'rest', 'missed', 'pending'].includes(statusRaw)
+                    ? statusRaw
+                    : (Boolean(dayItem && dayItem.attended) ? 'trained' : 'rest');
                 const isToday = Boolean(dayItem && dayItem.is_today);
-                const status = attended ? 'entrenaste' : 'descanso';
-                const title = ((weekday !== '' ? (weekday + ' ') : '') + date + ' - ' + status + (isToday ? ' (hoy)' : '')).trim();
+                const isPlaceholder = Boolean(dayItem && dayItem.is_placeholder);
+                const statusLabel = status === 'trained'
+                    ? 'entrenado'
+                    : (status === 'missed'
+                        ? 'faltaste'
+                        : (status === 'pending' ? 'aún no marcado' : 'descanso'));
+                const title = ((weekday !== '' ? (weekday + ' ') : '') + date + ' - ' + statusLabel + (isToday ? ' (hoy)' : '')).trim();
 
                 const cellEl = document.createElement('span');
                 cellEl.className = 'timeline-cell';
-                if (attended) cellEl.classList.add('timeline-cell-attended');
+                if (isPlaceholder) {
+                    cellEl.classList.add('timeline-cell-placeholder');
+                    cellEl.textContent = ' ';
+                    cellEl.setAttribute('aria-hidden', 'true');
+                    timelineGridEl.appendChild(cellEl);
+                    return;
+                }
+
+                if (status === 'trained') {
+                    cellEl.classList.add('timeline-cell-trained');
+                } else if (status === 'pending') {
+                    cellEl.classList.add('timeline-cell-pending');
+                } else {
+                    cellEl.classList.add('timeline-cell-neutral');
+                }
                 if (isToday) cellEl.classList.add('timeline-cell-today');
                 cellEl.textContent = label;
                 cellEl.title = title;
@@ -2913,33 +3705,7 @@
 
             const payload = await res.json();
             if (!payload || !payload.ok || !payload.progress) return;
-
-            if (periodVisitsEl) periodVisitsEl.textContent = String(payload.progress.period_visits ?? 0);
-            if (periodTotalEl) periodTotalEl.textContent = String(payload.progress.total_visits ?? 0);
-            if (periodWindowLabelEl) {
-                const windowLabel = String(payload.progress.period_window_label || 'Sin membresia activa');
-                periodWindowLabelEl.textContent = 'Periodo: ' + windowLabel;
-            }
-            renderMonthAttendance(payload.progress);
-            renderProgressPrediction(payload.progress);
-            renderWeeklyGoal(payload.progress);
-            renderBodyState(payload.progress);
-            renderTrainingPlan(payload.progress);
-
-            if (liveCountEl) {
-                const next = String(payload.progress.live_clients_count ?? 0);
-                if (liveCountEl.textContent !== next) {
-                    liveCountEl.classList.remove('live-count-pop');
-                    void liveCountEl.offsetWidth;
-                    liveCountEl.classList.add('live-count-pop');
-                }
-                liveCountEl.textContent = next;
-            }
-
-            if (liveWindowEl) {
-                const label = String(payload.progress.live_window_label || 'En vivo');
-                liveWindowEl.textContent = 'Conteo de ' + label + '. Actualiza automatico.';
-            }
+            applyProgressPayload(payload.progress);
         } catch (error) {
             // ignore refresh errors
         }
@@ -3085,6 +3851,7 @@
 
                 // Avoid stuck loader when user taps a link that keeps the same view/anchor.
                 if (samePathAndQuery && (sameHash || (targetUrl.hash !== '' && currentUrl.hash === ''))) {
+                    hideModuleLoader();
                     setUserMenuOpen(false);
                     if (targetUrl.hash !== '') {
                         window.location.hash = targetUrl.hash;
@@ -3156,11 +3923,25 @@
     });
 
     openWeeklyGoalEditBtn?.addEventListener('click', () => {
+        setSectionCollapsed('weekly-goal', false, true);
         setWeeklyGoalEditOpen(true);
     });
 
     closeWeeklyGoalEditBtn?.addEventListener('click', () => {
         setWeeklyGoalEditOpen(false);
+    });
+
+    sectionToggleBtnEls.forEach((buttonEl) => {
+        buttonEl.addEventListener('click', () => {
+            const sectionId = String(buttonEl.dataset.sectionToggle || '').trim();
+            if (sectionId === '') return;
+
+            const cardEl = sectionCardEls.find((item) => String(item.dataset.sectionCard || '') === sectionId);
+            if (!cardEl) return;
+
+            const nextCollapsed = !cardEl.classList.contains('is-section-collapsed');
+            setSectionCollapsed(sectionId, nextCollapsed, true);
+        });
     });
 
     clientPushToggleBtn?.addEventListener('click', async () => {
@@ -3175,15 +3956,36 @@
         await subscribeClientPush();
     });
 
+    trainingStartBtn?.addEventListener('click', async () => {
+        await triggerTrainingAction(trainingStartUrl, 'Iniciando entrenamiento...');
+    });
+
+    trainingFinishBtn?.addEventListener('click', async () => {
+        await triggerTrainingAction(trainingFinishUrl, 'Finalizando entrenamiento...');
+    });
+
     logoutForm?.addEventListener('submit', () => {
         clearBootSeen();
     });
 
+    window.addEventListener('pageshow', () => {
+        hideModuleLoader();
+    });
+
+    window.addEventListener('popstate', () => {
+        hideModuleLoader();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        hideModuleLoader();
+    });
+
     initFitnessForms();
+    initializeSectionCollapseState();
     refreshClientPushStatus();
     initBootScreen();
-    moduleLoader?.classList.add('hidden');
-    moduleLoader?.setAttribute('aria-hidden', 'true');
+    hideModuleLoader();
     if (fitnessModal && !fitnessModal.classList.contains('hidden')) {
         setFitnessModalOpen(true);
     }
