@@ -219,27 +219,76 @@ jobs:
             echo "Deploy PRO terminado"
             exit 0
 
-      - name: Post-deploy health check (/login)
+      - name: Post-deploy health check (resilient)
         run: |
-          URL="${{ secrets.HEALTHCHECK_URL }}"
-          if [ -z "$URL" ]; then
-            URL="https://gymsystemflexjokagencia.duckdns.org/login"
-          fi
+          set -euo pipefail
 
-          echo "Healthcheck URL: $URL"
-          OK=0
-          for i in $(seq 1 24); do
-            CODE="$(curl -k -sS -o /dev/null -w '%{http_code}' -I "$URL")"
-            echo "Attempt $i -> HTTP $CODE"
-            if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
-              OK=1
-              break
+          PRIMARY_URL="${{ secrets.HEALTHCHECK_URL }}"
+          FALLBACK_URL_1="https://gymsystemflexjokagencia.duckdns.org/cliente/premium/login"
+          FALLBACK_URL_2="https://gymsystemflexjokagencia.duckdns.org/login"
+
+          URLS=()
+          if [ -n "${PRIMARY_URL}" ]; then
+            URLS+=("${PRIMARY_URL}")
+          fi
+          URLS+=("${FALLBACK_URL_1}")
+          URLS+=("${FALLBACK_URL_2}")
+
+          dns_ready() {
+            local host="$1"
+            if command -v getent >/dev/null 2>&1; then
+              getent ahostsv4 "${host}" >/dev/null 2>&1 || getent hosts "${host}" >/dev/null 2>&1
+              return $?
             fi
-            sleep 5
+            if command -v nslookup >/dev/null 2>&1; then
+              nslookup "${host}" >/dev/null 2>&1
+              return $?
+            fi
+            return 0
+          }
+
+          url_host() {
+            local url="$1"
+            echo "${url}" | sed -E 's#^[a-zA-Z]+://([^/:]+).*#\1#'
+          }
+
+          OK=0
+          for URL in "${URLS[@]}"; do
+            HOST="$(url_host "${URL}")"
+            echo "Healthcheck URL candidate: ${URL}"
+
+            for i in $(seq 1 24); do
+              if ! dns_ready "${HOST}"; then
+                echo "Attempt ${i} -> DNS not ready for ${HOST}"
+                sleep 5
+                continue
+              fi
+
+              TMP_ERR="$(mktemp)"
+              set +e
+              CODE="$(curl -k -sS -o /dev/null -w '%{http_code}' -I --connect-timeout 8 --max-time 20 "${URL}" 2>"${TMP_ERR}")"
+              CURL_RC=$?
+              set -e
+              ERR_MSG="$(tr '\n' ' ' < "${TMP_ERR}" | sed -E 's/[[:space:]]+/ /g' | sed -E 's/[[:space:]]+$//')"
+              rm -f "${TMP_ERR}"
+
+              if [ "${CURL_RC}" -eq 0 ] && { [ "${CODE}" = "200" ] || [ "${CODE}" = "301" ] || [ "${CODE}" = "302" ]; }; then
+                echo "Attempt ${i} -> HTTP ${CODE} (OK) on ${URL}"
+                OK=1
+                break 2
+              fi
+
+              if [ -n "${ERR_MSG}" ]; then
+                echo "Attempt ${i} -> curl rc=${CURL_RC}, http=${CODE}, err=${ERR_MSG}"
+              else
+                echo "Attempt ${i} -> curl rc=${CURL_RC}, http=${CODE}"
+              fi
+              sleep 5
+            done
           done
 
-          if [ "$OK" -ne 1 ]; then
-            echo "ERROR: Health check failed. Expected 200/302 on $URL"
+          if [ "${OK}" -ne 1 ]; then
+            echo "ERROR: Health check failed after retries on all candidate URLs."
             exit 1
           fi
 
