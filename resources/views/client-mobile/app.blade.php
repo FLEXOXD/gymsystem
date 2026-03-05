@@ -2739,6 +2739,7 @@
     let permissionAutoRequestAttempted = false;
     let permissionGestureHooked = false;
     let permissionGestureTriggered = false;
+    let cameraPermissionProbeState = 'unknown';
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
@@ -2783,21 +2784,57 @@
         element.classList.add('is-' + normalizedState);
     }
 
+    function rememberCameraProbeSuccess() {
+        cameraPermissionProbeState = 'granted';
+    }
+
+    function rememberCameraProbeError(error) {
+        const errorName = String(error && error.name ? error.name : '').trim();
+        if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError' || errorName === 'SecurityError') {
+            cameraPermissionProbeState = 'denied';
+            return;
+        }
+        if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+            cameraPermissionProbeState = 'unsupported';
+            return;
+        }
+        if (
+            errorName === 'NotReadableError'
+            || errorName === 'TrackStartError'
+            || errorName === 'OverconstrainedError'
+            || errorName === 'ConstraintNotSatisfiedError'
+        ) {
+            // Error tecnico de dispositivo/camara, no bloqueo de permiso.
+            cameraPermissionProbeState = 'granted';
+        }
+    }
+
     async function resolveCameraPermissionState() {
         if (!window.isSecureContext || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
             return 'unsupported';
         }
 
+        if (cameraPermissionProbeState === 'granted') {
+            return 'granted';
+        }
+        if (cameraPermissionProbeState === 'unsupported') {
+            return 'unsupported';
+        }
+
         if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
-            return 'prompt';
+            return cameraPermissionProbeState === 'denied' ? 'denied' : 'prompt';
         }
 
         try {
             const result = await navigator.permissions.query({ name: 'camera' });
             const state = String(result && result.state ? result.state : 'prompt');
-            return ['granted', 'prompt', 'denied'].includes(state) ? state : 'prompt';
+            const normalized = ['granted', 'prompt', 'denied'].includes(state) ? state : 'prompt';
+            if (normalized === 'denied' && cameraPermissionProbeState === 'granted') {
+                return 'granted';
+            }
+            return normalized;
         } catch (_error) {
-            return 'prompt';
+            return cameraPermissionProbeState === 'denied' ? 'denied' : 'prompt';
         }
     }
 
@@ -2928,9 +2965,11 @@
                 const previewStream = await requestCameraStream();
                 if (previewStream) {
                     previewStream.getTracks().forEach((track) => track.stop());
+                    rememberCameraProbeSuccess();
                 }
             } catch (error) {
                 cameraError = error;
+                rememberCameraProbeError(error);
             }
         }
 
@@ -4602,9 +4641,12 @@
         let lastError = null;
         for (const constraints of constraintsAttempts) {
             try {
-                return await navigator.mediaDevices.getUserMedia(constraints);
+                const liveStream = await navigator.mediaDevices.getUserMedia(constraints);
+                rememberCameraProbeSuccess();
+                return liveStream;
             } catch (error) {
                 lastError = error;
+                rememberCameraProbeError(error);
                 const errorName = String(error && error.name ? error.name : '').trim();
                 if (
                     errorName === 'NotAllowedError'
@@ -4681,6 +4723,7 @@
                 stream = await requestCameraStream();
                 video.srcObject = stream;
                 await video.play();
+                rememberCameraProbeSuccess();
                 video.classList.remove('hidden');
                 stopBtn.classList.remove('hidden');
                 startBtn.classList.add('hidden');
@@ -4710,10 +4753,13 @@
                     }
                 }, 320);
             } catch (nativeError) {
+                rememberCameraProbeError(nativeError);
                 stopScan();
                 try {
                     await startFallbackScan();
+                    rememberCameraProbeSuccess();
                 } catch (fallbackError) {
+                    rememberCameraProbeError(fallbackError);
                     const fallbackMessage = String(fallbackError && fallbackError.message ? fallbackError.message : '').trim();
                     if (fallbackMessage.includes('No se pudo cargar el lector QR alternativo')) {
                         statusEl.textContent = 'No se pudo cargar el lector QR alternativo. Verifica internet y vuelve a intentar.';
@@ -4731,7 +4777,9 @@
 
         try {
             await startFallbackScan();
+            rememberCameraProbeSuccess();
         } catch (fallbackError) {
+            rememberCameraProbeError(fallbackError);
             const fallbackMessage = String(fallbackError && fallbackError.message ? fallbackError.message : '').trim();
             if (fallbackMessage.includes('No se pudo cargar el lector QR alternativo')) {
                 statusEl.textContent = 'No se pudo cargar el lector QR alternativo. Verifica internet y vuelve a intentar.';
@@ -4967,6 +5015,7 @@
     });
 
     window.addEventListener('pageshow', () => {
+        cameraPermissionProbeState = 'unknown';
         moduleLoaderLocked = false;
         hideModuleLoader();
         resetFitnessFormSubmitState();
