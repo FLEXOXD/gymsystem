@@ -52,24 +52,24 @@
                         @if ($isContactMode)
                             <div class="mb-2 text-3xl font-black leading-none text-slate-900 dark:text-slate-100">Personalizado <span class="text-base font-bold text-slate-700 dark:text-slate-300">/Contacto</span></div>
                             <p class="text-sm text-slate-700 dark:text-slate-200">
-                                Primer mes con descuento:
+                                Primer mes con oferta:
                                 @if ($discountPercent !== null)
                                     <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
                                 @elseif ($discountPrice !== null)
                                     <strong>${{ $money($discountPrice) }}</strong> de referencia.
                                 @else
-                                    <strong>segun cotizacion</strong>.
+                                    <strong>según cotización</strong>.
                                 @endif
                             </p>
                         @else
                             <div class="mb-2 text-5xl font-black leading-none text-slate-900 dark:text-slate-100">${{ $money($price) }}<span class="ml-1 text-2xl font-bold text-slate-700 dark:text-slate-300">/Mes</span></div>
                             <p class="text-sm text-slate-700 dark:text-slate-200">
-                                Primer mes con descuento:
+                                Primer mes con oferta:
                                 @if ($discountPrice !== null && $discountPrice < $price)
                                     <span class="line-through opacity-70">${{ $money($price) }}</span>
                                     <strong>${{ $money($discountPrice) }}</strong>
                                 @else
-                                    <strong>sin descuento configurado</strong>
+                                    <strong>sin oferta configurada</strong>
                                 @endif
                             </p>
                         @endif

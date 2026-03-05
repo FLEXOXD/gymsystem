@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Client extends Model
 {
@@ -75,6 +76,22 @@ class Client extends Model
     public function presenceSessions(): HasMany
     {
         return $this->hasMany(PresenceSession::class);
+    }
+
+    /**
+     * Perfil fisico para seguimiento en app cliente.
+     */
+    public function fitnessProfile(): HasOne
+    {
+        return $this->hasOne(ClientFitnessProfile::class);
+    }
+
+    /**
+     * Suscripciones push activas/inactivas del cliente en PWA movil.
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(ClientPushSubscription::class);
     }
 
     /**

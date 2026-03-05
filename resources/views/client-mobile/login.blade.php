@@ -7,12 +7,122 @@
     <title>Acceso cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        :root {
+            --bg-0: #01070f;
+            --bg-1: #031426;
+            --neon-green: #22c55e;
+            --neon-cyan: #22d3ee;
+            --text-soft: #d4f6ef;
+        }
         .mobile-guard { display: none; }
-        .mobile-shell { min-height: 100vh; background: radial-gradient(circle at 20% 10%, rgba(14,165,233,.20), transparent 45%), radial-gradient(circle at 90% 5%, rgba(34,197,94,.22), transparent 40%), #020617; color: #e2e8f0; }
-        .mobile-card { border: 1px solid rgba(56,189,248,.35); background: rgba(2,6,23,.80); box-shadow: 0 20px 60px rgba(2,6,23,.65); }
+        .mobile-shell {
+            min-height: 100vh;
+            background:
+                linear-gradient(rgba(1,7,15,.42), rgba(1,7,15,.70)),
+                radial-gradient(circle at 10% 12%, rgba(34,197,94,.25), transparent 38%),
+                radial-gradient(circle at 88% 6%, rgba(34,211,238,.20), transparent 42%),
+                linear-gradient(90deg, rgba(1,7,15,.16) 0%, rgba(1,7,15,.36) 100%),
+                url('https://drive.google.com/thumbnail?id=1chSsW0bDbahHFg6e2ttH4wKkg6CrZKI0&sz=w2000') center center / cover no-repeat,
+                url('https://st3.depositphotos.com/3383955/33157/i/950/depositphotos_331574238-stock-photo-sporty-couple-workout-dumbbells-muscular.jpg') center center / cover no-repeat,
+                linear-gradient(165deg, var(--bg-1), var(--bg-0) 65%);
+            color: #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .mobile-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(rgba(34,197,94,.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34,197,94,.08) 1px, transparent 1px);
+            background-size: 26px 26px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), rgba(0,0,0,.15));
+            pointer-events: none;
+        }
+        .hero-panel {
+            position: relative;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .login-card {
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .field-label {
+            color: #d8f3ff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: .02em;
+        }
+        .login-input {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(56,189,248,.28);
+            background: rgba(2,6,23,.78);
+            color: #e2e8f0;
+            padding: 11px 13px;
+            outline: none;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+        .login-input::placeholder { color: rgba(148,163,184,.85); }
+        .login-input:focus {
+            border-color: rgba(34,197,94,.75);
+            box-shadow: 0 0 0 3px rgba(34,197,94,.22);
+        }
+        .login-submit {
+            width: 100%;
+            border: 0;
+            border-radius: 13px;
+            padding: 12px 14px;
+            background: linear-gradient(120deg, #1d4ed8, #06b6d4 55%, #16a34a);
+            color: #f8fafc;
+            font-weight: 800;
+            letter-spacing: .01em;
+            transition: transform .14s ease, box-shadow .2s ease, opacity .18s ease;
+            box-shadow: 0 16px 36px rgba(8,47,73,.42);
+        }
+        .login-submit:active { transform: translateY(1px) scale(.995); }
+        .login-submit[disabled] { opacity: .7; cursor: wait; }
+        .submit-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,.28);
+            border-top-color: #ffffff;
+            border-radius: 9999px;
+            display: inline-block;
+            animation: loginSpin .7s linear infinite;
+            vertical-align: -2px;
+            margin-right: 8px;
+        }
+        .login-layout {
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 22px 0;
+        }
+        .login-stack {
+            width: min(100%, 460px);
+        }
+        @supports not (height: 100dvh) {
+            .login-layout { min-height: 100vh; }
+        }
+        @keyframes loginSpin { to { transform: rotate(360deg); } }
         @media (min-width: 900px) and (pointer:fine) {
             .mobile-shell { display: none; }
-            .mobile-guard { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #020617; color: #cbd5e1; }
+            .mobile-guard {
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 24px;
+                background: #020617;
+                color: #cbd5e1;
+            }
         }
     </style>
 </head>
@@ -20,16 +130,17 @@
 <div class="mobile-guard">
     <div class="max-w-xl rounded-2xl border border-slate-700 bg-slate-900/80 p-6 text-center">
         <h1 class="text-2xl font-black text-white">Interfaz exclusiva para celulares</h1>
-        <p class="mt-3 text-sm text-slate-300">Ingresa desde tu teléfono e instala la PWA para usar check-in móvil.</p>
+        <p class="mt-3 text-sm text-slate-300">Ingresa desde tu telefono para usar check-in movil.</p>
     </div>
 </div>
 
-<main class="mobile-shell px-4 py-6">
-    <section class="mx-auto max-w-md space-y-4">
-        <header class="text-center">
-            <p class="text-xs font-black uppercase tracking-[.18em] text-cyan-200">{{ (string) $gym->name }}</p>
-            <h1 class="mt-2 text-3xl font-black text-white">Acceso cliente PWA</h1>
-            <p class="mt-2 text-sm text-slate-300">{{ __('messages.client_mobile.login_hint') }}</p>
+<main class="mobile-shell px-4">
+    <section class="login-layout relative z-10">
+        <div class="login-stack mx-auto max-w-md space-y-5">
+        <header class="hero-panel rounded-3xl p-5 text-center">
+            <p class="text-xs font-black uppercase tracking-[.2em] text-emerald-200">{{ (string) $gym->name }}</p>
+            <h1 class="mt-2 text-3xl font-black text-white">Bienvenido a tu espacio fitness</h1>
+            <p class="mt-2 text-sm text-cyan-100/90">Inicia sesion para registrar asistencias y seguir tu progreso en el gimnasio.</p>
         </header>
 
         @if ($errors->has('mobile_login'))
@@ -38,21 +149,40 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('client-mobile.authenticate', ['gymSlug' => $gym->slug]) }}" class="mobile-card rounded-2xl p-4 space-y-4">
+        <form id="client-login-form" method="POST" action="{{ route('client-mobile.authenticate', ['gymSlug' => $gym->slug]) }}" class="login-card rounded-3xl p-5 space-y-4">
             @csrf
-            <label class="block space-y-1 text-sm">
-                <span class="font-semibold text-slate-200">Usuario</span>
-                <input type="text" name="username" required autocomplete="username" value="{{ old('username', '') }}" class="ui-input" placeholder="usuario cliente">
+            <label class="block space-y-1.5 text-sm">
+                <span class="field-label">Usuario</span>
+                <input type="text" name="username" required autocomplete="username" value="{{ old('username', '') }}" class="login-input" placeholder="usuario cliente">
             </label>
 
-            <label class="block space-y-1 text-sm">
-                <span class="font-semibold text-slate-200">Contraseña</span>
-                <input type="password" name="password" required autocomplete="current-password" class="ui-input" placeholder="********">
+            <label class="block space-y-1.5 text-sm">
+                <span class="field-label">Contrasena</span>
+                <input type="password" name="password" required autocomplete="current-password" class="login-input" placeholder="********">
             </label>
 
-            <button type="submit" class="ui-button ui-button-primary w-full justify-center">Entrar</button>
+            <button id="client-login-submit" type="submit" class="login-submit">
+                <span class="submit-label">Entrar</span>
+            </button>
         </form>
+
+        <p class="px-1 text-center text-[11px] text-emerald-100/80">Tu sesion es privada y segura en este dispositivo.</p>
+        </div>
     </section>
 </main>
+
+<script>
+(function () {
+    const form = document.getElementById('client-login-form');
+    const submit = document.getElementById('client-login-submit');
+    if (!form || !submit) return;
+
+    form.addEventListener('submit', function () {
+        if (submit.disabled) return;
+        submit.disabled = true;
+        submit.innerHTML = '<span class="submit-spinner" aria-hidden="true"></span><span class="submit-label">Ingresando...</span>';
+    });
+})();
+</script>
 </body>
 </html>

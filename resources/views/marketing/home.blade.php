@@ -763,20 +763,56 @@
         .price { margin-top: .45rem; font-size: 2.5rem; font-weight: 900; line-height: 1; letter-spacing: -.03em; }
         .price small { font-size: 1rem; color: #b3cabd; font-weight: 700; margin-left: .2rem; }
         .plan-discount {
-            margin-top: .5rem;
-            font-size: .88rem;
-            color: #b6c9be;
-            line-height: 1.45;
+            margin-top: .58rem;
+            font-size: .9rem;
+            color: #d4e9dd;
+            line-height: 1.4;
+            border: 1px solid rgba(76, 255, 146, .28);
+            background: linear-gradient(140deg, rgba(13, 40, 23, .56), rgba(8, 24, 15, .7));
+            border-radius: .65rem;
+            padding: .45rem .55rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .3rem;
+        }
+        .plan-discount-kicker {
+            color: #cde3d7;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+        .plan-discount-offer {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .14rem .4rem;
+            border-radius: 999px;
+            border: 1px solid rgba(74, 222, 128, .52);
+            background: rgba(34, 197, 94, .15);
+            color: #bbf7d0;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        .plan-discount-detail {
+            color: #e2efe7;
+            font-size: .9rem;
+            font-weight: 600;
         }
         .plan-discount strong {
-            color: #9dffb6;
-            font-size: .96rem;
-            font-weight: 800;
+            color: #a7f3d0;
+            font-size: 1.08rem;
+            font-weight: 900;
+            text-shadow: 0 0 14px rgba(74, 222, 128, .35);
         }
         .price-old {
             text-decoration: line-through;
             color: #8da99b;
             margin-right: .26rem;
+            font-weight: 700;
         }
         .plan p { margin: .65rem 0 0; color: #b6c9be; line-height: 1.5; }
         .plan ul { margin: .8rem 0 0; padding: 0; list-style: none; display: grid; gap: .45rem; color: #e1efe5; font-size: .95rem; }
@@ -1924,25 +1960,31 @@
                         @if ($isContactMode)
                             <div class="price">Personalizado<small>/Contacto</small></div>
                             <div class="plan-discount">
-                                Primer mes con descuento:
-                                @if ($discountPercent !== null && $discountPercent > 0)
-                                    <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
-                                @elseif ($discountPrice !== null && $discountPrice > 0)
-                                    <strong>${{ $formatPlanMoney($discountPrice) }}</strong> de referencia.
-                                @else
-                                    <strong>segun cotizacion</strong>.
-                                @endif
+                                <span class="plan-discount-kicker">Primer mes con</span>
+                                <span class="plan-discount-offer">Oferta</span>
+                                <span class="plan-discount-detail">
+                                    @if ($discountPercent !== null && $discountPercent > 0)
+                                        <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
+                                    @elseif ($discountPrice !== null && $discountPrice > 0)
+                                        <strong>${{ $formatPlanMoney($discountPrice) }}</strong> de referencia.
+                                    @else
+                                        <strong>según cotización</strong>.
+                                    @endif
+                                </span>
                             </div>
                         @else
                             <div class="price">${{ $formatPlanMoney($price) }}<small>/Mes</small></div>
                             <div class="plan-discount">
-                                Primer mes con descuento:
-                                @if ($discountPrice !== null && $discountPrice < $price)
-                                    <span class="price-old">${{ $formatPlanMoney($price) }}</span>
-                                    <strong>${{ $formatPlanMoney($discountPrice) }}</strong>
-                                @else
-                                    <strong>Sin descuento</strong>
-                                @endif
+                                <span class="plan-discount-kicker">Primer mes con</span>
+                                <span class="plan-discount-offer">Oferta</span>
+                                <span class="plan-discount-detail">
+                                    @if ($discountPrice !== null && $discountPrice < $price)
+                                        <span class="price-old">${{ $formatPlanMoney($price) }}</span>
+                                        <strong>${{ $formatPlanMoney($discountPrice) }}</strong>
+                                    @else
+                                        <strong>Sin oferta</strong>
+                                    @endif
+                                </span>
                             </div>
                         @endif
                         <p>{{ $planCard['summary'] }}</p>

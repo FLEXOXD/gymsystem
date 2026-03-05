@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ClientPushSubscription;
 use App\Models\PushSubscription;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -26,7 +27,7 @@ class WebPushService
             && class_exists(\Minishlink\WebPush\Subscription::class);
     }
 
-    public function sendToSubscription(PushSubscription $subscription, array $payload): bool
+    public function sendToSubscription(PushSubscription|ClientPushSubscription $subscription, array $payload): bool
     {
         if (! $this->isConfigured()) {
             return false;

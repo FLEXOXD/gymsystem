@@ -92,10 +92,28 @@ Route::prefix('cliente/{gymSlug}')
             Route::get('/progress', [ClientMobileController::class, 'progress'])
                 ->middleware('throttle:120,1')
                 ->name('progress');
+            Route::post('/profile', [ClientMobileController::class, 'updateProfile'])
+                ->middleware('throttle:20,1')
+                ->name('profile.update');
+            Route::post('/fitness-profile', [ClientMobileController::class, 'saveFitnessProfile'])
+                ->middleware('throttle:20,1')
+                ->name('fitness-profile.save');
+            Route::post('/weekly-goal', [ClientMobileController::class, 'updateWeeklyGoal'])
+                ->middleware('throttle:20,1')
+                ->name('weekly-goal.update');
+            Route::get('/push/status', [ClientMobileController::class, 'pushStatus'])
+                ->middleware('throttle:120,1')
+                ->name('push.status');
+            Route::post('/push/subscribe', [ClientMobileController::class, 'pushSubscribe'])
+                ->middleware('throttle:30,1')
+                ->name('push.subscribe');
+            Route::post('/push/unsubscribe', [ClientMobileController::class, 'pushUnsubscribe'])
+                ->middleware('throttle:30,1')
+                ->name('push.unsubscribe');
             Route::post('/check-in', [ClientMobileController::class, 'checkIn'])
                 ->middleware('throttle:120,1')
                 ->name('check-in');
-            Route::post('/logout', [ClientMobileController::class, 'logout'])->name('logout');
+            Route::match(['GET', 'POST'], '/logout', [ClientMobileController::class, 'logout'])->name('logout');
         });
     });
 
