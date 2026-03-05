@@ -139,17 +139,24 @@
         return '';
     }
 
-    function resolveCsrfToken() {
-        const cookieRaw = readCookie('XSRF-TOKEN');
-        if (cookieRaw !== '') {
-            try {
-                return decodeURIComponent(cookieRaw);
-            } catch (error) {
-                return cookieRaw;
-            }
+    function resolveCsrfHeaders() {
+        const headers = {};
+        const metaToken = String(csrfMeta || '').trim();
+        if (metaToken !== '') {
+            headers['X-CSRF-TOKEN'] = metaToken;
+            return headers;
         }
 
-        return csrfMeta;
+        const cookieRaw = readCookie('XSRF-TOKEN');
+        if (cookieRaw === '') return headers;
+
+        try {
+            headers['X-XSRF-TOKEN'] = decodeURIComponent(cookieRaw);
+        } catch (error) {
+            headers['X-XSRF-TOKEN'] = cookieRaw;
+        }
+
+        return headers;
     }
 
     async function refreshProgress() {
@@ -191,25 +198,29 @@
         statusEl.textContent = mobileI18n.validating_entry;
 
         try {
-            const csrf = resolveCsrfToken();
+            const csrfHeaders = resolveCsrfHeaders();
             const res = await fetch(checkinUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                    'X-XSRF-TOKEN': csrf,
+                    ...csrfHeaders,
                 },
                 body: JSON.stringify({ token }),
             });
 
-            const payload = await res.json();
+            let payload = null;
+            try {
+                payload = await res.json();
+            } catch (error) {
+                payload = null;
+            }
             if (res.status === 419) {
                 statusEl.textContent = mobileI18n.session_expired_reload;
                 return;
             }
-            if (payload.ok) {
+            if (payload && payload.ok) {
                 statusEl.textContent = payload.message || mobileI18n.checkin_success;
                 manualInput.value = '';
                 await refreshProgress();
@@ -217,7 +228,7 @@
                 return;
             }
 
-            statusEl.textContent = payload.message || mobileI18n.validation_failed;
+            statusEl.textContent = (payload && payload.message) || mobileI18n.validation_failed;
         } catch (error) {
             statusEl.textContent = mobileI18n.network_validation_failed;
         }
