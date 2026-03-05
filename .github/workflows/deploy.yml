@@ -164,13 +164,13 @@ jobs:
                   "$conf"
               done
 
-              sudo tee /etc/apache2/conf-available/gymsystem-permissions-policy.conf >/dev/null <<'EOF'
-<IfModule mod_headers.c>
-    Header always unset Permissions-Policy
-    Header always unset Feature-Policy
-    Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), fullscreen=(self), display-capture=(self)"
-</IfModule>
-EOF
+              sudo bash -lc "printf '%s\n' \
+                '<IfModule mod_headers.c>' \
+                '    Header always unset Permissions-Policy' \
+                '    Header always unset Feature-Policy' \
+                '    Header always set Permissions-Policy \"camera=(self), microphone=(self), geolocation=(self), fullscreen=(self), display-capture=(self)\"' \
+                '</IfModule>' \
+                > /etc/apache2/conf-available/gymsystem-permissions-policy.conf"
               sudo a2enconf gymsystem-permissions-policy >/dev/null 2>&1 || true
 
               if sudo grep -R -E -q "/var/www/gymsystem/releases/[0-9]{14}/public|/var/www/gymsystem/public" /etc/apache2/sites-enabled /etc/apache2/conf-enabled; then
