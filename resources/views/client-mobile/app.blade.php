@@ -1385,6 +1385,49 @@
             display: grid;
             gap: 8px;
         }
+        .permission-list {
+            display: grid;
+            gap: 8px;
+        }
+        .permission-item {
+            border: 1px solid rgba(56,189,248,.28);
+            background: rgba(2,6,23,.72);
+            border-radius: 12px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .permission-item-label {
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .permission-item-state {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .permission-item-state.is-granted {
+            color: #86efac;
+        }
+        .permission-item-state.is-prompt {
+            color: #fcd34d;
+        }
+        .permission-item-state.is-denied {
+            color: #fda4af;
+        }
+        .permission-item-state.is-unsupported {
+            color: #94a3b8;
+        }
+        .permission-hint {
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 600;
+        }
         .guide-focus-target {
             box-shadow: 0 0 0 3px rgba(34,211,238,.48), 0 0 30px rgba(34,197,94,.42);
             animation: guidePulse 1.1s ease-in-out 2;
@@ -1553,6 +1596,30 @@
         <div class="action-guide-actions">
             <button id="action-guide-cta" type="button" class="module-action module-action-primary">Entendido</button>
             <button id="action-guide-dismiss" type="button" class="module-action">Cerrar</button>
+        </div>
+    </article>
+</div>
+
+<div id="permission-gate-modal" class="action-guide-modal hidden" aria-hidden="true">
+    <button type="button" class="action-guide-backdrop" id="permission-gate-dismiss-backdrop" aria-label="Cerrar permisos"></button>
+    <article class="action-guide-panel" role="dialog" aria-modal="true" aria-labelledby="permission-gate-title">
+        <p class="action-guide-eyebrow">Permisos</p>
+        <h3 id="permission-gate-title" class="action-guide-title">Activa permisos para usar la app</h3>
+        <p class="action-guide-text">Necesitamos permisos de camara y notificaciones para escanear QR dinamico y enviarte avisos de progreso.</p>
+        <div class="permission-list">
+            <div class="permission-item">
+                <span class="permission-item-label">Camara</span>
+                <span id="permission-camera-state" class="permission-item-state is-prompt">Pendiente</span>
+            </div>
+            <div class="permission-item">
+                <span class="permission-item-label">Notificaciones</span>
+                <span id="permission-notification-state" class="permission-item-state is-prompt">Pendiente</span>
+            </div>
+        </div>
+        <p id="permission-gate-hint" class="permission-hint">Pulsa habilitar y acepta todos los permisos.</p>
+        <div class="action-guide-actions">
+            <button id="permission-gate-request" type="button" class="module-action module-action-primary">Habilitar permisos</button>
+            <button id="permission-gate-dismiss" type="button" class="module-action">Ahora no</button>
         </div>
     </article>
 </div>
@@ -2557,6 +2624,13 @@
     const actionGuideCtaBtn = document.getElementById('action-guide-cta');
     const actionGuideDismissBtn = document.getElementById('action-guide-dismiss');
     const actionGuideDismissEls = Array.from(document.querySelectorAll('[data-action-guide-dismiss]'));
+    const permissionGateModal = document.getElementById('permission-gate-modal');
+    const permissionGateRequestBtn = document.getElementById('permission-gate-request');
+    const permissionGateDismissBtn = document.getElementById('permission-gate-dismiss');
+    const permissionGateDismissBackdropBtn = document.getElementById('permission-gate-dismiss-backdrop');
+    const permissionCameraStateEl = document.getElementById('permission-camera-state');
+    const permissionNotificationStateEl = document.getElementById('permission-notification-state');
+    const permissionGateHintEl = document.getElementById('permission-gate-hint');
 
     const userMenuToggle = document.getElementById('user-menu-toggle');
     const userMenuPanel = document.getElementById('user-menu-panel');
@@ -2661,6 +2735,7 @@
     let actionGuideMode = '';
     let actionGuideDismissedMode = '';
     let actionGuideCtaHandler = null;
+    let permissionGateBusy = false;
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
@@ -2685,6 +2760,149 @@
             await navigator.serviceWorker.register('/sw.js');
         } catch (_error) {
             // Keep silent.
+        }
+    }
+
+    function setPermissionGateOpen(isOpen) {
+        if (!permissionGateModal) return;
+        permissionGateModal.classList.toggle('hidden', !isOpen);
+        permissionGateModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    function applyPermissionStateBadge(element, state, label) {
+        if (!(element instanceof HTMLElement)) return;
+        const normalizedState = ['granted', 'prompt', 'denied', 'unsupported'].includes(String(state))
+            ? String(state)
+            : 'prompt';
+
+        element.textContent = String(label || normalizedState);
+        element.classList.remove('is-granted', 'is-prompt', 'is-denied', 'is-unsupported');
+        element.classList.add('is-' + normalizedState);
+    }
+
+    async function resolveCameraPermissionState() {
+        if (!window.isSecureContext || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+            return 'unsupported';
+        }
+
+        if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
+            return 'prompt';
+        }
+
+        try {
+            const result = await navigator.permissions.query({ name: 'camera' });
+            const state = String(result && result.state ? result.state : 'prompt');
+            return ['granted', 'prompt', 'denied'].includes(state) ? state : 'prompt';
+        } catch (_error) {
+            return 'prompt';
+        }
+    }
+
+    function resolveNotificationPermissionState() {
+        if (!('Notification' in window)) {
+            return 'unsupported';
+        }
+
+        const state = String(Notification.permission || 'default');
+        if (state === 'granted') return 'granted';
+        if (state === 'denied') return 'denied';
+        return 'prompt';
+    }
+
+    function getPermissionGateRequirements() {
+        return {
+            cameraRequired: checkinUrl !== '',
+            notificationsRequired: String(pushVapidPublicKey || '').trim() !== '' && 'Notification' in window,
+        };
+    }
+
+    async function refreshPermissionGateState() {
+        const requirements = getPermissionGateRequirements();
+        const cameraState = requirements.cameraRequired ? await resolveCameraPermissionState() : 'unsupported';
+        const notificationState = requirements.notificationsRequired ? resolveNotificationPermissionState() : 'unsupported';
+
+        applyPermissionStateBadge(
+            permissionCameraStateEl,
+            cameraState,
+            cameraState === 'granted'
+                ? 'Activo'
+                : (cameraState === 'denied' ? 'Bloqueado' : (cameraState === 'unsupported' ? 'No disponible' : 'Pendiente'))
+        );
+
+        applyPermissionStateBadge(
+            permissionNotificationStateEl,
+            notificationState,
+            notificationState === 'granted'
+                ? 'Activo'
+                : (notificationState === 'denied' ? 'Bloqueado' : (notificationState === 'unsupported' ? 'No disponible' : 'Pendiente'))
+        );
+
+        const missingCamera = requirements.cameraRequired && cameraState !== 'granted';
+        const missingNotifications = requirements.notificationsRequired && notificationState !== 'granted';
+        const hasMissing = missingCamera || missingNotifications;
+
+        if (permissionGateHintEl) {
+            if (!hasMissing) {
+                permissionGateHintEl.textContent = 'Permisos habilitados correctamente.';
+            } else if (cameraState === 'denied' || notificationState === 'denied') {
+                permissionGateHintEl.textContent = 'Tienes permisos bloqueados. Habilitalos en ajustes del navegador.';
+            } else {
+                permissionGateHintEl.textContent = 'Pulsa habilitar y acepta todos los permisos.';
+            }
+        }
+
+        return {
+            hasMissing,
+            cameraState,
+            notificationState,
+            requirements,
+        };
+    }
+
+    async function requestClientPermissions() {
+        if (permissionGateBusy) return;
+        permissionGateBusy = true;
+
+        if (permissionGateRequestBtn instanceof HTMLButtonElement) {
+            permissionGateRequestBtn.disabled = true;
+            permissionGateRequestBtn.textContent = 'Solicitando...';
+        }
+
+        const { requirements } = await refreshPermissionGateState();
+        let cameraError = null;
+
+        if (requirements.notificationsRequired && 'Notification' in window && Notification.permission === 'default') {
+            try {
+                await Notification.requestPermission();
+            } catch (_error) {
+                // Keep silent.
+            }
+        }
+
+        if (requirements.cameraRequired) {
+            try {
+                const previewStream = await requestCameraStream();
+                if (previewStream) {
+                    previewStream.getTracks().forEach((track) => track.stop());
+                }
+            } catch (error) {
+                cameraError = error;
+            }
+        }
+
+        const result = await refreshPermissionGateState();
+        if (!result.hasMissing && !cameraError) {
+            window.setTimeout(() => {
+                setPermissionGateOpen(false);
+            }, 350);
+        } else if (cameraError && permissionGateHintEl) {
+            permissionGateHintEl.textContent = resolveCameraErrorMessage(cameraError);
+        }
+
+        permissionGateBusy = false;
+        if (permissionGateRequestBtn instanceof HTMLButtonElement) {
+            permissionGateRequestBtn.disabled = false;
+            permissionGateRequestBtn.textContent = 'Habilitar permisos';
         }
     }
 
@@ -4592,6 +4810,9 @@
         if (fitnessModal && !fitnessModal.classList.contains('hidden')) {
             dismissFitnessModal();
         }
+        if (permissionGateModal && !permissionGateModal.classList.contains('hidden')) {
+            setPermissionGateOpen(false);
+        }
         setWeeklyGoalEditOpen(false);
         if (actionGuideModal && !actionGuideModal.classList.contains('hidden')) {
             closeActionGuide(true);
@@ -4614,6 +4835,18 @@
             return;
         }
         actionGuideCtaHandler();
+    });
+
+    permissionGateDismissBtn?.addEventListener('click', () => {
+        setPermissionGateOpen(false);
+    });
+
+    permissionGateDismissBackdropBtn?.addEventListener('click', () => {
+        setPermissionGateOpen(false);
+    });
+
+    permissionGateRequestBtn?.addEventListener('click', async () => {
+        await requestClientPermissions();
     });
 
     openFitnessModalTrigger?.addEventListener('click', () => {
@@ -4693,6 +4926,13 @@
         moduleLoaderLocked = false;
         hideModuleLoader();
         resetFitnessFormSubmitState();
+        refreshPermissionGateState().then((state) => {
+            if (state.hasMissing) {
+                setPermissionGateOpen(true);
+            }
+        }).catch(() => {
+            // Keep silent.
+        });
     });
 
     window.addEventListener('pagehide', () => {
@@ -4722,6 +4962,13 @@
     initFitnessForms();
     resetFitnessFormSubmitState();
     initializeSectionCollapseState();
+    refreshPermissionGateState().then((state) => {
+        if (state.hasMissing) {
+            setPermissionGateOpen(true);
+        }
+    }).catch(() => {
+        // Keep silent.
+    });
     refreshClientPushStatus();
     initBootScreen();
     hideModuleLoader();
