@@ -1,3 +1,14 @@
+<IfModule mod_headers.c>
+    <IfModule mod_setenvif.c>
+        SetEnvIfNoCase Request_URI "^/cliente/" IS_CLIENT_MOBILE=1
+    </IfModule>
+
+    # Force camera permissions policy for client mobile routes.
+    Header always unset Permissions-Policy env=IS_CLIENT_MOBILE
+    Header always unset Feature-Policy env=IS_CLIENT_MOBILE
+    Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), fullscreen=(self), display-capture=(self)" env=IS_CLIENT_MOBILE
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
