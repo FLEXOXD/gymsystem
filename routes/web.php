@@ -82,6 +82,8 @@ Route::prefix('cliente/{gymSlug}')
     ->middleware('gym.timezone')
     ->name('client-mobile.')
     ->group(function (): void {
+        Route::get('/manifest.webmanifest', [ClientMobileController::class, 'manifest'])
+            ->name('manifest');
         Route::get('/login', [ClientMobileController::class, 'login'])->name('login');
         Route::post('/login', [ClientMobileController::class, 'authenticate'])
             ->middleware('throttle:60,1')

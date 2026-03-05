@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#16c172">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GymSystem">
+    <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
     <title>Acceso cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -88,6 +96,28 @@
         }
         .login-submit:active { transform: translateY(1px) scale(.995); }
         .login-submit[disabled] { opacity: .7; cursor: wait; }
+        .login-install {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(56,189,248,.42);
+            background: rgba(2,6,23,.72);
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .01em;
+            padding: 10px 12px;
+            transition: transform .12s ease, border-color .18s ease;
+        }
+        .login-install:active { transform: translateY(1px); }
+        .login-install:hover { border-color: rgba(34,197,94,.62); }
+        .login-install.hidden { display: none; }
+        .login-install-note {
+            color: #a7f3d0;
+            font-size: 11px;
+            line-height: 1.35;
+            text-align: center;
+        }
+        .login-install-note.hidden { display: none; }
         .submit-spinner {
             width: 14px;
             height: 14px;
@@ -164,6 +194,9 @@
             <button id="client-login-submit" type="submit" class="login-submit">
                 <span class="submit-label">Entrar</span>
             </button>
+
+            <button id="client-pwa-install" type="button" class="login-install hidden">Instalar app</button>
+            <p id="client-pwa-install-note" class="login-install-note hidden">Para instalar: abre el menu del navegador y elige "Instalar app".</p>
         </form>
 
         <p class="px-1 text-center text-[11px] text-emerald-100/80">Tu sesión es privada y segura en este dispositivo.</p>
@@ -175,7 +208,33 @@
 (function () {
     const form = document.getElementById('client-login-form');
     const submit = document.getElementById('client-login-submit');
+    const installBtn = document.getElementById('client-pwa-install');
+    const installNote = document.getElementById('client-pwa-install-note');
+    let installPromptEvent = null;
     if (!form || !submit) return;
+
+    function isStandaloneMode() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function setPwaModeCookie(mode) {
+        document.cookie = 'gym_pwa_mode=' + mode + '; path=/; max-age=2592000; SameSite=Lax';
+    }
+
+    async function registerPwaServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+
+        try {
+            await navigator.serviceWorker.register('/sw.js');
+        } catch (_error) {
+            // Keep silent.
+        }
+    }
+
+    function showInstallManualHint() {
+        if (!installNote) return;
+        installNote.classList.remove('hidden');
+    }
 
     function resetSubmitState() {
         submit.disabled = false;
@@ -188,6 +247,52 @@
         submit.innerHTML = '<span class="submit-spinner" aria-hidden="true"></span><span class="submit-label">Ingresando...</span>';
     });
 
+    if (installBtn) {
+        if (isStandaloneMode()) {
+            installBtn.classList.add('hidden');
+            installBtn.setAttribute('aria-hidden', 'true');
+        }
+
+        window.addEventListener('beforeinstallprompt', function (event) {
+            event.preventDefault();
+            installPromptEvent = event;
+            installBtn.classList.remove('hidden');
+            installBtn.removeAttribute('aria-hidden');
+            if (installNote) {
+                installNote.classList.add('hidden');
+            }
+        });
+
+        installBtn.addEventListener('click', async function () {
+            if (!installPromptEvent) {
+                showInstallManualHint();
+                return;
+            }
+
+            installPromptEvent.prompt();
+            try {
+                await installPromptEvent.userChoice;
+            } catch (_error) {
+                // Keep silent.
+            }
+            installPromptEvent = null;
+            installBtn.classList.add('hidden');
+            installBtn.setAttribute('aria-hidden', 'true');
+        });
+    }
+
+    window.addEventListener('appinstalled', function () {
+        if (installBtn) {
+            installBtn.classList.add('hidden');
+            installBtn.setAttribute('aria-hidden', 'true');
+        }
+        if (installNote) {
+            installNote.classList.add('hidden');
+        }
+    });
+
+    setPwaModeCookie(isStandaloneMode() ? 'standalone' : 'browser');
+    registerPwaServiceWorker();
     window.addEventListener('pageshow', resetSubmitState);
 })();
 </script>

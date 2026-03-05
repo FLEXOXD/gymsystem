@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#16c172">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GymSystem">
+    <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
     <title>App cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -2649,11 +2657,36 @@
     let trainingActionBusy = false;
     let trainingCountdownTimer = null;
     let moduleLoaderFailSafeTimer = null;
+    let moduleLoaderLocked = false;
     let actionGuideMode = '';
     let actionGuideDismissedMode = '';
     let actionGuideCtaHandler = null;
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
     let sectionCollapseState = {};
+    let scannerFallbackLibraryPromise = null;
+    let fallbackScannerControls = null;
+    let fallbackScannerReader = null;
+    let scanBusy = false;
+    let lastScanToken = '';
+    let lastScanAt = 0;
+
+    function isStandaloneMode() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function syncPwaModeCookie() {
+        const mode = isStandaloneMode() ? 'standalone' : 'browser';
+        document.cookie = 'gym_pwa_mode=' + mode + '; path=/; max-age=2592000; SameSite=Lax';
+    }
+
+    async function registerPwaServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+        try {
+            await navigator.serviceWorker.register('/sw.js');
+        } catch (_error) {
+            // Keep silent.
+        }
+    }
 
     function setUserMenuOpen(isOpen) {
         if (!userMenuPanel) return;
@@ -2775,6 +2808,7 @@
         const fitnessForms = document.querySelectorAll('form[data-fitness-form]');
         if (!fitnessForms.length) return;
 
+        moduleLoaderLocked = false;
         fitnessForms.forEach((form) => {
             form.dataset.submitting = '0';
             const submitBtn = form.querySelector('button[type="submit"]');
@@ -2873,6 +2907,7 @@
 
                 const firstInvalid = getFirstInvalidField();
                 if (firstInvalid instanceof HTMLElement) {
+                    event.preventDefault();
                     form.dataset.submitting = '0';
                     if (submitBtn instanceof HTMLButtonElement) {
                         submitBtn.disabled = false;
@@ -2920,7 +2955,7 @@
                 if (submitBtn instanceof HTMLButtonElement) {
                     submitBtn.disabled = true;
                 }
-                showModuleLoader();
+                showModuleLoader({ keepVisibleUntilNavigation: true });
             });
         });
     }
@@ -2931,25 +2966,41 @@
             window.clearTimeout(moduleLoaderFailSafeTimer);
             moduleLoaderFailSafeTimer = null;
         }
+        moduleLoaderLocked = false;
         moduleLoader.classList.add('hidden');
         moduleLoader.setAttribute('aria-hidden', 'true');
     }
 
-    function showModuleLoader() {
+    function showModuleLoader(options) {
         if (!moduleLoader) return;
         if (moduleLoaderFailSafeTimer) {
             window.clearTimeout(moduleLoaderFailSafeTimer);
             moduleLoaderFailSafeTimer = null;
         }
+        const settings = options && typeof options === 'object' ? options : {};
+        const keepVisibleUntilNavigation = Boolean(settings.keepVisibleUntilNavigation);
+        moduleLoaderLocked = keepVisibleUntilNavigation;
+
         moduleLoader.classList.remove('hidden');
         moduleLoader.setAttribute('aria-hidden', 'false');
 
-        // Fail-safe: if navigation is canceled/back-restored, prevent sticky overlay.
+        if (!keepVisibleUntilNavigation) {
+            // Fail-safe: if navigation is canceled/back-restored, prevent sticky overlay.
+            moduleLoaderFailSafeTimer = window.setTimeout(() => {
+                if (document.visibilityState === 'visible') {
+                    hideModuleLoader();
+                }
+            }, 12000);
+            return;
+        }
+
+        // Extended fallback for long server responses on form save.
         moduleLoaderFailSafeTimer = window.setTimeout(() => {
-            if (document.visibilityState === 'visible') {
-                hideModuleLoader();
-            }
-        }, 12000);
+            if (document.visibilityState !== 'visible') return;
+            moduleLoaderLocked = false;
+            hideModuleLoader();
+            resetFitnessFormSubmitState();
+        }, 45000);
     }
 
     function setActionGuideOpen(isOpen) {
@@ -4170,40 +4221,195 @@
         }
     }
 
+    function resetScanMarkers() {
+        scanBusy = false;
+        lastScanToken = '';
+        lastScanAt = 0;
+    }
+
+    async function supportsNativeQrDetection() {
+        if (!('BarcodeDetector' in window)) {
+            return false;
+        }
+
+        if (typeof BarcodeDetector.getSupportedFormats !== 'function') {
+            return true;
+        }
+
+        try {
+            const formats = await BarcodeDetector.getSupportedFormats();
+            return Array.isArray(formats) && formats.includes('qr_code');
+        } catch (_error) {
+            return false;
+        }
+    }
+
+    async function loadFallbackScannerLibrary() {
+        if (window.ZXingBrowser && window.ZXingBrowser.BrowserQRCodeReader) {
+            return window.ZXingBrowser;
+        }
+
+        if (scannerFallbackLibraryPromise) {
+            return scannerFallbackLibraryPromise;
+        }
+
+        const scriptSources = [
+            'https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js',
+            'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js',
+        ];
+
+        scannerFallbackLibraryPromise = new Promise((resolve, reject) => {
+            const tryLoad = (index) => {
+                if (index >= scriptSources.length) {
+                    reject(new Error('No se pudo cargar el lector QR alternativo.'));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = scriptSources[index];
+                script.async = true;
+                script.onload = () => {
+                    if (window.ZXingBrowser && window.ZXingBrowser.BrowserQRCodeReader) {
+                        resolve(window.ZXingBrowser);
+                        return;
+                    }
+                    tryLoad(index + 1);
+                };
+                script.onerror = () => {
+                    tryLoad(index + 1);
+                };
+                document.head.appendChild(script);
+            };
+
+            tryLoad(0);
+        });
+
+        return scannerFallbackLibraryPromise;
+    }
+
+    function stopFallbackScanner() {
+        if (fallbackScannerControls && typeof fallbackScannerControls.stop === 'function') {
+            try {
+                fallbackScannerControls.stop();
+            } catch (_error) {
+                // ignore stop errors
+            }
+        }
+        fallbackScannerControls = null;
+
+        if (fallbackScannerReader && typeof fallbackScannerReader.reset === 'function') {
+            try {
+                fallbackScannerReader.reset();
+            } catch (_error) {
+                // ignore reset errors
+            }
+        }
+        fallbackScannerReader = null;
+    }
+
     async function startScan() {
         if (!statusEl || !startBtn || !stopBtn || !video) return;
 
-        if (!('BarcodeDetector' in window)) {
-            statusEl.textContent = mobileI18n.scan_qr_unsupported;
+        if (!window.isSecureContext) {
+            statusEl.textContent = 'Escanear QR requiere HTTPS en este dispositivo.';
             return;
         }
 
-        detector = new BarcodeDetector({ formats: ['qr_code'] });
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+            statusEl.textContent = 'Este navegador no permite abrir la camara.';
+            return;
+        }
+
+        stopScan();
+        startBtn.disabled = true;
+        resetScanMarkers();
+        statusEl.textContent = 'Abriendo camara...';
+
+        const canUseNativeQr = await supportsNativeQrDetection();
+        if (canUseNativeQr) {
+            detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                video.srcObject = stream;
+                await video.play();
+                video.classList.remove('hidden');
+                stopBtn.classList.remove('hidden');
+                startBtn.classList.add('hidden');
+                statusEl.textContent = mobileI18n.scan_in_progress;
+
+                scanTimer = window.setInterval(async () => {
+                    if (!detector || !video || video.readyState < 2 || scanBusy) return;
+                    try {
+                        const codes = await detector.detect(video);
+                        if (!codes || !codes.length) return;
+                        const raw = String(codes[0].rawValue || '').trim();
+                        if (raw === '') return;
+
+                        const now = Date.now();
+                        if (raw === lastScanToken && (now - lastScanAt) < 1600) return;
+                        lastScanToken = raw;
+                        lastScanAt = now;
+
+                        scanBusy = true;
+                        try {
+                            await submitToken(raw);
+                        } finally {
+                            scanBusy = false;
+                        }
+                    } catch (_error) {
+                        // ignore decode errors
+                    }
+                }, 320);
+            } catch (_error) {
+                statusEl.textContent = mobileI18n.camera_open_failed;
+                stopScan();
+            } finally {
+                startBtn.disabled = false;
+            }
+
+            return;
+        }
 
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-            video.srcObject = stream;
-            await video.play();
+            const zxingBrowser = await loadFallbackScannerLibrary();
+            const ReaderCtor = zxingBrowser && (
+                (typeof zxingBrowser.BrowserQRCodeReader === 'function' && zxingBrowser.BrowserQRCodeReader)
+                || (typeof zxingBrowser.BrowserMultiFormatReader === 'function' && zxingBrowser.BrowserMultiFormatReader)
+            );
+            if (!ReaderCtor) {
+                throw new Error('Fallback QR reader unavailable');
+            }
+
+            fallbackScannerReader = new ReaderCtor();
+            fallbackScannerControls = await fallbackScannerReader.decodeFromVideoDevice(undefined, video, async (result) => {
+                if (!result || scanBusy) return;
+
+                const raw = String(typeof result.getText === 'function' ? result.getText() : (result.text || '')).trim();
+                if (raw === '') return;
+
+                const now = Date.now();
+                if (raw === lastScanToken && (now - lastScanAt) < 1600) return;
+                lastScanToken = raw;
+                lastScanAt = now;
+
+                scanBusy = true;
+                try {
+                    await submitToken(raw);
+                } finally {
+                    scanBusy = false;
+                }
+            });
+
             video.classList.remove('hidden');
             stopBtn.classList.remove('hidden');
             startBtn.classList.add('hidden');
             statusEl.textContent = mobileI18n.scan_in_progress;
-
-            scanTimer = window.setInterval(async () => {
-                if (!detector || !video || video.readyState < 2) return;
-                try {
-                    const codes = await detector.detect(video);
-                    if (!codes || !codes.length) return;
-                    const raw = String(codes[0].rawValue || '').trim();
-                    if (raw === '') return;
-                    await submitToken(raw);
-                } catch (error) {
-                    // ignore decode errors
-                }
-            }, 350);
-        } catch (error) {
-            statusEl.textContent = mobileI18n.camera_open_failed;
+        } catch (_error) {
+            statusEl.textContent = mobileI18n.scan_qr_unsupported;
             stopScan();
+        } finally {
+            startBtn.disabled = false;
         }
     }
 
@@ -4213,10 +4419,23 @@
             scanTimer = null;
         }
 
+        detector = null;
+        stopFallbackScanner();
+
         if (stream) {
             stream.getTracks().forEach((track) => track.stop());
             stream = null;
         }
+
+        if (video && video.srcObject && video.srcObject.getTracks) {
+            try {
+                video.srcObject.getTracks().forEach((track) => track.stop());
+            } catch (_error) {
+                // ignore stop errors
+            }
+        }
+
+        resetScanMarkers();
 
         if (!video || !startBtn || !stopBtn) return;
 
@@ -4225,6 +4444,7 @@
         video.classList.add('hidden');
         stopBtn.classList.add('hidden');
         startBtn.classList.remove('hidden');
+        startBtn.disabled = false;
     }
 
     startBtn?.addEventListener('click', startScan);
@@ -4401,21 +4621,26 @@
     });
 
     window.addEventListener('pageshow', () => {
+        moduleLoaderLocked = false;
         hideModuleLoader();
         resetFitnessFormSubmitState();
     });
 
     window.addEventListener('popstate', () => {
+        moduleLoaderLocked = false;
         hideModuleLoader();
         resetFitnessFormSubmitState();
     });
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible') return;
+        if (moduleLoaderLocked) return;
         hideModuleLoader();
         resetFitnessFormSubmitState();
     });
 
+    syncPwaModeCookie();
+    registerPwaServiceWorker();
     initFitnessForms();
     resetFitnessFormSubmitState();
     initializeSectionCollapseState();

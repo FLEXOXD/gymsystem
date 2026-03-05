@@ -51,6 +51,65 @@ class ClientMobileController extends Controller
         return view('client-mobile.login', ['gym' => $gym]);
     }
 
+    public function manifest(Request $request, string $gymSlug): JsonResponse
+    {
+        $gym = $this->resolveGymBySlug($gymSlug);
+        $this->abortIfFeatureUnavailable((int) $gym->id);
+
+        $baseScope = '/cliente/'.trim((string) $gym->slug).'/';
+        $startUrl = route('client-mobile.login', [
+            'gymSlug' => $gym->slug,
+            'pwa_mode' => 'standalone',
+        ], false);
+
+        $name = trim((string) $gym->name);
+        if ($name === '') {
+            $name = 'GymSystem';
+        }
+
+        $manifest = [
+            'id' => $baseScope.'app',
+            'name' => 'Portal cliente - '.$name,
+            'short_name' => Str::limit($name, 16, ''),
+            'description' => 'Registro de asistencia y progreso fisico del cliente.',
+            'start_url' => $startUrl,
+            'scope' => $baseScope,
+            'display' => 'standalone',
+            'display_override' => ['standalone', 'minimal-ui', 'browser'],
+            'orientation' => 'portrait-primary',
+            'background_color' => '#020617',
+            'theme_color' => '#16c172',
+            'icons' => [
+                [
+                    'src' => asset('pwa/favicon-brand-192.png?v=20260302'),
+                    'sizes' => '192x192',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/favicon-brand.png?v=20260302'),
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/icon-maskable.png?v=20260302'),
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                    'purpose' => 'maskable',
+                ],
+            ],
+            'lang' => 'es-EC',
+            'dir' => 'ltr',
+            'prefer_related_applications' => false,
+        ];
+
+        return response()
+            ->json($manifest)
+            ->header('Content-Type', 'application/manifest+json; charset=utf-8')
+            ->header('Cache-Control', 'public, max-age=600');
+    }
+
     public function authenticate(Request $request, string $gymSlug): RedirectResponse
     {
         $gym = $this->resolveGymBySlug($gymSlug);
