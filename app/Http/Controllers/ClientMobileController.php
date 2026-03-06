@@ -16,6 +16,7 @@ use App\Services\AttendanceCheckinService;
 use App\Services\ClientPushNotificationService;
 use App\Services\MobileCheckInTokenService;
 use App\Services\PlanAccessService;
+use App\Services\PresenceSessionService;
 use App\Services\WebPushService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -34,7 +35,8 @@ class ClientMobileController extends Controller
         private readonly PlanAccessService $planAccessService,
         private readonly AttendanceCheckinService $attendanceCheckinService,
         private readonly MobileCheckInTokenService $mobileCheckInTokenService,
-        private readonly ClientPushNotificationService $clientPushNotificationService
+        private readonly ClientPushNotificationService $clientPushNotificationService,
+        private readonly PresenceSessionService $presenceSessionService
     ) {
     }
 
@@ -444,6 +446,13 @@ class ClientMobileController extends Controller
             'finished_at' => $nowAtGym,
             'finish_reason' => 'manual',
         ]);
+
+        $this->closePresenceAfterTrainingCompletion(
+            gymId: (int) $gym->id,
+            clientId: (int) $client->id,
+            finishedAt: $nowAtGym,
+            reason: 'training_manual'
+        );
 
         $sessionDate = $this->normalizeDateString((string) ($activeSession->session_date?->toDateString() ?? ''));
         if ($sessionDate === '') {
@@ -2557,6 +2566,13 @@ class ClientMobileController extends Controller
             'finish_reason' => 'auto',
         ]);
 
+        $this->closePresenceAfterTrainingCompletion(
+            gymId: $gymId,
+            clientId: $clientId,
+            finishedAt: $scheduledEndAt,
+            reason: 'training_auto'
+        );
+
         $sessionDate = $this->normalizeDateString((string) ($activeSession->session_date?->toDateString() ?? ''));
         if ($sessionDate === '') {
             $sessionDate = $nowAtGym->toDateString();
@@ -2691,6 +2707,34 @@ class ClientMobileController extends Controller
             'status_label' => $statusLabel,
             'hint_line' => $hintLine,
         ];
+    }
+
+    private function closePresenceAfterTrainingCompletion(
+        int $gymId,
+        int $clientId,
+        Carbon $finishedAt,
+        string $reason
+    ): void {
+        if (! $this->shouldAutoClosePresenceWithTraining($gymId)) {
+            return;
+        }
+
+        $operatorId = $this->resolveMobileOperatorUserId($gymId);
+        $this->presenceSessionService->registerCheckOut(
+            gymId: $gymId,
+            clientId: $clientId,
+            checkOutBy: $operatorId,
+            checkOutMethod: 'training',
+            checkOutAt: $finishedAt,
+            reason: $reason
+        );
+    }
+
+    private function shouldAutoClosePresenceWithTraining(int $gymId): bool
+    {
+        $planKey = $this->planAccessService->currentPlanKeyForGym($gymId);
+
+        return in_array($planKey, ['premium', 'sucursales'], true);
     }
 
     private function dispatchTrainingCompletedPushNotification(

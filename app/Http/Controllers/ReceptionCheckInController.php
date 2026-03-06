@@ -13,6 +13,7 @@ use App\Services\PresenceSessionService;
 use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -161,9 +162,16 @@ class ReceptionCheckInController extends Controller
         ]);
     }
 
-    public function mobileDisplay(Request $request): View
+    public function mobileDisplay(Request $request): RedirectResponse
     {
-        return $this->display($request);
+        $routeParams = array_filter([
+            'contextGym' => (string) ($request->route('contextGym') ?? ''),
+            'scope' => $request->query('scope'),
+            'pwa_mode' => $request->query('pwa_mode'),
+            'open_mobile_scanner' => 1,
+        ], static fn ($value): bool => $value !== null && $value !== '');
+
+        return redirect()->route('reception.index', $routeParams);
     }
 
     /**

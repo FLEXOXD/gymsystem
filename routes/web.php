@@ -366,7 +366,7 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                     ->middleware('role:owner,cashier')
                     ->name('reception.display');
                 Route::get('/reception/mobile-display', [ReceptionCheckInController::class, 'mobileDisplay'])
-                    ->middleware(['role:owner,cashier', 'plan.feature:client_accounts'])
+                    ->middleware('role:owner,cashier')
                     ->name('reception.mobile-display');
                 Route::get('/reception/sync/latest', [ReceptionCheckInController::class, 'syncLatest'])
                     ->middleware('role:owner,cashier')

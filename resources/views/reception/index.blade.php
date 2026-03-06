@@ -5,36 +5,50 @@
 
 @section('content')
     <x-ui.card title="Ingreso unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta autoenvío por lector tipo teclado.">
-        <div class="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-            <label class="space-y-2 text-sm font-semibold ui-muted">
-                <span>Valor de entrada</span>
-                <input id="value" name="value" type="text" inputmode="text" autocomplete="off" autofocus
-                       placeholder="RFID, QR o documento"
-                       class="ui-input h-16 rounded-xl border-2 px-4 text-2xl font-black tracking-wide md:h-20 md:text-3xl">
-            </label>
+        <div class="grid gap-4 xl:grid-cols-[minmax(320px,1.2fr)_minmax(340px,1fr)]">
+            <div class="space-y-3">
+                <label class="space-y-2 text-sm font-semibold ui-muted">
+                    <span>Valor de entrada</span>
+                    <input id="value" name="value" type="text" inputmode="text" autocomplete="off" autofocus
+                           placeholder="RFID, QR o documento"
+                           class="ui-input h-16 rounded-xl border-2 px-4 text-2xl font-black tracking-wide md:h-20 md:text-3xl">
+                </label>
 
-            <div class="flex flex-wrap items-center gap-2 md:pb-1">
-                <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 md:h-16">Enviar</x-ui.button>
-                <x-ui.button id="checkout-btn" type="button" variant="ghost" size="lg" class="h-14 md:h-16">
-                    Registrar salida
-                </x-ui.button>
-                <x-ui.button :href="route('reception.display')" target="_blank" rel="noopener" variant="secondary" size="lg" class="h-14 md:h-16">
-                    Pantalla 2 + QR
-                </x-ui.button>
-                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                    <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
-                    Autoescaneo
-                </label>
-                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                    <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
-                    Sonido
-                </label>
+                <p id="status-chip" class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
+                    {{ __('messages.reception.ready_to_scan') }}
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="grid gap-2 sm:grid-cols-2">
+                    <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 w-full">Enviar</x-ui.button>
+                    <x-ui.button id="checkout-btn" type="button" variant="ghost" size="lg" class="h-14 w-full">
+                        Registrar salida
+                    </x-ui.button>
+                </div>
+
+                <div class="grid gap-2 sm:grid-cols-2">
+                    <x-ui.button :href="route('reception.display')" target="_blank" rel="noopener" variant="secondary" size="lg" class="h-14 w-full">
+                        Pantalla 2 + QR
+                    </x-ui.button>
+                    <x-ui.button id="reception-open-mobile-scanner" type="button" variant="secondary" size="lg" class="h-14 w-full" aria-haspopup="dialog" aria-controls="reception-mobile-scanner-modal" aria-expanded="false">
+                        Escanear QR desde mi celular
+                    </x-ui.button>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
+                        Autoescaneo
+                    </label>
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
+                        Sonido
+                    </label>
+                </div>
             </div>
         </div>
 
-        <p id="status-chip" class="mt-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
-            {{ __('messages.reception.ready_to_scan') }}
-        </p>
     </x-ui.card>
 
     @if (!empty($canManageClientAccounts))
@@ -183,6 +197,71 @@
         </div>
     </x-ui.card>
 
+    <div id="reception-mobile-scanner-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receptionMobileScannerTitle">
+        <div class="ui-modal-panel max-w-6xl">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 id="receptionMobileScannerTitle" class="ui-heading text-lg">Escanear QR desde mi celular</h3>
+                    <p class="mt-1 text-sm ui-muted">
+                        Cámara en modal para ingreso y salida sin abrir otra pantalla.
+                    </p>
+                </div>
+                <button type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-sm" data-close-mobile-scanner aria-label="Cerrar escáner">
+                    Cerrar
+                </button>
+            </div>
+
+            <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <section class="space-y-3">
+                    <div class="rounded-2xl border border-slate-300 bg-slate-950/90 p-2 dark:border-slate-700">
+                        <video id="reception-mobile-scanner-video" class="h-[300px] w-full rounded-xl bg-black object-cover sm:h-[420px]" autoplay muted playsinline></video>
+                    </div>
+                    <p id="reception-mobile-scanner-status" class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100">
+                        Presiona "Iniciar cámara" para escanear.
+                    </p>
+                    <p id="reception-mobile-scanner-feedback" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100">
+                        Sin lecturas aún.
+                    </p>
+                </section>
+
+                <aside class="space-y-3">
+                    <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                        <x-ui.button id="reception-mobile-scanner-start" type="button" variant="primary" class="w-full">Iniciar cámara</x-ui.button>
+                        <x-ui.button id="reception-mobile-scanner-stop" type="button" variant="ghost" class="w-full" disabled>Detener</x-ui.button>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+                        <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">Modo de registro</p>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <label id="reception-mobile-mode-checkin-card" class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-2 text-xs font-black text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-100">
+                                <input id="reception-mobile-mode-checkin" type="radio" name="reception-mobile-mode" value="checkin" class="sr-only" checked>
+                                Ingreso
+                            </label>
+                            <label id="reception-mobile-mode-checkout-card" class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                                <input id="reception-mobile-mode-checkout" type="radio" name="reception-mobile-mode" value="checkout" class="sr-only">
+                                Salida
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+                        <label class="space-y-2 text-sm font-semibold ui-muted">
+                            <span>Código manual (fallback)</span>
+                            <input id="reception-mobile-scanner-input" type="text" inputmode="text" autocomplete="off" placeholder="RFID, QR o documento" class="ui-input">
+                        </label>
+                        <x-ui.button id="reception-mobile-scanner-submit" type="button" variant="secondary" class="mt-2 w-full">
+                            Procesar código
+                        </x-ui.button>
+                    </div>
+
+                    <p class="text-xs text-slate-500 dark:text-slate-300">
+                        Si el cliente vuelve a escanear y ya tenía ingreso activo, se registrará salida automáticamente.
+                    </p>
+                </aside>
+            </div>
+        </div>
+    </div>
+
     <div id="attendance-history-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="attendanceHistoryTitle">
         <div class="ui-modal-panel max-w-6xl">
             <div class="flex items-start justify-between gap-3">
@@ -263,9 +342,11 @@
         const syncPollUrl = @json(route('reception.sync.latest'));
         const checkInEndpoint = @json(route('reception.check-in'));
         const checkOutEndpoint = @json(route('reception.check-out'));
+        const autoOpenMobileScannerModal = Boolean(@json(request()->boolean('open_mobile_scanner')));
         const latestSyncEventId = String(@json((string) ($latestSyncEventId ?? '')));
         const latestSyncEventPublishedAt = Number(@json((int) ($latestSyncEventPublishedAt ?? 0))) || 0;
         const SYNC_POLL_INTERVAL_MS = 1200;
+        const MOBILE_SCANNER_SCAN_DEBOUNCE_MS = 1600;
         const syncChannelName = 'reception.checkin.' + String(syncGymId || 0);
         const syncStorageKey = syncChannelName + '.event';
         const syncSourceId = 'main-' + Math.random().toString(36).slice(2);
@@ -294,6 +375,19 @@
         const motivation = document.getElementById('result-motivation');
         const avatarInitials = document.getElementById('result-avatar-initials');
         const recentAttendancesBody = document.getElementById('recent-attendances-body');
+        const openMobileScannerBtn = document.getElementById('reception-open-mobile-scanner');
+        const mobileScannerModal = document.getElementById('reception-mobile-scanner-modal');
+        const mobileScannerVideo = document.getElementById('reception-mobile-scanner-video');
+        const mobileScannerStatus = document.getElementById('reception-mobile-scanner-status');
+        const mobileScannerFeedback = document.getElementById('reception-mobile-scanner-feedback');
+        const mobileScannerStartBtn = document.getElementById('reception-mobile-scanner-start');
+        const mobileScannerStopBtn = document.getElementById('reception-mobile-scanner-stop');
+        const mobileScannerSubmitBtn = document.getElementById('reception-mobile-scanner-submit');
+        const mobileScannerInput = document.getElementById('reception-mobile-scanner-input');
+        const mobileScannerModeCheckIn = document.getElementById('reception-mobile-mode-checkin');
+        const mobileScannerModeCheckOut = document.getElementById('reception-mobile-mode-checkout');
+        const mobileScannerModeCheckInCard = document.getElementById('reception-mobile-mode-checkin-card');
+        const mobileScannerModeCheckOutCard = document.getElementById('reception-mobile-mode-checkout-card');
         const attendanceHistoryModal = document.getElementById('attendance-history-modal');
         const mobileQrSvg = document.getElementById('mobile-qr-svg');
         const mobileQrPayload = document.getElementById('mobile-qr-payload');
@@ -342,6 +436,17 @@
         let mobileQrLastConsumedAtMs = 0;
         let mobileQrStatusPollTimer = null;
         let mobileQrStatusLoading = false;
+        let mobileScannerIsOpen = false;
+        let mobileScannerStream = null;
+        let mobileScannerDetector = null;
+        let mobileScannerScanTimer = null;
+        let mobileScannerFallbackLibraryPromise = null;
+        let mobileScannerFallbackReader = null;
+        let mobileScannerFallbackControls = null;
+        let mobileScannerScanBusy = false;
+        let mobileScannerSubmitting = false;
+        let mobileScannerLastScannedValue = '';
+        let mobileScannerLastScannedAt = 0;
 
         document.querySelectorAll('[data-open-attendance-history]').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -358,6 +463,593 @@
                 attendanceHistoryModal.classList.add('hidden');
             }
         });
+
+        function setMobileScannerStatus(text, tone = 'info') {
+            if (!mobileScannerStatus) return;
+
+            mobileScannerStatus.textContent = String(text || '').trim() || 'Sin estado.';
+            if (tone === 'ok') {
+                mobileScannerStatus.className = 'rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-100';
+                return;
+            }
+
+            if (tone === 'warn') {
+                mobileScannerStatus.className = 'rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-700/60 dark:bg-amber-900/20 dark:text-amber-100';
+                return;
+            }
+
+            if (tone === 'error') {
+                mobileScannerStatus.className = 'rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 dark:border-rose-700/60 dark:bg-rose-900/20 dark:text-rose-100';
+                return;
+            }
+
+            mobileScannerStatus.className = 'rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100';
+        }
+
+        function setMobileScannerFeedback(text, tone = 'neutral') {
+            if (!mobileScannerFeedback) return;
+
+            mobileScannerFeedback.textContent = String(text || '').trim() || 'Sin lecturas aún.';
+            if (tone === 'ok') {
+                mobileScannerFeedback.className = 'rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-100';
+                return;
+            }
+
+            if (tone === 'warn') {
+                mobileScannerFeedback.className = 'rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-700/60 dark:bg-amber-900/20 dark:text-amber-100';
+                return;
+            }
+
+            if (tone === 'error') {
+                mobileScannerFeedback.className = 'rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 dark:border-rose-700/60 dark:bg-rose-900/20 dark:text-rose-100';
+                return;
+            }
+
+            mobileScannerFeedback.className = 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100';
+        }
+
+        function setMobileScannerButtonsState(isActive) {
+            if (mobileScannerStartBtn) {
+                mobileScannerStartBtn.disabled = Boolean(isActive);
+            }
+            if (mobileScannerStopBtn) {
+                mobileScannerStopBtn.disabled = !isActive;
+            }
+        }
+
+        function mobileScannerMode() {
+            return mobileScannerModeCheckOut && mobileScannerModeCheckOut.checked ? 'checkout' : 'checkin';
+        }
+
+        function refreshMobileScannerModeCards() {
+            const checkInActive = mobileScannerMode() === 'checkin';
+
+            if (mobileScannerModeCheckInCard) {
+                mobileScannerModeCheckInCard.className = checkInActive
+                    ? 'inline-flex cursor-pointer items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-2 text-xs font-black text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-100'
+                    : 'inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
+            }
+
+            if (mobileScannerModeCheckOutCard) {
+                mobileScannerModeCheckOutCard.className = !checkInActive
+                    ? 'inline-flex cursor-pointer items-center justify-center rounded-lg border border-cyan-300 bg-cyan-50 px-2 py-2 text-xs font-black text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100'
+                    : 'inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
+            }
+        }
+
+        function stopMobileScannerFallback() {
+            if (mobileScannerFallbackControls && typeof mobileScannerFallbackControls.stop === 'function') {
+                try {
+                    mobileScannerFallbackControls.stop();
+                } catch (_error) {
+                    // Ignore stop fallback errors.
+                }
+            }
+            mobileScannerFallbackControls = null;
+
+            if (mobileScannerFallbackReader && typeof mobileScannerFallbackReader.reset === 'function') {
+                try {
+                    mobileScannerFallbackReader.reset();
+                } catch (_error) {
+                    // Ignore reset fallback errors.
+                }
+            }
+            mobileScannerFallbackReader = null;
+        }
+
+        function stopMobileScannerCamera(silent = false) {
+            if (mobileScannerScanTimer) {
+                clearInterval(mobileScannerScanTimer);
+                mobileScannerScanTimer = null;
+            }
+
+            stopMobileScannerFallback();
+            mobileScannerDetector = null;
+            mobileScannerScanBusy = false;
+            mobileScannerLastScannedValue = '';
+            mobileScannerLastScannedAt = 0;
+
+            if (mobileScannerStream) {
+                mobileScannerStream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+                mobileScannerStream = null;
+            }
+
+            const activeStream = mobileScannerVideo?.srcObject;
+            if (activeStream && typeof activeStream.getTracks === 'function') {
+                activeStream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+            }
+
+            if (mobileScannerVideo) {
+                mobileScannerVideo.srcObject = null;
+            }
+            setMobileScannerButtonsState(false);
+            if (!silent) {
+                setMobileScannerStatus('Cámara detenida.', 'info');
+            }
+        }
+
+        function resolveMobileScannerCameraError(error) {
+            const errorName = String(error && error.name ? error.name : '').trim();
+            if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+                return 'No se concedió permiso de cámara. Acepta el popup del navegador.';
+            }
+            if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+                return 'No se encontró una cámara disponible en este dispositivo.';
+            }
+            if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
+                return 'La cámara está en uso por otra app o pestaña.';
+            }
+            if (errorName === 'SecurityError') {
+                return 'La política del sitio bloquea cámara. Recarga y vuelve a intentar.';
+            }
+
+            return 'No se pudo abrir la cámara.';
+        }
+
+        async function requestMobileScannerStream() {
+            const constraintsAttempts = [
+                { video: { facingMode: { ideal: 'environment' } }, audio: false },
+                { video: { facingMode: 'environment' }, audio: false },
+                { video: true, audio: false },
+            ];
+
+            let lastError = null;
+            for (const constraints of constraintsAttempts) {
+                try {
+                    return await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (error) {
+                    lastError = error;
+                    const errorName = String(error && error.name ? error.name : '').trim();
+                    if (
+                        errorName === 'NotAllowedError'
+                        || errorName === 'PermissionDeniedError'
+                        || errorName === 'SecurityError'
+                    ) {
+                        break;
+                    }
+                }
+            }
+
+            throw (lastError || new Error('camera_unavailable'));
+        }
+
+        async function supportsNativeMobileQrDetection() {
+            if (!('BarcodeDetector' in window)) {
+                return false;
+            }
+
+            if (typeof BarcodeDetector.getSupportedFormats !== 'function') {
+                return true;
+            }
+
+            try {
+                const formats = await BarcodeDetector.getSupportedFormats();
+
+                return Array.isArray(formats) && formats.includes('qr_code');
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        async function loadMobileScannerFallbackLibrary() {
+            if (window.ZXingBrowser && window.ZXingBrowser.BrowserQRCodeReader) {
+                return window.ZXingBrowser;
+            }
+
+            if (mobileScannerFallbackLibraryPromise) {
+                return mobileScannerFallbackLibraryPromise;
+            }
+
+            const scriptSources = [
+                'https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js',
+                'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js',
+            ];
+
+            mobileScannerFallbackLibraryPromise = new Promise((resolve, reject) => {
+                const tryLoad = (index) => {
+                    if (index >= scriptSources.length) {
+                        reject(new Error('No se pudo cargar el lector QR alternativo.'));
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = scriptSources[index];
+                    script.async = true;
+                    script.onload = () => {
+                        if (window.ZXingBrowser && window.ZXingBrowser.BrowserQRCodeReader) {
+                            resolve(window.ZXingBrowser);
+                            return;
+                        }
+                        tryLoad(index + 1);
+                    };
+                    script.onerror = () => {
+                        tryLoad(index + 1);
+                    };
+                    document.head.appendChild(script);
+                };
+
+                tryLoad(0);
+            });
+
+            return mobileScannerFallbackLibraryPromise;
+        }
+
+        function normalizeMobileModalOutcome(payload) {
+            const reason = payloadReason(payload);
+            const eventType = payload && payload.event_type ? String(payload.event_type) : 'checkin';
+            if (payload.ok && eventType === 'checkout') {
+                return { headline: 'Salida registrada', tone: 'ok' };
+            }
+
+            if (payload.ok) {
+                return { headline: 'Cliente registrado', tone: 'ok' };
+            }
+
+            if (reason === 'membership_inactive' || reason === 'not_found' || reason === 'client_inactive' || reason === 'credential_inactive') {
+                return { headline: 'Cliente no disponible o membresía caducada', tone: 'error' };
+            }
+
+            if (reason === 'duplicate_attendance') {
+                return { headline: 'Cliente ya estaba registrado', tone: 'warn' };
+            }
+
+            if (reason === 'not_inside') {
+                return { headline: 'No hay ingreso activo para salida', tone: 'warn' };
+            }
+
+            return { headline: 'No se pudo registrar', tone: 'error' };
+        }
+
+        async function mobileScannerRequest(action, value) {
+            const endpoint = action === 'checkout' ? checkOutEndpoint : checkInEndpoint;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ value: value }),
+                });
+
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (_error) {
+                    payload = null;
+                }
+
+                if (!payload || typeof payload !== 'object') {
+                    return safePayload({
+                        ok: false,
+                        reason: 'invalid_payload',
+                        message: receptionI18n.invalid_server_response,
+                        method: null,
+                        client: null,
+                        attendance: null,
+                        attempt: null,
+                        event_type: action === 'checkout' ? 'checkout' : 'checkin',
+                    });
+                }
+
+                if (!Object.prototype.hasOwnProperty.call(payload, 'event_type')) {
+                    payload.event_type = action === 'checkout' ? 'checkout' : 'checkin';
+                }
+
+                return safePayload(payload);
+            } catch (_error) {
+                return safePayload({
+                    ok: false,
+                    reason: 'network_error',
+                    message: 'Error de red. Revisa conexión e intenta de nuevo.',
+                    method: null,
+                    client: null,
+                    attendance: null,
+                    attempt: null,
+                    event_type: action === 'checkout' ? 'checkout' : 'checkin',
+                });
+            }
+        }
+
+        async function processMobileScannerValue(rawValue, preferredAction = null, allowAutoCheckout = true) {
+            if (mobileScannerSubmitting) {
+                return;
+            }
+
+            const value = normalizeInput(rawValue);
+            if (value === '') {
+                setMobileScannerStatus('Ingresa o escanea un código válido.', 'warn');
+                return;
+            }
+
+            let action = preferredAction === 'checkout' ? 'checkout' : (preferredAction === 'checkin' ? 'checkin' : mobileScannerMode());
+            mobileScannerSubmitting = true;
+            if (mobileScannerSubmitBtn) {
+                mobileScannerSubmitBtn.disabled = true;
+            }
+
+            setMobileScannerStatus(action === 'checkout' ? 'Procesando salida...' : 'Procesando ingreso...', 'info');
+            let payload = await mobileScannerRequest(action, value);
+
+            if (
+                allowAutoCheckout
+                && action === 'checkin'
+                && payloadReason(payload) === 'duplicate_attendance'
+            ) {
+                const checkoutPayload = await mobileScannerRequest('checkout', value);
+                if (checkoutPayload.ok || payloadReason(checkoutPayload) !== 'not_inside') {
+                    payload = checkoutPayload;
+                    action = 'checkout';
+                }
+            }
+
+            const normalized = normalizeMobileModalOutcome(payload);
+            setMobileScannerStatus(normalized.headline, normalized.tone);
+            setMobileScannerFeedback(payload.message, normalized.tone);
+
+            render(payload);
+            prependRecentAttendance(payload);
+            emitSync(payload);
+            scheduleReset();
+            focusInput();
+
+            if (payload.ok && mobileScannerInput) {
+                mobileScannerInput.value = '';
+            } else if (mobileScannerInput) {
+                mobileScannerInput.value = value;
+                mobileScannerInput.focus({ preventScroll: true });
+                mobileScannerInput.select();
+            }
+
+            if (mobileScannerSubmitBtn) {
+                mobileScannerSubmitBtn.disabled = false;
+            }
+            mobileScannerSubmitting = false;
+        }
+
+        async function startMobileScannerNative() {
+            mobileScannerDetector = new BarcodeDetector({ formats: ['qr_code'] });
+            mobileScannerStream = await requestMobileScannerStream();
+            if (mobileScannerVideo) {
+                mobileScannerVideo.srcObject = mobileScannerStream;
+                await mobileScannerVideo.play();
+            }
+
+            mobileScannerScanTimer = window.setInterval(async function () {
+                if (!mobileScannerDetector || !mobileScannerVideo || mobileScannerVideo.readyState < 2 || mobileScannerScanBusy || mobileScannerSubmitting) {
+                    return;
+                }
+
+                try {
+                    const codes = await mobileScannerDetector.detect(mobileScannerVideo);
+                    if (!codes || !codes.length) {
+                        return;
+                    }
+
+                    const rawValue = normalizeInput(String(codes[0].rawValue || ''));
+                    if (rawValue === '') {
+                        return;
+                    }
+
+                    const now = Date.now();
+                    if (rawValue === mobileScannerLastScannedValue && (now - mobileScannerLastScannedAt) < MOBILE_SCANNER_SCAN_DEBOUNCE_MS) {
+                        return;
+                    }
+                    mobileScannerLastScannedValue = rawValue;
+                    mobileScannerLastScannedAt = now;
+
+                    mobileScannerScanBusy = true;
+                    try {
+                        if (mobileScannerInput) {
+                            mobileScannerInput.value = rawValue;
+                        }
+                        await processMobileScannerValue(rawValue, null, true);
+                    } finally {
+                        mobileScannerScanBusy = false;
+                    }
+                } catch (_error) {
+                    // Keep scan loop alive.
+                }
+            }, 220);
+
+            setMobileScannerButtonsState(true);
+            setMobileScannerStatus('Escaneando QR (modo nativo)...', 'ok');
+        }
+
+        async function startMobileScannerFallback() {
+            const zxingBrowser = await loadMobileScannerFallbackLibrary();
+            const ReaderCtor = zxingBrowser && (
+                (typeof zxingBrowser.BrowserQRCodeReader === 'function' && zxingBrowser.BrowserQRCodeReader)
+                || (typeof zxingBrowser.BrowserMultiFormatReader === 'function' && zxingBrowser.BrowserMultiFormatReader)
+            );
+            if (!ReaderCtor) {
+                throw new Error('Fallback QR reader unavailable');
+            }
+
+            mobileScannerFallbackReader = new ReaderCtor();
+            mobileScannerFallbackControls = await mobileScannerFallbackReader.decodeFromVideoDevice(undefined, mobileScannerVideo, async function (result) {
+                if (!result || mobileScannerScanBusy || mobileScannerSubmitting) return;
+
+                const rawValue = String(typeof result.getText === 'function' ? result.getText() : (result.text || '')).trim();
+                const normalized = normalizeInput(rawValue);
+                if (normalized === '') return;
+
+                const now = Date.now();
+                if (normalized === mobileScannerLastScannedValue && (now - mobileScannerLastScannedAt) < MOBILE_SCANNER_SCAN_DEBOUNCE_MS) {
+                    return;
+                }
+                mobileScannerLastScannedValue = normalized;
+                mobileScannerLastScannedAt = now;
+
+                mobileScannerScanBusy = true;
+                try {
+                    if (mobileScannerInput) {
+                        mobileScannerInput.value = normalized;
+                    }
+                    await processMobileScannerValue(normalized, null, true);
+                } finally {
+                    mobileScannerScanBusy = false;
+                }
+            });
+
+            setMobileScannerButtonsState(true);
+            setMobileScannerStatus('Escaneando QR (modo compatible)...', 'ok');
+        }
+
+        async function startMobileScannerCamera() {
+            if (!mobileScannerIsOpen) {
+                return;
+            }
+
+            if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                setMobileScannerStatus('La cámara requiere HTTPS.', 'error');
+                return;
+            }
+
+            if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                setMobileScannerStatus('Este navegador no soporta acceso a cámara.', 'error');
+                return;
+            }
+
+            stopMobileScannerCamera(true);
+            setMobileScannerButtonsState(true);
+            setMobileScannerStatus('Abriendo cámara...', 'info');
+
+            const canUseNative = await supportsNativeMobileQrDetection();
+            if (canUseNative) {
+                try {
+                    await startMobileScannerNative();
+                    return;
+                } catch (error) {
+                    stopMobileScannerCamera(true);
+                    setMobileScannerStatus(resolveMobileScannerCameraError(error) + ' Probando modo compatible...', 'warn');
+                }
+            }
+
+            try {
+                await startMobileScannerFallback();
+            } catch (error) {
+                stopMobileScannerCamera(true);
+                setMobileScannerStatus(resolveMobileScannerCameraError(error), 'error');
+            }
+        }
+
+        function closeMobileScannerModal(restoreFocus = true) {
+            if (!mobileScannerModal || mobileScannerModal.classList.contains('hidden')) {
+                return;
+            }
+
+            const focused = document.activeElement;
+            if (focused instanceof HTMLElement && mobileScannerModal.contains(focused)) {
+                focused.blur();
+            }
+
+            stopMobileScannerCamera(true);
+            mobileScannerModal.classList.add('hidden');
+            mobileScannerIsOpen = false;
+            if (openMobileScannerBtn) {
+                openMobileScannerBtn.setAttribute('aria-expanded', 'false');
+                if (restoreFocus) {
+                    openMobileScannerBtn.focus({ preventScroll: true });
+                }
+            }
+        }
+
+        function openMobileScannerModal(shouldAutoStart = true) {
+            if (!mobileScannerModal) {
+                return;
+            }
+
+            mobileScannerModal.classList.remove('hidden');
+            mobileScannerIsOpen = true;
+            if (openMobileScannerBtn) {
+                openMobileScannerBtn.setAttribute('aria-expanded', 'true');
+            }
+            refreshMobileScannerModeCards();
+            setMobileScannerStatus('Presiona "Iniciar cámara" para escanear.', 'info');
+            if (mobileScannerFeedback) {
+                setMobileScannerFeedback('Sin lecturas aún.', 'neutral');
+            }
+
+            if (mobileScannerInput) {
+                mobileScannerInput.value = '';
+            }
+            setMobileScannerButtonsState(false);
+
+            if (shouldAutoStart) {
+                startMobileScannerCamera();
+            }
+        }
+
+        openMobileScannerBtn?.addEventListener('click', function () {
+            openMobileScannerModal(true);
+        });
+        document.querySelectorAll('[data-close-mobile-scanner]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                closeMobileScannerModal(true);
+            });
+        });
+        mobileScannerModal?.addEventListener('click', function (event) {
+            if (event.target === mobileScannerModal) {
+                closeMobileScannerModal(true);
+            }
+        });
+        mobileScannerStartBtn?.addEventListener('click', function () {
+            startMobileScannerCamera();
+        });
+        mobileScannerStopBtn?.addEventListener('click', function () {
+            stopMobileScannerCamera();
+        });
+        mobileScannerSubmitBtn?.addEventListener('click', function () {
+            processMobileScannerValue(mobileScannerInput ? mobileScannerInput.value : '', null, true);
+        });
+        mobileScannerInput?.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            event.preventDefault();
+            processMobileScannerValue(mobileScannerInput.value, null, true);
+        });
+        mobileScannerModeCheckIn?.addEventListener('change', refreshMobileScannerModeCards);
+        mobileScannerModeCheckOut?.addEventListener('change', refreshMobileScannerModeCards);
+        window.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && mobileScannerIsOpen) {
+                closeMobileScannerModal(true);
+            }
+        });
+
+        if (autoOpenMobileScannerModal) {
+            openMobileScannerModal(false);
+        }
 
         function clearMobileQrTimers(includeStatusPoll = true) {
             if (mobileQrCountdownTimer) {
@@ -1375,6 +2067,14 @@
         }
 
         function canAutoFocusScanner() {
+            if (mobileScannerIsOpen) {
+                return false;
+            }
+
+            if (attendanceHistoryModal && !attendanceHistoryModal.classList.contains('hidden')) {
+                return false;
+            }
+
             const active = document.activeElement;
             if (!active || active === document.body) {
                 return true;
@@ -1701,6 +2401,7 @@
 
         window.addEventListener('beforeunload', function () {
             clearMobileQrTimers();
+            stopMobileScannerCamera(true);
             if (syncChannel) {
                 syncChannel.close();
             }
@@ -1710,6 +2411,11 @@
         });
 
         document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                stopMobileScannerCamera(true);
+                return;
+            }
+
             if (!document.hidden) {
                 pollLatestSyncEvent();
             }

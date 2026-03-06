@@ -9,6 +9,7 @@ use App\Models\Gym;
 use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\PresenceSession;
 use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
@@ -290,6 +291,12 @@ it('requires attendance and completed training session before updating progress 
         'token' => 'GYMSYS-MOBILE|'.$token,
     ])->assertOk()->assertJsonPath('ok', true);
 
+    expect(PresenceSession::query()
+        ->forGym($gym->id)
+        ->where('client_id', $client->id)
+        ->open()
+        ->count())->toBe(1);
+
     $start = $this->withSession($mobileSession)->postJson(route('client-mobile.training.start', [
         'gymSlug' => $gym->slug,
     ]));
@@ -306,6 +313,19 @@ it('requires attendance and completed training session before updating progress 
         ->assertJsonPath('ok', true)
         ->assertJsonPath('training_status.completed_today', true)
         ->assertJsonPath('training_status.progress_unlocked', true);
+
+    expect(PresenceSession::query()
+        ->forGym($gym->id)
+        ->where('client_id', $client->id)
+        ->open()
+        ->count())->toBe(0);
+
+    $this->assertDatabaseHas('presence_sessions', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'check_out_method' => 'training',
+        'check_out_reason' => 'training_manual',
+    ]);
 
     $this->assertDatabaseHas('client_training_sessions', [
         'gym_id' => $gym->id,
@@ -484,6 +504,21 @@ it('blocks dynamic qr feature when plan does not include client accounts', funct
         ->assertStatus(403)
         ->assertJsonPath('ok', false)
         ->assertJsonPath('feature', 'client_accounts');
+});
+
+it('redirects mobile scanner route to reception with modal flag regardless of client accounts plan feature', function () {
+    $gym = phase6MakeGym('mobile-scanner-open');
+    $owner = phase6MakeOwner($gym, 'phase6-mobile-scanner@example.test');
+    phase6SetPlan($gym, 'basico');
+
+    $this->actingAs($owner)
+        ->get(route('reception.mobile-display', [
+            'contextGym' => $gym->slug,
+        ]))
+        ->assertRedirect(route('reception.index', [
+            'contextGym' => $gym->slug,
+            'open_mobile_scanner' => 1,
+        ]));
 });
 
 it('does not allow check-in with credential value from another gym', function () {
