@@ -642,15 +642,37 @@
             display: inline-flex;
             align-items: center;
             justify-content: flex-start;
-            gap: .48rem;
+            gap: .52rem;
             padding: 0;
+            overflow: hidden;
+            line-height: 1;
+        }
+        .brand-chip.brand-chip-has-logo {
+            min-width: 0;
+            justify-content: flex-start;
+            gap: 2.1rem;
+            padding-inline: 0;
+        }
+        .brand-chip-logo-box {
+            width: 96px;
+            height: 32px;
+            flex: 0 0 96px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
         .brand-chip-logo {
-            width: 22px;
-            height: 22px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
+            object-position: center;
             background: transparent;
-            flex: 0 0 22px;
+            flex: 0 0 auto;
+            filter: drop-shadow(0 0 12px rgba(68, 255, 125, 0.28));
+            transform: scale(2.8);
+            transform-origin: center;
+            will-change: transform;
         }
         .brand-chip span {
             color: #c0d2c8;
@@ -1661,6 +1683,19 @@
             .brands-track { animation-duration: 32s; }
             .brands-row { gap: 1.45rem; padding-right: 1.45rem; }
             .brand-chip { min-width: 0; }
+            .brand-chip.brand-chip-has-logo {
+                min-width: 0;
+                gap: 1.65rem;
+                padding-inline: 0;
+            }
+            .brand-chip-logo-box {
+                width: 84px;
+                height: 28px;
+                flex-basis: 84px;
+            }
+            .brand-chip-logo {
+                transform: scale(2.45);
+            }
             .brand-chip span { font-size: .83rem; }
             .service-grid,
             .pricing-grid,
@@ -1689,6 +1724,19 @@
                 transform: scale(1.1);
             }
             .top-nav { padding: .58rem .64rem; }
+            .brand-chip.brand-chip-has-logo {
+                min-width: 0;
+                gap: 1.28rem;
+                padding-inline: 0;
+            }
+            .brand-chip-logo-box {
+                width: 74px;
+                height: 24px;
+                flex-basis: 74px;
+            }
+            .brand-chip-logo {
+                transform: scale(2.2);
+            }
             .mobile-nav-actions { grid-template-columns: 1fr; }
             .hero-actions { gap: .5rem; }
             .hero-actions .btn,
@@ -1876,9 +1924,14 @@
                 <div class="brands-track">
                     <div class="brands-row">
                         @foreach ($marqueeItems as $item)
-                            <div class="brand-chip" data-marquee-chip-index="{{ $item['index'] }}">
+                            <div @class([
+                                'brand-chip',
+                                'brand-chip-has-logo' => $item['logo'] !== '',
+                            ]) data-marquee-chip-index="{{ $item['index'] }}">
                                 @if ($item['logo'] !== '')
-                                    <img src="{{ $item['logo'] }}" alt="{{ $item['text'] }}" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                    <span class="brand-chip-logo-box">
+                                        <img src="{{ $item['logo'] }}" alt="{{ $item['text'] }}" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                    </span>
                                 @endif
                                 <span data-marquee-text-index="{{ $item['index'] }}">{{ $item['text'] }}</span>
                             </div>
@@ -1886,9 +1939,14 @@
                     </div>
                     <div class="brands-row" aria-hidden="true">
                         @foreach ($marqueeItems as $item)
-                            <div class="brand-chip" data-marquee-chip-index="{{ $item['index'] }}">
+                            <div @class([
+                                'brand-chip',
+                                'brand-chip-has-logo' => $item['logo'] !== '',
+                            ]) data-marquee-chip-index="{{ $item['index'] }}">
                                 @if ($item['logo'] !== '')
-                                    <img src="{{ $item['logo'] }}" alt="" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                    <span class="brand-chip-logo-box">
+                                        <img src="{{ $item['logo'] }}" alt="" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                    </span>
                                 @endif
                                 <span data-marquee-text-index="{{ $item['index'] }}">{{ $item['text'] }}</span>
                             </div>
