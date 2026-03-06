@@ -1561,6 +1561,7 @@
 <main
     class="mobile-shell px-4 pt-6 pb-6"
     data-screen="{{ $screen }}"
+    data-action-guide-key="{{ $gym->slug }}:{{ (string) ($client->id ?? 'guest') }}"
     data-app-url="{{ route('client-mobile.app', ['gymSlug' => $gym->slug]) }}"
     data-checkin-url="{{ route('client-mobile.check-in', ['gymSlug' => $gym->slug]) }}"
     data-progress-url="{{ route('client-mobile.progress', ['gymSlug' => $gym->slug]) }}"
@@ -2666,6 +2667,10 @@
     let directPermissionPromptArmed = false;
     let directPermissionPromptDone = false;
     const sectionStateStorageKey = 'client-mobile:progress:sections:v1';
+    const actionGuideSeenStorageBase = 'client-mobile:action-guide-seen:v1';
+    const actionGuideIdentity = String(shell.dataset.actionGuideKey || '').trim();
+    const actionGuideSeenStorageKey = actionGuideSeenStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    let actionGuideAlreadySeen = false;
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
     let fallbackScannerControls = null;
@@ -2836,6 +2841,23 @@
             const isCollapsed = Boolean(sectionCollapseState[sectionId]);
             setSectionCollapsed(sectionId, isCollapsed, false);
         });
+    }
+
+    function readActionGuideSeenState() {
+        try {
+            return window.localStorage.getItem(actionGuideSeenStorageKey) === '1';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function markActionGuideSeen() {
+        actionGuideAlreadySeen = true;
+        try {
+            window.localStorage.setItem(actionGuideSeenStorageKey, '1');
+        } catch (error) {
+            // ignore persistence errors
+        }
     }
 
     function setFitnessModalOpen(isOpen) {
@@ -3092,6 +3114,7 @@
     function closeActionGuide(markDismissed = true) {
         if (markDismissed && actionGuideMode !== '') {
             actionGuideDismissedMode = actionGuideMode;
+            markActionGuideSeen();
         }
         setActionGuideOpen(false);
     }
@@ -3100,6 +3123,9 @@
         if (!actionGuideModal || !actionGuideTitleEl || !actionGuideTextEl || !actionGuideCtaBtn) return;
 
         actionGuideMode = mode;
+        if (actionGuideMode !== '') {
+            markActionGuideSeen();
+        }
         actionGuideTitleEl.textContent = String(title || 'Guía rápida');
         actionGuideTextEl.textContent = String(text || 'Sigue esta indicación para continuar.');
         actionGuideCtaBtn.textContent = String(ctaLabel || 'Entendido');
@@ -3197,6 +3223,11 @@
     }
 
     function updateActionGuide(progressPayload, force = false) {
+        if (actionGuideAlreadySeen) {
+            closeActionGuide(false);
+            return;
+        }
+
         const mode = resolveGuideMode(progressPayload);
         if (mode === '') {
             actionGuideMode = '';
@@ -4698,8 +4729,12 @@
     });
 
     actionGuideCtaBtn?.addEventListener('click', () => {
+        if (actionGuideMode !== '') {
+            markActionGuideSeen();
+        }
+
         if (typeof actionGuideCtaHandler !== 'function') {
-            closeActionGuide(true);
+            closeActionGuide(false);
             return;
         }
         actionGuideCtaHandler();
@@ -4815,6 +4850,7 @@
     initFitnessForms();
     resetFitnessFormSubmitState();
     initializeSectionCollapseState();
+    actionGuideAlreadySeen = readActionGuideSeenState();
     armDirectPermissionPrompt();
     refreshClientPushStatus();
     initBootScreen();
@@ -4837,5 +4873,6 @@
 </script>
 </body>
 </html>
+
 
 
