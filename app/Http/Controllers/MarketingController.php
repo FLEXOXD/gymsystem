@@ -7,7 +7,9 @@ use App\Models\DemoSession;
 use App\Models\Gym;
 use App\Models\LegalAcceptance;
 use App\Models\LandingContactMessage;
+use App\Models\LandingQuoteRequest;
 use App\Models\SuperAdminPlanTemplate;
+use App\Models\User;
 use App\Services\DemoSessionService;
 use App\Support\LegalTerms;
 use App\Support\MarketingContent;
@@ -46,6 +48,8 @@ class MarketingController extends Controller
             return $redirect;
         }
 
+        $this->applyPublicTimezone();
+
         return view('marketing.demo', [
             'content' => MarketingContent::load(),
         ]);
@@ -58,6 +62,8 @@ class MarketingController extends Controller
             return $redirect;
         }
 
+        $this->applyPublicTimezone();
+
         return view('marketing.demo-guide', [
             'content' => MarketingContent::load(),
         ]);
@@ -65,6 +71,8 @@ class MarketingController extends Controller
 
     public function storeContactMessage(Request $request): RedirectResponse
     {
+        $this->applyPublicTimezone();
+
         $data = $request->validateWithBag('landingContact', [
             'first_name' => ['required', 'string', 'max:80'],
             'last_name' => ['required', 'string', 'max:80'],
@@ -84,6 +92,48 @@ class MarketingController extends Controller
         return redirect()
             ->to(route('landing.contact').'#contacto')
             ->with('contact_status', 'Mensaje enviado. Te responderemos pronto.');
+    }
+
+    public function storeQuoteRequest(Request $request): RedirectResponse
+    {
+        $this->applyPublicTimezone();
+
+        $data = $request->validateWithBag('landingQuote', [
+            'quote_first_name' => ['required', 'string', 'max:80'],
+            'quote_last_name' => ['required', 'string', 'max:80'],
+            'quote_email' => ['required', 'email', 'max:150'],
+            'quote_phone_country_code' => ['required', 'string', 'max:10', 'regex:/^\+\d{1,4}$/'],
+            'quote_phone_number' => ['required', 'string', 'max:30', 'regex:/^[0-9\s\-]{6,20}$/'],
+            'quote_country' => ['required', 'string', 'max:120'],
+            'quote_professionals_count' => ['required', 'integer', 'min:1', 'max:5000'],
+            'quote_requested_plan' => ['nullable', 'string', 'max:60'],
+            'quote_source' => ['nullable', 'string', 'max:60'],
+            'quote_notes' => ['nullable', 'string', 'max:1000'],
+            'quote_privacy_accepted' => ['accepted'],
+        ], [
+            'quote_privacy_accepted.accepted' => 'Debes aceptar el tratamiento de datos para recibir tu cotizacion.',
+            'quote_phone_country_code.regex' => 'El prefijo telefonico debe tener formato internacional, por ejemplo +593.',
+            'quote_phone_number.regex' => 'Ingresa un numero telefonico valido.',
+        ]);
+
+        $sanitizedPhoneNumber = preg_replace('/\D+/', '', (string) $data['quote_phone_number']) ?? '';
+
+        LandingQuoteRequest::query()->create([
+            'first_name' => trim((string) $data['quote_first_name']),
+            'last_name' => trim((string) $data['quote_last_name']),
+            'email' => strtolower(trim((string) $data['quote_email'])),
+            'phone_country_code' => trim((string) $data['quote_phone_country_code']),
+            'phone_number' => $sanitizedPhoneNumber !== '' ? $sanitizedPhoneNumber : trim((string) $data['quote_phone_number']),
+            'country' => trim((string) $data['quote_country']),
+            'professionals_count' => (int) $data['quote_professionals_count'],
+            'requested_plan' => $this->normalizeQuoteMeta($data['quote_requested_plan'] ?? null),
+            'source' => $this->normalizeQuoteMeta($data['quote_source'] ?? null),
+            'notes' => $this->normalizeNullableText($data['quote_notes'] ?? null),
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return back()->with('quote_status', 'Solicitud enviada. Te contactaremos con tu cotizacion.');
     }
 
     public function privacy(Request $request): View|\Illuminate\Http\RedirectResponse
@@ -127,6 +177,8 @@ class MarketingController extends Controller
         if ($redirect) {
             return $redirect;
         }
+
+        $this->applyPublicTimezone();
 
         return view('marketing.home', [
             'stats' => $this->resolveLandingStats(),
@@ -273,6 +325,49 @@ class MarketingController extends Controller
         );
 
         return 'demo:fingerprint:'.$fingerprint;
+    }
+
+    private function normalizeQuoteMeta(mixed $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized !== '' ? mb_substr($normalized, 0, 60) : null;
+    }
+
+    private function normalizeNullableText(mixed $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function applyPublicTimezone(): string
+    {
+        $timezone = $this->resolvePublicTimezone();
+
+        config(['app.timezone' => $timezone]);
+        date_default_timezone_set($timezone);
+
+        return $timezone;
+    }
+
+    private function resolvePublicTimezone(): string
+    {
+        $candidate = trim((string) User::query()
+            ->whereNull('gym_id')
+            ->whereNotNull('timezone')
+            ->orderByDesc('id')
+            ->value('timezone'));
+
+        if (
+            $candidate !== ''
+            && $candidate !== 'UTC'
+            && in_array($candidate, timezone_identifiers_list(), true)
+        ) {
+            return $candidate;
+        }
+
+        return 'America/Guayaquil';
     }
 
     /**

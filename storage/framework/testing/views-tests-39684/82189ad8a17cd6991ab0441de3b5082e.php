@@ -1,8 +1,8 @@
-﻿@php($content = $content ?? \App\Support\MarketingContent::defaults())
-@php($demoCtaLabel = 'Demo gratis')
-@php($brandName = trim((string) ($content['brand_name'] ?? 'GymSystem')))
-@php($brandLogoUrl = trim((string) ($content['brand_logo_url'] ?? '')))
-@php($brandInitials = trim((string) ($content['brand_initials'] ?? 'GS')))
+﻿<?php ($content = $content ?? \App\Support\MarketingContent::defaults()); ?>
+<?php ($demoCtaLabel = 'Demo gratis'); ?>
+<?php ($brandName = trim((string) ($content['brand_name'] ?? 'GymSystem'))); ?>
+<?php ($brandLogoUrl = trim((string) ($content['brand_logo_url'] ?? ''))); ?>
+<?php ($brandInitials = trim((string) ($content['brand_initials'] ?? 'GS'))); ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b1020">
     <title>GymSystem Demo | Flujo de ejemplo</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         body {
             margin: 0;
@@ -165,32 +165,32 @@
 <body>
     <main class="demo-wrap">
         <nav class="demo-nav">
-            <a class="demo-brand" href="{{ route('landing') }}">
-                @if ($brandLogoUrl !== '')
-                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="demo-brand-logo">
-                @else
-                    <span class="demo-badge">{{ $brandInitials }}</span>
-                @endif
-                <span>{{ $brandName }} Demo</span>
+            <a class="demo-brand" href="<?php echo e(route('landing')); ?>">
+                <?php if($brandLogoUrl !== ''): ?>
+                    <img src="<?php echo e($brandLogoUrl); ?>" alt="<?php echo e($brandName); ?>" class="demo-brand-logo">
+                <?php else: ?>
+                    <span class="demo-badge"><?php echo e($brandInitials); ?></span>
+                <?php endif; ?>
+                <span><?php echo e($brandName); ?> Demo</span>
             </a>
             <div class="demo-actions">
-                <a class="btn btn-outline" href="{{ route('landing') }}">Volver al inicio</a>
-                <a class="btn btn-outline" href="{{ route('login') }}">Iniciar sesión</a>
+                <a class="btn btn-outline" href="<?php echo e(route('landing')); ?>">Volver al inicio</a>
+                <a class="btn btn-outline" href="<?php echo e(route('login')); ?>">Iniciar sesión</a>
             </div>
         </nav>
 
         <section class="hero">
-            <h1>{{ $demoCtaLabel }}: entra al sistema real con cuenta temporal</h1>
+            <h1><?php echo e($demoCtaLabel); ?>: entra al sistema real con cuenta temporal</h1>
             <p>Inicias con un gimnasio de prueba aislado. Puedes navegar clientes, planes, caja y reportes sin afectar cuentas reales.</p>
             <div class="note">
                 Los datos demo se eliminan automáticamente al expirar la sesión temporal.
             </div>
             <div class="demo-actions" style="margin-top:.85rem;">
-                <form method="POST" action="{{ route('demo.request') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-main">{{ $demoCtaLabel }}</button>
+                <form method="POST" action="<?php echo e(route('demo.request')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <button type="submit" class="btn btn-main"><?php echo e($demoCtaLabel); ?></button>
                 </form>
-                <a class="btn btn-outline" href="{{ route('landing', ['quote' => 1]) }}">Solicita tu cotización</a>
+                <a class="btn btn-outline" href="<?php echo e(route('landing', ['quote' => 1])); ?>">Solicita tu cotización</a>
             </div>
         </section>
 
@@ -222,3 +222,4 @@
 </html>
 
 
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/demo.blade.php ENDPATH**/ ?>

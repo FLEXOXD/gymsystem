@@ -1,4 +1,4 @@
-﻿@php
+﻿<?php
     $content = $content ?? \App\Support\MarketingContent::load();
     $demoCtaLabel = 'Demo gratis';
     $loginLabel = trim((string) ($content['login_button_label'] ?? 'Iniciar sesión'));
@@ -90,8 +90,8 @@
         default => 'Software para gimnasios',
     };
     $tabIconUrl = asset('pwa/favicon-brand.png?v=20260302');
-@endphp
-@php
+?>
+<?php
     $serviceCards = [
         [
             'index' => '1',
@@ -137,20 +137,19 @@
         $amount = (float) $value;
         return number_format($amount, 0, '.', '');
     };
-    $quoteCountryPrefixes = [
-        'Ecuador' => '+593',
-        'Colombia' => '+57',
-        'Peru' => '+51',
-        'Chile' => '+56',
-        'Mexico' => '+52',
-        'Argentina' => '+54',
-        'Bolivia' => '+591',
-        'Panama' => '+507',
-        'Costa Rica' => '+506',
-        'Otro' => null,
+    $quoteCountries = [
+        'Ecuador',
+        'Colombia',
+        'Peru',
+        'Chile',
+        'Mexico',
+        'Argentina',
+        'Bolivia',
+        'Panama',
+        'Costa Rica',
+        'Otro',
     ];
-    $quoteCountries = array_keys($quoteCountryPrefixes);
-    $quotePhonePrefixes = array_values(array_unique(array_filter(array_values($quoteCountryPrefixes))));
+    $quotePhonePrefixes = ['+593', '+57', '+51', '+56', '+52', '+54', '+591', '+507', '+506'];
     $landingQuoteErrors = $errors->getBag('landingQuote');
     $quoteModalMessage = '';
     $quoteModalType = 'idle';
@@ -166,18 +165,18 @@
     $quoteSelectedPlanLabel = $quoteSelectedPlan !== ''
         ? \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $quoteSelectedPlan))
         : '';
-@endphp
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#05080f">
-    <title>{{ $brandName }} | {{ $pageTitleSuffix }}</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ $tabIconUrl }}">
-    <link rel="shortcut icon" href="{{ $tabIconUrl }}">
-    <link rel="apple-touch-icon" href="{{ $tabIconUrl }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title><?php echo e($brandName); ?> | <?php echo e($pageTitleSuffix); ?></title>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e($tabIconUrl); ?>">
+    <link rel="shortcut icon" href="<?php echo e($tabIconUrl); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e($tabIconUrl); ?>">
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         :root {
             --bg: #030405;
@@ -189,11 +188,11 @@
             --neon: #47ff6f;
             --neon-soft: rgba(71, 255, 111, 0.32);
             --border: #254235;
-            --home-page-bg-1: url('{{ $homePageBackgroundUrls[0] }}');
-            --home-page-bg-2: url('{{ $homePageBackgroundUrls[1] }}');
-            --home-page-bg-3: url('{{ $homePageBackgroundUrls[2] }}');
-            --home-page-bg-4: url('{{ $homePageBackgroundUrls[3] }}');
-            --home-page-bg-5: url('{{ $homePageBackgroundUrls[4] }}');
+            --home-page-bg-1: url('<?php echo e($homePageBackgroundUrls[0]); ?>');
+            --home-page-bg-2: url('<?php echo e($homePageBackgroundUrls[1]); ?>');
+            --home-page-bg-3: url('<?php echo e($homePageBackgroundUrls[2]); ?>');
+            --home-page-bg-4: url('<?php echo e($homePageBackgroundUrls[3]); ?>');
+            --home-page-bg-5: url('<?php echo e($homePageBackgroundUrls[4]); ?>');
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
@@ -410,53 +409,6 @@
         .btn-demo { color: #061209; background: linear-gradient(140deg, #57ff54, #20dc78); box-shadow: 0 16px 34px var(--neon-soft); }
         .btn-wa { color: #f4f9ff; border: 1px solid #2f4f3f; background: rgba(13,20,16,.86); }
         .btn-icon { width: 16px; height: 16px; flex: 0 0 16px; }
-        .btn-quote-trigger .btn-icon {
-            width: 18px;
-            height: 18px;
-            flex-basis: 18px;
-        }
-        .quote-cta-icon-badge {
-            position: relative;
-            width: 1.9rem;
-            height: 1.9rem;
-            border-radius: .62rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 1.9rem;
-            background: linear-gradient(145deg, rgba(72, 255, 143, .2), rgba(18, 135, 83, .12));
-            border: 1px solid rgba(90, 255, 155, .36);
-            box-shadow: 0 10px 24px rgba(8, 31, 18, .2), inset 0 1px 0 rgba(255, 255, 255, .08);
-            color: inherit;
-        }
-        .quote-cta-icon-badge::before {
-            content: "";
-            position: absolute;
-            inset: 3px;
-            border-radius: .48rem;
-            background: linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0));
-            pointer-events: none;
-        }
-        .quote-cta-icon-badge::after {
-            content: "";
-            position: absolute;
-            top: -3px;
-            right: -3px;
-            width: .55rem;
-            height: .55rem;
-            border-radius: 999px;
-            background: radial-gradient(circle, #d8ff72 0%, #63ff6d 58%, #1ea14c 100%);
-            box-shadow: 0 0 10px rgba(99, 255, 109, .6);
-        }
-        .btn-demo .quote-cta-icon-badge {
-            background: linear-gradient(145deg, rgba(6, 18, 9, .12), rgba(6, 18, 9, .04));
-            border-color: rgba(6, 18, 9, .16);
-            box-shadow: 0 10px 24px rgba(14, 81, 36, .18), inset 0 1px 0 rgba(255, 255, 255, .28);
-        }
-        .btn-outline .quote-cta-icon-badge,
-        .btn-wa .quote-cta-icon-badge {
-            background: linear-gradient(145deg, rgba(71, 255, 111, .16), rgba(25, 46, 32, .28));
-        }
 
         .main { padding-bottom: 4rem; position: relative; z-index: 2; }
         .flash-stack { margin-top: 1rem; display: grid; gap: .6rem; }
@@ -1678,7 +1630,6 @@
             top: 50%;
             transform: translate(-50%, -50%);
             width: min(1080px, calc(100% - 1.4rem));
-            height: min(92vh, 860px);
             max-height: min(92vh, 860px);
             border: 1px solid rgba(97, 255, 158, .26);
             border-radius: 1.6rem;
@@ -1694,8 +1645,7 @@
         .quote-modal-shell {
             display: grid;
             grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
-            height: 100%;
-            min-height: 0;
+            min-height: min(82vh, 760px);
         }
         .quote-modal-close {
             position: absolute;
@@ -1864,28 +1814,7 @@
                 radial-gradient(circle at top right, rgba(14, 165, 233, .08), transparent 22%),
                 linear-gradient(180deg, #f8fbfa 0%, #eef6f2 100%);
             color: #16212a;
-            min-height: 0;
-            height: 100%;
             overflow-y: auto;
-            overscroll-behavior: contain;
-            scrollbar-gutter: stable;
-            padding-right: 1.2rem;
-        }
-        .quote-modal-form-panel::-webkit-scrollbar {
-            width: 10px;
-        }
-        .quote-modal-form-panel::-webkit-scrollbar-track {
-            background: rgba(14, 22, 28, .08);
-            border-radius: 999px;
-        }
-        .quote-modal-form-panel::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #21c8e7, #1098d1);
-            border-radius: 999px;
-            border: 2px solid rgba(248, 251, 250, .9);
-        }
-        .quote-modal-form-panel {
-            scrollbar-width: thin;
-            scrollbar-color: #1098d1 rgba(14, 22, 28, .08);
         }
         .quote-form-header h3 {
             margin: .5rem 0 0;
@@ -2024,13 +1953,10 @@
         @media (max-width: 980px) {
             .quote-modal {
                 width: min(760px, calc(100% - 1rem));
-                height: auto;
                 max-height: 94vh;
-                overflow-y: auto;
             }
             .quote-modal-shell {
                 grid-template-columns: 1fr;
-                height: auto;
             }
             .quote-modal-side {
                 min-height: 320px;
@@ -2060,11 +1986,6 @@
             .quote-modal-stat {
                 right: 1rem;
                 top: 1rem;
-            }
-            .quote-modal-form-panel {
-                height: auto;
-                overflow: visible;
-                padding-right: 1rem;
             }
         }
 
@@ -2249,23 +2170,23 @@
         }
     </style>
 </head>
-<body class="{{ $showPrimarySections ? 'is-home' : 'is-subpage' }}">
-    @if ($showPrimarySections)
-        <div class="home-scroll-bg" data-home-scroll-bg data-bg-images='@json($homePageBackgroundUrls)' aria-hidden="true">
+<body class="<?php echo e($showPrimarySections ? 'is-home' : 'is-subpage'); ?>">
+    <?php if($showPrimarySections): ?>
+        <div class="home-scroll-bg" data-home-scroll-bg data-bg-images='<?php echo json_encode($homePageBackgroundUrls, 15, 512) ?>' aria-hidden="true">
             <span class="home-scroll-bg-layer is-a is-active" data-home-bg-layer="0"></span>
             <span class="home-scroll-bg-layer is-b" data-home-bg-layer="1"></span>
         </div>
-    @endif
+    <?php endif; ?>
 
     <header class="top-wrap">
         <div class="shell">
             <nav class="top-nav">
-                <a class="brand" href="{{ route('landing') }}">
-                    @if ($brandLogoUrl !== '')
-                        <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="brand-logo">
-                    @else
-                        <span class="brand-fallback">{{ $brandInitials }}</span>
-                    @endif
+                <a class="brand" href="<?php echo e(route('landing')); ?>">
+                    <?php if($brandLogoUrl !== ''): ?>
+                        <img src="<?php echo e($brandLogoUrl); ?>" alt="<?php echo e($brandName); ?>" class="brand-logo">
+                    <?php else: ?>
+                        <span class="brand-fallback"><?php echo e($brandInitials); ?></span>
+                    <?php endif; ?>
                 </a>
 
                 <button type="button"
@@ -2280,16 +2201,16 @@
                 </button>
 
                 <div class="menu-links">
-                    <a href="{{ $inicioHref }}">Inicio</a>
-                    <a href="{{ $featuresHref }}">Servicios</a>
-                    <a href="{{ $pricingHref }}">Precios</a>
-                    <a href="{{ $faqHref }}">Preguntas</a>
-                    <a href="{{ $aboutHref }}">Nosotros</a>
-                    <a href="{{ $contactHref }}">Contáctanos</a>
+                    <a href="<?php echo e($inicioHref); ?>">Inicio</a>
+                    <a href="<?php echo e($featuresHref); ?>">Servicios</a>
+                    <a href="<?php echo e($pricingHref); ?>">Precios</a>
+                    <a href="<?php echo e($faqHref); ?>">Preguntas</a>
+                    <a href="<?php echo e($aboutHref); ?>">Nosotros</a>
+                    <a href="<?php echo e($contactHref); ?>">Contáctanos</a>
                 </div>
 
                 <div class="nav-actions">
-                    <a class="btn btn-outline" href="{{ route('login') }}">{{ $loginLabel }}</a>
+                    <a class="btn btn-outline" href="<?php echo e(route('login')); ?>"><?php echo e($loginLabel); ?></a>
                     <button class="btn btn-demo"
                             type="button"
                             data-open-quote-modal
@@ -2302,15 +2223,15 @@
 
             <div id="landing-mobile-nav" class="mobile-nav-panel" data-mobile-nav-panel hidden>
                 <div class="mobile-nav-links">
-                    <a href="{{ $inicioHref }}">Inicio</a>
-                    <a href="{{ $featuresHref }}">Servicios</a>
-                    <a href="{{ $pricingHref }}">Precios</a>
-                    <a href="{{ $faqHref }}">Preguntas</a>
-                    <a href="{{ $aboutHref }}">Nosotros</a>
-                    <a href="{{ $contactHref }}">Contáctanos</a>
+                    <a href="<?php echo e($inicioHref); ?>">Inicio</a>
+                    <a href="<?php echo e($featuresHref); ?>">Servicios</a>
+                    <a href="<?php echo e($pricingHref); ?>">Precios</a>
+                    <a href="<?php echo e($faqHref); ?>">Preguntas</a>
+                    <a href="<?php echo e($aboutHref); ?>">Nosotros</a>
+                    <a href="<?php echo e($contactHref); ?>">Contáctanos</a>
                 </div>
                 <div class="mobile-nav-actions">
-                    <a class="btn btn-outline" href="{{ route('login') }}">{{ $loginLabel }}</a>
+                    <a class="btn btn-outline" href="<?php echo e(route('login')); ?>"><?php echo e($loginLabel); ?></a>
                     <button class="btn btn-demo"
                             type="button"
                             data-open-quote-modal
@@ -2325,15 +2246,15 @@
 
     <main class="main">
         <section class="shell flash-stack" aria-live="polite">
-            @if (session('status'))
-                <div class="flash">{{ session('status') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="flash flash-error">{{ session('error') }}</div>
-            @endif
+            <?php if(session('status')): ?>
+                <div class="flash"><?php echo e(session('status')); ?></div>
+            <?php endif; ?>
+            <?php if(session('error')): ?>
+                <div class="flash flash-error"><?php echo e(session('error')); ?></div>
+            <?php endif; ?>
         </section>
 
-        @if ($showPrimarySections)
+        <?php if($showPrimarySections): ?>
         <section id="inicio" class="shell hero">
             <div class="hero-fx" aria-hidden="true">
                 <span class="hero-fx-line l1"></span>
@@ -2346,74 +2267,71 @@
                 <span class="hero-fx-node n5"></span>
             </div>
             <div class="reveal">
-                <p class="kicker">{{ $content['hero_kicker'] ?? 'Software para gimnasios' }}</p>
-                <h1>{{ $heroTitleText }} <span class="neon">sin problemas</span></h1>
-                <p>{{ $content['hero_subtitle'] ?? 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil.' }}</p>
+                <p class="kicker"><?php echo e($content['hero_kicker'] ?? 'Software para gimnasios'); ?></p>
+                <h1><?php echo e($heroTitleText); ?> <span class="neon">sin problemas</span></h1>
+                <p><?php echo e($content['hero_subtitle'] ?? 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil.'); ?></p>
 
                 <div class="hero-actions">
-                    <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                        @csrf
-                        <button class="btn btn-demo" type="submit">{{ $demoCtaLabel }}</button>
+                    <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                        <?php echo csrf_field(); ?>
+                        <button class="btn btn-demo" type="submit"><?php echo e($demoCtaLabel); ?></button>
                     </form>
-                    <button class="btn btn-wa btn-quote-trigger"
+                    <button class="btn btn-wa"
                             type="button"
                             data-open-quote-modal
                             data-quote-source="hero_secondary"
                             aria-controls="quote-request-modal">
-                        <span class="quote-cta-icon-badge" aria-hidden="true">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
-                                <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            </svg>
-                        </span>
+                        <svg class="btn-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <path d="M27.1 4.8A13.88 13.88 0 0 0 16.01.2C8.37.2 2.16 6.42 2.16 14.05c0 2.45.64 4.84 1.86 6.95L2 31.8l11.1-2.9a13.8 13.8 0 0 0 6.88 1.86h.01c7.63 0 13.85-6.22 13.85-13.85 0-3.7-1.44-7.19-4.74-10.1Z" fill="#25D366"/>
+                            <path d="M20.83 18.44c-.27-.13-1.58-.78-1.82-.86-.24-.09-.41-.13-.58.13-.17.27-.67.86-.82 1.04-.15.18-.31.2-.58.07-.27-.13-1.12-.41-2.13-1.31-.79-.7-1.32-1.56-1.48-1.83-.15-.27-.02-.41.11-.54.12-.12.27-.31.4-.46.13-.16.18-.27.27-.45.09-.18.04-.33-.02-.46-.06-.13-.58-1.4-.79-1.92-.21-.5-.43-.43-.58-.44h-.49c-.17 0-.45.07-.68.33-.24.27-.9.88-.9 2.15s.92 2.5 1.04 2.67c.13.18 1.8 2.75 4.37 3.85.61.26 1.08.41 1.45.52.61.19 1.16.16 1.59.1.49-.07 1.58-.64 1.8-1.25.22-.61.22-1.13.15-1.25-.06-.11-.24-.17-.51-.3Z" fill="#fff"/>
+                        </svg>
                         <span>Solicita tu cotización</span>
                     </button>
                 </div>
 
-                <p class="hero-note"><b>{{ $demoCtaLabel }}:</b> crea un acceso temporal de prueba. Si superas 3 intentos, espera 60 minutos para volver a solicitar. <b>{{ $loginLabel }}:</b> abre tus datos reales.</p>
+                <p class="hero-note"><b><?php echo e($demoCtaLabel); ?>:</b> crea un acceso temporal de prueba. Si superas 3 intentos, espera 60 minutos para volver a solicitar. <b><?php echo e($loginLabel); ?>:</b> abre tus datos reales.</p>
             </div>
 
             <article class="hero-panel reveal">
                 <div class="hero-media-frame">
-                    @if (count($heroSlides) > 0)
+                    <?php if(count($heroSlides) > 0): ?>
                         <div class="hero-carousel" data-hero-carousel>
-                            @foreach ($heroSlides as $slideIndex => $slideUrl)
-                                <figure class="hero-slide {{ $slideIndex === 0 ? 'is-active' : '' }}" data-hero-slide>
-                                    <img src="{{ $slideUrl }}"
-                                         alt="Slide hero {{ $slideIndex + 1 }}"
+                            <?php $__currentLoopData = $heroSlides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $slideIndex => $slideUrl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <figure class="hero-slide <?php echo e($slideIndex === 0 ? 'is-active' : ''); ?>" data-hero-slide>
+                                    <img src="<?php echo e($slideUrl); ?>"
+                                         alt="Slide hero <?php echo e($slideIndex + 1); ?>"
                                          class="hero-slide-image"
-                                         data-hero-slide-index="{{ $slideIndex + 1 }}"
-                                         loading="{{ $slideIndex === 0 ? 'eager' : 'lazy' }}"
+                                         data-hero-slide-index="<?php echo e($slideIndex + 1); ?>"
+                                         loading="<?php echo e($slideIndex === 0 ? 'eager' : 'lazy'); ?>"
                                          decoding="async"
-                                         fetchpriority="{{ $slideIndex === 0 ? 'high' : 'auto' }}">
+                                         fetchpriority="<?php echo e($slideIndex === 0 ? 'high' : 'auto'); ?>">
                                 </figure>
-                            @endforeach
-                            @if (count($heroSlides) > 1)
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(count($heroSlides) > 1): ?>
                                 <button type="button" class="hero-carousel-control prev" data-hero-prev aria-label="Slide anterior">‹</button>
                                 <button type="button" class="hero-carousel-control next" data-hero-next aria-label="Slide siguiente">›</button>
                                 <div class="hero-carousel-dots">
-                                    @foreach ($heroSlides as $slideIndex => $slideUrl)
+                                    <?php $__currentLoopData = $heroSlides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $slideIndex => $slideUrl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <button type="button"
-                                                class="hero-carousel-dot {{ $slideIndex === 0 ? 'is-active' : '' }}"
-                                                data-hero-dot="{{ $slideIndex }}"
-                                                aria-label="Ir al slide {{ $slideIndex + 1 }}"></button>
-                                    @endforeach
+                                                class="hero-carousel-dot <?php echo e($slideIndex === 0 ? 'is-active' : ''); ?>"
+                                                data-hero-dot="<?php echo e($slideIndex); ?>"
+                                                aria-label="Ir al slide <?php echo e($slideIndex + 1); ?>"></button>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="hero-media-placeholder">Sube imagenes del carrusel hero desde SuperAdmin para mostrar una demo visual en vivo.</div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <div class="hero-insight-grid">
                     <article class="hero-insight-card">
                         <span class="hero-insight-label">Gimnasios registrados</span>
-                        <span class="hero-insight-value">{{ number_format((int) ($stats['gyms'] ?? 0)) }}</span>
+                        <span class="hero-insight-value"><?php echo e(number_format((int) ($stats['gyms'] ?? 0))); ?></span>
                     </article>
                     <article class="hero-insight-card">
                         <span class="hero-insight-label">Con suscripcion activa</span>
-                        <span class="hero-insight-value">{{ number_format((int) ($stats['active_sessions'] ?? 0)) }}</span>
+                        <span class="hero-insight-value"><?php echo e(number_format((int) ($stats['active_sessions'] ?? 0))); ?></span>
                     </article>
                 </div>
             </article>
@@ -2423,34 +2341,34 @@
             <div class="brands-marquee">
                 <div class="brands-track">
                     <div class="brands-row">
-                        @foreach ($marqueeItems as $item)
-                            <div @class([
+                        <?php $__currentLoopData = $marqueeItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                 'brand-chip',
                                 'brand-chip-has-logo' => $item['logo'] !== '',
-                            ]) data-marquee-chip-index="{{ $item['index'] }}">
-                                @if ($item['logo'] !== '')
+                            ]); ?>" data-marquee-chip-index="<?php echo e($item['index']); ?>">
+                                <?php if($item['logo'] !== ''): ?>
                                     <span class="brand-chip-logo-box">
-                                        <img src="{{ $item['logo'] }}" alt="{{ $item['text'] }}" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                        <img src="<?php echo e($item['logo']); ?>" alt="<?php echo e($item['text']); ?>" class="brand-chip-logo" data-marquee-logo-index="<?php echo e($item['index']); ?>">
                                     </span>
-                                @endif
-                                <span data-marquee-text-index="{{ $item['index'] }}">{{ $item['text'] }}</span>
+                                <?php endif; ?>
+                                <span data-marquee-text-index="<?php echo e($item['index']); ?>"><?php echo e($item['text']); ?></span>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                     <div class="brands-row" aria-hidden="true">
-                        @foreach ($marqueeItems as $item)
-                            <div @class([
+                        <?php $__currentLoopData = $marqueeItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                                 'brand-chip',
                                 'brand-chip-has-logo' => $item['logo'] !== '',
-                            ]) data-marquee-chip-index="{{ $item['index'] }}">
-                                @if ($item['logo'] !== '')
+                            ]); ?>" data-marquee-chip-index="<?php echo e($item['index']); ?>">
+                                <?php if($item['logo'] !== ''): ?>
                                     <span class="brand-chip-logo-box">
-                                        <img src="{{ $item['logo'] }}" alt="" class="brand-chip-logo" data-marquee-logo-index="{{ $item['index'] }}">
+                                        <img src="<?php echo e($item['logo']); ?>" alt="" class="brand-chip-logo" data-marquee-logo-index="<?php echo e($item['index']); ?>">
                                     </span>
-                                @endif
-                                <span data-marquee-text-index="{{ $item['index'] }}">{{ $item['text'] }}</span>
+                                <?php endif; ?>
+                                <span data-marquee-text-index="<?php echo e($item['index']); ?>"><?php echo e($item['text']); ?></span>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </div>
@@ -2463,30 +2381,30 @@
                 <p>Tres capas clave para recepción, control de datos y experiencia móvil de tu gimnasio.</p>
             </header>
             <div class="service-grid">
-                @foreach ($serviceCards as $service)
+                <?php $__currentLoopData = $serviceCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <article class="service reveal">
-                        <i>{{ $service['index'] }}</i>
-                        <h3>{{ $service['title'] }}</h3>
-                        <p>{{ $service['text'] }}</p>
+                        <i><?php echo e($service['index']); ?></i>
+                        <h3><?php echo e($service['title']); ?></h3>
+                        <p><?php echo e($service['text']); ?></p>
                         <ul>
-                            @foreach ($service['items'] as $item)
-                                @if ($item !== '')
-                                    <li>{{ $item }}</li>
-                                @endif
-                            @endforeach
+                            <?php $__currentLoopData = $service['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($item !== ''): ?>
+                                    <li><?php echo e($item); ?></li>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
                         <div class="service-media">
-                            @php
+                            <?php
                                 $imageKey = 'section_'.$service['index'].'_image_url';
-                            @endphp
-                            @if (!empty($content[$imageKey]))
-                                <img src="{{ $content[$imageKey] }}" alt="{{ $service['title'] }}">
-                            @else
-                                <span>{{ $service['title'] }}</span>
-                            @endif
+                            ?>
+                            <?php if(!empty($content[$imageKey])): ?>
+                                <img src="<?php echo e($content[$imageKey]); ?>" alt="<?php echo e($service['title']); ?>">
+                            <?php else: ?>
+                                <span><?php echo e($service['title']); ?></span>
+                            <?php endif; ?>
                         </div>
                     </article>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </section>
 
@@ -2497,8 +2415,8 @@
                 <p>Escala de una sede a operación multi-gym sin cambiar de plataforma.</p>
             </header>
             <div class="pricing-grid">
-                @foreach ($publicPlanCards as $planCard)
-                    @php
+                <?php $__currentLoopData = $publicPlanCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planCard): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
                         $isFeatured = (bool) ($planCard['featured'] ?? false);
                         $isContactMode = (bool) ($planCard['contact_mode'] ?? false);
@@ -2508,71 +2426,67 @@
                         $discountPercent = isset($planCard['discount_percent']) ? (int) $planCard['discount_percent'] : null;
                         $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
                         $planCtaLabel = 'SOLICITA TU COTIZACION';
-                    @endphp
-                    <article class="plan reveal {{ $isFeatured ? 'popular' : '' }}">
-                        @if ($isFeatured)
+                    ?>
+                    <article class="plan reveal <?php echo e($isFeatured ? 'popular' : ''); ?>">
+                        <?php if($isFeatured): ?>
                             <span class="pop">Plan destacado</span>
-                        @endif
-                        <h3>{{ $planCard['name'] }}</h3>
-                        @if ($isContactMode)
+                        <?php endif; ?>
+                        <h3><?php echo e($planCard['name']); ?></h3>
+                        <?php if($isContactMode): ?>
                             <div class="price">Personalizado<small>/Contacto</small></div>
                             <div class="plan-discount">
                                 <span class="plan-discount-kicker">Primer mes con</span>
                                 <span class="plan-discount-offer">Oferta</span>
                                 <span class="plan-discount-detail">
-                                    @if ($discountPercent !== null && $discountPercent > 0)
-                                        <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
-                                    @elseif ($discountPrice !== null && $discountPrice > 0)
-                                        <strong>${{ $formatPlanMoney($discountPrice) }}</strong> de referencia.
-                                    @else
+                                    <?php if($discountPercent !== null && $discountPercent > 0): ?>
+                                        <strong><?php echo e($discountPercent); ?>% menos</strong> sobre el valor cotizado.
+                                    <?php elseif($discountPrice !== null && $discountPrice > 0): ?>
+                                        <strong>$<?php echo e($formatPlanMoney($discountPrice)); ?></strong> de referencia.
+                                    <?php else: ?>
                                         <strong>según cotización</strong>.
-                                    @endif
+                                    <?php endif; ?>
                                 </span>
                             </div>
-                        @else
-                            <div class="price">${{ $formatPlanMoney($price) }}<small>/Mes</small></div>
+                        <?php else: ?>
+                            <div class="price">$<?php echo e($formatPlanMoney($price)); ?><small>/Mes</small></div>
                             <div class="plan-discount">
                                 <span class="plan-discount-kicker">Primer mes con</span>
                                 <span class="plan-discount-offer">Oferta</span>
                                 <span class="plan-discount-detail">
-                                    @if ($discountPrice !== null && $discountPrice < $price)
-                                        <span class="price-old">${{ $formatPlanMoney($price) }}</span>
-                                        <strong>${{ $formatPlanMoney($discountPrice) }}</strong>
-                                    @else
+                                    <?php if($discountPrice !== null && $discountPrice < $price): ?>
+                                        <span class="price-old">$<?php echo e($formatPlanMoney($price)); ?></span>
+                                        <strong>$<?php echo e($formatPlanMoney($discountPrice)); ?></strong>
+                                    <?php else: ?>
                                         <strong>Sin oferta</strong>
-                                    @endif
+                                    <?php endif; ?>
                                 </span>
                             </div>
-                        @endif
-                        <p>{{ $planCard['summary'] }}</p>
+                        <?php endif; ?>
+                        <p><?php echo e($planCard['summary']); ?></p>
                         <ul>
-                            @foreach ($planFeatures as $feature)
-                                @php
+                            <?php $__currentLoopData = $planFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
                                     $isHighlightedFeature = str_contains(mb_strtolower((string) $feature), 'muy pronto');
-                                @endphp
-                                <li class="{{ $isHighlightedFeature ? 'plan-highlight' : '' }}">{{ $feature }}</li>
-                            @endforeach
+                                ?>
+                                <li class="<?php echo e($isHighlightedFeature ? 'plan-highlight' : ''); ?>"><?php echo e($feature); ?></li>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
                         <div class="plan-cta">
-                            <button class="btn btn-quote-trigger {{ $isContactMode ? 'btn-wa' : ($isFeatured ? 'btn-demo' : 'btn-outline') }}"
+                            <button class="btn <?php echo e($isContactMode ? 'btn-wa' : ($isFeatured ? 'btn-demo' : 'btn-outline')); ?>"
                                     type="button"
-                                    data-plan-cta-key="{{ $planKey }}"
+                                    data-plan-cta-key="<?php echo e($planKey); ?>"
                                     data-open-quote-modal
-                                    data-quote-plan="{{ $planKey }}"
-                                    data-quote-source="pricing_{{ $planKey }}"
+                                    data-quote-plan="<?php echo e($planKey); ?>"
+                                    data-quote-source="pricing_<?php echo e($planKey); ?>"
                                     aria-controls="quote-request-modal">
-                                <span class="quote-cta-icon-badge" aria-hidden="true">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                                        <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                        <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
-                                        <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
-                                <span>{{ $planCtaLabel }}</span>
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12.04 2C6.57 2 2.12 6.45 2.12 11.92c0 1.75.46 3.46 1.33 4.96L2 22l5.28-1.38a9.86 9.86 0 0 0 4.76 1.21h.01c5.47 0 9.92-4.45 9.92-9.92C21.96 6.45 17.51 2 12.04 2Zm0 18.16h-.01a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.13.82.84-3.05-.2-.31a8.17 8.17 0 0 1-1.26-4.37c0-4.53 3.69-8.22 8.23-8.22 2.2 0 4.27.86 5.83 2.41a8.18 8.18 0 0 1 2.41 5.82c0 4.53-3.69 8.22-8.23 8.22Zm4.5-6.17c-.25-.12-1.49-.74-1.72-.82-.23-.09-.4-.13-.57.12-.17.25-.65.82-.8.99-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.25-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.88-.21-.49-.43-.42-.57-.42h-.49c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.09 0 1.23.9 2.42 1.03 2.58.12.17 1.77 2.7 4.28 3.78.6.26 1.07.41 1.43.52.6.19 1.14.16 1.57.1.48-.07 1.49-.61 1.7-1.2.21-.59.21-1.09.15-1.2-.06-.11-.23-.17-.48-.29Z"/>
+                                </svg>
+                                <span><?php echo e($planCtaLabel); ?></span>
                             </button>
                         </div>
                     </article>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </section>
 
@@ -2583,24 +2497,24 @@
                 <p>Respuestas rápidas para probar la demo y evaluar si el flujo encaja con tu operación.</p>
             </header>
             <div class="faq-list">
-                @foreach ($faqItems as $faqIndex => $faq)
-                    <article class="faq-item reveal {{ $faqIndex === 0 ? 'is-open' : '' }}" data-faq-item>
-                        <button class="faq-btn" type="button" data-faq-button aria-expanded="{{ $faqIndex === 0 ? 'true' : 'false' }}">
-                            <span>{{ $faq['q'] }}</span>
+                <?php $__currentLoopData = $faqItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $faqIndex => $faq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <article class="faq-item reveal <?php echo e($faqIndex === 0 ? 'is-open' : ''); ?>" data-faq-item>
+                        <button class="faq-btn" type="button" data-faq-button aria-expanded="<?php echo e($faqIndex === 0 ? 'true' : 'false'); ?>">
+                            <span><?php echo e($faq['q']); ?></span>
                             <span>+</span>
                         </button>
                         <div class="faq-content" data-faq-content>
-                            <p>{{ $faq['a'] }}</p>
+                            <p><?php echo e($faq['a']); ?></p>
                         </div>
                     </article>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </section>
-        @endif
+        <?php endif; ?>
 
-        @if ($showAboutSection)
+        <?php if($showAboutSection): ?>
         <section id="nosotros" class="section about-section">
-            <div class="about-hero-band reveal" @if ($aboutHeroImage !== '') style="--about-hero-image: url('{{ $aboutHeroImage }}');" @endif>
+            <div class="about-hero-band reveal" <?php if($aboutHeroImage !== ''): ?> style="--about-hero-image: url('<?php echo e($aboutHeroImage); ?>');" <?php endif; ?>>
                 <div class="shell about-hero-content">
                     <p class="about-hero-kicker">Sobre nosotros</p>
                     <h2 class="about-hero-title">FlexJok</h2>
@@ -2623,11 +2537,11 @@
                 </article>
 
                 <aside class="about-story-media reveal">
-                    @if ($aboutStoryImage !== '')
-                        <img src="{{ $aboutStoryImage }}" alt="Equipo FlexJok">
-                    @else
+                    <?php if($aboutStoryImage !== ''): ?>
+                        <img src="<?php echo e($aboutStoryImage); ?>" alt="Equipo FlexJok">
+                    <?php else: ?>
                         <div class="about-story-media-placeholder">Sube una imagen principal para la sección Sobre nosotros desde SuperAdmin.</div>
-                    @endif
+                    <?php endif; ?>
                     <div class="about-year-badge">
                         <span class="about-year-value">2025</span>
                         <span class="about-year-label">Desde</span>
@@ -2677,11 +2591,11 @@
                 <div class="about-team-grid">
                     <article class="about-team-card">
                         <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage1 !== '')
-                                <img src="{{ $aboutTeamImage1 }}" alt="Equipo FlexJok - Estrategia comercial">
-                            @else
+                            <?php if($aboutTeamImage1 !== ''): ?>
+                                <img src="<?php echo e($aboutTeamImage1); ?>" alt="Equipo FlexJok - Estrategia comercial">
+                            <?php else: ?>
                                 <div class="about-team-placeholder">Imagen de equipo</div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="about-team-info">
                             <span class="about-team-role">Dirección</span>
@@ -2691,11 +2605,11 @@
                     </article>
                     <article class="about-team-card">
                         <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage2 !== '')
-                                <img src="{{ $aboutTeamImage2 }}" alt="Equipo FlexJok - Operaciones">
-                            @else
+                            <?php if($aboutTeamImage2 !== ''): ?>
+                                <img src="<?php echo e($aboutTeamImage2); ?>" alt="Equipo FlexJok - Operaciones">
+                            <?php else: ?>
                                 <div class="about-team-placeholder">Imagen de operaciones</div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="about-team-info">
                             <span class="about-team-role">Operación</span>
@@ -2705,11 +2619,11 @@
                     </article>
                     <article class="about-team-card">
                         <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage3 !== '')
-                                <img src="{{ $aboutTeamImage3 }}" alt="Equipo FlexJok - Tecnología">
-                            @else
+                            <?php if($aboutTeamImage3 !== ''): ?>
+                                <img src="<?php echo e($aboutTeamImage3); ?>" alt="Equipo FlexJok - Tecnología">
+                            <?php else: ?>
                                 <div class="about-team-placeholder">Imagen de tecnología</div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="about-team-info">
                             <span class="about-team-role">Tecnología</span>
@@ -2720,10 +2634,10 @@
                 </div>
             </div>
         </section>
-        @endif
+        <?php endif; ?>
 
-        @if ($showContactSection)
-        @php
+        <?php if($showContactSection): ?>
+        <?php
             $landingContactErrors = $errors->getBag('landingContact');
             $contactModalMessage = '';
             $contactModalType = 'success';
@@ -2733,7 +2647,7 @@
                 $contactModalMessage = (string) $landingContactErrors->first();
                 $contactModalType = 'error';
             }
-        @endphp
+        ?>
         <section id="contacto" class="shell section">
             <header class="heading reveal">
                 <small>Contáctanos</small>
@@ -2758,7 +2672,7 @@
                                 <path d="m4 8 8 5 8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
-                        <p>{{ $footerContactEmail }}</p>
+                        <p><?php echo e($footerContactEmail); ?></p>
                     </article>
                     <article class="contact-info-card">
                         <span class="contact-icon contact-icon--wa" aria-hidden="true">
@@ -2774,23 +2688,23 @@
                 <form id="landing-contact-form"
                       class="contact-form-grid"
                       method="POST"
-                      action="{{ route('landing.contact.store') }}">
-                    @csrf
+                      action="<?php echo e(route('landing.contact.store')); ?>">
+                    <?php echo csrf_field(); ?>
                     <label>
                         Nombre
-                        <input type="text" class="contact-input" name="first_name" value="{{ old('first_name') }}" required>
+                        <input type="text" class="contact-input" name="first_name" value="<?php echo e(old('first_name')); ?>" required>
                     </label>
                     <label>
                         Apellido
-                        <input type="text" class="contact-input" name="last_name" value="{{ old('last_name') }}" required>
+                        <input type="text" class="contact-input" name="last_name" value="<?php echo e(old('last_name')); ?>" required>
                     </label>
                     <label class="full">
                         Correo electrónico
-                        <input type="email" class="contact-input" name="email" value="{{ old('email') }}" required>
+                        <input type="email" class="contact-input" name="email" value="<?php echo e(old('email')); ?>" required>
                     </label>
                     <label class="full">
                         Mensaje
-                        <textarea class="contact-input" name="message" required>{{ old('message') }}</textarea>
+                        <textarea class="contact-input" name="message" required><?php echo e(old('message')); ?></textarea>
                     </label>
                     <div class="contact-submit full">
                         <button type="submit" class="btn btn-demo">Enviar mensaje</button>
@@ -2799,23 +2713,23 @@
             </div>
         </section>
 
-        <div id="contact-status-backdrop" class="contact-status-backdrop {{ $contactModalMessage !== '' ? 'is-open' : '' }}"></div>
+        <div id="contact-status-backdrop" class="contact-status-backdrop <?php echo e($contactModalMessage !== '' ? 'is-open' : ''); ?>"></div>
         <div id="contact-status-modal"
-             class="contact-status-modal {{ $contactModalMessage !== '' ? 'is-open' : '' }} {{ $contactModalType === 'error' ? 'is-error' : '' }}"
-             data-variant="{{ $contactModalType }}"
+             class="contact-status-modal <?php echo e($contactModalMessage !== '' ? 'is-open' : ''); ?> <?php echo e($contactModalType === 'error' ? 'is-error' : ''); ?>"
+             data-variant="<?php echo e($contactModalType); ?>"
              role="dialog"
              aria-modal="true"
              aria-labelledby="contact-status-title">
-            <h4 id="contact-status-title">{{ $contactModalType === 'error' ? 'Revisa tus datos' : 'Mensaje enviado' }}</h4>
-            <p>{{ $contactModalMessage !== '' ? $contactModalMessage : 'Tu mensaje fue procesado.' }}</p>
+            <h4 id="contact-status-title"><?php echo e($contactModalType === 'error' ? 'Revisa tus datos' : 'Mensaje enviado'); ?></h4>
+            <p><?php echo e($contactModalMessage !== '' ? $contactModalMessage : 'Tu mensaje fue procesado.'); ?></p>
             <div class="contact-status-actions">
                 <button id="contact-status-close" type="button" class="contact-status-close">Cerrar</button>
             </div>
         </div>
-        @endif
+        <?php endif; ?>
 
-        @if ($showLegalSection)
-        @php
+        <?php if($showLegalSection): ?>
+        <?php
             $legalPageConfig = match ($pageMode) {
                 'privacy' => [
                     'section_id' => 'legal-privacy',
@@ -2932,33 +2846,33 @@
                     ],
                 ],
             };
-        @endphp
-        <section id="{{ $legalPageConfig['section_id'] }}" class="shell section">
+        ?>
+        <section id="<?php echo e($legalPageConfig['section_id']); ?>" class="shell section">
             <header class="heading reveal">
-                <small>{{ $legalPageConfig['small'] }}</small>
-                <h2>{{ $legalPageConfig['title'] }}</h2>
-                <p>{{ $legalPageConfig['lead'] }}</p>
+                <small><?php echo e($legalPageConfig['small']); ?></small>
+                <h2><?php echo e($legalPageConfig['title']); ?></h2>
+                <p><?php echo e($legalPageConfig['lead']); ?></p>
             </header>
 
             <div class="legal-shell reveal">
                 <div class="legal-grid">
                     <article class="legal-card">
-                        @foreach ($legalPageConfig['blocks'] as $block)
+                        <?php $__currentLoopData = $legalPageConfig['blocks']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $block): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="legal-block">
-                                <h3>{{ $block['title'] }}</h3>
-                                <p>{{ $block['text'] }}</p>
+                                <h3><?php echo e($block['title']); ?></h3>
+                                <p><?php echo e($block['text']); ?></p>
                                 <ul class="legal-points">
-                                    @foreach ($block['points'] as $point)
-                                        <li>{{ $point }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $block['points']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $point): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($point); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </article>
                 </div>
             </div>
         </section>
-        @endif
+        <?php endif; ?>
 
     </main>
 
@@ -2966,47 +2880,47 @@
         <div class="shell footer-panel">
             <div class="footer-grid">
             <section class="footer-brand">
-                @if ($brandLogoUrl !== '')
-                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="footer-brand-logo">
-                @else
-                    <h4>{{ $brandName }}</h4>
-                @endif
-                <p class="footer-lead">{{ $footerText }}</p>
+                <?php if($brandLogoUrl !== ''): ?>
+                    <img src="<?php echo e($brandLogoUrl); ?>" alt="<?php echo e($brandName); ?>" class="footer-brand-logo">
+                <?php else: ?>
+                    <h4><?php echo e($brandName); ?></h4>
+                <?php endif; ?>
+                <p class="footer-lead"><?php echo e($footerText); ?></p>
             </section>
             <section>
                 <h4 class="footer-neon-title">Compañía</h4>
                 <ul>
-                    <li><a href="{{ $inicioHref }}">Inicio</a></li>
-                    <li><a href="{{ $featuresHref }}">Servicios</a></li>
-                    <li><a href="{{ $pricingHref }}">Precios</a></li>
-                    <li><a href="{{ $faqHref }}">Preguntas</a></li>
-                    <li><a href="{{ $aboutHref }}">Nosotros</a></li>
-                    <li><a href="{{ $contactHref }}">Contáctanos</a></li>
+                    <li><a href="<?php echo e($inicioHref); ?>">Inicio</a></li>
+                    <li><a href="<?php echo e($featuresHref); ?>">Servicios</a></li>
+                    <li><a href="<?php echo e($pricingHref); ?>">Precios</a></li>
+                    <li><a href="<?php echo e($faqHref); ?>">Preguntas</a></li>
+                    <li><a href="<?php echo e($aboutHref); ?>">Nosotros</a></li>
+                    <li><a href="<?php echo e($contactHref); ?>">Contáctanos</a></li>
                 </ul>
             </section>
             <section>
                 <h4 class="footer-neon-title">Legal</h4>
                 <ul>
-                    <li><a href="{{ $privacyHref }}">Política de privacidad</a></li>
-                    <li><a href="{{ $serviceTermsHref }}">Condiciones de servicio</a></li>
-                    <li><a href="{{ $commercialTermsHref }}">Términos comerciales</a></li>
+                    <li><a href="<?php echo e($privacyHref); ?>">Política de privacidad</a></li>
+                    <li><a href="<?php echo e($serviceTermsHref); ?>">Condiciones de servicio</a></li>
+                    <li><a href="<?php echo e($commercialTermsHref); ?>">Términos comerciales</a></li>
                 </ul>
             </section>
             <section>
                 <h4 class="footer-neon-title">Contacto</h4>
                 <ul>
-                    <li><a href="{{ $content['whatsapp_url'] }}" target="_blank" rel="noreferrer">WhatsApp comercial</a></li>
-                    <li><a class="footer-contact-email" href="mailto:{{ $footerContactEmail }}">{{ $footerContactEmail }}</a></li>
+                    <li><a href="<?php echo e($content['whatsapp_url']); ?>" target="_blank" rel="noreferrer">WhatsApp comercial</a></li>
+                    <li><a class="footer-contact-email" href="mailto:<?php echo e($footerContactEmail); ?>"><?php echo e($footerContactEmail); ?></a></li>
                 </ul>
             </section>
             </div>
-            <div class="copy">{{ $footerText }}</div>
+            <div class="copy"><?php echo e($footerText); ?></div>
         </div>
     </footer>
 
-    <div id="quote-request-backdrop" class="quote-modal-backdrop {{ $quoteModalOpen ? 'is-open' : '' }}"></div>
+    <div id="quote-request-backdrop" class="quote-modal-backdrop <?php echo e($quoteModalOpen ? 'is-open' : ''); ?>"></div>
     <div id="quote-request-modal"
-         class="quote-modal {{ $quoteModalOpen ? 'is-open' : '' }}"
+         class="quote-modal <?php echo e($quoteModalOpen ? 'is-open' : ''); ?>"
          role="dialog"
          aria-modal="true"
          aria-labelledby="quote-request-title">
@@ -3031,35 +2945,35 @@
                     </div>
 
                     <div class="quote-modal-bubble is-a">
-                        @if ($aboutTeamImage1 !== '')
-                            <img src="{{ $aboutTeamImage1 }}" alt="">
-                        @else
-                            <span class="quote-modal-bubble-fallback">{{ mb_substr($brandInitials, 0, 1) }}</span>
-                        @endif
+                        <?php if($aboutTeamImage1 !== ''): ?>
+                            <img src="<?php echo e($aboutTeamImage1); ?>" alt="">
+                        <?php else: ?>
+                            <span class="quote-modal-bubble-fallback"><?php echo e(mb_substr($brandInitials, 0, 1)); ?></span>
+                        <?php endif; ?>
                     </div>
 
                     <div class="quote-modal-bubble is-b">
-                        @if ($aboutTeamImage3 !== '')
-                            <img src="{{ $aboutTeamImage3 }}" alt="">
-                        @else
-                            <span class="quote-modal-bubble-fallback">{{ mb_substr($brandInitials, 0, 1) }}</span>
-                        @endif
+                        <?php if($aboutTeamImage3 !== ''): ?>
+                            <img src="<?php echo e($aboutTeamImage3); ?>" alt="">
+                        <?php else: ?>
+                            <span class="quote-modal-bubble-fallback"><?php echo e(mb_substr($brandInitials, 0, 1)); ?></span>
+                        <?php endif; ?>
                     </div>
 
                     <div class="quote-modal-main-photo">
-                        @if ($aboutTeamImage2 !== '')
-                            <img src="{{ $aboutTeamImage2 }}" alt="">
-                        @else
-                            <span class="quote-modal-main-photo-fallback">{{ $brandInitials }}</span>
-                        @endif
+                        <?php if($aboutTeamImage2 !== ''): ?>
+                            <img src="<?php echo e($aboutTeamImage2); ?>" alt="">
+                        <?php else: ?>
+                            <span class="quote-modal-main-photo-fallback"><?php echo e($brandInitials); ?></span>
+                        <?php endif; ?>
                     </div>
 
                     <div class="quote-modal-bubble is-c">
-                        @if ($heroSlides[0] ?? false)
-                            <img src="{{ $heroSlides[0] }}" alt="">
-                        @else
-                            <span class="quote-modal-bubble-fallback">{{ mb_substr($brandInitials, 0, 1) }}</span>
-                        @endif
+                        <?php if($heroSlides[0] ?? false): ?>
+                            <img src="<?php echo e($heroSlides[0]); ?>" alt="">
+                        <?php else: ?>
+                            <span class="quote-modal-bubble-fallback"><?php echo e(mb_substr($brandInitials, 0, 1)); ?></span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </section>
@@ -3071,106 +2985,168 @@
                     <p>Comparte tus datos y el tamaño de tu equipo para prepararte una cotizacion ajustada a tu gimnasio.</p>
                 </header>
 
-                @if ($quoteModalMessage !== '')
-                    <div class="quote-form-alert {{ $quoteModalType === 'error' ? 'is-error' : 'is-success' }}">
-                        {{ $quoteModalMessage }}
-                    </div>
-                @endif
+                <?php if($quoteModalMessage !== ''): ?>
+                    <div class="quote-form-alert <?php echo e($quoteModalType === 'error' ? 'is-error' : 'is-success'); ?>">
+                        <?php echo e($quoteModalMessage); ?>
 
-                <div id="quote-plan-pill" class="quote-plan-pill {{ $quoteSelectedPlanLabel !== '' ? 'is-visible' : '' }}">
+                    </div>
+                <?php endif; ?>
+
+                <div id="quote-plan-pill" class="quote-plan-pill <?php echo e($quoteSelectedPlanLabel !== '' ? 'is-visible' : ''); ?>">
                     <span>Plan de interes:</span>
-                    <strong data-quote-plan-label>{{ $quoteSelectedPlanLabel !== '' ? $quoteSelectedPlanLabel : 'General' }}</strong>
+                    <strong data-quote-plan-label><?php echo e($quoteSelectedPlanLabel !== '' ? $quoteSelectedPlanLabel : 'General'); ?></strong>
                 </div>
 
-                <form id="landing-quote-form" method="POST" action="{{ route('landing.quote.store') }}">
-                    @csrf
-                    <input type="hidden" name="quote_requested_plan" value="{{ old('quote_requested_plan') }}" data-quote-plan-input>
-                    <input type="hidden" name="quote_source" value="{{ old('quote_source', 'landing_'.$pageMode) }}" data-quote-source-input>
+                <form id="landing-quote-form" method="POST" action="<?php echo e(route('landing.quote.store')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="quote_requested_plan" value="<?php echo e(old('quote_requested_plan')); ?>" data-quote-plan-input>
+                    <input type="hidden" name="quote_source" value="<?php echo e(old('quote_source', 'landing_'.$pageMode)); ?>" data-quote-source-input>
 
                     <div class="quote-form-grid">
                         <label class="quote-form-field">
                             Nombre*
-                            <input type="text" class="contact-input" name="quote_first_name" value="{{ old('quote_first_name') }}" placeholder="Nombre" required>
-                            @error('quote_first_name', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <input type="text" class="contact-input" name="quote_first_name" value="<?php echo e(old('quote_first_name')); ?>" placeholder="Nombre" required>
+                            <?php $__errorArgs = ['quote_first_name', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field">
                             Apellido*
-                            <input type="text" class="contact-input" name="quote_last_name" value="{{ old('quote_last_name') }}" placeholder="Apellido" required>
-                            @error('quote_last_name', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <input type="text" class="contact-input" name="quote_last_name" value="<?php echo e(old('quote_last_name')); ?>" placeholder="Apellido" required>
+                            <?php $__errorArgs = ['quote_last_name', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field">
                             Telefono de contacto*
                             <span class="quote-form-inline">
-                                <select class="contact-input quote-form-prefix" name="quote_phone_country_code" data-quote-prefix-select required>
-                                    @foreach ($quotePhonePrefixes as $prefix)
-                                        <option value="{{ $prefix }}" @selected(old('quote_phone_country_code', '+593') === $prefix)>{{ $prefix }}</option>
-                                    @endforeach
+                                <select class="contact-input quote-form-prefix" name="quote_phone_country_code" required>
+                                    <?php $__currentLoopData = $quotePhonePrefixes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $prefix): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($prefix); ?>" <?php if(old('quote_phone_country_code', '+593') === $prefix): echo 'selected'; endif; ?>><?php echo e($prefix); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
-                                <input type="tel" class="contact-input" name="quote_phone_number" value="{{ old('quote_phone_number') }}" placeholder="987654321" required>
+                                <input type="tel" class="contact-input" name="quote_phone_number" value="<?php echo e(old('quote_phone_number')); ?>" placeholder="987654321" required>
                             </span>
-                            @error('quote_phone_country_code', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
-                            @error('quote_phone_number', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <?php $__errorArgs = ['quote_phone_country_code', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            <?php $__errorArgs = ['quote_phone_number', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field">
                             Correo electronico*
-                            <input type="email" class="contact-input" name="quote_email" value="{{ old('quote_email') }}" placeholder="correo@tugym.com" required>
-                            @error('quote_email', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <input type="email" class="contact-input" name="quote_email" value="<?php echo e(old('quote_email')); ?>" placeholder="correo@tugym.com" required>
+                            <?php $__errorArgs = ['quote_email', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
                             Pais de residencia*
-                            <select class="contact-input" name="quote_country" data-quote-country-select required>
+                            <select class="contact-input" name="quote_country" required>
                                 <option value="">Selecciona tu pais</option>
-                                @foreach ($quoteCountryPrefixes as $country => $prefix)
-                                    <option value="{{ $country }}"
-                                            data-phone-prefix="{{ $prefix ?? '' }}"
-                                            @selected(old('quote_country') === $country)>{{ $country }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $quoteCountries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $country): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($country); ?>" <?php if(old('quote_country') === $country): echo 'selected'; endif; ?>><?php echo e($country); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
-                            @error('quote_country', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <?php $__errorArgs = ['quote_country', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
                             Cuantos profesionales atienden en tu gimnasio?*
-                            <input type="number" class="contact-input" name="quote_professionals_count" value="{{ old('quote_professionals_count') }}" min="1" max="5000" placeholder="Ej: 6" required>
+                            <input type="number" class="contact-input" name="quote_professionals_count" value="<?php echo e(old('quote_professionals_count')); ?>" min="1" max="5000" placeholder="Ej: 6" required>
                             <span class="quote-form-help">Considera recepcion, entrenadores, administracion y personal operativo.</span>
-                            @error('quote_professionals_count', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <?php $__errorArgs = ['quote_professionals_count', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
                             Comentarios adicionales
-                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuentanos si manejas varias sedes, caja, recepcion o procesos especiales.">{{ old('quote_notes') }}</textarea>
-                            @error('quote_notes', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuentanos si manejas varias sedes, caja, recepcion o procesos especiales."><?php echo e(old('quote_notes')); ?></textarea>
+                            <?php $__errorArgs = ['quote_notes', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <div class="quote-form-checkbox quote-form-field--full">
                             <label>
-                                <input type="checkbox" name="quote_privacy_accepted" value="1" @checked(old('quote_privacy_accepted'))>
+                                <input type="checkbox" name="quote_privacy_accepted" value="1" <?php if(old('quote_privacy_accepted')): echo 'checked'; endif; ?>>
                                 <span>Acepto el tratamiento de mis datos para recibir mi cotizacion y seguimiento comercial.</span>
                             </label>
                             <p class="quote-form-legal">Usaremos esta informacion solo para responder tu solicitud y coordinar una propuesta personalizada.</p>
-                            @error('quote_privacy_accepted', 'landingQuote')
-                                <span class="quote-form-error">{{ $message }}</span>
-                            @enderror
+                            <?php $__errorArgs = ['quote_privacy_accepted', 'landingQuote'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="quote-form-error"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
 
@@ -3180,14 +3156,14 @@
         </div>
     </div>
 
-    <div id="demo-limit-backdrop" class="modal-backdrop {{ $demoLimitSeconds > 0 ? 'is-open' : '' }}"></div>
+    <div id="demo-limit-backdrop" class="modal-backdrop <?php echo e($demoLimitSeconds > 0 ? 'is-open' : ''); ?>"></div>
 
     <div id="demo-limit-modal"
-         class="modal {{ $demoLimitSeconds > 0 ? 'is-open' : '' }}"
+         class="modal <?php echo e($demoLimitSeconds > 0 ? 'is-open' : ''); ?>"
          role="dialog"
          aria-modal="true"
          aria-labelledby="demo-limit-title"
-         data-retry-seconds="{{ $demoLimitSeconds }}">
+         data-retry-seconds="<?php echo e($demoLimitSeconds); ?>">
         <h4 id="demo-limit-title">Limite de demos alcanzado</h4>
         <p>Alcanzaste el maximo de 3 intentos por hora. Debes esperar antes de volver a solicitar tu demo.</p>
         <div class="modal-time">Tiempo restante: <span id="demo-limit-countdown">--:--</span></div>
@@ -3355,7 +3331,7 @@
             const navLinks = Array.from(document.querySelectorAll('.menu-links a, .mobile-nav-links a'));
             if (navLinks.length > 0) {
                 const activeStorageKey = 'landing.nav.active';
-                const homePathname = @json(parse_url(route('landing'), PHP_URL_PATH) ?: '/');
+                const homePathname = <?php echo json_encode(parse_url(route('landing'), PHP_URL_PATH) ?: '/', 512) ?>;
 
                 const normalizePath = function (value) {
                     const normalized = String(value || '').replace(/\/+$/, '');
@@ -3689,8 +3665,6 @@
             const quotePlanLabel = quotePlanPill ? quotePlanPill.querySelector('[data-quote-plan-label]') : null;
             const quoteTriggers = Array.from(document.querySelectorAll('[data-open-quote-modal]'));
             const firstQuoteInput = quoteForm ? quoteForm.querySelector('input[name="quote_first_name"]') : null;
-            const quoteCountrySelect = quoteForm ? quoteForm.querySelector('[data-quote-country-select]') : null;
-            const quotePrefixSelect = quoteForm ? quoteForm.querySelector('[data-quote-prefix-select]') : null;
 
             const humanizeQuotePlan = function (value) {
                 return String(value || '')
@@ -3722,29 +3696,6 @@
 
                 quotePlanPill.classList.add('is-visible');
                 quotePlanLabel.textContent = humanizeQuotePlan(normalized);
-            };
-
-            const syncQuotePrefixFromCountry = function () {
-                if (!(quoteCountrySelect instanceof HTMLSelectElement) || !(quotePrefixSelect instanceof HTMLSelectElement)) {
-                    return;
-                }
-
-                const selectedOption = quoteCountrySelect.selectedOptions.length > 0
-                    ? quoteCountrySelect.selectedOptions[0]
-                    : null;
-                const prefix = selectedOption ? String(selectedOption.getAttribute('data-phone-prefix') || '').trim() : '';
-
-                if (prefix === '') {
-                    return;
-                }
-
-                const matchingOption = Array.from(quotePrefixSelect.options).find(function (option) {
-                    return option.value === prefix;
-                });
-
-                if (matchingOption) {
-                    quotePrefixSelect.value = prefix;
-                }
             };
 
             const openQuoteModal = function (options) {
@@ -3809,13 +3760,6 @@
             if (quoteModal && quoteModal.classList.contains('is-open')) {
                 document.body.classList.add('quote-modal-open');
                 syncQuotePlan(quotePlanInput instanceof HTMLInputElement ? quotePlanInput.value : '');
-            }
-
-            if (quoteCountrySelect instanceof HTMLSelectElement && quotePrefixSelect instanceof HTMLSelectElement) {
-                quoteCountrySelect.addEventListener('change', syncQuotePrefixFromCountry);
-                if (String(quoteCountrySelect.value || '').trim() !== '') {
-                    syncQuotePrefixFromCountry();
-                }
             }
 
             if (quoteForm) {
@@ -3920,3 +3864,4 @@
 
 
 
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/home.blade.php ENDPATH**/ ?>

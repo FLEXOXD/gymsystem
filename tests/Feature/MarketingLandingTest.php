@@ -4,10 +4,12 @@ use App\Http\Controllers\MarketingController;
 use App\Models\DemoSession;
 use App\Models\Gym;
 use App\Models\LegalAcceptance;
+use App\Models\LandingQuoteRequest;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -102,38 +104,160 @@ it('shows dedicated legal pages', function () {
         ->assertDontSee('id="contacto"', false);
 });
 
-it('renders whatsapp urls per pricing plan using superadmin-configured messages', function () {
-    SiteSetting::query()->create([
-        'key' => 'marketing.whatsapp_phone',
-        'value' => '593111222333',
-    ]);
-    SiteSetting::query()->create([
-        'key' => 'marketing.whatsapp_message_plan_basico',
-        'value' => 'msg_plan_basico',
-    ]);
-    SiteSetting::query()->create([
-        'key' => 'marketing.whatsapp_message_plan_profesional',
-        'value' => 'msg_plan_profesional',
-    ]);
-    SiteSetting::query()->create([
-        'key' => 'marketing.whatsapp_message_plan_premium',
-        'value' => 'msg_plan_premium',
-    ]);
-    SiteSetting::query()->create([
-        'key' => 'marketing.whatsapp_message_plan_sucursales',
-        'value' => 'msg_plan_sucursales',
-    ]);
-
+it('renders quote triggers across landing ctas and pricing cards', function () {
     $this->get(route('landing'))
         ->assertOk()
+        ->assertSee('Solicita tu cotización')
+        ->assertSee('data-open-quote-modal', false)
         ->assertSee('data-plan-cta-key="basico"', false)
         ->assertSee('data-plan-cta-key="profesional"', false)
         ->assertSee('data-plan-cta-key="premium"', false)
         ->assertSee('data-plan-cta-key="sucursales"', false)
-        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_basico', false)
-        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_profesional', false)
-        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_premium', false)
-        ->assertSee('https://api.whatsapp.com/send?phone=593111222333&amp;text=msg_plan_sucursales', false);
+        ->assertSee('data-quote-plan="basico"', false)
+        ->assertSee('data-quote-plan="profesional"', false)
+        ->assertSee('data-quote-plan="premium"', false)
+        ->assertSee('data-quote-plan="sucursales"', false);
+});
+
+it('stores quote requests from the landing modal', function () {
+    $this->from(route('landing'))
+        ->post(route('landing.quote.store'), [
+            'quote_first_name' => 'David',
+            'quote_last_name' => 'Quintana',
+            'quote_email' => 'ventas@example.com',
+            'quote_phone_country_code' => '+593',
+            'quote_phone_number' => '0987654321',
+            'quote_country' => 'Ecuador',
+            'quote_professionals_count' => 8,
+            'quote_requested_plan' => 'sucursales',
+            'quote_source' => 'hero_secondary',
+            'quote_notes' => 'Necesito manejar una sede principal y dos sucursales.',
+            'quote_privacy_accepted' => '1',
+        ])
+        ->assertRedirect(route('landing'))
+        ->assertSessionHas('quote_status');
+
+    $quote = LandingQuoteRequest::query()->first();
+
+    expect($quote)->not->toBeNull()
+        ->and($quote->first_name)->toBe('David')
+        ->and($quote->last_name)->toBe('Quintana')
+        ->and($quote->email)->toBe('ventas@example.com')
+        ->and($quote->phone_country_code)->toBe('+593')
+        ->and($quote->phone_number)->toBe('0987654321')
+        ->and($quote->country)->toBe('Ecuador')
+        ->and($quote->professionals_count)->toBe(8)
+        ->and($quote->requested_plan)->toBe('sucursales')
+        ->and($quote->source)->toBe('hero_secondary');
+});
+
+it('stores quote request timestamps using superadmin public timezone', function () {
+    User::factory()->create([
+        'gym_id' => null,
+        'timezone' => 'America/Guayaquil',
+    ]);
+
+    config(['app.timezone' => 'UTC']);
+    date_default_timezone_set('UTC');
+
+    Carbon::setTestNow(Carbon::create(2026, 3, 8, 10, 42, 0, 'America/Guayaquil'));
+
+    try {
+        $this->post(route('landing.quote.store'), [
+            'quote_first_name' => 'Evelyn',
+            'quote_last_name' => 'Quintana',
+            'quote_email' => 'evelyn@example.com',
+            'quote_phone_country_code' => '+593',
+            'quote_phone_number' => '0991066303',
+            'quote_country' => 'Ecuador',
+            'quote_professionals_count' => 2,
+            'quote_notes' => 'Horario correcto Ecuador.',
+            'quote_privacy_accepted' => '1',
+        ])->assertSessionHas('quote_status');
+
+        $quote = LandingQuoteRequest::query()->firstOrFail();
+
+        expect((string) $quote->getRawOriginal('created_at'))->toStartWith('2026-03-08 10:42:00');
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('shows stored quote requests in superadmin panel', function () {
+    $superAdmin = User::factory()->create([
+        'gym_id' => null,
+    ]);
+
+    LandingQuoteRequest::query()->create([
+        'first_name' => 'Cliente',
+        'last_name' => 'Lead',
+        'email' => 'lead@example.com',
+        'phone_country_code' => '+593',
+        'phone_number' => '099000111',
+        'country' => 'Ecuador',
+        'professionals_count' => 12,
+        'requested_plan' => 'sucursales',
+        'source' => 'pricing_sucursales',
+        'notes' => 'Quiere centralizar caja y reportes.',
+    ]);
+
+    $this->actingAs($superAdmin)
+        ->get(route('superadmin.quotations.index'))
+        ->assertOk()
+        ->assertSee('Solicitudes de cotizacion')
+        ->assertSee('Cliente Lead')
+        ->assertSee('lead@example.com')
+        ->assertSee('Selecciona una solicitud para ver el detalle.');
+});
+
+it('shows quote request detail only after selecting a request', function () {
+    $superAdmin = User::factory()->create([
+        'gym_id' => null,
+    ]);
+
+    $quote = LandingQuoteRequest::query()->create([
+        'first_name' => 'Cliente',
+        'last_name' => 'Lead',
+        'email' => 'lead@example.com',
+        'phone_country_code' => '+593',
+        'phone_number' => '099000111',
+        'country' => 'Ecuador',
+        'professionals_count' => 12,
+        'requested_plan' => 'sucursales',
+        'source' => 'pricing_sucursales',
+        'notes' => 'Quiere centralizar caja y reportes.',
+    ]);
+
+    $this->actingAs($superAdmin)
+        ->get(route('superadmin.quotations.show', $quote->id))
+        ->assertOk()
+        ->assertSee('Cliente Lead')
+        ->assertSee('Quiere centralizar caja y reportes.')
+        ->assertSee('Marcar como revisada');
+});
+
+it('does not mark quote requests as reviewed when only opening the detail', function () {
+    $superAdmin = User::factory()->create([
+        'gym_id' => null,
+    ]);
+
+    $quote = LandingQuoteRequest::query()->create([
+        'first_name' => 'Marco',
+        'last_name' => 'Tenelema',
+        'email' => 'marco@example.com',
+        'phone_country_code' => '+593',
+        'phone_number' => '099100200',
+        'country' => 'Ecuador',
+        'professionals_count' => 2,
+        'notes' => 'No debe marcarse sola.',
+    ]);
+
+    $this->actingAs($superAdmin)
+        ->get(route('superadmin.quotations.show', $quote->id))
+        ->assertOk()
+        ->assertSee('Marco Tenelema');
+
+    expect($quote->fresh()->read_at)->toBeNull();
 });
 
 it('stores legal acceptance evidence with validation', function () {

@@ -22,6 +22,7 @@ use App\Http\Controllers\SuperAdminInboxController;
 use App\Http\Controllers\SuperAdminSiteContentController;
 use App\Http\Controllers\SuperAdminNotificationsController;
 use App\Http\Controllers\SuperAdminPlanTemplateController;
+use App\Http\Controllers\SuperAdminQuotationController;
 use App\Http\Controllers\SubscriptionAdminController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\PwaEventController;
@@ -36,6 +37,9 @@ Route::get('/contactanos', [MarketingController::class, 'contact'])->name('landi
 Route::post('/contactanos/mensaje', [MarketingController::class, 'storeContactMessage'])
     ->middleware(['throttle:20,1'])
     ->name('landing.contact.store');
+Route::post('/cotizacion/solicitar', [MarketingController::class, 'storeQuoteRequest'])
+    ->middleware(['throttle:20,1'])
+    ->name('landing.quote.store');
 Route::get('/politica-de-privacidad', [MarketingController::class, 'privacy'])->name('landing.legal.privacy');
 Route::get('/condiciones-de-servicio', [MarketingController::class, 'serviceTerms'])->name('landing.legal.service');
 Route::get('/terminos-comerciales', [MarketingController::class, 'commercialTerms'])->name('landing.legal.commercial');
@@ -186,6 +190,12 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
         Route::middleware('superadmin')->prefix('superadmin')->name('superadmin.')->group(function (): void {
             Route::get('/dashboard', [SuperAdminDashboardController::class, 'dashboard'])
                 ->name('dashboard');
+            Route::get('/quotations', [SuperAdminQuotationController::class, 'index'])
+                ->name('quotations.index');
+            Route::get('/quotations/{quote}', [SuperAdminQuotationController::class, 'show'])
+                ->name('quotations.show');
+            Route::post('/quotations/{quote}/read', [SuperAdminQuotationController::class, 'markRead'])
+                ->name('quotations.read');
             Route::get('/gyms', [SuperAdminDashboardController::class, 'gyms'])
                 ->name('gyms.index');
             Route::get('/sucursales', [SuperAdminBranchController::class, 'index'])

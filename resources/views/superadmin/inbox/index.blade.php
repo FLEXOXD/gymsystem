@@ -4,6 +4,16 @@
 @section('page-title', 'Notificaciones de contacto')
 
 @section('content')
+    @php
+        $panelTimezone = trim((string) (auth()->user()?->timezone ?? ''));
+        if (
+            $panelTimezone === ''
+            || $panelTimezone === 'UTC'
+            || ! in_array($panelTimezone, timezone_identifiers_list(), true)
+        ) {
+            $panelTimezone = 'America/Guayaquil';
+        }
+    @endphp
     <x-ui.card title="Bandeja de contacto web" subtitle="Mensajes del formulario público. Campana: 4 horas. Inbox y borrado: 24 horas.">
         @if ($unreadCount > 0)
             <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
@@ -61,7 +71,7 @@
                             <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">{{ \Illuminate\Support\Str::limit($message->message, 90) }}</p>
                             <div class="mt-1 flex items-center justify-between gap-2">
                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                                    {{ $message->created_at?->format('d/m/Y H:i') }}
+                                    {{ $message->created_at?->copy()->timezone($panelTimezone)?->format('d/m/Y H:i') }}
                                 </p>
                                 @if ($minutesLeft !== null)
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide {{ $minutesLeft <= 20 ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200' }}">
@@ -90,7 +100,7 @@
                             <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">{{ $selectedFullName !== '' ? $selectedFullName : 'Sin nombre' }}</h3>
                             <p class="text-sm text-slate-600 dark:text-slate-300">{{ $selectedMessage->email }}</p>
                             <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                                Recibido: {{ $selectedMessage->created_at?->format('d/m/Y H:i') }}
+                                Recibido: {{ $selectedMessage->created_at?->copy()->timezone($panelTimezone)?->format('d/m/Y H:i') }}
                             </p>
                             @if ($selectedMinutesLeft !== null)
                                 <p class="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide {{ $selectedMinutesLeft <= 20 ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200' }}">

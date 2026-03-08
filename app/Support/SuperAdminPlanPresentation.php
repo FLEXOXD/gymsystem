@@ -77,7 +77,7 @@ class SuperAdminPlanPresentation
                 ],
                 'featured' => false,
                 'contact_mode' => true,
-                'cta' => 'Hablar por WhatsApp',
+                'cta' => 'Solicita tu cotizacion',
             ],
         ];
     }
