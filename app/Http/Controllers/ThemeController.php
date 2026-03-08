@@ -15,6 +15,7 @@ use App\Models\Gym;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Support\Currency;
+use App\Support\GymLocationCatalog;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -118,6 +119,7 @@ class ThemeController extends Controller
             'languageOptions' => $this->languageOptions(),
             'gym' => $gym,
             'currencyOptions' => Currency::options(),
+            'locationCatalog' => GymLocationCatalog::catalog(),
             'timezoneOptions' => $this->timezoneOptions(),
         ]);
     }
@@ -206,7 +208,38 @@ class ThemeController extends Controller
 
         abort_if(! $gym, 403, __('messages.user_without_gym'));
 
-        $gym->update($request->validated());
+        $data = $request->validated();
+        $countryCode = strtolower(trim((string) ($data['address_country_code'] ?? '')));
+        $state = trim((string) ($data['address_state'] ?? ''));
+        $city = trim((string) ($data['address_city'] ?? ''));
+        $line = trim((string) ($data['address_line'] ?? ''));
+
+        $resolvedState = $state !== '' && $countryCode !== ''
+            ? (GymLocationCatalog::resolveState($countryCode, $state) ?? $state)
+            : null;
+        $resolvedCity = $city !== '' && $countryCode !== '' && $resolvedState !== null
+            ? (GymLocationCatalog::resolveCity($countryCode, $resolvedState, $city) ?? $city)
+            : null;
+        $countryName = $countryCode !== ''
+            ? (string) (GymLocationCatalog::catalog()[$countryCode]['label'] ?? strtoupper($countryCode))
+            : null;
+        $addressLine = $line !== '' ? $line : null;
+
+        $gym->update([
+            'name' => (string) $data['name'],
+            'phone' => $data['phone'] ?? null,
+            'currency_code' => (string) $data['currency_code'],
+            'language_code' => (string) $data['language_code'],
+            'timezone' => (string) $data['timezone'],
+            'address_country_code' => $countryCode !== '' ? $countryCode : null,
+            'address_country_name' => $countryName,
+            'address_state' => $resolvedState,
+            'address_city' => $resolvedCity,
+            'address_line' => $addressLine,
+            'address' => $countryCode !== '' && $resolvedState !== null && $resolvedCity !== null
+                ? GymLocationCatalog::buildAddress($countryCode, $resolvedState, $resolvedCity, $addressLine)
+                : $addressLine,
+        ]);
 
         return back()->with('status', __('messages.gym_profile_updated'));
     }

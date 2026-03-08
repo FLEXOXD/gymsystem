@@ -11,9 +11,11 @@ use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\Client;
 use App\Models\Gym;
+use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\Promotion;
+use App\Models\User;
 use App\Services\CashSessionService;
 use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
@@ -98,6 +100,7 @@ class ClientController extends Controller
                 'clients.first_name',
                 'clients.last_name',
                 'clients.document_number',
+                'clients.phone',
                 'clients.photo_path',
                 'clients.status',
                 'g.name as gym_name',
@@ -143,15 +146,42 @@ class ClientController extends Controller
             ->withQueryString();
 
         $paymentsByMembership = $this->resolveMembershipPayments($gymIds, $clients);
+        $clientMutationPolicies = $this->resolveClientMutationPolicies($request, $clients->getCollection());
         $clients->setCollection(
-            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now, $request): array {
+            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now, $request, $clientMutationPolicies): array {
                 $row = $this->buildClientCardRow($client, $paymentsByMembership, $now);
+                $mutationPolicy = $clientMutationPolicies[(int) ($client->gym_id ?? 0)] ?? [
+                    'can_manage' => false,
+                    'owner_scope_label' => 'dueno del gimnasio',
+                    'owner_modal_hint' => 'Confirma con la contrasena del dueno del gimnasio.',
+                ];
                 $row['show_url'] = $this->buildClientShowUrl(
                     $request,
                     (int) $client->id,
                     (int) ($client->gym_id ?? 0),
                     trim((string) ($client->gym_slug ?? ''))
                 );
+                $row['can_manage'] = (bool) ($mutationPolicy['can_manage'] ?? false);
+                $row['owner_scope_label'] = (string) ($mutationPolicy['owner_scope_label'] ?? 'dueno del gimnasio');
+                $row['owner_modal_hint'] = (string) ($mutationPolicy['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.');
+                $row['edit_url'] = $row['can_manage']
+                    ? $this->buildClientActionUrl(
+                        $request,
+                        'clients.basic.update',
+                        (int) $client->id,
+                        (int) ($client->gym_id ?? 0),
+                        trim((string) ($client->gym_slug ?? ''))
+                    )
+                    : null;
+                $row['delete_url'] = $row['can_manage']
+                    ? $this->buildClientActionUrl(
+                        $request,
+                        'clients.destroy',
+                        (int) $client->id,
+                        (int) ($client->gym_id ?? 0),
+                        trim((string) ($client->gym_slug ?? ''))
+                    )
+                    : null;
 
                 return $row;
             })
@@ -186,8 +216,30 @@ class ClientController extends Controller
         }
 
         $errorBag = $request->session()->get('errors');
-        $hasFormErrors = $errorBag && $errorBag->isNotEmpty();
-        $openCreateModal = (bool) old('_open_create_modal', false) || $hasFormErrors;
+        $createModalErrorKeys = [
+            'first_name',
+            'last_name',
+            'document_number',
+            'phone',
+            'gender',
+            'photo',
+            'start_membership',
+            'plan_id',
+            'membership_starts_at',
+            'membership_price',
+            'promotion_id',
+            'payment_method',
+            'amount_paid',
+            'create_app_account',
+            'app_username',
+            'app_password',
+            'app_password_confirmation',
+            'cash',
+        ];
+        $hasCreateErrors = $errorBag
+            ? collect($createModalErrorKeys)->contains(static fn (string $key): bool => $errorBag->has($key))
+            : false;
+        $openCreateModal = (bool) old('_open_create_modal', false) || $hasCreateErrors;
 
         return view('clients.index', [
             'clients' => $clients,
@@ -265,6 +317,107 @@ class ClientController extends Controller
         return redirect()
             ->route('clients.index')
             ->with('status', 'Cliente creado correctamente.');
+    }
+
+    public function updateBasic(Request $request, string $contextGym, int $client): RedirectResponse
+    {
+        if (ActiveGymContext::isGlobal($request)) {
+            return back()->withErrors(['clients' => 'Selecciona una sede especifica para editar clientes.']);
+        }
+
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $clientModel = Client::query()
+            ->forGyms($gymIds)
+            ->select(['id', 'gym_id', 'first_name', 'last_name', 'phone'])
+            ->findOrFail($client);
+
+        $authorization = $this->resolveClientMutationAuthorization($request, $clientModel);
+        if ($authorization['message'] !== null) {
+            return back()->withErrors(['clients' => $authorization['message']]);
+        }
+
+        $data = $request->validate([
+            'edit_client_id' => ['required', 'integer'],
+            'edit_first_name' => ['required', 'string', 'max:120'],
+            'edit_last_name' => ['required', 'string', 'max:120'],
+            'edit_phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
+        ], [
+            'edit_first_name.required' => 'Ingresa el nombre del cliente.',
+            'edit_first_name.max' => 'El nombre no puede superar 120 caracteres.',
+            'edit_last_name.required' => 'Ingresa el apellido del cliente.',
+            'edit_last_name.max' => 'El apellido no puede superar 120 caracteres.',
+            'edit_phone.required' => 'Ingresa el telefono del cliente.',
+            'edit_phone.max' => 'El telefono no puede superar 30 caracteres.',
+            'edit_phone.regex' => 'El telefono solo puede contener numeros y los simbolos + - ( ).',
+        ]);
+
+        if ((int) $data['edit_client_id'] !== (int) $clientModel->id) {
+            return back()
+                ->withErrors(['edit_client_id' => 'No se pudo identificar el cliente a editar.'])
+                ->withInput();
+        }
+
+        $clientModel->update([
+            'first_name' => trim((string) $data['edit_first_name']),
+            'last_name' => trim((string) $data['edit_last_name']),
+            'phone' => trim((string) $data['edit_phone']),
+        ]);
+
+        return back()->with('status', 'Cliente actualizado correctamente.');
+    }
+
+    public function destroy(Request $request, string $contextGym, int $client): RedirectResponse
+    {
+        if (ActiveGymContext::isGlobal($request)) {
+            return back()->withErrors(['clients' => 'Selecciona una sede especifica para eliminar clientes.']);
+        }
+
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $clientModel = Client::query()
+            ->forGyms($gymIds)
+            ->select(['id', 'gym_id', 'first_name', 'last_name'])
+            ->findOrFail($client);
+
+        $authorization = $this->resolveClientMutationAuthorization($request, $clientModel);
+        if ($authorization['message'] !== null) {
+            return back()->withErrors(['clients' => $authorization['message']]);
+        }
+
+        $data = $request->validate([
+            'delete_client_id' => ['required', 'integer'],
+            'owner_password' => ['required', 'string'],
+        ], [
+            'owner_password.required' => 'Ingresa la contrasena del dueno autorizado.',
+        ]);
+
+        if ((int) $data['delete_client_id'] !== (int) $clientModel->id) {
+            return back()
+                ->withErrors(['delete_client_id' => 'No se pudo identificar el cliente a eliminar.'])
+                ->withInput($request->except('owner_password'));
+        }
+
+        /** @var User|null $approvingOwner */
+        $approvingOwner = $authorization['owner'];
+        if (! $approvingOwner instanceof User) {
+            return back()->withErrors(['clients' => 'No se encontro un dueno autorizado para validar esta accion.']);
+        }
+
+        if (! Hash::check((string) $data['owner_password'], (string) $approvingOwner->password)) {
+            $passwordMessage = (bool) ($authorization['is_branch_managed'] ?? false)
+                ? 'La contrasena del dueno principal no es correcta.'
+                : 'La contrasena del dueno del gimnasio no es correcta.';
+
+            return back()
+                ->withErrors(['owner_password' => $passwordMessage])
+                ->withInput($request->except('owner_password'));
+        }
+
+        $clientName = $clientModel->full_name;
+        $clientModel->delete();
+
+        return back()->with('status', 'Cliente '.$clientName.' eliminado correctamente.');
     }
 
     public function checkDocument(Request $request): JsonResponse
@@ -745,8 +898,12 @@ class ClientController extends Controller
 
         return [
             'id' => (int) $client->id,
+            'gym_id' => (int) ($client->gym_id ?? 0),
             'full_name' => (string) $client->full_name,
+            'first_name' => (string) ($client->first_name ?? ''),
+            'last_name' => (string) ($client->last_name ?? ''),
             'document_number' => (string) $client->document_number,
+            'phone' => trim((string) ($client->phone ?? '')),
             'photo_url' => $this->resolvePhotoUrl($client->photo_path),
             'initials' => $this->initialsOf($client->full_name),
             'gym_name' => trim((string) ($client->gym_name ?? '')) !== '' ? (string) $client->gym_name : ('Sede #'.((int) ($client->gym_id ?? 0))),
@@ -911,6 +1068,147 @@ class ClientController extends Controller
         }
 
         return route('clients.show', $params);
+    }
+
+    private function buildClientActionUrl(
+        Request $request,
+        string $routeName,
+        int $clientId,
+        int $clientGymId,
+        ?string $clientGymSlug = null
+    ): string {
+        $params = ['client' => $clientId];
+        $contextGym = trim((string) ($request->route('contextGym') ?? ''));
+
+        if ($contextGym === '' && $clientGymId > 0) {
+            $contextGym = trim((string) ($clientGymSlug ?? ''));
+        }
+
+        if ($contextGym !== '') {
+            $params['contextGym'] = $contextGym;
+        }
+
+        $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+        if ($pwaMode === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return route($routeName, $params);
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Client>  $clients
+     * @return array<int, array{can_manage:bool,owner_scope_label:string,owner_modal_hint:string}>
+     */
+    private function resolveClientMutationPolicies(Request $request, \Illuminate\Support\Collection $clients): array
+    {
+        $currentUser = $request->user();
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $gymIds = $clients
+            ->map(static fn (Client $client): int => (int) ($client->gym_id ?? 0))
+            ->filter(static fn (int $gymId): bool => $gymId > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($gymIds === []) {
+            return [];
+        }
+
+        $branchParentMap = GymBranchLink::query()
+            ->whereIn('branch_gym_id', $gymIds)
+            ->pluck('hub_gym_id', 'branch_gym_id')
+            ->map(static fn ($gymId): int => (int) $gymId)
+            ->all();
+
+        $approvingGymIds = collect($gymIds)
+            ->map(static fn (int $gymId): int => (int) ($branchParentMap[$gymId] ?? $gymId))
+            ->unique()
+            ->values()
+            ->all();
+
+        $ownersByGym = User::query()
+            ->whereIn('gym_id', $approvingGymIds)
+            ->where('role', User::ROLE_OWNER)
+            ->orderBy('id')
+            ->get(['id', 'gym_id'])
+            ->groupBy('gym_id')
+            ->map(static fn ($rows) => $rows->first());
+
+        $policies = [];
+        foreach ($gymIds as $gymId) {
+            $approvingGymId = (int) ($branchParentMap[$gymId] ?? $gymId);
+            $approvingOwner = $ownersByGym->get($approvingGymId);
+            $isBranchManaged = array_key_exists($gymId, $branchParentMap);
+
+            $policies[$gymId] = [
+                'can_manage' => ! $isGlobalScope
+                    && $currentUser instanceof User
+                    && $currentUser->isOwner()
+                    && $approvingOwner instanceof User
+                    && (int) $currentUser->id === (int) $approvingOwner->id,
+                'owner_scope_label' => $isBranchManaged ? 'dueno principal' : 'dueno del gimnasio',
+                'owner_modal_hint' => $isBranchManaged
+                    ? 'Confirma con la contrasena del dueno principal de la sede matriz.'
+                    : 'Confirma con la contrasena del dueno del gimnasio.',
+            ];
+        }
+
+        return $policies;
+    }
+
+    /**
+     * @return array{owner:?User,is_branch_managed:bool,message:?string}
+     */
+    private function resolveClientMutationAuthorization(Request $request, Client $client): array
+    {
+        $currentUser = $request->user();
+        if (! $currentUser instanceof User || ! $currentUser->isOwner()) {
+            return [
+                'owner' => null,
+                'is_branch_managed' => false,
+                'message' => 'Solo el dueno autorizado puede editar o eliminar clientes.',
+            ];
+        }
+
+        $branchLink = GymBranchLink::query()
+            ->where('branch_gym_id', (int) $client->gym_id)
+            ->first(['hub_gym_id']);
+
+        $isBranchManaged = $branchLink instanceof GymBranchLink && (int) ($branchLink->hub_gym_id ?? 0) > 0;
+        $approvingGymId = $isBranchManaged
+            ? (int) ($branchLink->hub_gym_id ?? 0)
+            : (int) ($client->gym_id ?? 0);
+
+        $approvingOwner = User::query()
+            ->where('gym_id', $approvingGymId)
+            ->where('role', User::ROLE_OWNER)
+            ->orderBy('id')
+            ->first();
+
+        if (! $approvingOwner instanceof User) {
+            return [
+                'owner' => null,
+                'is_branch_managed' => $isBranchManaged,
+                'message' => 'No se encontro un dueno autorizado para esta operacion.',
+            ];
+        }
+
+        if ((int) $currentUser->id !== (int) $approvingOwner->id) {
+            return [
+                'owner' => $approvingOwner,
+                'is_branch_managed' => $isBranchManaged,
+                'message' => $isBranchManaged
+                    ? 'Solo el dueno principal puede editar o eliminar clientes de una sucursal.'
+                    : 'Solo el dueno del gimnasio puede editar o eliminar clientes.',
+            ];
+        }
+
+        return [
+            'owner' => $approvingOwner,
+            'is_branch_managed' => $isBranchManaged,
+            'message' => null,
+        ];
     }
 
     private function resolvePhotoUrl(?string $photoPath): ?string

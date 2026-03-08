@@ -1,18 +1,18 @@
-﻿@extends('layouts.panel')
+﻿
 
-@section('title', 'Clientes')
-@section('page-title', 'Clientes')
+<?php $__env->startSection('title', 'Clientes'); ?>
+<?php $__env->startSection('page-title', 'Clientes'); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
     <style>
         [x-cloak] {
             display: none !important;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-    @php
+<?php $__env->startSection('content'); ?>
+    <?php
         $canManagePromotions = (bool) ($canManagePromotions ?? false);
         $canManageClientAccounts = (bool) ($canManageClientAccounts ?? false);
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
@@ -98,18 +98,6 @@
         $showCreateErrorSummary = collect($createErrorKeys)->contains(fn (string $key): bool => $errors->has($key));
         $showEditErrorSummary = collect($editErrorKeys)->contains(fn (string $key): bool => $errors->has($key));
         $showDeleteErrorSummary = collect($deleteErrorKeys)->contains(fn (string $key): bool => $errors->has($key));
-        $createErrorMessages = collect($createErrorKeys)
-            ->flatMap(fn (string $key) => $errors->get($key))
-            ->unique()
-            ->values();
-        $editErrorMessages = collect($editErrorKeys)
-            ->flatMap(fn (string $key) => $errors->get($key))
-            ->unique()
-            ->values();
-        $deleteErrorMessages = collect($deleteErrorKeys)
-            ->flatMap(fn (string $key) => $errors->get($key))
-            ->unique()
-            ->values();
 
         $editModalDefaults = [
             'open' => old('_open_edit_modal') ? true : false,
@@ -129,18 +117,18 @@
             'owner_scope_label' => (string) ($oldDeleteClient['owner_scope_label'] ?? 'dueno del gimnasio'),
             'owner_modal_hint' => (string) ($oldDeleteClient['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.'),
         ];
-    @endphp
+    ?>
 
     <div x-data="clientsIndexPage({
-            openCreateModal: @js($openCreateModal),
-             plans: @js($planCatalog),
-             promotions: @js($promotionCatalog),
-             defaults: @js($formDefaults),
-             editModal: @js($editModalDefaults),
-             deleteModal: @js($deleteModalDefaults),
-             documentCheckUrl: @js(route('clients.check-document')),
-             allowCreate: @js(! $isGlobalScope),
-             canManageClientAccounts: @js($canManageClientAccounts),
+            openCreateModal: <?php echo \Illuminate\Support\Js::from($openCreateModal)->toHtml() ?>,
+             plans: <?php echo \Illuminate\Support\Js::from($planCatalog)->toHtml() ?>,
+             promotions: <?php echo \Illuminate\Support\Js::from($promotionCatalog)->toHtml() ?>,
+             defaults: <?php echo \Illuminate\Support\Js::from($formDefaults)->toHtml() ?>,
+             editModal: <?php echo \Illuminate\Support\Js::from($editModalDefaults)->toHtml() ?>,
+             deleteModal: <?php echo \Illuminate\Support\Js::from($deleteModalDefaults)->toHtml() ?>,
+             documentCheckUrl: <?php echo \Illuminate\Support\Js::from(route('clients.check-document'))->toHtml() ?>,
+             allowCreate: <?php echo \Illuminate\Support\Js::from(! $isGlobalScope)->toHtml() ?>,
+             canManageClientAccounts: <?php echo \Illuminate\Support\Js::from($canManageClientAccounts)->toHtml() ?>,
          })"
          x-init="init()"
          class="space-y-4">
@@ -148,69 +136,127 @@
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <article class="rounded-2xl border border-slate-300/70 bg-slate-100 p-4 shadow-lg dark:border-white/10 dark:bg-slate-900/40">
                 <p class="ui-muted text-xs font-semibold uppercase tracking-widest">Total clientes</p>
-                <p class="mt-2 text-3xl font-black ui-heading">{{ $stats['total'] }}</p>
+                <p class="mt-2 text-3xl font-black ui-heading"><?php echo e($stats['total']); ?></p>
                 <p class="ui-muted mt-1 text-xs">Base actual del listado</p>
             </article>
             <article class="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-4 shadow-lg dark:border-emerald-300/30 dark:bg-emerald-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-200">Activos</p>
-                <p class="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">{{ $stats['active'] }}</p>
+                <p class="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100"><?php echo e($stats['active']); ?></p>
                 <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Membresía vigente</p>
             </article>
             <article class="rounded-2xl border border-amber-400/35 bg-amber-500/10 p-4 shadow-lg dark:border-amber-300/30 dark:bg-amber-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-amber-800 dark:text-amber-200">Por vencer</p>
-                <p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">{{ $stats['expiring'] }}</p>
+                <p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100"><?php echo e($stats['expiring']); ?></p>
                 <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los próximos 7 días</p>
             </article>
             <article class="rounded-2xl border border-rose-400/35 bg-rose-500/10 p-4 shadow-lg dark:border-rose-300/30 dark:bg-rose-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-rose-800 dark:text-rose-200">Vencid@s</p>
-                <p class="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">{{ $stats['expired'] }}</p>
+                <p class="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100"><?php echo e($stats['expired']); ?></p>
                 <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovación</p>
             </article>
         </section>
 
-        @if ($isGlobalScope)
+        <?php if($isGlobalScope): ?>
             <div class="ui-alert ui-alert-warning">
                 Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal especifica.
             </div>
-        @endif
+        <?php endif; ?>
 
-        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención.">
+        <?php if (isset($component)) { $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.card','data' => ['title' => 'Clientes del gimnasio','subtitle' => 'Vista operacional para recepción, renovaciones y retención.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => 'Clientes del gimnasio','subtitle' => 'Vista operacional para recepción, renovaciones y retención.']); ?>
             <div class="space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
-                        <input type="hidden" name="filter" value="{{ $quickFilter }}">
+                    <form method="GET" action="<?php echo e(route('clients.index')); ?>" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
+                        <input type="hidden" name="filter" value="<?php echo e($quickFilter); ?>">
                         <input id="clients-search"
                                type="text"
                                name="q"
-                               value="{{ $search }}"
+                               value="<?php echo e($search); ?>"
                                placeholder="Buscar por nombre, apellido o documento..."
                                class="ui-input">
-                        <x-ui.button type="submit" variant="secondary">Buscar</x-ui.button>
-                        <x-ui.button :href="route('clients.index')" variant="ghost">Limpiar</x-ui.button>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'submit','variant' => 'secondary']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','variant' => 'secondary']); ?>Buscar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['href' => route('clients.index'),'variant' => 'ghost']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('clients.index')),'variant' => 'ghost']); ?>Limpiar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                     </form>
 
-                    <x-ui.button id="clients-open-create"
-                                 type="button"
-                                 :variant="$isGlobalScope ? 'ghost' : 'primary'"
-                                 x-on:click="openCreateClient()"
-                                 class="whitespace-nowrap"
-                                 :disabled="$isGlobalScope"
-                                 title="{{ $isGlobalScope ? 'Selecciona una sede para crear clientes' : 'Crear cliente' }}">
-                        {{ $isGlobalScope ? 'Solo lectura global' : '+ Nuevo cliente' }}
-                    </x-ui.button>
+                    <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['id' => 'clients-open-create','type' => 'button','variant' => $isGlobalScope ? 'ghost' : 'primary','xOn:click' => 'openCreateClient()','class' => 'whitespace-nowrap','disabled' => $isGlobalScope,'title' => ''.e($isGlobalScope ? 'Selecciona una sede para crear clientes' : 'Crear cliente').'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'clients-open-create','type' => 'button','variant' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($isGlobalScope ? 'ghost' : 'primary'),'x-on:click' => 'openCreateClient()','class' => 'whitespace-nowrap','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($isGlobalScope),'title' => ''.e($isGlobalScope ? 'Selecciona una sede para crear clientes' : 'Crear cliente').'']); ?>
+                        <?php echo e($isGlobalScope ? 'Solo lectura global' : '+ Nuevo cliente'); ?>
+
+                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                 </div>
 
                 <div id="clients-filter-chips" class="flex flex-wrap gap-2">
-                    @foreach ($filters as $filterKey => $filterLabel)
-                        @php
+                    <?php $__currentLoopData = $filters; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $filterKey => $filterLabel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
                             $isActiveFilter = $quickFilter === $filterKey;
                             $chipQuery = array_merge($baseFilterQuery, ['filter' => $filterKey]);
                             $chipClass = $isActiveFilter
                                 ? 'ui-button ui-button-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wide'
                                 : 'ui-button ui-button-ghost px-3 py-1.5 text-xs font-bold uppercase tracking-wide';
-                        @endphp
-                        <a href="{{ route('clients.index', $chipQuery) }}" class="{{ $chipClass }}">{{ $filterLabel }}</a>
-                    @endforeach
+                        ?>
+                        <a href="<?php echo e(route('clients.index', $chipQuery)); ?>" class="<?php echo e($chipClass); ?>"><?php echo e($filterLabel); ?></a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
@@ -227,15 +273,15 @@
                             <th class="px-3 py-3">Pago</th>
                             <th class="px-3 py-3">Ultima asistencia</th>
                             <th class="px-3 py-3">Estado</th>
-                            @if ($isGlobalScope)
+                            <?php if($isGlobalScope): ?>
                                 <th class="px-3 py-3">Sede</th>
-                            @endif
+                            <?php endif; ?>
                             <th class="px-3 py-3">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse ($clients as $client)
-                            @php
+                        <?php $__empty_1 = true; $__currentLoopData = $clients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $client): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
                                 $daysToneClass = match ($client['days_badge']['tone']) {
                                     'success' => 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-400/30',
                                     'warning' => 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-400/30',
@@ -243,54 +289,113 @@
                                     'danger-strong' => 'bg-rose-600/80 text-rose-50 border border-rose-300/60',
                                     default => 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-500/20 dark:text-slate-200 dark:border-slate-400/30',
                                 };
-                            @endphp
+                            ?>
                             <tr class="border-b border-slate-200 text-sm text-slate-800 odd:bg-white even:bg-slate-100 hover:bg-sky-100/70 dark:border-slate-800 dark:text-slate-200 dark:odd:bg-slate-900 dark:even:bg-slate-950/50 dark:hover:bg-cyan-500/10">
-                                <td class="px-3 py-3 font-bold text-slate-800 dark:text-slate-200">#{{ $client['id'] }}</td>
+                                <td class="px-3 py-3 font-bold text-slate-800 dark:text-slate-200">#<?php echo e($client['id']); ?></td>
                                 <td class="px-3 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if ($client['photo_url'])
-                                            <img src="{{ $client['photo_url'] }}"
-                                                 alt="{{ $client['full_name'] }}"
+                                        <?php if($client['photo_url']): ?>
+                                            <img src="<?php echo e($client['photo_url']); ?>"
+                                                 alt="<?php echo e($client['full_name']); ?>"
                                                  class="h-10 w-10 rounded-full border border-white/20 object-cover">
-                                        @else
+                                        <?php else: ?>
                                             <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-slate-700 text-xs font-black uppercase tracking-wider text-white">
-                                                {{ $client['initials'] }}
+                                                <?php echo e($client['initials']); ?>
+
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                         <div class="min-w-0">
-                                            <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $client['full_name'] }}</p>
-                                            <p class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">{{ $client['document_number'] }}</p>
+                                            <p class="truncate font-semibold text-slate-900 dark:text-slate-100"><?php echo e($client['full_name']); ?></p>
+                                            <p class="truncate text-xs font-medium text-slate-600 dark:text-slate-400"><?php echo e($client['document_number']); ?></p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-slate-800 dark:text-slate-100">{{ $client['plan_name'] }}</td>
-                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $client['membership_ends_at_human'] }}</td>
+                                <td class="px-3 py-3 font-semibold text-slate-800 dark:text-slate-100"><?php echo e($client['plan_name']); ?></td>
+                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200"><?php echo e($client['membership_ends_at_human']); ?></td>
                                 <td class="px-3 py-3">
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $daysToneClass }}">
-                                        {{ $client['days_badge']['label'] }}
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide <?php echo e($daysToneClass); ?>">
+                                        <?php echo e($client['days_badge']['label']); ?>
+
                                     </span>
                                 </td>
                                 <td class="px-3 py-3">
-                                    <x-ui.badge :variant="$client['payment_badge']['variant']">
-                                        {{ $client['payment_badge']['label'] }}
-                                    </x-ui.badge>
+                                    <?php if (isset($component)) { $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.badge','data' => ['variant' => $client['payment_badge']['variant']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($client['payment_badge']['variant'])]); ?>
+                                        <?php echo e($client['payment_badge']['label']); ?>
+
+                                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $attributes = $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $component = $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
                                 </td>
-                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $client['last_checkin_label'] }}</td>
+                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200"><?php echo e($client['last_checkin_label']); ?></td>
                                 <td class="px-3 py-3">
-                                    <x-ui.badge :variant="$client['status_badge']['variant']">
-                                        {{ $client['status_badge']['label'] }}
-                                    </x-ui.badge>
+                                    <?php if (isset($component)) { $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.badge','data' => ['variant' => $client['status_badge']['variant']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($client['status_badge']['variant'])]); ?>
+                                        <?php echo e($client['status_badge']['label']); ?>
+
+                                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $attributes = $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $component = $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
                                 </td>
-                                @if ($isGlobalScope)
+                                <?php if($isGlobalScope): ?>
                                     <td class="px-3 py-3">
-                                        <x-ui.badge variant="info">
-                                            {{ $client['gym_name'] ?? '-' }}
-                                        </x-ui.badge>
+                                        <?php if (isset($component)) { $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.badge','data' => ['variant' => 'info']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'info']); ?>
+                                            <?php echo e($client['gym_name'] ?? '-'); ?>
+
+                                         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $attributes = $__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__attributesOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4)): ?>
+<?php $component = $__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4; ?>
+<?php unset($__componentOriginalab7baa01105b3dfe1e0cf1dfc58879b4); ?>
+<?php endif; ?>
                                     </td>
-                                @endif
+                                <?php endif; ?>
                                 <td class="px-3 py-3">
                                     <div class="flex min-w-[180px] flex-wrap gap-2">
-                                        <a href="{{ (string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : []))) }}"
+                                        <a href="<?php echo e((string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))); ?>"
                                            class="ui-button ui-button-secondary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
@@ -299,42 +404,42 @@
                                             Ver
                                         </a>
 
-                                        @if (! empty($client['can_manage']))
+                                        <?php if(! empty($client['can_manage'])): ?>
                                             <button type="button"
                                                     class="ui-button ui-button-primary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold"
-                                                    x-on:click="openEditClient({
-                                                        action: @js((string) ($client['edit_url'] ?? '')),
-                                                        id: {{ (int) $client['id'] }},
-                                                        first_name: @js((string) ($client['first_name'] ?? '')),
-                                                        last_name: @js((string) ($client['last_name'] ?? '')),
-                                                        phone: @js((string) ($client['phone'] ?? '')),
-                                                        full_name: @js((string) ($client['full_name'] ?? ''))
-                                                    })">
+                                                    x-on:click='openEditClient(<?php echo \Illuminate\Support\Js::from([
+                                                        "action" => (string) ($client["edit_url"] ?? ""),
+                                                        "id" => (int) $client["id"],
+                                                        "first_name" => (string) ($client["first_name"] ?? ""),
+                                                        "last_name" => (string) ($client["last_name"] ?? ""),
+                                                        "phone" => (string) ($client["phone"] ?? ""),
+                                                        "full_name" => (string) ($client["full_name"] ?? ""),
+                                                    ])->toHtml() ?>)'>
                                                 Editar
                                             </button>
 
                                             <button type="button"
                                                     class="inline-flex items-center gap-2 rounded-xl border border-rose-400/35 bg-rose-500/15 px-3 py-1.5 text-xs font-bold text-rose-100 transition hover:border-rose-300/60 hover:bg-rose-500/25"
-                                                    x-on:click="openDeleteClient({
-                                                        action: @js((string) ($client['delete_url'] ?? '')),
-                                                        id: {{ (int) $client['id'] }},
-                                                        full_name: @js((string) ($client['full_name'] ?? '')),
-                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueno del gimnasio')),
-                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.'))
-                                                    })">
+                                                    x-on:click='openDeleteClient(<?php echo \Illuminate\Support\Js::from([
+                                                        "action" => (string) ($client["delete_url"] ?? ""),
+                                                        "id" => (int) $client["id"],
+                                                        "full_name" => (string) ($client["full_name"] ?? ""),
+                                                        "owner_scope_label" => (string) ($client["owner_scope_label"] ?? "dueno del gimnasio"),
+                                                        "owner_modal_hint" => (string) ($client["owner_modal_hint"] ?? "Confirma con la contrasena del dueno del gimnasio."),
+                                                    ])->toHtml() ?>)'>
                                                 Eliminar
                                             </button>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="{{ $isGlobalScope ? 10 : 9 }}" class="px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
+                                <td colspan="<?php echo e($isGlobalScope ? 10 : 9); ?>" class="px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
                                     No hay clientes para los filtros actuales.
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -342,13 +447,23 @@
 
             <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <p class="text-sm ui-muted">
-                    Mostrando {{ $clients->firstItem() ?? 0 }} - {{ $clients->lastItem() ?? 0 }} de {{ $clients->total() }} clientes
+                    Mostrando <?php echo e($clients->firstItem() ?? 0); ?> - <?php echo e($clients->lastItem() ?? 0); ?> de <?php echo e($clients->total()); ?> clientes
                 </p>
                 <div>
-                    {{ $clients->onEachSide(1)->links() }}
+                    <?php echo e($clients->onEachSide(1)->links()); ?>
+
                 </div>
             </div>
-        </x-ui.card>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $attributes = $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $component = $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
 
         <div x-cloak
              x-show="modalOpen"
@@ -361,12 +476,12 @@
                  role="dialog"
                  aria-modal="true">
                 <form method="POST"
-                      action="{{ route('clients.store') }}"
+                      action="<?php echo e(route('clients.store')); ?>"
                       enctype="multipart/form-data"
                       novalidate
                       class="flex h-full min-h-0 flex-1 flex-col space-y-0"
                       x-on:submit="submitCreateClient($event)">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="_open_create_modal" value="1">
 
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
@@ -383,16 +498,18 @@
                     </header>
 
                     <div class="ui-modal-scroll-body space-y-5 px-5 py-5">
-                        @if ($showCreateErrorSummary)
+                        <?php if($showCreateErrorSummary): ?>
                             <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                                 <p class="font-semibold">Corrige los siguientes campos antes de guardar:</p>
                                 <ul class="mt-1 list-disc space-y-1 pl-5 text-xs">
-                                    @foreach ($createErrorMessages as $message)
-                                        <li>{{ $message }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->only($createErrorKeys); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $messages): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php $__currentLoopData = (array) $messages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $message): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <li><?php echo e($message); ?></li>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -407,9 +524,16 @@
                                        x-bind:class="clientValidationErrors.first_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        x-ref="firstNameInput">
                                 <p x-cloak x-show="clientValidationErrors.first_name" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.first_name"></p>
-                                @error('first_name')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['first_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -423,9 +547,16 @@
                                        class="ui-input"
                                        x-bind:class="clientValidationErrors.last_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''">
                                 <p x-cloak x-show="clientValidationErrors.last_name" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.last_name"></p>
-                                @error('last_name')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['last_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
@@ -440,9 +571,16 @@
                                        x-bind:class="clientValidationErrors.document_number ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        placeholder="Cedula, DNI o pasaporte">
                                 <p x-cloak x-show="clientValidationErrors.document_number" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.document_number"></p>
-                                @error('document_number')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['document_number'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 <div x-cloak x-show="documentState === 'checking'" class="text-xs text-slate-400">Validando documento...</div>
                                 <div x-cloak x-show="documentState === 'exists'" class="rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-200">
                                     <p>Este documento ya existe en este gimnasio.</p>
@@ -465,9 +603,16 @@
                                        x-bind:class="clientValidationErrors.phone ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        placeholder="Ej: 0991234567">
                                 <p x-cloak x-show="clientValidationErrors.phone" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.phone"></p>
-                                @error('phone')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -477,12 +622,19 @@
                                     <option value="female">Mujer</option>
                                     <option value="neutral">Neutral</option>
                                 </select>
-                                @error('gender')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['gender'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
-                            @if ($canManageClientAccounts)
+                            <?php if($canManageClientAccounts): ?>
                                 <div class="space-y-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 md:col-span-2">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-100">
@@ -510,9 +662,16 @@
                                                    x-bind:class="clientValidationErrors.app_username ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                                    placeholder="ej: maria.perez">
                                             <p x-cloak x-show="clientValidationErrors.app_username" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_username"></p>
-                                            @error('app_username')
-                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                            @enderror
+                                            <?php $__errorArgs = ['app_username'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         </label>
 
                                         <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -526,9 +685,16 @@
                                                    x-bind:class="clientValidationErrors.app_password ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                                    placeholder="Minimo 8 caracteres">
                                             <p x-cloak x-show="clientValidationErrors.app_password" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password"></p>
-                                            @error('app_password')
-                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                            @enderror
+                                            <?php $__errorArgs = ['app_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         </label>
 
                                         <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
@@ -542,13 +708,20 @@
                                                    x-bind:class="clientValidationErrors.app_password_confirmation ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                                    placeholder="Repite la contraseña">
                                             <p x-cloak x-show="clientValidationErrors.app_password_confirmation" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password_confirmation"></p>
-                                            @error('app_password_confirmation')
-                                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                            @enderror
+                                            <?php $__errorArgs = ['app_password_confirmation'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         </label>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
                             <div class="space-y-2 md:col-span-2">
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -556,9 +729,16 @@
                                     <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input"
                                            x-on:change="onPhotoSelected($event)">
                                 </label>
-                                @error('photo')
-                                    <span class="block text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['photo'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="block text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
 
                                 <div class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                                     <template x-if="photoPreview">
@@ -592,32 +772,53 @@
                                     <span>Plan</span>
                                     <select name="plan_id" x-model="form.plan_id" x-on:change="onPlanChange()" x-bind:disabled="!form.start_membership" class="ui-input">
                                         <option value="">Selecciona un plan</option>
-                                        @foreach ($plans as $plan)
-                                            <option value="{{ $plan->id }}">{{ $plan->name }} ({{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }})</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $plans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($plan->id); ?>"><?php echo e($plan->name); ?> (<?php echo e(\App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months)); ?>)</option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('plan_id')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['plan_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Fecha inicio</span>
                                     <input type="date" name="membership_starts_at" x-model="form.membership_starts_at" x-on:input="recalculateMembershipEnd()" x-bind:disabled="!form.start_membership" class="ui-input">
-                                    @error('membership_starts_at')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['membership_starts_at'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Precio</span>
                                     <input type="number" name="membership_price" x-model="form.membership_price" min="0" step="0.01" x-bind:disabled="!form.start_membership" class="ui-input">
-                                    @error('membership_price')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['membership_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
-                                @if ($canManagePromotions)
+                                <?php if($canManagePromotions): ?>
                                     <label class="space-y-1 text-sm font-semibold text-slate-300">
                                         <span>Promoción (opcional)</span>
                                         <select name="promotion_id" x-model="form.promotion_id" x-on:change="onPromotionChange()" x-bind:disabled="!form.start_membership" class="ui-input">
@@ -626,18 +827,32 @@
                                                 <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
                                             </template>
                                         </select>
-                                        @error('promotion_id')
-                                            <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                        @enderror
+                                        <?php $__errorArgs = ['promotion_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </label>
-                                @else
+                                <?php else: ?>
                                     <div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200 md:col-span-2">
                                         Promociones no disponibles en tu plan actual.
-                                        @error('promotion_id')
-                                            <p class="mt-1 font-semibold text-rose-200">{{ $message }}</p>
-                                        @enderror
+                                        <?php $__errorArgs = ['promotion_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <p class="mt-1 font-semibold text-rose-200"><?php echo e($message); ?></p>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
-                                @endif
+                                <?php endif; ?>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Método de pago</span>
@@ -646,17 +861,31 @@
                                         <option value="transfer">Transferencia</option>
                                         <option value="card">Tarjeta</option>
                                     </select>
-                                    @error('payment_method')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['payment_method'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
                                     <span>Monto pagado</span>
                                     <input type="number" name="amount_paid" x-model="form.amount_paid" min="0" step="0.01" x-bind:disabled="!form.start_membership" class="ui-input">
-                                    @error('amount_paid')
-                                        <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['amount_paid'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
                                 <div class="space-y-2 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
@@ -672,25 +901,84 @@
                             <p x-cloak x-show="form.start_membership && plans.length === 0" class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
                                 No hay planes activos. Crea un plan antes de iniciar membresías desde este modal.
                             </p>
-                            @error('cash')
+                            <?php $__errorArgs = ['cash'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                 <div class="mt-3 rounded-xl border-2 border-rose-400/80 bg-rose-500/20 p-3 text-rose-100 shadow-lg">
                                     <p class="text-xs font-black uppercase tracking-wide">Debe abrir caja para cobrar</p>
-                                    <p class="mt-1 text-sm font-semibold">{{ $message }}</p>
+                                    <p class="mt-1 text-sm font-semibold"><?php echo e($message); ?></p>
                                     <div class="mt-2">
-                                        <x-ui.button :href="route('cash.index')" variant="secondary" size="sm">Ir a caja</x-ui.button>
+                                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['href' => route('cash.index'),'variant' => 'secondary','size' => 'sm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('cash.index')),'variant' => 'secondary','size' => 'sm']); ?>Ir a caja <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                                     </div>
                                 </div>
-                            @enderror
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
 
                     <footer class="ui-modal-sticky-footer flex items-center justify-end gap-3 px-5 py-4">
-                        <x-ui.button type="button" variant="ghost" x-on:click="closeCreateClient()">Cancelar</x-ui.button>
-                        <x-ui.button type="submit"
-                                     variant="success"
-                                     x-bind:disabled="submitting || documentState === 'exists' || (form.start_membership && plans.length === 0)">
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'ghost','xOn:click' => 'closeCreateClient()']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'ghost','x-on:click' => 'closeCreateClient()']); ?>Cancelar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'submit','variant' => 'success','xBind:disabled' => 'submitting || documentState === \'exists\' || (form.start_membership && plans.length === 0)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','variant' => 'success','x-bind:disabled' => 'submitting || documentState === \'exists\' || (form.start_membership && plans.length === 0)']); ?>
                             Guardar
-                        </x-ui.button>
+                         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                     </footer>
                 </form>
             </div>
@@ -711,8 +999,8 @@
                       novalidate
                       class="flex h-full min-h-0 flex-1 flex-col space-y-0"
                       x-on:submit="submitEditClient($event)">
-                    @csrf
-                    @method('PATCH')
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('PATCH'); ?>
                     <input type="hidden" name="_open_edit_modal" value="1">
                     <input type="hidden" name="edit_client_id" x-bind:value="editForm.id || ''">
 
@@ -730,16 +1018,18 @@
                     </header>
 
                     <div class="ui-modal-scroll-body space-y-5 px-5 py-5">
-                        @if ($showEditErrorSummary)
+                        <?php if($showEditErrorSummary): ?>
                             <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                                 <p class="font-semibold">No se pudo actualizar este cliente.</p>
                                 <ul class="mt-1 list-disc space-y-1 pl-5 text-xs">
-                                    @foreach ($editErrorMessages as $message)
-                                        <li>{{ $message }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->only($editErrorKeys); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $messages): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php $__currentLoopData = (array) $messages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $message): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <li><?php echo e($message); ?></li>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80">Cliente seleccionado</p>
@@ -758,9 +1048,16 @@
                                        x-bind:class="editValidationErrors.first_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        x-ref="editFirstNameInput">
                                 <p x-cloak x-show="editValidationErrors.first_name" class="text-xs font-semibold text-rose-300" x-text="editValidationErrors.first_name"></p>
-                                @error('edit_first_name')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['edit_first_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -773,9 +1070,16 @@
                                        class="ui-input"
                                        x-bind:class="editValidationErrors.last_name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''">
                                 <p x-cloak x-show="editValidationErrors.last_name" class="text-xs font-semibold text-rose-300" x-text="editValidationErrors.last_name"></p>
-                                @error('edit_last_name')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['edit_last_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
@@ -788,16 +1092,59 @@
                                        x-bind:class="editValidationErrors.phone ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
                                        placeholder="Ej: 0991234567">
                                 <p x-cloak x-show="editValidationErrors.phone" class="text-xs font-semibold text-rose-300" x-text="editValidationErrors.phone"></p>
-                                @error('edit_phone')
-                                    <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                                @enderror
+                                <?php $__errorArgs = ['edit_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </label>
                         </div>
                     </div>
 
                     <footer class="ui-modal-sticky-footer flex items-center justify-end gap-3 px-5 py-4">
-                        <x-ui.button type="button" variant="ghost" x-on:click="closeEditClient()">Cancelar</x-ui.button>
-                        <x-ui.button type="submit" variant="primary" x-bind:disabled="editSubmitting">Guardar cambios</x-ui.button>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'ghost','xOn:click' => 'closeEditClient()']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'ghost','x-on:click' => 'closeEditClient()']); ?>Cancelar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'submit','variant' => 'primary','xBind:disabled' => 'editSubmitting']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','variant' => 'primary','x-bind:disabled' => 'editSubmitting']); ?>Guardar cambios <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                     </footer>
                 </form>
             </div>
@@ -818,8 +1165,8 @@
                       novalidate
                       class="flex h-full min-h-0 flex-1 flex-col space-y-0"
                       x-on:submit="submitDeleteClient($event)">
-                    @csrf
-                    @method('DELETE')
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('DELETE'); ?>
                     <input type="hidden" name="_open_delete_modal" value="1">
                     <input type="hidden" name="delete_client_id" x-bind:value="deleteForm.id || ''">
 
@@ -837,16 +1184,18 @@
                     </header>
 
                     <div class="ui-modal-scroll-body space-y-5 px-5 py-5">
-                        @if ($showDeleteErrorSummary)
+                        <?php if($showDeleteErrorSummary): ?>
                             <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                                 <p class="font-semibold">No se pudo eliminar este cliente.</p>
                                 <ul class="mt-1 list-disc space-y-1 pl-5 text-xs">
-                                    @foreach ($deleteErrorMessages as $message)
-                                        <li>{{ $message }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->only($deleteErrorKeys); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $messages): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php $__currentLoopData = (array) $messages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $message): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <li><?php echo e($message); ?></li>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-4">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-rose-200/80">Cliente a eliminar</p>
@@ -865,14 +1214,39 @@
                                    autocomplete="current-password"
                                    x-ref="deletePasswordInput">
                             <p x-cloak x-show="deleteValidationErrors.owner_password" class="text-xs font-semibold text-rose-300" x-text="deleteValidationErrors.owner_password"></p>
-                            @error('owner_password')
-                                <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
-                            @enderror
+                            <?php $__errorArgs = ['owner_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="text-xs font-semibold text-rose-300"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
                     </div>
 
                     <footer class="ui-modal-sticky-footer flex items-center justify-end gap-3 px-5 py-4">
-                        <x-ui.button type="button" variant="ghost" x-on:click="closeDeleteClient()">Cancelar</x-ui.button>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'ghost','xOn:click' => 'closeDeleteClient()']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'ghost','x-on:click' => 'closeDeleteClient()']); ?>Cancelar <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                         <button type="submit"
                                 class="inline-flex items-center justify-center rounded-xl border border-rose-400/35 bg-rose-500/90 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
                                 x-bind:disabled="deleteSubmitting">
@@ -883,9 +1257,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script>
         window.clientsIndexPage = function clientsIndexPage(config) {
@@ -1663,4 +2037,6 @@
             };
         };
     </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.panel', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\gymsystem\resources\views/clients/index.blade.php ENDPATH**/ ?>

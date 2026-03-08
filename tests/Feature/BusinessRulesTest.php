@@ -1661,3 +1661,278 @@ it('blocks direct superadmin renew and suspend for managed branch subscriptions'
         'billing_owner_gym_id' => $hubGym->id,
     ]);
 });
+
+it('allows owner to update a client basic profile', function () {
+    $gym = makeGym('client-basic-update');
+    $owner = makeGymUser($gym, 'client-basic-update@example.test', User::ROLE_OWNER);
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Mario',
+        'last_name' => 'Lopez',
+        'document_number' => 'CLI-UPD-001',
+        'phone' => '0990000001',
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->from(route('clients.index', ['contextGym' => $gym->slug]))
+        ->patch(route('clients.basic.update', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_edit_modal' => '1',
+            'edit_client_id' => $client->id,
+            'edit_first_name' => 'Marco',
+            'edit_last_name' => 'Quintana',
+            'edit_phone' => '0991234567',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $gym->slug]))
+        ->assertSessionHas('status', 'Cliente actualizado correctamente.');
+
+    $this->assertDatabaseHas('clients', [
+        'id' => $client->id,
+        'gym_id' => $gym->id,
+        'first_name' => 'Marco',
+        'last_name' => 'Quintana',
+        'phone' => '0991234567',
+    ]);
+});
+
+it('blocks cashier from editing and deleting clients', function () {
+    $gym = makeGym('client-mutation-cashier');
+    $cashier = makeCashierUser($gym, 'client-mutation-cashier@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Caja',
+        'document_number' => 'CLI-CASHIER-001',
+        'phone' => '0991111111',
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($cashier)
+        ->from(route('clients.index', ['contextGym' => $gym->slug]))
+        ->patch(route('clients.basic.update', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_edit_modal' => '1',
+            'edit_client_id' => $client->id,
+            'edit_first_name' => 'No',
+            'edit_last_name' => 'Permitido',
+            'edit_phone' => '0992222222',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $gym->slug]))
+        ->assertSessionHasErrors(['clients']);
+
+    $this->assertDatabaseHas('clients', [
+        'id' => $client->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Caja',
+        'phone' => '0991111111',
+    ]);
+
+    $this->actingAs($cashier)
+        ->from(route('clients.index', ['contextGym' => $gym->slug]))
+        ->delete(route('clients.destroy', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_delete_modal' => '1',
+            'delete_client_id' => $client->id,
+            'owner_password' => 'password',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $gym->slug]))
+        ->assertSessionHasErrors(['clients']);
+
+    $this->assertDatabaseHas('clients', [
+        'id' => $client->id,
+        'gym_id' => $gym->id,
+    ]);
+});
+
+it('blocks branch local owner from editing and deleting branch clients', function () {
+    $hubGym = makeGym('hub-branch-client-mutation');
+    $branchGym = makeGym('branch-client-mutation');
+    $hubOwner = makeGymUser($hubGym, 'hub-branch-client-mutation@example.test');
+    $branchOwner = makeGymUser($branchGym, 'branch-client-mutation@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    Subscription::query()
+        ->where('gym_id', $branchGym->id)
+        ->update([
+            'plan_key' => 'premium',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'branch_plan_key' => 'premium',
+        'status' => 'active',
+        'created_by' => $hubOwner->id,
+    ]);
+
+    $client = Client::query()->create([
+        'gym_id' => $branchGym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Sucursal',
+        'document_number' => 'CLI-BRANCH-OWNER-001',
+        'phone' => '0993333333',
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($branchOwner)
+        ->from(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->patch(route('clients.basic.update', [
+            'contextGym' => $branchGym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_edit_modal' => '1',
+            'edit_client_id' => $client->id,
+            'edit_first_name' => 'Cambio',
+            'edit_last_name' => 'Local',
+            'edit_phone' => '0994444444',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->assertSessionHasErrors(['clients']);
+
+    $this->actingAs($branchOwner)
+        ->from(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->delete(route('clients.destroy', [
+            'contextGym' => $branchGym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_delete_modal' => '1',
+            'delete_client_id' => $client->id,
+            'owner_password' => 'password',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->assertSessionHasErrors(['clients']);
+
+    $this->assertDatabaseHas('clients', [
+        'id' => $client->id,
+        'gym_id' => $branchGym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Sucursal',
+    ]);
+});
+
+it('requires the hub owner password to delete a branch client', function () {
+    $hubGym = makeGym('hub-delete-branch-client');
+    $branchGym = makeGym('branch-delete-branch-client');
+    $hubOwner = makeGymUser($hubGym, 'hub-delete-branch-client@example.test');
+    $branchOwner = makeGymUser($branchGym, 'branch-delete-branch-client@example.test');
+    $hubOwner->update(['password' => 'HubSecret#2026']);
+    $branchOwner->update(['password' => 'BranchSecret#2026']);
+
+    Subscription::query()
+        ->where('gym_id', $hubGym->id)
+        ->update([
+            'plan_key' => 'sucursales',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    Subscription::query()
+        ->where('gym_id', $branchGym->id)
+        ->update([
+            'plan_key' => 'premium',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    GymBranchLink::query()->create([
+        'hub_gym_id' => $hubGym->id,
+        'branch_gym_id' => $branchGym->id,
+        'branch_plan_key' => 'premium',
+        'status' => 'active',
+        'created_by' => $hubOwner->id,
+    ]);
+
+    $client = Client::query()->create([
+        'gym_id' => $branchGym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Eliminar',
+        'document_number' => 'CLI-BRANCH-DELETE-001',
+        'phone' => '0995555555',
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $branchGym->id,
+        'name' => 'Plan sucursal',
+        'duration_days' => 30,
+        'price' => 30,
+        'status' => 'active',
+    ]);
+
+    $membership = Membership::query()->create([
+        'gym_id' => $branchGym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(30)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($hubOwner)
+        ->from(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->delete(route('clients.destroy', [
+            'contextGym' => $branchGym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_delete_modal' => '1',
+            'delete_client_id' => $client->id,
+            'owner_password' => 'BranchSecret#2026',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->assertSessionHasErrors(['owner_password']);
+
+    $this->assertDatabaseHas('clients', [
+        'id' => $client->id,
+        'gym_id' => $branchGym->id,
+    ]);
+
+    $this->actingAs($hubOwner)
+        ->from(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->delete(route('clients.destroy', [
+            'contextGym' => $branchGym->slug,
+            'client' => $client->id,
+        ]), [
+            '_open_delete_modal' => '1',
+            'delete_client_id' => $client->id,
+            'owner_password' => 'HubSecret#2026',
+        ])
+        ->assertRedirect(route('clients.index', ['contextGym' => $branchGym->slug]))
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseMissing('clients', [
+        'id' => $client->id,
+    ]);
+    $this->assertDatabaseMissing('memberships', [
+        'id' => $membership->id,
+    ]);
+});

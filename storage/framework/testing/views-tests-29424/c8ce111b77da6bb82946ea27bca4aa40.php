@@ -1,4 +1,4 @@
-@php
+<?php
     use App\Models\Gym;
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
@@ -361,25 +361,25 @@
         );
     $legalTermsDocuments = LegalTerms::orderedDocuments();
     $legalAcceptancePostUrl = route('legal.modal-acceptance.store');
-@endphp
+?>
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full antialiased {{ $themeClass }}" data-theme="{{ $activeTheme }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>" class="h-full antialiased <?php echo e($themeClass); ?>" data-theme="<?php echo e($activeTheme); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="pwa-events-url" content="{{ route('pwa.events.store') }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <meta name="pwa-events-url" content="<?php echo e(route('pwa.events.store')); ?>">
     <meta name="theme-color" content="#16c172">
-    <meta name="pwa-install-enabled" content="{{ $canInstallPwa ? '1' : '0' }}">
-    <meta name="pwa-upgrade-message" content="{{ $pwaUpgradeMessage }}">
-    @if (! $isSuperAdmin)
-        <meta name="push-web-enabled" content="{{ $pushWebEnabled ? '1' : '0' }}">
-        <meta name="push-vapid-public-key" content="{{ $pushVapidPublicKey }}">
-        <meta name="push-subscribe-url" content="{{ route('notifications.push.subscribe') }}">
-        <meta name="push-unsubscribe-url" content="{{ route('notifications.push.unsubscribe') }}">
-        <meta name="push-status-url" content="{{ route('notifications.push.status') }}">
-        <meta name="push-test-url" content="{{ route('notifications.push.test') }}">
-    @endif
+    <meta name="pwa-install-enabled" content="<?php echo e($canInstallPwa ? '1' : '0'); ?>">
+    <meta name="pwa-upgrade-message" content="<?php echo e($pwaUpgradeMessage); ?>">
+    <?php if(! $isSuperAdmin): ?>
+        <meta name="push-web-enabled" content="<?php echo e($pushWebEnabled ? '1' : '0'); ?>">
+        <meta name="push-vapid-public-key" content="<?php echo e($pushVapidPublicKey); ?>">
+        <meta name="push-subscribe-url" content="<?php echo e(route('notifications.push.subscribe')); ?>">
+        <meta name="push-unsubscribe-url" content="<?php echo e(route('notifications.push.unsubscribe')); ?>">
+        <meta name="push-status-url" content="<?php echo e(route('notifications.push.status')); ?>">
+        <meta name="push-test-url" content="<?php echo e(route('notifications.push.test')); ?>">
+    <?php endif; ?>
     <script>
         (function () {
             var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
@@ -402,16 +402,16 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    @if ($canInstallPwa)
-        <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    @endif
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    @if ($canInstallPwa)
-        <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    @endif
-    <title>{{ $pageTitle }} - {{ config('app.name', 'GymSystem') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <?php if($canInstallPwa): ?>
+        <link rel="manifest" href="<?php echo e(asset('manifest.webmanifest')); ?>">
+    <?php endif; ?>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <link rel="shortcut icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <?php if($canInstallPwa): ?>
+        <link rel="apple-touch-icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <?php endif; ?>
+    <title><?php echo e($pageTitle); ?> - <?php echo e(config('app.name', 'GymSystem')); ?></title>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         .smart-list-wrap {
             max-height: min(68vh, 720px);
@@ -1231,47 +1231,47 @@
             }
         }
     </style>
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body class="theme-body h-full ui-text">
 <div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar relative z-40 hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
         <a id="brand-home-link"
-           href="{{ $brandHomeUrl }}"
-           data-home-url="{{ $brandHomeUrl }}"
+           href="<?php echo e($brandHomeUrl); ?>"
+           data-home-url="<?php echo e($brandHomeUrl); ?>"
            data-tour="sidebar-brand"
            class="theme-divider relative z-50 flex cursor-pointer items-center gap-4 border-b px-4 py-4 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
            style="pointer-events:auto;">
-            @php
+            <?php
                 $hasBrandImage = ($isSuperAdmin && !empty($userPhotoUrl)) || (!$isSuperAdmin && !empty($gymLogo));
-            @endphp
-            <div id="brand-logo-badge" @class([
+            ?>
+            <div id="brand-logo-badge" class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                 'flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black',
                 'theme-logo-badge' => ! $hasBrandImage,
                 'bg-transparent shadow-none' => $hasBrandImage,
-            ])>
-                @if ($isSuperAdmin && $userPhotoUrl)
-                    <img src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="brand-logo-media brand-logo-media-cover">
-                @elseif ($gymLogo)
-                    <img src="{{ $gymLogo }}"
+            ]); ?>">
+                <?php if($isSuperAdmin && $userPhotoUrl): ?>
+                    <img src="<?php echo e($userPhotoUrl); ?>" alt="<?php echo e($userName); ?>" class="brand-logo-media brand-logo-media-cover">
+                <?php elseif($gymLogo): ?>
+                    <img src="<?php echo e($gymLogo); ?>"
                          alt="Logo"
                          class="brand-logo-media brand-logo-media-contain"
-                         data-fallback-src="{{ (!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : '' }}"
+                         data-fallback-src="<?php echo e((!$isSuperAdmin && $userPhotoUrl) ? $userPhotoUrl : ''); ?>"
                          onerror="var fb=this.dataset.fallbackSrc||''; if(fb!=='' && this.src!==fb){ this.src=fb; this.classList.remove('brand-logo-media-contain'); this.classList.add('brand-logo-media-cover'); return; } this.style.display='none'; var fallback=this.parentNode.querySelector('[data-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
-                    <span data-logo-fallback class="hidden text-lg font-black uppercase">{{ $gymInitials }}</span>
-                @else
-                    <span class="text-lg font-black uppercase">{{ $gymInitials }}</span>
-                @endif
+                    <span data-logo-fallback class="hidden text-lg font-black uppercase"><?php echo e($gymInitials); ?></span>
+                <?php else: ?>
+                    <span class="text-lg font-black uppercase"><?php echo e($gymInitials); ?></span>
+                <?php endif; ?>
             </div>
             <div class="sidebar-label">
                 <p class="ui-muted text-xs font-bold uppercase tracking-widest">GymSystem</p>
-                <p class="ui-heading text-base">{{ $gymName }}</p>
+                <p class="ui-heading text-base"><?php echo e($gymName); ?></p>
             </div>
         </a>
 
         <nav class="space-y-1 px-3 py-4">
-            @foreach ($navItems as $item)
-                @php
+            <?php $__currentLoopData = $navItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php
                     $activePatterns = explode('|', $item['active']);
                     $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
                     $isHighlight = (bool) ($item['highlight'] ?? false);
@@ -1279,126 +1279,126 @@
                     if ($isHighlight) {
                         $navClass .= ' nav-link-highlight';
                     }
-                @endphp
-                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-                   data-tour="nav-{{ $item['icon'] ?? 'item' }}"
-                   class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $navClass }}">
-                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : ($isHighlight ? 'theme-nav-dot-highlight' : '') }}"></span>
+                ?>
+                <a href="<?php echo e(route($item['route'], $item['params'] ?? [])); ?>"
+                   data-tour="nav-<?php echo e($item['icon'] ?? 'item'); ?>"
+                   class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition <?php echo e($navClass); ?>">
+                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full <?php echo e($isActive ? 'bg-white' : ($isHighlight ? 'theme-nav-dot-highlight' : '')); ?>"></span>
                     <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
-                        @switch($item['icon'] ?? '')
-                            @case('panel')
+                        <?php switch($item['icon'] ?? ''):
+                            case ('panel'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M3 4h8v8H3V4Zm10 0h8v5h-8V4ZM3 14h8v6H3v-6Zm10-3h8v9h-8v-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('quotations')
+                                <?php break; ?>
+                            <?php case ('quotations'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M8 4h8l4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                     <path d="M16 4v4h4M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('reception')
+                                <?php break; ?>
+                            <?php case ('reception'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M6 11h12M12 5v12m7-6a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('clients')
+                                <?php break; ?>
+                            <?php case ('clients'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M16 18v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1m16 0v-1a4 4 0 0 0-3-3.87M13 6.13a4 4 0 1 1 0 7.75M9.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('plans')
+                                <?php break; ?>
+                            <?php case ('plans'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('inbox')
+                                <?php break; ?>
+                            <?php case ('inbox'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M5 8.5 12 13l7-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('cash')
+                                <?php break; ?>
+                            <?php case ('cash'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M3 10h18M8 14h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('reports')
+                                <?php break; ?>
+                            <?php case ('reports'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M5 19V9m7 10V5m7 14v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('branches')
+                                <?php break; ?>
+                            <?php case ('branches'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M7 6h10M7 12h5M7 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M4 6a1 1 0 1 1 0 .01M4 12a1 1 0 1 1 0 .01M4 18a1 1 0 1 1 0 .01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('staff')
+                                <?php break; ?>
+                            <?php case ('staff'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M7.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M4 18v-1a3.5 3.5 0 0 1 7 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M16.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M13 18v-1a3.5 3.5 0 0 1 7 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('gyms')
+                                <?php break; ?>
+                            <?php case ('gyms'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M4 20V8l8-4 8 4v12M9 20v-5h6v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('gym')
+                                <?php break; ?>
+                            <?php case ('gym'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="9" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M4.8 18.2v-1a4.2 4.2 0 0 1 8.4 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M16 8v6M13 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('notifications')
+                                <?php break; ?>
+                            <?php case ('notifications'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M6 10a6 6 0 1 1 12 0v4l2 2H4l2-2v-4Zm4 8a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('suggestions')
+                                <?php break; ?>
+                            <?php case ('suggestions'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M6 5h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-4 3v-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('legal_acceptances')
+                                <?php break; ?>
+                            <?php case ('legal_acceptances'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M8 4h6l4 4v12H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                     <path d="M14 4v4h4M10 13l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @break
-                            @case('web')
+                                <?php break; ?>
+                            <?php case ('web'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M3 8h18M8 4v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @case('client_portal')
+                                <?php break; ?>
+                            <?php case ('client_portal'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <rect x="7.5" y="2.8" width="9" height="18.4" rx="2.3" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M11 18.3h2M9.4 6.7h5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M3.8 10h2.3M18 10h2.2M5.3 6.3 6.9 7.9M18.7 6.3 17.1 7.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
-                                @break
-                            @default
+                                <?php break; ?>
+                            <?php default: ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
                                 </svg>
-                        @endswitch
+                        <?php endswitch; ?>
                     </span>
-                    <span class="sidebar-label">{{ $item['label'] }}</span>
-                    @if ($isHighlight)
+                    <span class="sidebar-label"><?php echo e($item['label']); ?></span>
+                    <?php if($isHighlight): ?>
                         <span class="ml-auto rounded-full border border-emerald-300/45 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100">
                             Link
                         </span>
-                    @endif
+                    <?php endif; ?>
                 </a>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </nav>
 
     </aside>
@@ -1419,77 +1419,97 @@
                         </span>
                         <span class="panel-menu-trigger-label">Ocultar menú</span>
                     </button>
-                    @php
+                    <?php
                         $mobileBrandImage = $isSuperAdmin ? $userPhotoUrl : $gymLogo;
                         $mobileBrandImageClass = $isSuperAdmin ? 'brand-logo-media brand-logo-media-cover' : 'brand-logo-media brand-logo-media-contain';
-                    @endphp
-                    <span id="mobile-brand-logo" @class([
+                    ?>
+                    <span id="mobile-brand-logo" class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                         'mt-0.5 inline-flex items-center justify-center overflow-hidden rounded-xl text-xs font-black uppercase lg:hidden',
                         'theme-logo-badge' => empty($mobileBrandImage),
                         'bg-transparent shadow-none' => !empty($mobileBrandImage),
-                    ])>
-                        @if (!empty($mobileBrandImage))
-                            <img src="{{ $mobileBrandImage }}"
+                    ]); ?>">
+                        <?php if(!empty($mobileBrandImage)): ?>
+                            <img src="<?php echo e($mobileBrandImage); ?>"
                                  alt="Logo"
-                                 class="{{ $mobileBrandImageClass }}"
+                                 class="<?php echo e($mobileBrandImageClass); ?>"
                                  onerror="this.style.display='none'; var fallback=this.parentNode.querySelector('[data-mobile-logo-fallback]'); if (fallback) { fallback.classList.remove('hidden'); }">
-                            <span data-mobile-logo-fallback class="hidden">{{ $gymInitials }}</span>
-                        @else
-                            {{ $gymInitials }}
-                        @endif
+                            <span data-mobile-logo-fallback class="hidden"><?php echo e($gymInitials); ?></span>
+                        <?php else: ?>
+                            <?php echo e($gymInitials); ?>
+
+                        <?php endif; ?>
                     </span>
                     <div id="panel-header-title" class="panel-header-title-stack">
-                        <p class="panel-header-kicker">{{ __('ui.panel_operativo') }}</p>
-                        <h1 class="panel-header-main ui-heading truncate">@yield('page-title', $pageTitle)</h1>
+                        <p class="panel-header-kicker"><?php echo e(__('ui.panel_operativo')); ?></p>
+                        <h1 class="panel-header-main ui-heading truncate"><?php echo $__env->yieldContent('page-title', $pageTitle); ?></h1>
                     </div>
                 </div>
 
                 <div id="panel-header-right">
-                    @if (!$isSuperAdmin)
-                        <form method="GET" action="{{ route('clients.index', $gymRouteParams) }}" class="hidden items-center gap-2 lg:flex">
-                            <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('ui.search_client') }}"
+                    <?php if(!$isSuperAdmin): ?>
+                        <form method="GET" action="<?php echo e(route('clients.index', $gymRouteParams)); ?>" class="hidden items-center gap-2 lg:flex">
+                            <input type="text" name="q" value="<?php echo e(request('q')); ?>" placeholder="<?php echo e(__('ui.search_client')); ?>"
                                    class="ui-input w-52"
                                    data-tour="header-search-client">
-                            <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold" data-tour="header-search-btn">{{ __('ui.search') }}</button>
+                            <button type="submit" class="ui-button ui-button-primary px-3 py-2 text-xs font-bold" data-tour="header-search-btn"><?php echo e(__('ui.search')); ?></button>
                         </form>
-                    @endif
+                    <?php endif; ?>
 
-                    @if ($headerLiveClientsVisible)
-                        @hasSection('header-live-banner')
-                            @yield('header-live-banner')
-                        @else
+                    <?php if($headerLiveClientsVisible): ?>
+                        <?php if (! empty(trim($__env->yieldContent('header-live-banner')))): ?>
+                            <?php echo $__env->yieldContent('header-live-banner'); ?>
+                        <?php else: ?>
                             <span id="header-live-banner"
                                   class="header-live-pill"
-                                  data-live-url="{{ $headerLiveClientsUrl ?? '' }}">
+                                  data-live-url="<?php echo e($headerLiveClientsUrl ?? ''); ?>">
                                 <span class="live-core-dot" aria-hidden="true"></span>
                                 <span class="live-label">PRESENTES</span>
-                                <strong id="header-live-clients" class="live-count">{{ (int) $headerLiveClientsCount }}</strong>
+                                <strong id="header-live-clients" class="live-count"><?php echo e((int) $headerLiveClientsCount); ?></strong>
                             </span>
-                        @endif
-                    @endif
+                        <?php endif; ?>
+                    <?php endif; ?>
 
-                    @if ($isDemoMode)
+                    <?php if($isDemoMode): ?>
                         <span class="demo-header-badge" title="Tiempo restante de la demo">
                             Demo:
-                            <strong data-demo-global-countdown data-demo-countdown-target>{{ $demoExpiresLabel ?: 'calculando...' }}</strong>
+                            <strong data-demo-global-countdown data-demo-countdown-target><?php echo e($demoExpiresLabel ?: 'calculando...'); ?></strong>
                         </span>
-                    @endif
+                    <?php endif; ?>
 
-                    @if (!$isSuperAdmin && $gymSubscriptionStatus)
-                        <x-badge :variant="$statusVariant">{{ $gymSubscriptionStatus }}</x-badge>
-                    @endif
+                    <?php if(!$isSuperAdmin && $gymSubscriptionStatus): ?>
+                        <?php if (isset($component)) { $__componentOriginal2ddbc40e602c342e508ac696e52f8719 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2ddbc40e602c342e508ac696e52f8719 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.badge','data' => ['variant' => $statusVariant]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($statusVariant)]); ?><?php echo e($gymSubscriptionStatus); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2ddbc40e602c342e508ac696e52f8719)): ?>
+<?php $attributes = $__attributesOriginal2ddbc40e602c342e508ac696e52f8719; ?>
+<?php unset($__attributesOriginal2ddbc40e602c342e508ac696e52f8719); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2ddbc40e602c342e508ac696e52f8719)): ?>
+<?php $component = $__componentOriginal2ddbc40e602c342e508ac696e52f8719; ?>
+<?php unset($__componentOriginal2ddbc40e602c342e508ac696e52f8719); ?>
+<?php endif; ?>
+                    <?php endif; ?>
 
-                    @if (!$isSuperAdmin)
+                    <?php if(!$isSuperAdmin): ?>
                         <button id="pwa-install-button"
                                 type="button"
-                                class="ui-button ui-button-ghost {{ $isStandalonePwaMode ? 'hidden' : 'hidden lg:inline-flex' }} px-3 py-2 text-xs font-bold"
-                                data-pwa-enabled="{{ $canInstallPwa ? '1' : '0' }}"
-                                title="{{ $canInstallPwa ? 'Instalar app' : $pwaUpgradeMessage }}">
-                            {{ $canInstallPwa ? 'Instalar app' : 'PWA bloqueada' }}
-                        </button>
-                    @endif
+                                class="ui-button ui-button-ghost <?php echo e($isStandalonePwaMode ? 'hidden' : 'hidden lg:inline-flex'); ?> px-3 py-2 text-xs font-bold"
+                                data-pwa-enabled="<?php echo e($canInstallPwa ? '1' : '0'); ?>"
+                                title="<?php echo e($canInstallPwa ? 'Instalar app' : $pwaUpgradeMessage); ?>">
+                            <?php echo e($canInstallPwa ? 'Instalar app' : 'PWA bloqueada'); ?>
 
-                    @if ($isSuperAdmin)
+                        </button>
+                    <?php endif; ?>
+
+                    <?php if($isSuperAdmin): ?>
                         <div id="header-bell-root" class="relative">
                             <button id="header-bell-button"
                                     type="button"
@@ -1502,49 +1522,49 @@
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M6 10a6 6 0 1 1 12 0v4l2 2H4l2-2v-4Zm4 8a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                @if ($headerContactUnread > 0)
-                                    <span class="header-bell-count">{{ min(99, $headerContactUnread) }}</span>
-                                @endif
+                                <?php if($headerContactUnread > 0): ?>
+                                    <span class="header-bell-count"><?php echo e(min(99, $headerContactUnread)); ?></span>
+                                <?php endif; ?>
                             </button>
 
                             <div id="header-bell-dropdown" class="absolute right-0 z-40 mt-2 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
                                 <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                     <p class="text-xs font-black uppercase tracking-wide text-slate-700 dark:text-slate-100">Notificaciones web</p>
-                                    <a href="{{ $inboxUrl }}" class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Abrir bandeja</a>
+                                    <a href="<?php echo e($inboxUrl); ?>" class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Abrir bandeja</a>
                                 </div>
 
                                 <div class="grid gap-2 p-2">
-                                    @forelse ($headerContactItems as $bellMessage)
-                                        @php
+                                    <?php $__empty_1 = true; $__currentLoopData = $headerContactItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bellMessage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                        <?php
                                             $bellName = trim($bellMessage->first_name.' '.$bellMessage->last_name);
                                             $bellUnread = $bellMessage->read_at === null;
-                                        @endphp
-                                        <a href="{{ route('superadmin.inbox.show', $bellMessage->id) }}"
-                                           class="header-bell-item {{ $bellUnread ? 'is-unread' : '' }}">
-                                            <p class="header-bell-name">{{ $bellName !== '' ? $bellName : 'Sin nombre' }}</p>
-                                            <p class="header-bell-mail">{{ $bellMessage->email }}</p>
-                                            <p class="header-bell-time">{{ $bellMessage->created_at?->copy()->timezone($panelDisplayTimezone)?->format('d/m/Y H:i') }}</p>
+                                        ?>
+                                        <a href="<?php echo e(route('superadmin.inbox.show', $bellMessage->id)); ?>"
+                                           class="header-bell-item <?php echo e($bellUnread ? 'is-unread' : ''); ?>">
+                                            <p class="header-bell-name"><?php echo e($bellName !== '' ? $bellName : 'Sin nombre'); ?></p>
+                                            <p class="header-bell-mail"><?php echo e($bellMessage->email); ?></p>
+                                            <p class="header-bell-time"><?php echo e($bellMessage->created_at?->copy()->timezone($panelDisplayTimezone)?->format('d/m/Y H:i')); ?></p>
                                         </a>
-                                    @empty
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                         <p class="rounded-xl border border-dashed border-slate-300 px-3 py-6 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-300">
                                             Aun no hay mensajes nuevos desde la web.
                                         </p>
-                                    @endforelse
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <div id="user-menu-root" class="relative">
                         <button id="user-menu-button" type="button" class="ui-button ui-button-ghost flex items-center gap-2 px-2 py-1.5" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-dropdown" data-tour="user-menu-button">
-                            @if ($userPhotoUrl)
+                            <?php if($userPhotoUrl): ?>
                                 <span class="panel-user-avatar inline-flex items-center justify-center overflow-hidden rounded-full">
-                                    <img id="user-avatar-image" src="{{ $userPhotoUrl }}" alt="{{ $userName }}" class="h-full w-full object-cover object-center">
+                                    <img id="user-avatar-image" src="<?php echo e($userPhotoUrl); ?>" alt="<?php echo e($userName); ?>" class="h-full w-full object-cover object-center">
                                 </span>
-                            @else
-                                <span class="panel-user-avatar inline-flex items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200">{{ $userInitial }}</span>
-                            @endif
-                            <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 lg:inline">{{ $userName }}</span>
+                            <?php else: ?>
+                                <span class="panel-user-avatar inline-flex items-center justify-center rounded-full bg-sky-100 text-sm font-black text-sky-800 dark:bg-sky-900/45 dark:text-sky-200"><?php echo e($userInitial); ?></span>
+                            <?php endif; ?>
+                            <span class="hidden text-sm font-semibold text-slate-800 dark:text-slate-100 lg:inline"><?php echo e($userName); ?></span>
                             <svg class="h-4 w-4 text-slate-600 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
                             </svg>
@@ -1552,22 +1572,22 @@
 
                         <div id="user-menu-dropdown" class="absolute right-0 z-40 mt-2 hidden w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
                             <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ $userName }}</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-300">{{ $userEmail !== '' ? $userEmail : __('ui.no_email') }}</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100"><?php echo e($userName); ?></p>
+                                <p class="text-xs text-slate-500 dark:text-slate-300"><?php echo e($userEmail !== '' ? $userEmail : __('ui.no_email')); ?></p>
                             </div>
 
                             <div class="p-2">
-                                @if (! $isCashierMode)
-                                    <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
-                                    <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
-                                    <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
-                                @endif
+                                <?php if(! $isCashierMode): ?>
+                                    <a href="<?php echo e($profileUrl); ?>" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><?php echo e(__('ui.view_profile')); ?></a>
+                                    <a href="<?php echo e($settingsUrl); ?>" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><?php echo e(__('ui.settings')); ?></a>
+                                    <a href="<?php echo e($contactUrl); ?>" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><?php echo e(__('ui.contact')); ?></a>
+                                <?php endif; ?>
 
-                                @if (! $isSuperAdmin && ! $isDemoMode)
+                                <?php if(! $isSuperAdmin && ! $isDemoMode): ?>
                                     <button id="push-notifications-button"
                                             type="button"
                                             class="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                                            data-push-enabled="{{ $pushWebEnabled ? '1' : '0' }}"
+                                            data-push-enabled="<?php echo e($pushWebEnabled ? '1' : '0'); ?>"
                                             title="Gestionar notificaciones push">
                                         <span class="inline-flex items-center gap-2">
                                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1580,11 +1600,11 @@
                                             Apagadas
                                         </span>
                                     </button>
-                                @endif
+                                <?php endif; ?>
 
-                                <form method="POST" action="{{ route('logout') }}" class="mt-1">
-                                    @csrf
-                                    <button type="submit" class="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/30">{{ __('ui.logout') }}</button>
+                                <form method="POST" action="<?php echo e(route('logout')); ?>" class="mt-1">
+                                    <?php echo csrf_field(); ?>
+                                    <button type="submit" class="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/30"><?php echo e(__('ui.logout')); ?></button>
                                 </form>
                             </div>
                         </div>
@@ -1594,65 +1614,137 @@
         </header>
 
         <main class="panel-view mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
-            @if ($isDemoMode)
+            <?php if($isDemoMode): ?>
                 <div id="demo-countdown-source"
                      class="hidden"
-                     data-demo-expires-at="{{ $demoExpiresAtIso }}"
-                     data-demo-server-now="{{ $demoServerNowIso }}"
-                     data-demo-end-url="{{ route('demo.end') }}"
-                     data-demo-expired-url="{{ route('landing') }}"
-                     data-demo-expiry-fallback="{{ $demoExpiresLabel }}">
+                     data-demo-expires-at="<?php echo e($demoExpiresAtIso); ?>"
+                     data-demo-server-now="<?php echo e($demoServerNowIso); ?>"
+                     data-demo-end-url="<?php echo e(route('demo.end')); ?>"
+                     data-demo-expired-url="<?php echo e(route('landing')); ?>"
+                     data-demo-expiry-fallback="<?php echo e($demoExpiresLabel); ?>">
                 </div>
-            @endif
+            <?php endif; ?>
 
-            @if (! $isSuperAdmin)
+            <?php if(! $isSuperAdmin): ?>
                 <section id="pwa-access-alert" class="ui-alert ui-alert-warning hidden text-xs font-semibold"></section>
                 <section id="push-access-alert" class="ui-alert ui-alert-info hidden text-xs font-semibold"></section>
-            @endif
+            <?php endif; ?>
 
-            @if ($isCashierMode)
+            <?php if($isCashierMode): ?>
                 <section class="rounded-2xl border border-cyan-200 bg-cyan-50/90 px-4 py-3 text-sm text-cyan-900 shadow-sm dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
                     <p class="font-bold uppercase tracking-wide">Modo Cajero</p>
                     <p class="mt-1 text-xs">
                         Acceso operativo habilitado para panel, recepcion, clientes, membresias y cobros.
                     </p>
                 </section>
-            @endif
+            <?php endif; ?>
 
-            @include('layouts.partials.panel.branch-context-switcher')
+            <?php echo $__env->make('layouts.partials.panel.branch-context-switcher', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            @include('layouts.partials.panel.global-scope-banner')
+            <?php echo $__env->make('layouts.partials.panel.global-scope-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
             <div class="panel-toast-stack" aria-live="polite" aria-atomic="true">
-            @if (!empty($subscription_grace))
-                <x-toast type="warning" :autohide="false">{{ __('ui.toast.grace_subscription', ['days' => (int) ($subscription_grace_days ?? 3)]) }}</x-toast>
-            @endif
+            <?php if(!empty($subscription_grace)): ?>
+                <?php if (isset($component)) { $__componentOriginal7cfab914afdd05940201ca0b2cbc009b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.toast','data' => ['type' => 'warning','autohide' => false]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('toast'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'warning','autohide' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false)]); ?><?php echo e(__('ui.toast.grace_subscription', ['days' => (int) ($subscription_grace_days ?? 3)])); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $attributes = $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $component = $__componentOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+            <?php endif; ?>
 
-            @if (session('status'))
-                <x-toast type="success">{{ session('status') }}</x-toast>
-            @endif
-            @if (session('error'))
-                <x-toast type="danger" :autohide="false">{{ session('error') }}</x-toast>
-            @endif
+            <?php if(session('status')): ?>
+                <?php if (isset($component)) { $__componentOriginal7cfab914afdd05940201ca0b2cbc009b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.toast','data' => ['type' => 'success']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('toast'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'success']); ?><?php echo e(session('status')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $attributes = $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $component = $__componentOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+            <?php endif; ?>
+            <?php if(session('error')): ?>
+                <?php if (isset($component)) { $__componentOriginal7cfab914afdd05940201ca0b2cbc009b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.toast','data' => ['type' => 'danger','autohide' => false]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('toast'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'danger','autohide' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false)]); ?><?php echo e(session('error')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $attributes = $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $component = $__componentOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+            <?php endif; ?>
 
-            @if ($errors->any() && ! $suppressGlobalValidationToast)
-                <x-toast type="danger" :autohide="false">{{ $errors->first() }}</x-toast>
-            @endif
+            <?php if($errors->any() && ! $suppressGlobalValidationToast): ?>
+                <?php if (isset($component)) { $__componentOriginal7cfab914afdd05940201ca0b2cbc009b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.toast','data' => ['type' => 'danger','autohide' => false]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('toast'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'danger','autohide' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false)]); ?><?php echo e($errors->first()); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $attributes = $__attributesOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__attributesOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b)): ?>
+<?php $component = $__componentOriginal7cfab914afdd05940201ca0b2cbc009b; ?>
+<?php unset($__componentOriginal7cfab914afdd05940201ca0b2cbc009b); ?>
+<?php endif; ?>
+            <?php endif; ?>
             </div>
 
-            @if ($isDemoMode && count($demoGuideSteps) > 0)
+            <?php if($isDemoMode && count($demoGuideSteps) > 0): ?>
                 <div id="demo-tour-overlay" class="demo-tour-overlay" data-open="0" aria-hidden="true"></div>
 
                 <section id="demo-tour-popover"
                          class="demo-tour-popover"
                          data-open="0"
-                         data-demo-token="{{ $demoSessionToken }}"
-                         data-demo-steps='@json($demoGuideSteps)'
-                         data-demo-expires-at="{{ $demoExpiresAtIso }}"
-                         data-demo-server-now="{{ $demoServerNowIso }}"
-                         data-demo-end-url="{{ route('demo.end') }}"
-                         data-demo-expired-url="{{ route('landing') }}"
-                         data-demo-expiry-fallback="{{ $demoExpiresLabel }}"
+                         data-demo-token="<?php echo e($demoSessionToken); ?>"
+                         data-demo-steps='<?php echo json_encode($demoGuideSteps, 15, 512) ?>'
+                         data-demo-expires-at="<?php echo e($demoExpiresAtIso); ?>"
+                         data-demo-server-now="<?php echo e($demoServerNowIso); ?>"
+                         data-demo-end-url="<?php echo e(route('demo.end')); ?>"
+                         data-demo-expired-url="<?php echo e(route('landing')); ?>"
+                         data-demo-expiry-fallback="<?php echo e($demoExpiresLabel); ?>"
                          aria-live="polite"
                          aria-label="Guia guiada demo">
                     <div class="demo-tour-header">
@@ -1667,7 +1759,7 @@
                     <p class="demo-tour-progress" data-demo-tour-progress></p>
                     <p class="demo-tour-expiry">
                         Demo activa:
-                        <strong data-demo-tour-countdown data-demo-countdown-target>{{ $demoExpiresLabel ?: 'calculando...' }}</strong>
+                        <strong data-demo-tour-countdown data-demo-countdown-target><?php echo e($demoExpiresLabel ?: 'calculando...'); ?></strong>
                     </p>
                     <div class="demo-tour-actions">
                         <button type="button" class="ui-button ui-button-ghost" data-demo-tour-prev>Anterior</button>
@@ -1675,16 +1767,16 @@
                         <button type="button" class="ui-button ui-button-secondary" data-demo-tour-open-route>Ir al paso</button>
                     </div>
                 </section>
-            @endif
+            <?php endif; ?>
 
-            @yield('content')
+            <?php echo $__env->yieldContent('content'); ?>
         </main>
     </div>
 </div>
 
-@include('layouts.partials.panel.mobile-nav')
+<?php echo $__env->make('layouts.partials.panel.mobile-nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-@include('layouts.partials.panel.legal-acceptance-modal')
+<?php echo $__env->make('layouts.partials.panel.legal-acceptance-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <div id="ui-loading-overlay" class="ui-loading-overlay" data-open="0" aria-hidden="true">
     <div class="ui-loading-card" role="status" aria-live="polite">
         <span class="ui-loading-spin" aria-hidden="true"></span>
@@ -1777,7 +1869,8 @@
     })();
 </script>
 
-@include('layouts.partials.panel-inline-scripts')
-@stack('scripts')
+<?php echo $__env->make('layouts.partials.panel-inline-scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/layouts/panel.blade.php ENDPATH**/ ?>

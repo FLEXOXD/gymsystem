@@ -64,16 +64,18 @@ class SuperAdminDashboardController extends Controller
      */
     public function gym(): View
     {
-        $viewData = $this->gymFormViewData();
-        $viewData['gymsWithAdmins'] = Gym::query()
-            ->withoutDemoSessions()
-            ->with(['users' => static function ($query): void {
-                $query->orderBy('id');
-            }])
-            ->orderByDesc('id')
-            ->get();
+        return view('superadmin.gym', $this->gymFormViewData());
+    }
 
-        return view('superadmin.gym', $viewData);
+    /**
+     * Gym listing page for SuperAdmin.
+     */
+    public function gymListing(): View
+    {
+        return view('superadmin.gym-listing', [
+            'gymsWithAdmins' => $this->gymsWithAdmins(),
+            'locationCatalog' => GymLocationCatalog::catalog(),
+        ]);
     }
 
     /**
@@ -286,7 +288,7 @@ class SuperAdminDashboardController extends Controller
         });
 
         return redirect()
-            ->route('superadmin.gym.index')
+            ->route('superadmin.gym-list.index')
             ->with('status', 'Gimnasio eliminado con todos sus datos.');
     }
 
@@ -375,5 +377,23 @@ class SuperAdminDashboardController extends Controller
         if ($normalized !== '' && Storage::disk('public')->exists($normalized)) {
             Storage::disk('public')->delete($normalized);
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Gym>
+     */
+    private function gymsWithAdmins()
+    {
+        return Gym::query()
+            ->withoutDemoSessions()
+            ->with([
+                'users' => static function ($query): void {
+                    $query->orderBy('id');
+                },
+                'branchLinks',
+                'parentHubLinks.hubGym',
+            ])
+            ->orderByDesc('id')
+            ->get();
     }
 }

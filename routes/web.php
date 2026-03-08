@@ -196,6 +196,8 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 ->name('quotations.show');
             Route::post('/quotations/{quote}/read', [SuperAdminQuotationController::class, 'markRead'])
                 ->name('quotations.read');
+            Route::get('/gym-list', [SuperAdminDashboardController::class, 'gymListing'])
+                ->name('gym-list.index');
             Route::get('/gyms', [SuperAdminDashboardController::class, 'gyms'])
                 ->name('gyms.index');
             Route::get('/sucursales', [SuperAdminBranchController::class, 'index'])
@@ -290,6 +292,12 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::get('/clients/{client}', [ClientController::class, 'show'])
                     ->middleware('role:owner,cashier')
                     ->name('clients.show');
+                Route::patch('/clients/{client}/basic', [ClientController::class, 'updateBasic'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.basic.update');
+                Route::delete('/clients/{client}', [ClientController::class, 'destroy'])
+                    ->middleware('role:owner,cashier')
+                    ->name('clients.destroy');
                 Route::patch('/clients/{client}/photo', [ClientController::class, 'updatePhoto'])
                     ->middleware('role:owner,cashier')
                     ->name('clients.photo.update');

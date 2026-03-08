@@ -15,13 +15,17 @@
         $gymLogoUpdateUrl = route('settings.gym-logo.update');
         $gymAvatarsUpdateUrl = route('settings.gym-avatars.update');
         $superAdminTimezoneUpdateUrl = route('settings.superadmin-timezone.update');
+        $locationCatalog = is_array($locationCatalog ?? null) ? $locationCatalog : [];
         $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
         $gymLanguageCode = old('language_code', $gym->language_code ?? 'es');
         $superAdminTimezone = old('superadmin_timezone', auth()->user()?->timezone ?? config('app.timezone', 'UTC'));
+        $gymAddressCountryCode = '';
         $gymAddressCountry = '-';
         $gymAddressState = '-';
         $gymAddressCity = '-';
         $gymAddressLine = '-';
+        $statesForGymCountry = [];
+        $citiesForGymState = [];
         $avatarCards = [
             'male' => ['label' => 'Avatar hombre', 'field' => 'avatar_male'],
             'female' => ['label' => 'Avatar mujer', 'field' => 'avatar_female'],
@@ -84,10 +88,34 @@
             ];
             $gymTimezone = old('timezone', $gym->timezone ?? 'UTC');
 
-            $gymAddressCountry = trim((string) ($gym->address_country_name ?? ''));
-            $gymAddressState = trim((string) ($gym->address_state ?? ''));
-            $gymAddressCity = trim((string) ($gym->address_city ?? ''));
-            $gymAddressLine = trim((string) ($gym->address_line ?? ''));
+            $gymAddressCountryCode = strtolower(trim((string) old('address_country_code', $gym->address_country_code ?? '')));
+            if ($gymAddressCountryCode === '' || ! array_key_exists($gymAddressCountryCode, $locationCatalog)) {
+                $matchedCountryCode = '';
+                foreach ($locationCatalog as $countryCode => $countryMeta) {
+                    if (strcasecmp(
+                        trim((string) ($countryMeta['label'] ?? '')),
+                        trim((string) ($gym->address_country_name ?? ''))
+                    ) === 0) {
+                        $matchedCountryCode = (string) $countryCode;
+                        break;
+                    }
+                }
+
+                $gymAddressCountryCode = $matchedCountryCode;
+            }
+
+            $gymAddressCountry = $gymAddressCountryCode !== '' && array_key_exists($gymAddressCountryCode, $locationCatalog)
+                ? (string) ($locationCatalog[$gymAddressCountryCode]['label'] ?? $gym->address_country_name ?? '')
+                : trim((string) ($gym->address_country_name ?? ''));
+            $gymAddressState = trim((string) old('address_state', $gym->address_state ?? ''));
+            $gymAddressCity = trim((string) old('address_city', $gym->address_city ?? ''));
+            $gymAddressLine = trim((string) old('address_line', $gym->address_line ?? ''));
+            $statesForGymCountry = $gymAddressCountryCode !== ''
+                ? (array) ($locationCatalog[$gymAddressCountryCode]['states'] ?? [])
+                : [];
+            $citiesForGymState = $gymAddressState !== ''
+                ? (array) ($statesForGymCountry[$gymAddressState] ?? [])
+                : [];
 
             if (($gymAddressCountry === '' || $gymAddressState === '' || $gymAddressCity === '') && !empty($gym->address)) {
                 $addressParts = array_values(array_filter(array_map(
@@ -233,19 +261,46 @@
                         <div class="grid gap-3 md:grid-cols-2">
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">País (solo lectura)</label>
-                                <input type="text" class="ui-input" value="{{ $gymAddressCountry }}" readonly>
+                                <select id="gym-address-country" name="address_country_code" class="ui-input">
+                                    <option value="">Selecciona pais</option>
+                                    @foreach ($locationCatalog as $countryCode => $countryMeta)
+                                        <option value="{{ $countryCode }}" @selected($gymAddressCountryCode === $countryCode)>{{ $countryMeta['label'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('address_country_code')
+                                    <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Provincia / Estado (solo lectura)</label>
-                                <input type="text" class="ui-input" value="{{ $gymAddressState }}" readonly>
+                                <select id="gym-address-state" name="address_state" class="ui-input">
+                                    <option value="">Selecciona provincia/estado</option>
+                                    @foreach (array_keys($statesForGymCountry) as $stateName)
+                                        <option value="{{ $stateName }}" @selected($gymAddressState === $stateName)>{{ $stateName }}</option>
+                                    @endforeach
+                                </select>
+                                @error('address_state')
+                                    <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Ciudad (solo lectura)</label>
-                                <input type="text" class="ui-input" value="{{ $gymAddressCity }}" readonly>
+                                <select id="gym-address-city" name="address_city" class="ui-input">
+                                    <option value="">Selecciona ciudad</option>
+                                    @foreach ($citiesForGymState as $cityName)
+                                        <option value="{{ $cityName }}" @selected($gymAddressCity === $cityName)>{{ $cityName }}</option>
+                                    @endforeach
+                                </select>
+                                @error('address_city')
+                                    <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Dirección línea (solo lectura)</label>
-                                <input type="text" class="ui-input" value="{{ $gymAddressLine }}" readonly>
+                                <input type="text" name="address_line" class="ui-input" value="{{ $gymAddressLine !== '-' ? $gymAddressLine : '' }}" placeholder="Barrio, avenida, referencia">
+                                @error('address_line')
+                                    <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
@@ -444,6 +499,12 @@
             const timezoneDetectBtn = document.getElementById('timezone-detect-btn');
             const timezoneDetectHint = document.getElementById('timezone-detect-hint');
             const timezoneCurrent = document.getElementById('timezone-current');
+            const locationCatalog = @json($locationCatalog);
+            const gymProfileForm = document.getElementById('gym-profile-form');
+            const countrySelect = document.getElementById('gym-address-country');
+            const stateSelect = document.getElementById('gym-address-state');
+            const citySelect = document.getElementById('gym-address-city');
+            const locationSectionHint = gymProfileForm?.closest('section')?.querySelector('p.ui-muted');
 
             const favoriteTimezoneIds = [
                 'America/Guayaquil',
@@ -604,6 +665,81 @@
                 } catch (error) {
                     return '';
                 }
+            };
+
+            const replaceOptions = (select, values, placeholder) => {
+                if (!select) return;
+                select.innerHTML = '';
+
+                const baseOption = document.createElement('option');
+                baseOption.value = '';
+                baseOption.textContent = placeholder;
+                select.appendChild(baseOption);
+
+                values.forEach((value) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    select.appendChild(option);
+                });
+            };
+
+            const statesForCountry = (countryCode) => {
+                const country = locationCatalog[String(countryCode || '').toLowerCase()] || null;
+                if (!country || !country.states) return [];
+
+                return Object.keys(country.states);
+            };
+
+            const citiesForState = (countryCode, stateName) => {
+                const country = locationCatalog[String(countryCode || '').toLowerCase()] || null;
+                if (!country || !country.states || !country.states[stateName]) return [];
+
+                return country.states[stateName];
+            };
+
+            const syncGymCities = (preferredCity = '') => {
+                if (!countrySelect || !stateSelect || !citySelect) return;
+
+                const cities = citiesForState(countrySelect.value, stateSelect.value);
+                replaceOptions(citySelect, cities, 'Selecciona ciudad');
+
+                if (preferredCity && cities.includes(preferredCity)) {
+                    citySelect.value = preferredCity;
+                }
+            };
+
+            const syncGymStates = (preferredState = '', preferredCity = '') => {
+                if (!countrySelect || !stateSelect) return;
+
+                const states = statesForCountry(countrySelect.value);
+                replaceOptions(stateSelect, states, 'Selecciona provincia/estado');
+
+                if (preferredState && states.includes(preferredState)) {
+                    stateSelect.value = preferredState;
+                }
+
+                syncGymCities(preferredCity);
+            };
+
+            const initGymLocationPicker = () => {
+                if (!countrySelect || !stateSelect || !citySelect) return;
+
+                const selectedState = stateSelect.value;
+                const selectedCity = citySelect.value;
+
+                countrySelect.addEventListener('change', () => syncGymStates('', ''));
+                stateSelect.addEventListener('change', () => syncGymCities(''));
+
+                syncGymStates(selectedState, selectedCity);
+
+                if (locationSectionHint) {
+                    locationSectionHint.textContent = 'Actualiza nombre comercial, telefono y ubicacion del gimnasio.';
+                }
+
+                gymProfileForm?.querySelectorAll('label').forEach((label) => {
+                    label.textContent = String(label.textContent || '').replace(/\s*\(solo lectura\)/i, '');
+                });
             };
 
             const initTimezonePicker = () => {
@@ -771,6 +907,7 @@
             });
 
             initTimezonePicker();
+            initGymLocationPicker();
             applyTheme(currentTheme);
             setActiveCard(currentTheme);
         })();
