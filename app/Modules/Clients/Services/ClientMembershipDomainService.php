@@ -22,8 +22,13 @@ class ClientMembershipDomainService
 
         return [
             'ends_at' => $endsAt,
-            'status' => $endsAt->isBefore(now()->startOfDay()) ? 'expired' : 'active',
+            'status' => $this->resolveMembershipStatus($startsAt, $endsAt),
         ];
+    }
+
+    public function resolveMembershipStatus(Carbon $startsAt, Carbon $endsAt): string
+    {
+        return $endsAt->isBefore(now()->startOfDay()) ? 'expired' : 'active';
     }
 
     public function buildMembershipCashDescription(
@@ -43,4 +48,3 @@ class ClientMembershipDomainService
         return $description;
     }
 }
-

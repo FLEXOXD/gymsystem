@@ -69,7 +69,8 @@ class CashSessionService
         float $amount,
         string $method,
         ?int $membershipId = null,
-        ?string $description = null
+        ?string $description = null,
+        Carbon|string|null $occurredAt = null
     ): CashMovement {
         $this->assertUserCanManageMovements(gymId: $gymId, userId: $userId);
 
@@ -98,7 +99,9 @@ class CashSessionService
             'membership_id' => $membership?->id,
             'created_by' => $userId,
             'description' => $description,
-            'occurred_at' => Carbon::now(),
+            'occurred_at' => $occurredAt instanceof Carbon
+                ? $occurredAt
+                : ($occurredAt ? Carbon::parse($occurredAt) : Carbon::now()),
         ]);
     }
 

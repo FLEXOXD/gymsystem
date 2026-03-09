@@ -12,11 +12,13 @@
         <form method="POST" action="{{ route('memberships.store') }}" class="flex min-h-0 flex-1 flex-col space-y-0">
             @csrf
             <input type="hidden" name="client_id" value="{{ $client->id }}">
+            <input type="hidden" name="active_tab" value="membership">
+            <input type="hidden" name="membership_form_mode" value="create">
 
             <header class="flex items-start justify-between border-b border-slate-800 px-6 py-4">
                 <div>
                     <h3 class="text-xl font-black text-slate-100">Cobrar / Renovar membresía</h3>
-                    <p class="mt-1 text-sm text-slate-400">Crea membresía y registra cobro en caja automáticamente.</p>
+                    <p class="mt-1 text-sm text-slate-400">Crea la membresía y registra el ingreso en caja con la fecha real del pago.</p>
                 </div>
                 <x-ui.button type="button" variant="ghost" size="sm" x-on:click="closeMembershipModal()">Cerrar</x-ui.button>
             </header>
@@ -33,34 +35,51 @@
                     </div>
                 @enderror
 
+                <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+                    <p class="font-semibold">Uso recomendado</p>
+                    <p class="mt-1 text-cyan-50/90">Si el cliente pagó antes pero lo registras hoy, cambia "Fecha real de pago" para que caja quede alineada con el historial real.</p>
+                </div>
+
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
                         <span>Plan</span>
                         <select name="plan_id" required class="ui-input" x-ref="membershipPlanInput">
+                            @if ($plans->isEmpty())
+                                <option value="">Sin planes activos</option>
+                            @endif
                             @foreach ($plans as $plan)
                                 <option value="{{ $plan->id }}" @selected((string) old('plan_id') === (string) $plan->id)>
                                     {{ $plan->name }} ({{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}, {{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }})
                                 </option>
                             @endforeach
                         </select>
+                        @error('plan_id')
+                            <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                        @enderror
                     </label>
 
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
-                        <span>Inicio</span>
+                        <span>Inicio de membresía</span>
                         <input type="date"
                                name="starts_at"
                                value="{{ old('starts_at', now()->toDateString()) }}"
                                required
                                class="ui-input">
+                        @error('starts_at')
+                            <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                        @enderror
                     </label>
 
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
-                        <span>Estado</span>
+                        <span>Estado base</span>
                         <select name="status" class="ui-input">
                             <option value="active" @selected(old('status', 'active') === 'active')>Activo</option>
                             <option value="expired" @selected(old('status') === 'expired')>Vencido</option>
                             <option value="cancelled" @selected(old('status') === 'cancelled')>Cancelado</option>
                         </select>
+                        @error('status')
+                            <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                        @enderror
                     </label>
 
                     <label class="space-y-1 text-sm font-semibold text-slate-300">
@@ -71,6 +90,22 @@
                             <option value="card" @selected(old('payment_method') === 'card')>Tarjeta</option>
                             <option value="transfer" @selected(old('payment_method') === 'transfer')>Transferencia</option>
                         </select>
+                        @error('payment_method')
+                            <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                        @enderror
+                    </label>
+
+                    <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
+                        <span>Fecha real de pago</span>
+                        <input type="date"
+                               name="payment_received_at"
+                               value="{{ old('payment_received_at', now()->toDateString()) }}"
+                               max="{{ now()->toDateString() }}"
+                               class="ui-input">
+                        <p class="text-xs text-slate-400">Se guarda en caja como `occurred_at`. Déjalo en hoy si cobras y registras el mismo día.</p>
+                        @error('payment_received_at')
+                            <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                        @enderror
                     </label>
 
                     @if ($canManagePromotions)
@@ -99,6 +134,9 @@
                                 @endforeach
                             </select>
                             <p class="text-xs text-slate-400">La promoción válida precio final y días extra automáticamente.</p>
+                            @error('promotion_id')
+                                <p class="text-xs font-semibold text-rose-300">{{ $message }}</p>
+                            @enderror
                         </label>
                     @else
                         <div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200 md:col-span-2 xl:col-span-4">

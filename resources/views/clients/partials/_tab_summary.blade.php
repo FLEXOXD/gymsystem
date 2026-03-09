@@ -1,6 +1,6 @@
 <div class="grid gap-6 xl:grid-cols-12">
     <div class="space-y-6 xl:col-span-8">
-        <x-ui.card title="Estado de membresía" subtitle="Vista rápida para recepción y renovación.">
+        <x-ui.card title="Estado de membresía" subtitle="Vista rápida para recepción, cobro y ajustes.">
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Estado actual</p>
@@ -10,22 +10,36 @@
                             <span class="text-sm text-slate-700 dark:text-slate-300">Plan: {{ $latestMembership->plan?->name ?? 'Sin plan' }}</span>
                         @endif
                     </div>
-                    <p class="mt-3 text-sm text-slate-700 dark:text-slate-300">Vence: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipEndsLabel }}</span></p>
-                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Días restantes: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $remainingLabel }}</span></p>
-                    <x-ui.button type="button" variant="success" class="mt-4 w-full" x-on:click="openMembershipModal()">Cobrar / Renovar</x-ui.button>
+                    <p class="mt-3 text-sm text-slate-700 dark:text-slate-300">{{ $membershipDateLabel }}: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipDateValue }}</span></p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">{{ $membershipCountdownLabel }}: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipCountdownValue }}</span></p>
+                    @if ($latestMembership)
+                        <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Inicio: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipStartsLabel }}</span></p>
+                    @endif
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <x-ui.button type="button" variant="success" class="flex-1 min-w-[170px]" x-on:click="openMembershipModal()">
+                            Cobrar / Renovar
+                        </x-ui.button>
+
+                        @if (! empty($canAdjustMemberships) && $latestMembership)
+                            <x-ui.button type="button" variant="secondary" class="flex-1 min-w-[170px]" x-on:click="openMembershipAdjustmentModal({{ (int) $latestMembership->id }})">
+                                Ajustar membresía
+                            </x-ui.button>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Cliente</p>
                     <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">Estado general: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $statusLabels[$client->status] ?? $client->status }}</span></p>
                     <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Teléfono: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->phone ?: '-' }}</span></p>
-                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></p>
                 </div>
             </div>
         </x-ui.card>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <x-ui.card title="últimas asistencias" subtitle="últimos ingresos registrados.">
+            <x-ui.card title="Últimas asistencias" subtitle="Últimos ingresos registrados.">
                 @if ($attendancePreview->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($attendancePreview as $attendance)
@@ -50,7 +64,7 @@
                 @endif
             </x-ui.card>
 
-            <x-ui.card title="últimos pagos" subtitle="Movimientos de caja vinculados al cliente.">
+            <x-ui.card title="Últimos pagos" subtitle="Movimientos de caja vinculados al cliente.">
                 @if ($paymentsPreview->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($paymentsPreview as $movement)
@@ -156,6 +170,13 @@
                         <button type="button" class="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-800" x-on:click="setTab('app_access')">
                             <span>Usuario app cliente</span>
                             <span class="text-slate-500 dark:text-slate-400">Tab</span>
+                        </button>
+                    @endif
+
+                    @if (! empty($canAdjustMemberships) && $latestMembership)
+                        <button type="button" class="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-800" x-on:click="openMembershipAdjustmentModal({{ (int) $latestMembership->id }})">
+                            <span>Ajustar membresía</span>
+                            <span class="text-slate-500 dark:text-slate-400">Modal</span>
                         </button>
                     @endif
 

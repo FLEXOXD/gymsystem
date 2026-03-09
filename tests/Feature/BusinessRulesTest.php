@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use App\Models\CashMovement;
 use App\Models\CashSession;
 use App\Models\GymBranchLink;
 use App\Models\Gym;
@@ -288,6 +289,7 @@ it('does not allow membership sale when cash session is closed', function () {
     $response->assertRedirect(route('clients.show', [
         'contextGym' => $gym->slug,
         'client' => $client->id,
+        'tab' => 'membership',
     ]));
     $response->assertSessionHasErrors(['cash']);
 
@@ -341,6 +343,7 @@ it('allows cashier to sell membership and charge on owner-opened cash session', 
         ->assertRedirect(route('clients.show', [
             'contextGym' => $gym->slug,
             'client' => $client->id,
+            'tab' => 'membership',
         ]))
         ->assertSessionHas('status');
 
@@ -356,6 +359,299 @@ it('allows cashier to sell membership and charge on owner-opened cash session', 
         'type' => 'income',
         'method' => 'cash',
         'created_by' => $cashier->id,
+    ]);
+});
+
+it('stores the real payment date and shows future memberships as scheduled in client detail', function () {
+    $gym = makeGym('scheduled-membership-detail');
+    $owner = makeGymUser($gym, 'scheduled-membership-detail@example.test', User::ROLE_OWNER);
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Paula',
+        'last_name' => 'Agenda',
+        'document_number' => 'SCHEDULED-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Plan Programado',
+        'duration_days' => 30,
+        'price' => 42,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('cash.open', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'opening_balance' => '35.00',
+            'notes' => 'Apertura QA programada',
+        ])
+        ->assertRedirect(route('cash.index', ['contextGym' => $gym->slug]));
+
+    $startsAt = Carbon::today()->addDays(5);
+    $paymentDate = Carbon::today()->subDays(3);
+
+    $this->actingAs($owner)
+        ->post(route('memberships.store', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'client_id' => $client->id,
+            'plan_id' => $plan->id,
+            'starts_at' => $startsAt->toDateString(),
+            'status' => 'active',
+            'payment_method' => 'transfer',
+            'payment_received_at' => $paymentDate->toDateString(),
+            'active_tab' => 'membership',
+            'membership_form_mode' => 'create',
+        ])
+        ->assertRedirect(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertSessionHas('status');
+
+    $membership = Membership::query()
+        ->where('gym_id', $gym->id)
+        ->where('client_id', $client->id)
+        ->firstOrFail();
+
+    $movement = CashMovement::query()
+        ->where('gym_id', $gym->id)
+        ->where('membership_id', $membership->id)
+        ->firstOrFail();
+
+    expect($movement->occurred_at?->toDateString())->toBe($paymentDate->toDateString());
+
+    $this->actingAs($owner)
+        ->get(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertOk()
+        ->assertSee('Programada')
+        ->assertSee($startsAt->translatedFormat('d M Y'));
+});
+
+it('stores membership adjustments with separate history from client detail flow', function () {
+    $gym = makeGym('membership-adjustment-history');
+    $owner = makeGymUser($gym, 'membership-adjustment-history@example.test', User::ROLE_OWNER);
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Camila',
+        'last_name' => 'Ajuste',
+        'document_number' => 'ADJUST-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Plan Ajustable',
+        'duration_days' => 30,
+        'price' => 50,
+        'status' => 'active',
+    ]);
+
+    $membership = Membership::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'price' => 50,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(29)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->patch(route('memberships.adjust', [
+            'contextGym' => $gym->slug,
+            'membership' => $membership->id,
+        ]), [
+            'client_id' => $client->id,
+            'active_tab' => 'membership',
+            'membership_form_mode' => 'adjustment',
+            'adjust_membership_id' => $membership->id,
+            'adjustment_type' => 'extend_access',
+            'reason' => 'grace_period',
+            'extra_days' => 7,
+            'notes' => 'Cierre parcial por mantenimiento',
+        ])
+        ->assertRedirect(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertSessionHas('status');
+
+    $membership->refresh();
+
+    expect($membership->ends_at?->toDateString())->toBe(Carbon::today()->addDays(36)->toDateString());
+
+    $this->assertDatabaseHas('membership_adjustments', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'membership_id' => $membership->id,
+        'type' => 'extend_access',
+        'reason' => 'grace_period',
+        'days_delta' => 7,
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertOk()
+        ->assertSee('Historial de ajustes')
+        ->assertSee('Sumar días al final')
+        ->assertSee('Prórroga o permiso temporal');
+});
+
+it('rejects illogical reason combinations for membership adjustments', function () {
+    $gym = makeGym('membership-adjust-invalid-reason');
+    $owner = makeGymUser($gym, 'membership-adjust-invalid-reason@example.test', User::ROLE_OWNER);
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Lucia',
+        'last_name' => 'Regla',
+        'document_number' => 'ADJUST-INVALID-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Plan Reglas',
+        'duration_days' => 30,
+        'price' => 60,
+        'status' => 'active',
+    ]);
+
+    $membership = Membership::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'price' => 60,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(29)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->from(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->patch(route('memberships.adjust', [
+            'contextGym' => $gym->slug,
+            'membership' => $membership->id,
+        ]), [
+            'client_id' => $client->id,
+            'active_tab' => 'membership',
+            'membership_form_mode' => 'adjustment',
+            'adjust_membership_id' => $membership->id,
+            'adjustment_type' => 'extend_access',
+            'reason' => 'future_start_requested',
+            'extra_days' => 5,
+        ])
+        ->assertRedirect(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertSessionHasErrors(['reason']);
+
+    $membership->refresh();
+
+    expect($membership->ends_at?->toDateString())->toBe(Carbon::today()->addDays(29)->toDateString());
+
+    $this->assertDatabaseMissing('membership_adjustments', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'membership_id' => $membership->id,
+        'type' => 'extend_access',
+    ]);
+});
+
+it('blocks cashier from adjusting memberships and hides the action in client detail', function () {
+    $gym = makeGym('cashier-membership-adjust-blocked');
+    $owner = makeGymUser($gym, 'owner-membership-adjust-blocked@example.test', User::ROLE_OWNER);
+    $cashier = makeCashierUser($gym, 'cashier-membership-adjust-blocked@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Diego',
+        'last_name' => 'Control',
+        'document_number' => 'ADJUST-BLOCK-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $plan = Plan::query()->create([
+        'gym_id' => $gym->id,
+        'name' => 'Plan Seguro',
+        'duration_days' => 30,
+        'price' => 55,
+        'status' => 'active',
+    ]);
+
+    $membership = Membership::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'plan_id' => $plan->id,
+        'price' => 55,
+        'starts_at' => Carbon::today()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(29)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($cashier)
+        ->get(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'membership',
+        ]))
+        ->assertOk()
+        ->assertDontSee('Ajustar membresía');
+
+    $this->actingAs($cashier)
+        ->patch(route('memberships.adjust', [
+            'contextGym' => $gym->slug,
+            'membership' => $membership->id,
+        ]), [
+            'client_id' => $client->id,
+            'active_tab' => 'membership',
+            'membership_form_mode' => 'adjustment',
+            'adjust_membership_id' => $membership->id,
+            'adjustment_type' => 'extend_access',
+            'reason' => 'grace_period',
+            'extra_days' => 3,
+        ])
+        ->assertStatus(403);
+
+    $membership->refresh();
+
+    expect($membership->ends_at?->toDateString())->toBe(Carbon::today()->addDays(29)->toDateString());
+
+    $this->assertDatabaseMissing('membership_adjustments', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'membership_id' => $membership->id,
+        'type' => 'extend_access',
     ]);
 });
 
@@ -772,7 +1068,7 @@ it('blocks membership sale with promotion when current plan does not include pro
         ]);
 
     $response
-        ->assertRedirect(route('clients.show', ['contextGym' => $gym->slug, 'client' => $client->id]))
+        ->assertRedirect(route('clients.show', ['contextGym' => $gym->slug, 'client' => $client->id, 'tab' => 'membership']))
         ->assertSessionHasErrors(['promotion_id']);
 
     $this->assertDatabaseCount('memberships', 0);

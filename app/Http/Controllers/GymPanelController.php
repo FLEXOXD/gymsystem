@@ -92,6 +92,7 @@ class GymPanelController extends Controller
                 $query->whereNull('lm.membership_status')
                     ->orWhere('lm.membership_status', '!=', 'cancelled');
             })
+            ->whereDate('lm.starts_at', '<=', $today)
             ->whereDate('lm.ends_at', '>=', $today);
 
         $activeMemberships = (clone $activeClientsBase)->count('clients.id');

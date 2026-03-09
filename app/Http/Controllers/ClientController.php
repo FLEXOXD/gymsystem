@@ -13,6 +13,7 @@ use App\Models\Client;
 use App\Models\Gym;
 use App\Models\GymBranchLink;
 use App\Models\Membership;
+use App\Models\MembershipAdjustment;
 use App\Models\Plan;
 use App\Models\Promotion;
 use App\Models\User;
@@ -541,6 +542,7 @@ class ClientController extends Controller
 
         $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
         $canManageClientAccounts = $this->planAccessService->canForGym($clientGymId, 'client_accounts');
+        $canAdjustMemberships = $request->user() instanceof User && $request->user()->isOwner();
 
         $plans = Plan::query()
             ->forGym($clientGymId)
@@ -589,11 +591,24 @@ class ClientController extends Controller
         $membershipState = 'none';
 
         if ($latestMembership) {
-            $isMembershipActive = $latestMembership->status === 'active'
-                && $latestMembership->ends_at !== null
-                && $latestMembership->ends_at->toDateString() >= $todayDate;
+            $membershipStartsAt = $latestMembership->starts_at?->copy()->startOfDay();
+            $membershipEndsAt = $latestMembership->ends_at?->copy()->startOfDay();
+            $isCancelledMembership = (string) $latestMembership->status === 'cancelled';
+            $isScheduledMembership = $membershipStartsAt !== null
+                && $membershipStartsAt->toDateString() > $todayDate
+                && ! $isCancelledMembership;
+            $isMembershipActive = ! $isCancelledMembership
+                && $membershipStartsAt !== null
+                && $membershipStartsAt->toDateString() <= $todayDate
+                && $membershipEndsAt !== null
+                && $membershipEndsAt->toDateString() >= $todayDate;
 
-            $membershipState = $isMembershipActive ? 'active' : 'expired';
+            $membershipState = match (true) {
+                $isCancelledMembership => 'cancelled',
+                $isScheduledMembership => 'scheduled',
+                $isMembershipActive => 'active',
+                default => 'expired',
+            };
         }
 
         $recentMembershipPayments = collect();
@@ -624,6 +639,37 @@ class ClientController extends Controller
                 ->get();
         }
 
+        $membershipAdjustments = collect();
+        if ($membershipIds->isNotEmpty()) {
+            $membershipAdjustments = MembershipAdjustment::query()
+                ->forGym($clientGymId)
+                ->whereIn('membership_id', $membershipIds)
+                ->select([
+                    'id',
+                    'gym_id',
+                    'client_id',
+                    'membership_id',
+                    'performed_by',
+                    'type',
+                    'reason',
+                    'notes',
+                    'previous_starts_at',
+                    'previous_ends_at',
+                    'new_starts_at',
+                    'new_ends_at',
+                    'days_delta',
+                    'created_at',
+                ])
+                ->with([
+                    'performedBy:id,name',
+                    'membership:id,plan_id',
+                    'membership.plan:id,name',
+                ])
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get();
+        }
+
         return view('clients.show', [
             'client' => $clientModel,
             'plans' => $plans,
@@ -632,9 +678,11 @@ class ClientController extends Controller
             'latestMembership' => $latestMembership,
             'membershipState' => $membershipState,
             'recentMembershipPayments' => $recentMembershipPayments,
+            'membershipAdjustments' => $membershipAdjustments,
             'promotions' => $promotions,
             'canManagePromotions' => $canManagePromotions,
             'canManageClientAccounts' => $canManageClientAccounts,
+            'canAdjustMemberships' => $canAdjustMemberships,
         ]);
     }
 
@@ -795,6 +843,7 @@ class ClientController extends Controller
                 $membershipState->whereNull('lm.membership_status')
                     ->orWhere('lm.membership_status', '!=', 'cancelled');
             })
+            ->whereDate('lm.starts_at', '<=', $todayDate)
             ->whereDate('lm.ends_at', '>=', $todayDate);
     }
 
@@ -867,6 +916,7 @@ class ClientController extends Controller
     private function buildClientCardRow(Client $client, array $paymentsByMembership, Carbon $now): array
     {
         $membershipEndsAtDate = $client->membership_ends_at ? Carbon::parse((string) $client->membership_ends_at)->startOfDay() : null;
+        $membershipStartsAtDate = $client->membership_starts_at ? Carbon::parse((string) $client->membership_starts_at)->startOfDay() : null;
         $membershipExpiresAt = $membershipEndsAtDate?->copy()->endOfDay();
         $remainingMinutes = $membershipExpiresAt !== null
             ? $now->diffInMinutes($membershipExpiresAt, false)
@@ -876,10 +926,12 @@ class ClientController extends Controller
         $membershipStatus = (string) ($client->membership_status ?? '');
         $isMembershipExpired = $remainingMinutes !== null && $remainingMinutes < 0;
         $isCancelled = $membershipStatus === 'cancelled';
+        $isScheduled = $membershipStartsAtDate !== null && $membershipStartsAtDate->greaterThan($now->copy()->startOfDay()) && ! $isCancelled;
 
         $generalStatus = match (true) {
             ! $hasMembership => 'inactive',
             $isCancelled || $isMembershipExpired => 'expired',
+            $isScheduled => 'scheduled',
             default => 'active',
         };
 
@@ -943,6 +995,7 @@ class ClientController extends Controller
         return match ($status) {
             'active' => ['label' => 'Activo', 'variant' => 'success'],
             'expired' => ['label' => 'Vencido', 'variant' => 'danger'],
+            'scheduled' => ['label' => 'Programado', 'variant' => 'info'],
             default => ['label' => 'Inactivo', 'variant' => 'muted'],
         };
     }

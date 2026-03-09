@@ -92,6 +92,14 @@ class Membership extends Model
     }
 
     /**
+     * Get the adjustment log for this membership.
+     */
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(MembershipAdjustment::class);
+    }
+
+    /**
      * Scope records for a specific gym.
      */
     public function scopeForGym(Builder $query, int $gymId): Builder

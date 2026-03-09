@@ -22,11 +22,11 @@
                 <div class="flex max-w-4xl flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                     <span>Membresía: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipLabel }}</span></span>
                     <span class="text-slate-500">|</span>
-                    <span>Vence: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipEndsLabel }}</span></span>
+                    <span>{{ $membershipDateLabel }}: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipDateValue }}</span></span>
                     <span class="text-slate-500">|</span>
-                    <span>Restan: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $remainingLabel }}</span></span>
+                    <span>{{ $membershipCountdownLabel }}: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $membershipCountdownValue }}</span></span>
                     <span class="text-slate-500">|</span>
-                    <span>última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></span>
+                    <span>Última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></span>
                 </div>
             </div>
         </div>
@@ -61,6 +61,15 @@
                         <span>Asignar RFID</span>
                         <span class="text-xs text-slate-400">Modal</span>
                     </button>
+
+                    @if (! empty($canAdjustMemberships) && $latestMembership)
+                        <button type="button"
+                                class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-slate-800"
+                                x-on:click="openMembershipAdjustmentModal({{ (int) $latestMembership->id }})">
+                            <span>Ajustar membresía</span>
+                            <span class="text-xs text-slate-400">Modal</span>
+                        </button>
+                    @endif
 
                     <a href="{{ route('clients.card', $client->id) }}"
                        target="_blank"

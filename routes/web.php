@@ -367,6 +367,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::post('/memberships', [MembershipController::class, 'store'])
                     ->middleware('role:owner,cashier')
                     ->name('memberships.store');
+                Route::patch('/memberships/{membership}/adjust', [MembershipController::class, 'adjust'])
+                    ->middleware('role:owner')
+                    ->name('memberships.adjust');
                 Route::post('/clients/{client}/credentials/rfid', [ClientCredentialController::class, 'storeRfid'])
                     ->middleware('role:owner,cashier')
                     ->name('client-credentials.store-rfid');
