@@ -435,6 +435,7 @@ it('stores the real payment date and shows future memberships as scheduled in cl
             'tab' => 'membership',
         ]))
         ->assertOk()
+        ->assertSee('id="sidebar-collapsed-tooltip"', false)
         ->assertSee('Programada')
         ->assertSee($startsAt->translatedFormat('d M Y'));
 });
@@ -757,6 +758,23 @@ it('enforces separation between superadmin and gym users', function () {
     $this->actingAs($gymUser)
         ->getJson(route('superadmin.subscriptions.index'))
         ->assertStatus(403);
+});
+
+it('renders the shared collapsed sidebar tooltip and unique superadmin nav icons', function () {
+    $superadmin = User::query()->create([
+        'name' => 'Super Admin Sidebar',
+        'email' => 'superadmin-sidebar@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $this->actingAs($superadmin)
+        ->get(route('superadmin.dashboard'))
+        ->assertOk()
+        ->assertSee('id="sidebar-collapsed-tooltip"', false)
+        ->assertSee('data-tour="nav-gym_directory"', false)
+        ->assertSee('data-tour="nav-subscriptions_admin"', false)
+        ->assertSee('data-tour="nav-gym_create"', false);
 });
 
 it('allows superadmin to reset gym admin password', function () {

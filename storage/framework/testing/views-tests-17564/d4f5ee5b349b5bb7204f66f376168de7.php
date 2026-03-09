@@ -136,9 +136,9 @@
         const pwaAccessAlert = document.getElementById('pwa-access-alert');
         const pushAccessAlert = document.getElementById('push-access-alert');
         const pwaInstallEnabled = pwaInstallButton?.getAttribute('data-pwa-enabled') === '1';
-        const pwaUpgradeMessage = @json($pwaUpgradeMessage);
-        const isDemoMode = Boolean(@json((bool) ($demo_mode ?? false)));
-        const currentUserId = Number(@json((int) ($user?->id ?? 0)));
+        const pwaUpgradeMessage = <?php echo json_encode($pwaUpgradeMessage, 15, 512) ?>;
+        const isDemoMode = Boolean(<?php echo json_encode((bool) ($demo_mode ?? false), 15, 512) ?>);
+        const currentUserId = Number(<?php echo json_encode((int) ($user?->id ?? 0), 15, 512) ?>);
         const reportPwaEvent = typeof window.reportGymPwaEvent === 'function'
             ? window.reportGymPwaEvent
             : function () {};
@@ -1138,11 +1138,11 @@
 
             const toolbar = document.createElement('div');
             toolbar.className = 'smart-list-toolbar';
-            const smartListSearchLabel = @js(__('ui.smart_list.search_label'));
-            const smartListSearchPlaceholder = @js(__('ui.smart_list.search_placeholder'));
-            const smartListShowing = @js(__('ui.smart_list.showing'));
-            const smartListOf = @js(__('ui.smart_list.of'));
-            const smartListNoResults = @js(__('ui.smart_list.no_results'));
+            const smartListSearchLabel = <?php echo \Illuminate\Support\Js::from(__('ui.smart_list.search_label'))->toHtml() ?>;
+            const smartListSearchPlaceholder = <?php echo \Illuminate\Support\Js::from(__('ui.smart_list.search_placeholder'))->toHtml() ?>;
+            const smartListShowing = <?php echo \Illuminate\Support\Js::from(__('ui.smart_list.showing'))->toHtml() ?>;
+            const smartListOf = <?php echo \Illuminate\Support\Js::from(__('ui.smart_list.of'))->toHtml() ?>;
+            const smartListNoResults = <?php echo \Illuminate\Support\Js::from(__('ui.smart_list.no_results'))->toHtml() ?>;
             toolbar.innerHTML =
                 '<label class="space-y-1 text-sm font-semibold ui-muted">' +
                     '<span>' + smartListSearchLabel + '</span>' +
@@ -1292,3 +1292,4 @@
             });
         };
 
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/layouts/partials/panel-inline/core-ui-and-push.blade.php ENDPATH**/ ?>
