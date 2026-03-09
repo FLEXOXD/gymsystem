@@ -1514,6 +1514,11 @@ class ClientMobileController extends Controller
             nowAtGym: $nowAtGym,
             gymSlug: $gymSlug
         );
+        $disciplineLeaderboard = $this->buildDisciplineLeaderboardPayload(
+            gymId: $gymId,
+            currentClientId: $clientId,
+            nowAtGym: $nowAtGym,
+        );
 
         return [
             'membership_status' => (string) ($latestMembership?->status ?? 'inactive'),
@@ -1536,8 +1541,226 @@ class ClientMobileController extends Controller
             'weekly_goal' => $weeklyGoalSummary,
             'last30_timeline' => $last30Timeline,
             'training_status' => $trainingStatus,
+            'leaderboard' => $disciplineLeaderboard,
             'today' => $today,
         ];
+    }
+
+    private function buildDisciplineLeaderboardPayload(int $gymId, int $currentClientId, Carbon $nowAtGym): array
+    {
+        $monthStartAt = $nowAtGym->copy()->startOfMonth();
+        $monthEndAt = $nowAtGym->copy()->endOfMonth();
+        $monthStart = $monthStartAt->toDateString();
+        $cacheKey = 'client-mobile:discipline-leaderboard:g'.$gymId.':m'.$monthStart.':b'.(int) floor($nowAtGym->timestamp / 45);
+
+        $ranking = Cache::remember($cacheKey, now()->addSeconds(50), function () use ($gymId, $nowAtGym): array {
+            return $this->computeDisciplineLeaderboardRanking($gymId, $nowAtGym);
+        });
+
+        $currentEntry = collect($ranking)
+            ->firstWhere('client_id', $currentClientId);
+
+        $entries = array_map(function (array $entry) use ($currentClientId): array {
+            $entry['is_current_client'] = (int) ($entry['client_id'] ?? 0) === $currentClientId;
+
+            return $entry;
+        }, array_slice($ranking, 0, 5));
+
+        if (is_array($currentEntry)) {
+            $currentEntry['is_current_client'] = true;
+        }
+
+        return [
+            'title' => 'Top 5 del mes',
+            'window_label' => 'Mes actual: '.$monthStartAt->translatedFormat('d M').' - '.$monthEndAt->translatedFormat('d M'),
+            'helper' => 'La asistencia pesa mas y el tiempo solo suma como bono segun tu objetivo personal durante el mes.',
+            'entries' => $entries,
+            'current_client' => $currentEntry,
+            'current_client_in_top' => is_array($currentEntry)
+                && (int) ($currentEntry['rank'] ?? 0) > 0
+                && (int) ($currentEntry['rank'] ?? 0) <= 5,
+            'chip_label' => $currentEntry
+                ? ('Vas #'.(int) $currentEntry['rank'].' del mes')
+                : 'Compite este mes',
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function computeDisciplineLeaderboardRanking(int $gymId, Carbon $nowAtGym): array
+    {
+        $monthStart = $nowAtGym->copy()->startOfMonth()->toDateString();
+        $today = $nowAtGym->toDateString();
+
+        $monthAttendances = Attendance::query()
+            ->forGym($gymId)
+            ->whereBetween('date', [$monthStart, $today])
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'date']);
+
+        if ($monthAttendances->isEmpty()) {
+            return [];
+        }
+
+        $clientIds = $monthAttendances
+            ->pluck('client_id')
+            ->map(static fn ($value): int => (int) $value)
+            ->unique()
+            ->values()
+            ->all();
+
+        $clients = Client::query()
+            ->forGym($gymId)
+            ->whereIn('id', $clientIds)
+            ->get(['id', 'first_name', 'last_name', 'status'])
+            ->keyBy('id');
+
+        $fitnessProfiles = ClientFitnessProfile::query()
+            ->forGym($gymId)
+            ->whereIn('client_id', $clientIds)
+            ->get(['client_id', 'session_minutes'])
+            ->keyBy('client_id');
+
+        $presenceByAttendanceId = PresenceSession::query()
+            ->forGym($gymId)
+            ->whereIn('check_in_attendance_id', $monthAttendances->pluck('id')->all())
+            ->get(['id', 'check_in_attendance_id', 'check_in_at', 'check_out_at'])
+            ->groupBy('check_in_attendance_id');
+
+        $clientScores = [];
+        $attendanceDays = $monthAttendances->groupBy(function (Attendance $attendance): string {
+            return (int) $attendance->client_id.'|'.(string) ($attendance->date?->toDateString() ?? '');
+        });
+
+        foreach ($attendanceDays as $dayAttendances) {
+            $firstAttendance = $dayAttendances->first();
+            if (! $firstAttendance) {
+                continue;
+            }
+
+            $clientId = (int) $firstAttendance->client_id;
+            $client = $clients->get($clientId);
+            if (! $client || (string) ($client->status ?? 'inactive') !== 'active') {
+                continue;
+            }
+
+            $profile = $fitnessProfiles->get($clientId);
+            $targetMinutes = max(45, min(120, (int) ($profile?->session_minutes ?? 60)));
+
+            $trackedMinutes = 0;
+            $hasTrackedDuration = false;
+
+            foreach ($dayAttendances as $attendance) {
+                $sessions = $presenceByAttendanceId->get((int) $attendance->id, collect());
+                foreach ($sessions as $session) {
+                    $hasTrackedDuration = true;
+                    $trackedMinutes += $this->resolveLeaderboardPresenceMinutes($session, $nowAtGym);
+                }
+            }
+
+            $trackedMinutes = min(120, $trackedMinutes);
+            if ($hasTrackedDuration && $trackedMinutes < 20) {
+                continue;
+            }
+
+            $completionRatio = $hasTrackedDuration
+                ? min(1, $trackedMinutes / max(1, $targetMinutes))
+                : 0;
+            $score = 12 + (3 * $completionRatio);
+
+            if (! array_key_exists($clientId, $clientScores)) {
+                $clientScores[$clientId] = [
+                    'client_id' => $clientId,
+                    'name' => $this->resolveLeaderboardClientName($client),
+                    'attendance_count' => 0,
+                    'total_minutes' => 0,
+                    'completed_goal_sessions' => 0,
+                    'score' => 0.0,
+                ];
+            }
+
+            $clientScores[$clientId]['attendance_count']++;
+            $clientScores[$clientId]['total_minutes'] += $trackedMinutes;
+            $clientScores[$clientId]['score'] += $score;
+            if ($completionRatio >= 0.999) {
+                $clientScores[$clientId]['completed_goal_sessions']++;
+            }
+        }
+
+        $ranking = array_values(array_filter($clientScores, static function (array $row): bool {
+            return (int) ($row['attendance_count'] ?? 0) > 0;
+        }));
+
+        usort($ranking, static function (array $left, array $right): int {
+            $scoreCompare = (float) ($right['score'] ?? 0) <=> (float) ($left['score'] ?? 0);
+            if ($scoreCompare !== 0) {
+                return $scoreCompare;
+            }
+
+            $attendanceCompare = (int) ($right['attendance_count'] ?? 0) <=> (int) ($left['attendance_count'] ?? 0);
+            if ($attendanceCompare !== 0) {
+                return $attendanceCompare;
+            }
+
+            $completedCompare = (int) ($right['completed_goal_sessions'] ?? 0) <=> (int) ($left['completed_goal_sessions'] ?? 0);
+            if ($completedCompare !== 0) {
+                return $completedCompare;
+            }
+
+            $minutesCompare = (int) ($right['total_minutes'] ?? 0) <=> (int) ($left['total_minutes'] ?? 0);
+            if ($minutesCompare !== 0) {
+                return $minutesCompare;
+            }
+
+            return strnatcasecmp((string) ($left['name'] ?? ''), (string) ($right['name'] ?? ''));
+        });
+
+        foreach ($ranking as $index => &$row) {
+            $score = round((float) ($row['score'] ?? 0), 1);
+            $attendanceCount = (int) ($row['attendance_count'] ?? 0);
+            $totalMinutes = (int) ($row['total_minutes'] ?? 0);
+            $completedGoals = (int) ($row['completed_goal_sessions'] ?? 0);
+
+            $row['rank'] = $index + 1;
+            $row['score'] = $score;
+            $row['score_label'] = number_format($score, 1, '.', '').' pts';
+            $row['attendance_label'] = $attendanceCount.' asistencia'.($attendanceCount === 1 ? '' : 's');
+            $row['time_label'] = $totalMinutes.' min';
+            $row['goal_label'] = $completedGoals.' meta'.($completedGoals === 1 ? '' : 's').' completa'.($completedGoals === 1 ? '' : 's');
+        }
+        unset($row);
+
+        return $ranking;
+    }
+
+    private function resolveLeaderboardPresenceMinutes(PresenceSession $session, Carbon $nowAtGym): int
+    {
+        $checkInAt = $session->check_in_at?->copy();
+        if (! $checkInAt) {
+            return 0;
+        }
+
+        $checkOutAt = $session->check_out_at?->copy() ?? $nowAtGym->copy();
+        if ($checkOutAt->lessThanOrEqualTo($checkInAt)) {
+            return 0;
+        }
+
+        return max(0, min(120, (int) $checkInAt->diffInMinutes($checkOutAt)));
+    }
+
+    private function resolveLeaderboardClientName(Client $client): string
+    {
+        $firstName = trim((string) ($client->first_name ?? ''));
+        $lastName = trim((string) ($client->last_name ?? ''));
+        $lastInitial = $lastName !== ''
+            ? mb_strtoupper(mb_substr($lastName, 0, 1)).'.'
+            : '';
+
+        $label = trim($firstName.' '.$lastInitial);
+
+        return $label !== '' ? $label : ('Cliente #'.(int) $client->id);
     }
 
     private function buildProgressPrediction(

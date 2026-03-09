@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Attendance;
 use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\ClientFitnessProfile;
@@ -373,6 +374,128 @@ it('requires attendance and completed training session before updating progress 
 
     $expectedMonthStart = Carbon::now()->startOfMonth()->toDateString();
     expect((string) $visibleDates->first())->toBe($expectedMonthStart);
+});
+
+it('builds a weighted monthly discipline leaderboard for client mobile', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-14 12:00:00', 'America/Guayaquil'));
+
+    try {
+        $gym = phase6MakeGym('mobile-leaderboard');
+        $owner = phase6MakeOwner($gym, 'phase6-mobile-leaderboard@example.test');
+        phase6SetPlan($gym, 'premium');
+
+        $alpha = phase6CreateActiveClientWithMembership($gym, 'P6-LB-001', 'Alpha');
+        $bravo = phase6CreateActiveClientWithMembership($gym, 'P6-LB-002', 'Bravo');
+        $charlie = phase6CreateActiveClientWithMembership($gym, 'P6-LB-003', 'Charlie');
+        $delta = phase6CreateActiveClientWithMembership($gym, 'P6-LB-004', 'Delta');
+        $echo = phase6CreateActiveClientWithMembership($gym, 'P6-LB-005', 'Echo');
+        $foxtrot = phase6CreateActiveClientWithMembership($gym, 'P6-LB-006', 'Foxtrot');
+
+        foreach ([
+            [$alpha, 60],
+            [$bravo, 45],
+            [$charlie, 60],
+            [$delta, 120],
+            [$echo, 90],
+            [$foxtrot, 120],
+        ] as [$client, $minutes]) {
+            ClientFitnessProfile::query()->create([
+                'gym_id' => $gym->id,
+                'client_id' => $client->id,
+                'age' => 29,
+                'sex' => 'masculino',
+                'height_cm' => 175,
+                'weight_kg' => 76,
+                'goal' => 'mantener_forma',
+                'experience_level' => 'intermedio',
+                'days_per_week' => 4,
+                'session_minutes' => $minutes,
+                'limitations' => ['ninguna'],
+                'body_metrics' => ['bmi' => 24.8],
+                'onboarding_completed_at' => now(),
+            ]);
+        }
+
+        $monthStart = Carbon::now()->startOfMonth()->startOfDay();
+        $registerSession = function (Client $client, Carbon $day, int $minutes) use ($gym, $owner): void {
+            $checkInAt = $day->copy()->setTime(8, 0);
+            $attendance = Attendance::query()->create([
+                'gym_id' => $gym->id,
+                'client_id' => $client->id,
+                'credential_id' => null,
+                'date' => $day->toDateString(),
+                'time' => $checkInAt->format('H:i:s'),
+                'created_by' => $owner->id,
+            ]);
+
+            PresenceSession::query()->create([
+                'gym_id' => $gym->id,
+                'client_id' => $client->id,
+                'check_in_attendance_id' => $attendance->id,
+                'check_in_by' => $owner->id,
+                'check_in_method' => 'document',
+                'check_in_at' => $checkInAt,
+                'check_out_by' => $owner->id,
+                'check_out_method' => 'training',
+                'check_out_at' => $checkInAt->copy()->addMinutes($minutes),
+                'check_out_reason' => 'training_manual',
+            ]);
+        };
+
+        for ($offset = 0; $offset < 5; $offset++) {
+            $day = $monthStart->copy()->addDays($offset);
+            $registerSession($alpha, $day, 60);
+            $registerSession($bravo, $day, 45);
+            $registerSession($charlie, $day, 30);
+
+            if ($offset < 4) {
+                $registerSession($delta, $day, 120);
+                $registerSession($echo, $day, 90);
+            }
+
+            if ($offset < 3) {
+                $registerSession($foxtrot, $day, 120);
+            }
+        }
+
+        $mobileSession = [
+            'client_mobile' => [
+                'client_id' => (int) $foxtrot->id,
+                'gym_id' => (int) $gym->id,
+                'login_at' => now()->toIso8601String(),
+            ],
+        ];
+
+        $progress = $this->withSession($mobileSession)->getJson(route('client-mobile.progress', [
+            'gymSlug' => $gym->slug,
+        ]));
+
+        $progress->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonCount(5, 'progress.leaderboard.entries')
+            ->assertJsonPath('progress.leaderboard.entries.0.client_id', $alpha->id)
+            ->assertJsonPath('progress.leaderboard.entries.1.client_id', $bravo->id)
+            ->assertJsonPath('progress.leaderboard.entries.2.client_id', $charlie->id)
+            ->assertJsonPath('progress.leaderboard.entries.3.client_id', $delta->id)
+            ->assertJsonPath('progress.leaderboard.entries.4.client_id', $echo->id)
+            ->assertJsonPath('progress.leaderboard.current_client.rank', 6)
+            ->assertJsonPath('progress.leaderboard.current_client.score_label', '45.0 pts')
+            ->assertJsonPath('progress.leaderboard.window_label', 'Mes actual: 01 mar. - 31 mar.')
+            ->assertJsonPath('progress.leaderboard.chip_label', 'Vas #6 del mes');
+
+        $this->withSession($mobileSession)
+            ->get(route('client-mobile.app', [
+                'gymSlug' => $gym->slug,
+            ]))
+            ->assertOk()
+            ->assertSee('id="leaderboard-toggle"', false)
+            ->assertSee('id="leaderboard-modal"', false)
+            ->assertSee('Top 5 del mes')
+            ->assertSee('Corona mensual')
+            ->assertSee('Mes actual', false);
+    } finally {
+        Carbon::setTestNow();
+    }
 });
 
 it('accepts 120 minutes in fitness profile session duration', function () {

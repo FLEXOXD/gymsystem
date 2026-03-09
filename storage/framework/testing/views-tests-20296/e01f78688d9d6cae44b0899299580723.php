@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <meta name="theme-color" content="#16c172">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GymSystem">
-    <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <title>App cliente - {{ (string) $gym->name }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="manifest" href="<?php echo e(route('client-mobile.manifest', ['gymSlug' => $gym->slug])); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <link rel="shortcut icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <title>App cliente - <?php echo e((string) $gym->name); ?></title>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         :root {
             --page-bg: #020617;
@@ -1795,19 +1795,19 @@
 
 <main
     class="mobile-shell px-4 pt-6 pb-6"
-    data-screen="{{ $screen }}"
-    data-action-guide-key="{{ $gym->slug }}:{{ (string) ($client->id ?? 'guest') }}"
-    data-app-url="{{ route('client-mobile.app', ['gymSlug' => $gym->slug]) }}"
-    data-checkin-url="{{ route('client-mobile.check-in', ['gymSlug' => $gym->slug]) }}"
-    data-progress-url="{{ route('client-mobile.progress', ['gymSlug' => $gym->slug]) }}"
-    data-training-start-url="{{ route('client-mobile.training.start', ['gymSlug' => $gym->slug]) }}"
-    data-training-finish-url="{{ route('client-mobile.training.finish', ['gymSlug' => $gym->slug]) }}"
-    data-push-status-url="{{ route('client-mobile.push.status', ['gymSlug' => $gym->slug]) }}"
-    data-push-subscribe-url="{{ route('client-mobile.push.subscribe', ['gymSlug' => $gym->slug]) }}"
-    data-push-unsubscribe-url="{{ route('client-mobile.push.unsubscribe', ['gymSlug' => $gym->slug]) }}"
-    data-push-vapid-key="{{ $webPushPublicKey }}"
+    data-screen="<?php echo e($screen); ?>"
+    data-action-guide-key="<?php echo e($gym->slug); ?>:<?php echo e((string) ($client->id ?? 'guest')); ?>"
+    data-app-url="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug])); ?>"
+    data-checkin-url="<?php echo e(route('client-mobile.check-in', ['gymSlug' => $gym->slug])); ?>"
+    data-progress-url="<?php echo e(route('client-mobile.progress', ['gymSlug' => $gym->slug])); ?>"
+    data-training-start-url="<?php echo e(route('client-mobile.training.start', ['gymSlug' => $gym->slug])); ?>"
+    data-training-finish-url="<?php echo e(route('client-mobile.training.finish', ['gymSlug' => $gym->slug])); ?>"
+    data-push-status-url="<?php echo e(route('client-mobile.push.status', ['gymSlug' => $gym->slug])); ?>"
+    data-push-subscribe-url="<?php echo e(route('client-mobile.push.subscribe', ['gymSlug' => $gym->slug])); ?>"
+    data-push-unsubscribe-url="<?php echo e(route('client-mobile.push.unsubscribe', ['gymSlug' => $gym->slug])); ?>"
+    data-push-vapid-key="<?php echo e($webPushPublicKey); ?>"
 >
-    @php
+    <?php
         $clientFullName = (string) $client->full_name;
         $clientDocument = trim((string) ($client->document_number ?? ''));
         $clientUsername = trim((string) ($client->app_username ?? ''));
@@ -2013,16 +2013,16 @@
             || $errors->has('weekly_goal')
             || $errors->has('weekly_goal_profile');
         $weeklyGoalSelectedValue = (string) old('weekly_goal', $weeklyGoalConfiguredTarget);
-    @endphp
+    ?>
     <section class="mx-auto max-w-md space-y-4 relative z-10">
         <div class="top-user-menu">
-            @if ($screen !== 'home')
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home']) }}" class="menu-back menu-back-top" aria-label="Volver al inicio">
+            <?php if($screen !== 'home'): ?>
+                <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home'])); ?>" class="menu-back menu-back-top" aria-label="Volver al inicio">
                     <span class="menu-back-icon" aria-hidden="true">&larr;</span>
                     <span>Atrás</span>
                 </a>
-            @endif
-            @if ($screen === 'home')
+            <?php endif; ?>
+            <?php if($screen === 'home'): ?>
                 <button id="leaderboard-toggle" type="button" class="leaderboard-chip" aria-haspopup="dialog" aria-expanded="false" aria-controls="leaderboard-modal">
                     <span class="leaderboard-chip-icon" aria-hidden="true">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -2036,34 +2036,35 @@
                         <span id="leaderboard-chip-status" class="leaderboard-chip-status">Compite este mes</span>
                     </span>
                 </button>
-            @endif
+            <?php endif; ?>
             <button id="user-menu-toggle" type="button" class="user-chip" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu-panel">
                 <span class="user-avatar">
-                    @if ($clientPhotoUrl !== '')
-                        <img src="{{ $clientPhotoUrl }}" alt="Foto de perfil" class="user-avatar-image">
-                    @else
-                        {{ $clientInitials }}
-                    @endif
+                    <?php if($clientPhotoUrl !== ''): ?>
+                        <img src="<?php echo e($clientPhotoUrl); ?>" alt="Foto de perfil" class="user-avatar-image">
+                    <?php else: ?>
+                        <?php echo e($clientInitials); ?>
+
+                    <?php endif; ?>
                 </span>
-                <span class="user-chip-name">{{ $clientFullName }}</span>
+                <span class="user-chip-name"><?php echo e($clientFullName); ?></span>
                 <span class="user-chip-caret">&#9662;</span>
             </button>
             <div id="user-menu-panel" class="user-dropdown hidden" role="menu" aria-hidden="true">
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
-                <form id="client-mobile-logout-form" method="POST" action="{{ route('client-mobile.logout', ['gymSlug' => $gym->slug]) }}">
-                    @csrf
+                <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile'])); ?>" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
+                <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical'])); ?>" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
+                <form id="client-mobile-logout-form" method="POST" action="<?php echo e(route('client-mobile.logout', ['gymSlug' => $gym->slug])); ?>">
+                    <?php echo csrf_field(); ?>
                     <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesión</button>
                 </form>
             </div>
         </div>
         <header class="hero-card home-clean home-welcome rounded-3xl p-4">
-            <p class="text-xs font-black uppercase tracking-[.18em] text-emerald-100">{{ (string) $gym->name }}</p>
-            <h1 class="mt-1 text-xl font-black text-white">Hola, {{ (string) $client->full_name }}</h1>
+            <p class="text-xs font-black uppercase tracking-[.18em] text-emerald-100"><?php echo e((string) $gym->name); ?></p>
+            <h1 class="mt-1 text-xl font-black text-white">Hola, <?php echo e((string) $client->full_name); ?></h1>
             <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opción para continuar.</p>
         </header>
 
-        @if ($screen === 'home')
+        <?php if($screen === 'home'): ?>
             <section id="home-view" class="home-stage">
                 <article class="glass-card home-clean home-intro rounded-3xl p-4">
                     <h2 class="home-intro-title">¿Qué deseas hacer hoy?</h2>
@@ -2071,10 +2072,10 @@
                 </article>
 
                 <article class="personal-message-card">
-                    <p class="personal-message-tag">{{ $personalMessageTag }}</p>
-                    <p class="personal-message-line">{{ $personalMessageLine1 }}</p>
-                    <p class="personal-message-line">{{ $personalMessageLine2 }}</p>
-                    <p class="personal-message-context">{{ $personalMessageContext }}</p>
+                    <p class="personal-message-tag"><?php echo e($personalMessageTag); ?></p>
+                    <p class="personal-message-line"><?php echo e($personalMessageLine1); ?></p>
+                    <p class="personal-message-line"><?php echo e($personalMessageLine2); ?></p>
+                    <p class="personal-message-context"><?php echo e($personalMessageContext); ?></p>
                 </article>
 
                 <article id="client-push-card" class="glass-card rounded-3xl p-4 space-y-2">
@@ -2088,7 +2089,7 @@
                     <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal está en riesgo o cuando lo completes.</p>
                 </article>
 
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o código">
+                <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin'])); ?>" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o código">
                     <span class="action-badge" aria-hidden="true">
                         <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3.5" y="3.5" width="6" height="6" rx="1"></rect>
@@ -2107,8 +2108,8 @@
                     <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                 </a>
 
-                @if ($fitnessProfileCompleted)
-                    <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'progress']) }}" class="menu-cta menu-progress home-btn" aria-label="Ver mi rendimiento en el gimnasio">
+                <?php if($fitnessProfileCompleted): ?>
+                    <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'progress'])); ?>" class="menu-cta menu-progress home-btn" aria-label="Ver mi rendimiento en el gimnasio">
                         <span class="action-badge" aria-hidden="true">
                             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 10v4"></path>
@@ -2124,7 +2125,7 @@
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
-                @else
+                <?php else: ?>
                     <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos físicos para ver rendimiento">
                         <span class="action-badge" aria-hidden="true">
                             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -2141,11 +2142,11 @@
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </button>
-                @endif
+                <?php endif; ?>
             </section>
-        @endif
+        <?php endif; ?>
 
-        @if ($screen === 'home')
+        <?php if($screen === 'home'): ?>
             <div id="leaderboard-modal" class="leaderboard-modal hidden" aria-hidden="true">
                 <button type="button" class="leaderboard-modal-backdrop" data-leaderboard-close aria-label="Cerrar top 5"></button>
                 <div class="leaderboard-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
@@ -2171,13 +2172,13 @@
                     </article>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if ($screen === 'checkin')
+        <?php if($screen === 'checkin'): ?>
             <section id="checkin-view" class="space-y-4">
-                @php
+                <?php
                     $monthEntries = is_array($progress['month_entries'] ?? null) ? $progress['month_entries'] : [];
-                @endphp
+                ?>
                 <article class="glass-card rounded-3xl p-4 space-y-3">
                     <div class="flex items-center">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Registrar asistencia</h2>
@@ -2196,48 +2197,48 @@
                         <input id="manual-token" type="text" class="module-input" placeholder="Pega token o contenido QR">
                     </label>
                     <button id="send-manual" type="button" class="module-action module-action-secondary">Validar código</button>
-                    <p id="checkin-status" class="status-box">{{ __('messages.client_mobile.ready_to_scan') }}</p>
+                    <p id="checkin-status" class="status-box"><?php echo e(__('messages.client_mobile.ready_to_scan')); ?></p>
                 </article>
 
                 <article class="period-summary">
                     <div class="flex items-end justify-between gap-3">
                         <div>
                             <p class="period-label">Asistencias del período</p>
-                            <p id="period-visits" class="period-count">{{ (int) ($progress['period_visits'] ?? 0) }}</p>
+                            <p id="period-visits" class="period-count"><?php echo e((int) ($progress['period_visits'] ?? 0)); ?></p>
                         </div>
                         <div>
                             <p class="period-total-label">Total histórico</p>
-                            <p id="period-total" class="period-total-value">{{ (int) ($progress['total_visits'] ?? 0) }}</p>
+                            <p id="period-total" class="period-total-value"><?php echo e((int) ($progress['total_visits'] ?? 0)); ?></p>
                         </div>
                     </div>
                     <p class="period-note">Las asistencias solo duran el tiempo que te suscribiste.</p>
-                    <p id="period-window-label" class="period-window">Período: {{ (string) ($progress['period_window_label'] ?? 'Sin membresía activa') }}</p>
+                    <p id="period-window-label" class="period-window">Período: <?php echo e((string) ($progress['period_window_label'] ?? 'Sin membresía activa')); ?></p>
                 </article>
 
                 <article class="month-log">
-                    <h3 id="month-log-title" class="month-log-title">Asistencias de {{ (string) ($progress['month_label'] ?? '-') }}</h3>
+                    <h3 id="month-log-title" class="month-log-title">Asistencias de <?php echo e((string) ($progress['month_label'] ?? '-')); ?></h3>
                     <p class="month-log-subtitle">Se muestran unicamente fecha y hora del mes actual.</p>
-                    <p class="month-log-counter">Registros del mes: <span id="month-attendance-count">{{ count($monthEntries) }}</span></p>
-                    <ul id="month-attendance-list" class="month-log-list {{ count($monthEntries) > 5 ? 'is-scrollable' : '' }}">
-                        @foreach ($monthEntries as $entry)
-                            @php
+                    <p class="month-log-counter">Registros del mes: <span id="month-attendance-count"><?php echo e(count($monthEntries)); ?></span></p>
+                    <ul id="month-attendance-list" class="month-log-list <?php echo e(count($monthEntries) > 5 ? 'is-scrollable' : ''); ?>">
+                        <?php $__currentLoopData = $monthEntries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $entry): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $entryDate = trim((string) ($entry['date'] ?? ''));
                                 $entryTime = trim((string) ($entry['time'] ?? ''));
-                            @endphp
-                            @if ($entryDate !== '')
+                            ?>
+                            <?php if($entryDate !== ''): ?>
                                 <li class="month-log-item">
-                                    <span class="month-log-date">{{ $entryDate }}</span>
-                                    <span class="month-log-time">{{ $entryTime !== '' ? $entryTime : '--:--:--' }}</span>
+                                    <span class="month-log-date"><?php echo e($entryDate); ?></span>
+                                    <span class="month-log-time"><?php echo e($entryTime !== '' ? $entryTime : '--:--:--'); ?></span>
                                 </li>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </ul>
-                    <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">Todavía no registras asistencias en este mes.</p>
+                    <p id="month-attendance-empty" class="month-log-empty <?php echo e(count($monthEntries) > 0 ? 'hidden' : ''); ?>">Todavía no registras asistencias en este mes.</p>
                 </article>
             </section>
-        @endif
+        <?php endif; ?>
 
-        @if ($screen === 'progress')
+        <?php if($screen === 'progress'): ?>
             <section id="progress-view" class="space-y-4">
                 <article class="glass-card rounded-3xl p-4">
                     <div class="flex items-center">
@@ -2255,36 +2256,36 @@
                         <p class="text-[11px] font-semibold text-emerald-100/90">ahora</p>
                     </div>
                     <div class="mt-2 flex items-end gap-2">
-                        <p class="text-4xl font-black leading-none text-white" id="live-clients-count">{{ (int) ($progress['live_clients_count'] ?? 0) }}</p>
+                        <p class="text-4xl font-black leading-none text-white" id="live-clients-count"><?php echo e((int) ($progress['live_clients_count'] ?? 0)); ?></p>
                         <p class="pb-1 text-xs font-semibold text-emerald-100/90">en tu gimnasio</p>
                     </div>
-                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automático.</p>
+                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de <?php echo e((string) ($progress['live_window_label'] ?? 'En vivo')); ?>. Actualiza automático.</p>
                 </article>
 
-                @if (session('goal_status'))
-                    <p class="profile-message profile-message-success">{{ (string) session('goal_status') }}</p>
-                @endif
+                <?php if(session('goal_status')): ?>
+                    <p class="profile-message profile-message-success"><?php echo e((string) session('goal_status')); ?></p>
+                <?php endif; ?>
 
-                <article class="prediction-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="prediction">
+                <article class="prediction-card progress-lock-card section-card <?php echo e($progressUnlocked ? '' : 'is-locked'); ?>" data-progress-lock-card data-section-card="prediction">
                     <div class="section-toolbar">
                         <p class="prediction-title">Prediccion de progreso</p>
                         <button type="button" class="section-toggle-btn" data-section-toggle="prediction" aria-expanded="true">Ocultar</button>
                     </div>
                     <div class="progress-lock-content" data-section-body>
-                        <p id="prediction-rhythm" class="prediction-rhythm">{{ $predictionRhythmLabel }} | Constancia: {{ $predictionConsistencyPct }}%</p>
-                        <p id="prediction-primary" class="prediction-line">{{ $predictionPrimaryLine }}</p>
-                        <p id="prediction-secondary" class="prediction-line">{{ $predictionSecondaryLine }}</p>
-                        <p id="prediction-context" class="prediction-context">{{ $predictionContextLine }}</p>
+                        <p id="prediction-rhythm" class="prediction-rhythm"><?php echo e($predictionRhythmLabel); ?> | Constancia: <?php echo e($predictionConsistencyPct); ?>%</p>
+                        <p id="prediction-primary" class="prediction-line"><?php echo e($predictionPrimaryLine); ?></p>
+                        <p id="prediction-secondary" class="prediction-line"><?php echo e($predictionSecondaryLine); ?></p>
+                        <p id="prediction-context" class="prediction-context"><?php echo e($predictionContextLine); ?></p>
                     </div>
-                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                    <div class="progress-lock-overlay" aria-hidden="<?php echo e($progressUnlocked ? 'true' : 'false'); ?>">
                         <div class="progress-lock-overlay-content">
                             <p class="progress-lock-title">Progreso en espera</p>
-                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                            <p class="progress-lock-text" data-progress-lock-message><?php echo e($progressLockReason); ?></p>
                         </div>
                     </div>
                 </article>
 
-                <article class="weekly-goal-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="weekly-goal">
+                <article class="weekly-goal-card progress-lock-card section-card <?php echo e($progressUnlocked ? '' : 'is-locked'); ?>" data-progress-lock-card data-section-card="weekly-goal">
                     <div class="section-toolbar">
                         <p class="weekly-goal-title">Meta semanal</p>
                         <div class="section-toolbar-actions">
@@ -2293,46 +2294,53 @@
                         </div>
                     </div>
                     <div class="progress-lock-content" data-section-body>
-                        <p id="weekly-goal-summary" class="weekly-goal-summary">{{ $weeklyGoalVisits }} de {{ $weeklyGoalTarget }} sesiones esta semana.</p>
+                        <p id="weekly-goal-summary" class="weekly-goal-summary"><?php echo e($weeklyGoalVisits); ?> de <?php echo e($weeklyGoalTarget); ?> sesiones esta semana.</p>
                         <div class="weekly-progress-track" aria-hidden="true">
-                            <span id="weekly-goal-progress-fill" class="weekly-progress-fill" style="width: {{ $weeklyGoalCompletion }}%;"></span>
+                            <span id="weekly-goal-progress-fill" class="weekly-progress-fill" style="width: <?php echo e($weeklyGoalCompletion); ?>%;"></span>
                         </div>
                         <div class="weekly-progress-meta">
-                            <span id="weekly-goal-progress-label">Completado: {{ $weeklyGoalCompletion }}%</span>
-                            <span id="weekly-goal-remaining-label">Faltan: {{ $weeklyGoalRemaining }}</span>
-                            <span id="weekly-goal-days-left-label">Días restantes: {{ $weeklyGoalDaysLeft }}</span>
+                            <span id="weekly-goal-progress-label">Completado: <?php echo e($weeklyGoalCompletion); ?>%</span>
+                            <span id="weekly-goal-remaining-label">Faltan: <?php echo e($weeklyGoalRemaining); ?></span>
+                            <span id="weekly-goal-days-left-label">Días restantes: <?php echo e($weeklyGoalDaysLeft); ?></span>
                         </div>
 
                         <div id="weekly-alert-list" class="weekly-alert-list">
-                            @foreach ($weeklyGoalAlerts as $alert)
-                                @php
+                            <?php $__currentLoopData = $weeklyGoalAlerts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $alert): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
                                     $alertTypeRaw = mb_strtolower(trim((string) ($alert['type'] ?? 'info')));
                                     $alertType = in_array($alertTypeRaw, ['info', 'success', 'warning', 'danger'], true) ? $alertTypeRaw : 'info';
                                     $alertText = trim((string) ($alert['text'] ?? 'Sin alertas por ahora.'));
-                                @endphp
-                                <p class="weekly-alert-item weekly-alert-{{ $alertType }}">{{ $alertText !== '' ? $alertText : 'Sin alertas por ahora.' }}</p>
-                            @endforeach
+                                ?>
+                                <p class="weekly-alert-item weekly-alert-<?php echo e($alertType); ?>"><?php echo e($alertText !== '' ? $alertText : 'Sin alertas por ahora.'); ?></p>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
 
-                        <div id="weekly-goal-edit-panel" class="weekly-goal-edit-panel {{ $weeklyGoalFormOpen ? '' : 'hidden' }}">
-                            @if ($errors->has('weekly_goal_profile'))
-                                <p class="profile-message profile-message-error">{{ (string) $errors->first('weekly_goal_profile') }}</p>
-                            @endif
-                            <form method="POST" action="{{ route('client-mobile.weekly-goal.update', ['gymSlug' => $gym->slug]) }}" class="space-y-2">
-                                @csrf
+                        <div id="weekly-goal-edit-panel" class="weekly-goal-edit-panel <?php echo e($weeklyGoalFormOpen ? '' : 'hidden'); ?>">
+                            <?php if($errors->has('weekly_goal_profile')): ?>
+                                <p class="profile-message profile-message-error"><?php echo e((string) $errors->first('weekly_goal_profile')); ?></p>
+                            <?php endif; ?>
+                            <form method="POST" action="<?php echo e(route('client-mobile.weekly-goal.update', ['gymSlug' => $gym->slug])); ?>" class="space-y-2">
+                                <?php echo csrf_field(); ?>
                                 <input type="hidden" name="_weekly_goal_form" value="1">
 
                                 <label class="block space-y-1 text-sm">
                                     <span class="profile-field-label">Objetivo semanal de entrenamientos</span>
                                     <select name="weekly_goal" class="module-input">
-                                        @foreach ([3, 4, 5, 6, 7] as $goalOption)
-                                            @php
+                                        <?php $__currentLoopData = [3, 4, 5, 6, 7]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $goalOption): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php
                                                 $goalOptionValue = (string) $goalOption;
-                                            @endphp
-                                            <option value="{{ $goalOptionValue }}" {{ $weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : '' }}>{{ $goalOptionValue }} días por semana</option>
-                                        @endforeach
+                                            ?>
+                                            <option value="<?php echo e($goalOptionValue); ?>" <?php echo e($weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : ''); ?>><?php echo e($goalOptionValue); ?> días por semana</option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('weekly_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                                    <?php $__errorArgs = ['weekly_goal'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="profile-field-error"><?php echo e((string) $message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </label>
 
                                 <div class="flex gap-2">
@@ -2342,21 +2350,21 @@
                             </form>
                         </div>
                     </div>
-                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                    <div class="progress-lock-overlay" aria-hidden="<?php echo e($progressUnlocked ? 'true' : 'false'); ?>">
                         <div class="progress-lock-overlay-content">
                             <p class="progress-lock-title">Progreso en espera</p>
-                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                            <p class="progress-lock-text" data-progress-lock-message><?php echo e($progressLockReason); ?></p>
                         </div>
                     </div>
                 </article>
 
-                <article class="weekly-history-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="weekly-history">
+                <article class="weekly-history-card progress-lock-card section-card <?php echo e($progressUnlocked ? '' : 'is-locked'); ?>" data-progress-lock-card data-section-card="weekly-history">
                     <div class="section-toolbar">
                         <p class="weekly-history-title">Histórico días de suscripción</p>
                         <button type="button" class="section-toggle-btn" data-section-toggle="weekly-history" aria-expanded="true">Ocultar</button>
                     </div>
                     <div class="progress-lock-content" data-section-body>
-                        <p id="timeline-month-label" class="weekly-history-month">Mes actual: {{ $timelineMonthLabel }}</p>
+                        <p id="timeline-month-label" class="weekly-history-month">Mes actual: <?php echo e($timelineMonthLabel); ?></p>
                         <p class="weekly-history-text">Cada celda representa un día. Verde: entrenado, gris claro: descanso o falta, opaco: aún no marcado.</p>
                         <div class="timeline-legend" aria-label="Leyenda de estados">
                             <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-trained" aria-hidden="true"></span>Entrenado</span>
@@ -2364,13 +2372,13 @@
                             <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-pending" aria-hidden="true"></span>Aún no marcado</span>
                         </div>
                         <div class="timeline-weekdays" aria-hidden="true">
-                            @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $weekdayLabel)
-                                <span class="timeline-weekday">{{ $weekdayLabel }}</span>
-                            @endforeach
+                            <?php $__currentLoopData = ['L', 'M', 'X', 'J', 'V', 'S', 'D']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $weekdayLabel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <span class="timeline-weekday"><?php echo e($weekdayLabel); ?></span>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <div id="timeline-grid" class="timeline-grid">
-                            @foreach ($weeklyTimeline as $timelineItem)
-                                @php
+                            <?php $__currentLoopData = $weeklyTimeline; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $timelineItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
                                     $timelineLabel = trim((string) ($timelineItem['label'] ?? '--'));
                                     $timelineDate = trim((string) ($timelineItem['date'] ?? ''));
                                     $timelineWeekday = trim((string) ($timelineItem['weekday_short'] ?? ''));
@@ -2388,145 +2396,145 @@
                                     };
                                     $timelineDisplayLabel = $timelineIsPlaceholder ? ' ' : $timelineLabel;
                                     $timelineTitle = trim(($timelineWeekday !== '' ? $timelineWeekday.' ' : '').$timelineDate.' - '.$timelineStatusLabel.($timelineIsToday ? ' (hoy)' : ''));
-                                @endphp
+                                ?>
                                 <span
-                                    class="timeline-cell {{ $timelineIsPlaceholder ? 'timeline-cell-placeholder' : '' }} {{ (! $timelineIsPlaceholder && $timelineStatus === 'trained') ? 'timeline-cell-trained' : '' }} {{ (! $timelineIsPlaceholder && $timelineStatus === 'pending') ? 'timeline-cell-pending' : '' }} {{ (! $timelineIsPlaceholder && in_array($timelineStatus, ['rest', 'missed'], true)) ? 'timeline-cell-neutral' : '' }} {{ (! $timelineIsPlaceholder && $timelineIsToday) ? 'timeline-cell-today' : '' }}"
-                                    @if (! $timelineIsPlaceholder)
-                                        title="{{ $timelineTitle }}"
-                                        aria-label="{{ $timelineTitle }}"
-                                    @else
+                                    class="timeline-cell <?php echo e($timelineIsPlaceholder ? 'timeline-cell-placeholder' : ''); ?> <?php echo e((! $timelineIsPlaceholder && $timelineStatus === 'trained') ? 'timeline-cell-trained' : ''); ?> <?php echo e((! $timelineIsPlaceholder && $timelineStatus === 'pending') ? 'timeline-cell-pending' : ''); ?> <?php echo e((! $timelineIsPlaceholder && in_array($timelineStatus, ['rest', 'missed'], true)) ? 'timeline-cell-neutral' : ''); ?> <?php echo e((! $timelineIsPlaceholder && $timelineIsToday) ? 'timeline-cell-today' : ''); ?>"
+                                    <?php if(! $timelineIsPlaceholder): ?>
+                                        title="<?php echo e($timelineTitle); ?>"
+                                        aria-label="<?php echo e($timelineTitle); ?>"
+                                    <?php else: ?>
                                         aria-hidden="true"
-                                    @endif
-                                >{{ $timelineDisplayLabel }}</span>
-                            @endforeach
+                                    <?php endif; ?>
+                                ><?php echo e($timelineDisplayLabel); ?></span>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                        <p id="timeline-week-commitment" class="weekly-history-insight">{{ $weeklyCommitmentLine }}</p>
-                        <p id="timeline-week-rest" class="weekly-history-insight">{{ $weeklyRestLine }}</p>
+                        <p id="timeline-week-commitment" class="weekly-history-insight"><?php echo e($weeklyCommitmentLine); ?></p>
+                        <p id="timeline-week-rest" class="weekly-history-insight"><?php echo e($weeklyRestLine); ?></p>
                     </div>
-                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                    <div class="progress-lock-overlay" aria-hidden="<?php echo e($progressUnlocked ? 'true' : 'false'); ?>">
                         <div class="progress-lock-overlay-content">
                             <p class="progress-lock-title">Progreso en espera</p>
-                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                            <p class="progress-lock-text" data-progress-lock-message><?php echo e($progressLockReason); ?></p>
                         </div>
                     </div>
                 </article>
 
-                <article class="body-state-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="body-state">
+                <article class="body-state-card progress-lock-card section-card <?php echo e($progressUnlocked ? '' : 'is-locked'); ?>" data-progress-lock-card data-section-card="body-state">
                     <div class="section-toolbar">
                         <p class="body-state-title">Estado del cuerpo</p>
                         <button type="button" class="section-toggle-btn" data-section-toggle="body-state" aria-expanded="true">Ocultar</button>
                     </div>
                     <div class="progress-lock-content" data-section-body>
-                        <p id="body-state-summary" class="body-state-summary">{{ $bodyStateSummaryLine }}</p>
+                        <p id="body-state-summary" class="body-state-summary"><?php echo e($bodyStateSummaryLine); ?></p>
                         <div class="body-state-grid">
                             <div class="body-state-row">
                                 <span class="body-state-label">Fuerza</span>
                                 <span class="body-state-track" aria-hidden="true">
-                                    <span id="body-state-force-bar" class="body-state-fill body-state-fill-force" style="width: {{ $bodyStateForce }}%;"></span>
+                                    <span id="body-state-force-bar" class="body-state-fill body-state-fill-force" style="width: <?php echo e($bodyStateForce); ?>%;"></span>
                                 </span>
-                                <span id="body-state-force-value" class="body-state-value">{{ $bodyStateForce }}</span>
+                                <span id="body-state-force-value" class="body-state-value"><?php echo e($bodyStateForce); ?></span>
                             </div>
                             <div class="body-state-row">
                                 <span class="body-state-label">Resistencia</span>
                                 <span class="body-state-track" aria-hidden="true">
-                                    <span id="body-state-resistance-bar" class="body-state-fill body-state-fill-resistance" style="width: {{ $bodyStateResistance }}%;"></span>
+                                    <span id="body-state-resistance-bar" class="body-state-fill body-state-fill-resistance" style="width: <?php echo e($bodyStateResistance); ?>%;"></span>
                                 </span>
-                                <span id="body-state-resistance-value" class="body-state-value">{{ $bodyStateResistance }}</span>
+                                <span id="body-state-resistance-value" class="body-state-value"><?php echo e($bodyStateResistance); ?></span>
                             </div>
                             <div class="body-state-row">
                                 <span class="body-state-label">Disciplina</span>
                                 <span class="body-state-track" aria-hidden="true">
-                                    <span id="body-state-discipline-bar" class="body-state-fill body-state-fill-discipline" style="width: {{ $bodyStateDiscipline }}%;"></span>
+                                    <span id="body-state-discipline-bar" class="body-state-fill body-state-fill-discipline" style="width: <?php echo e($bodyStateDiscipline); ?>%;"></span>
                                 </span>
-                                <span id="body-state-discipline-value" class="body-state-value">{{ $bodyStateDiscipline }}</span>
+                                <span id="body-state-discipline-value" class="body-state-value"><?php echo e($bodyStateDiscipline); ?></span>
                             </div>
                             <div class="body-state-row">
                                 <span class="body-state-label">Recuperación</span>
                                 <span class="body-state-track" aria-hidden="true">
-                                    <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: {{ $bodyStateRecovery }}%;"></span>
+                                    <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: <?php echo e($bodyStateRecovery); ?>%;"></span>
                                 </span>
-                                <span id="body-state-recovery-value" class="body-state-value">{{ $bodyStateRecovery }}</span>
+                                <span id="body-state-recovery-value" class="body-state-value"><?php echo e($bodyStateRecovery); ?></span>
                             </div>
                         </div>
-                        <p id="body-state-context" class="body-state-context">{{ $bodyStateContextLine }}</p>
+                        <p id="body-state-context" class="body-state-context"><?php echo e($bodyStateContextLine); ?></p>
                     </div>
-                    <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                    <div class="progress-lock-overlay" aria-hidden="<?php echo e($progressUnlocked ? 'true' : 'false'); ?>">
                         <div class="progress-lock-overlay-content">
                             <p class="progress-lock-title">Progreso en espera</p>
-                            <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                            <p class="progress-lock-text" data-progress-lock-message><?php echo e($progressLockReason); ?></p>
                         </div>
                     </div>
                 </article>
 
                 <article class="training-card section-card" data-section-card="training">
                     <div class="section-toolbar">
-                        <p id="training-title" class="training-title">{{ $trainingTitle }}</p>
+                        <p id="training-title" class="training-title"><?php echo e($trainingTitle); ?></p>
                         <button type="button" class="section-toggle-btn" data-section-toggle="training" aria-expanded="true">Ocultar</button>
                     </div>
                     <div data-section-body class="space-y-3">
-                    <div class="training-lockable progress-lock-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card>
+                    <div class="training-lockable progress-lock-card <?php echo e($progressUnlocked ? '' : 'is-locked'); ?>" data-progress-lock-card>
                         <div class="progress-lock-content">
-                            <p id="training-objective" class="training-line">{{ $trainingObjectiveLine }}</p>
-                            <p id="training-focus" class="training-line">{{ $trainingFocusLine }}</p>
-                            <p id="training-rhythm" class="training-line">{{ $trainingRhythmLine }}</p>
+                            <p id="training-objective" class="training-line"><?php echo e($trainingObjectiveLine); ?></p>
+                            <p id="training-focus" class="training-line"><?php echo e($trainingFocusLine); ?></p>
+                            <p id="training-rhythm" class="training-line"><?php echo e($trainingRhythmLine); ?></p>
                             <ul id="training-plan-list" class="training-list">
-                                @if ($trainingExercises !== [])
-                                    @foreach ($trainingExercises as $exercise)
-                                        @php
+                                <?php if($trainingExercises !== []): ?>
+                                    <?php $__currentLoopData = $trainingExercises; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $exercise): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $exerciseName = trim((string) ($exercise['name'] ?? 'Ejercicio'));
                                             $exerciseDose = trim((string) ($exercise['prescription'] ?? '3 x 10'));
-                                        @endphp
+                                        ?>
                                         <li class="training-item">
-                                            <span class="training-item-name">{{ $exerciseName }}</span>
-                                            <span class="training-item-dose">{{ $exerciseDose }}</span>
+                                            <span class="training-item-name"><?php echo e($exerciseName); ?></span>
+                                            <span class="training-item-dose"><?php echo e($exerciseDose); ?></span>
                                         </li>
-                                    @endforeach
-                                @else
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php else: ?>
                                     <li class="training-item">
                                         <span class="training-item-name">No hay rutina disponible por ahora.</span>
                                         <span class="training-item-dose">-</span>
                                     </li>
-                                @endif
+                                <?php endif; ?>
                             </ul>
-                            <p id="training-adaptation" class="training-line">{{ $trainingAdaptationLine }}</p>
-                            <p id="training-context" class="training-context">{{ $trainingContextLine }}</p>
+                            <p id="training-adaptation" class="training-line"><?php echo e($trainingAdaptationLine); ?></p>
+                            <p id="training-context" class="training-context"><?php echo e($trainingContextLine); ?></p>
                         </div>
-                        <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
+                        <div class="progress-lock-overlay" aria-hidden="<?php echo e($progressUnlocked ? 'true' : 'false'); ?>">
                             <div class="progress-lock-overlay-content">
                                 <p class="progress-lock-title">Progreso en espera</p>
-                                <p class="progress-lock-text" data-progress-lock-message>{{ $progressLockReason }}</p>
+                                <p class="progress-lock-text" data-progress-lock-message><?php echo e($progressLockReason); ?></p>
                             </div>
                         </div>
                     </div>
                     <div class="training-session-box">
-                        <p id="training-session-status" class="training-session-status">{{ $trainingStatusLabel }}</p>
-                        <p id="training-session-timer" class="training-session-timer {{ $trainingIsActive ? '' : 'hidden' }}">
-                            Tiempo restante: <span id="training-session-timer-value">{{ $trainingTimerLabel }}</span>
+                        <p id="training-session-status" class="training-session-status"><?php echo e($trainingStatusLabel); ?></p>
+                        <p id="training-session-timer" class="training-session-timer <?php echo e($trainingIsActive ? '' : 'hidden'); ?>">
+                            Tiempo restante: <span id="training-session-timer-value"><?php echo e($trainingTimerLabel); ?></span>
                         </p>
                         <div class="training-session-actions">
                             <button
                                 id="training-start-btn"
                                 type="button"
-                                class="module-action module-action-primary {{ $trainingCanStart ? '' : 'hidden' }}"
+                                class="module-action module-action-primary <?php echo e($trainingCanStart ? '' : 'hidden'); ?>"
                             >
                                 Comenzar entrenamiento
                             </button>
                             <button
                                 id="training-finish-btn"
                                 type="button"
-                                class="module-action module-action-secondary {{ $trainingCanFinish ? '' : 'hidden' }}"
+                                class="module-action module-action-secondary <?php echo e($trainingCanFinish ? '' : 'hidden'); ?>"
                             >
                                 Finalizar entrenamiento
                             </button>
                         </div>
-                        <p id="training-session-hint" class="training-session-hint">{{ $trainingHintLine }}</p>
+                        <p id="training-session-hint" class="training-session-hint"><?php echo e($trainingHintLine); ?></p>
                         <p id="training-session-feedback" class="training-session-feedback hidden"></p>
                     </div>
                     </div>
                 </article>
             </section>
-        @endif
-        @if ($screen === 'profile')
+        <?php endif; ?>
+        <?php if($screen === 'profile'): ?>
             <section id="profile-view" class="space-y-4">
                 <article class="glass-card rounded-3xl p-4">
                     <div class="profile-header-row">
@@ -2536,51 +2544,79 @@
                     <p class="mt-2 text-xs text-slate-300">Datos de tu cuenta y estado actual en el gimnasio.</p>
                 </article>
 
-                @if (session('profile_status'))
-                    <p class="profile-message profile-message-success">{{ (string) session('profile_status') }}</p>
-                @endif
-                @if ($errors->has('profile'))
-                    <p class="profile-message profile-message-error">{{ (string) $errors->first('profile') }}</p>
-                @endif
+                <?php if(session('profile_status')): ?>
+                    <p class="profile-message profile-message-success"><?php echo e((string) session('profile_status')); ?></p>
+                <?php endif; ?>
+                <?php if($errors->has('profile')): ?>
+                    <p class="profile-message profile-message-error"><?php echo e((string) $errors->first('profile')); ?></p>
+                <?php endif; ?>
 
-                <article id="profile-edit-panel" class="profile-edit-panel space-y-3 {{ $profileEditOpen ? '' : 'hidden' }}">
+                <article id="profile-edit-panel" class="profile-edit-panel space-y-3 <?php echo e($profileEditOpen ? '' : 'hidden'); ?>">
                     <div>
                         <p class="profile-edit-title">Editar seguridad y contacto</p>
                         <p class="profile-edit-help">Para cambiar contraseña, teléfono o foto debes validar tu contraseña actual.</p>
                     </div>
-                    <form method="POST" action="{{ route('client-mobile.profile.update', ['gymSlug' => $gym->slug]) }}" enctype="multipart/form-data" class="space-y-3">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('client-mobile.profile.update', ['gymSlug' => $gym->slug])); ?>" enctype="multipart/form-data" class="space-y-3">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="_profile_form" value="1">
 
                         <label class="block space-y-1 text-sm">
                             <span class="profile-field-label">Contraseña actual</span>
                             <input id="profile-current-password" type="password" name="current_password" class="module-input" autocomplete="current-password" required>
-                            @error('current_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                            <?php $__errorArgs = ['current_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="profile-field-error"><?php echo e((string) $message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="block space-y-1 text-sm">
                             <span class="profile-field-label">Teléfono (opcional)</span>
-                            <input type="text" name="phone" value="{{ old('phone', $clientPhone) }}" class="module-input" placeholder="+593..." autocomplete="tel">
-                            @error('phone')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                            <input type="text" name="phone" value="<?php echo e(old('phone', $clientPhone)); ?>" class="module-input" placeholder="+593..." autocomplete="tel">
+                            <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="profile-field-error"><?php echo e((string) $message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <div class="space-y-1 text-sm">
                             <span class="profile-field-label">Foto de perfil (opcional)</span>
                             <div class="flex items-center gap-3">
-                                @if ($clientPhotoUrl !== '')
-                                    <img src="{{ $clientPhotoUrl }}" alt="Foto actual" class="profile-photo-preview">
-                                @else
-                                    <span class="profile-photo-preview inline-flex items-center justify-center text-sm font-black text-emerald-100">{{ $clientInitials }}</span>
-                                @endif
+                                <?php if($clientPhotoUrl !== ''): ?>
+                                    <img src="<?php echo e($clientPhotoUrl); ?>" alt="Foto actual" class="profile-photo-preview">
+                                <?php else: ?>
+                                    <span class="profile-photo-preview inline-flex items-center justify-center text-sm font-black text-emerald-100"><?php echo e($clientInitials); ?></span>
+                                <?php endif; ?>
                                 <input type="file" name="photo" class="module-input" accept="image/jpeg,image/png,image/webp">
                             </div>
-                            @error('photo')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                            <?php $__errorArgs = ['photo'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="profile-field-error"><?php echo e((string) $message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
 
                         <label class="block space-y-1 text-sm">
                             <span class="profile-field-label">Nueva contraseña (opcional)</span>
                             <input type="password" name="new_password" class="module-input" autocomplete="new-password">
-                            @error('new_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+                            <?php $__errorArgs = ['new_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="profile-field-error"><?php echo e((string) $message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </label>
 
                         <label class="block space-y-1 text-sm">
@@ -2599,60 +2635,60 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Nombre</p>
-                            <p class="profile-kpi-value">{{ $clientFullName !== '' ? $clientFullName : '-' }}</p>
+                            <p class="profile-kpi-value"><?php echo e($clientFullName !== '' ? $clientFullName : '-'); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Usuario</p>
-                            <p class="profile-kpi-value">{{ $clientUsername !== '' ? $clientUsername : '-' }}</p>
+                            <p class="profile-kpi-value"><?php echo e($clientUsername !== '' ? $clientUsername : '-'); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Documento</p>
-                            <p class="profile-kpi-value">{{ $clientDocument !== '' ? $clientDocument : '-' }}</p>
+                            <p class="profile-kpi-value"><?php echo e($clientDocument !== '' ? $clientDocument : '-'); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Teléfono</p>
-                            <p class="profile-kpi-value">{{ $clientPhone !== '' ? $clientPhone : '-' }}</p>
+                            <p class="profile-kpi-value"><?php echo e($clientPhone !== '' ? $clientPhone : '-'); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Membresía</p>
-                            <p class="profile-kpi-value">{{ $membershipStatusLabel }}</p>
+                            <p class="profile-kpi-value"><?php echo e($membershipStatusLabel); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Vence</p>
-                            <p class="profile-kpi-value">{{ (string) ($progress['membership_ends_at'] ?? '-') }}</p>
+                            <p class="profile-kpi-value"><?php echo e((string) ($progress['membership_ends_at'] ?? '-')); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Visitas del mes</p>
-                            <p class="profile-kpi-value">{{ (int) ($progress['month_visits'] ?? 0) }}</p>
+                            <p class="profile-kpi-value"><?php echo e((int) ($progress['month_visits'] ?? 0)); ?></p>
                         </div>
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Total visitas</p>
-                            <p class="profile-kpi-value">{{ (int) ($progress['total_visits'] ?? 0) }}</p>
+                            <p class="profile-kpi-value"><?php echo e((int) ($progress['total_visits'] ?? 0)); ?></p>
                         </div>
                     </div>
                     <div class="profile-kpi">
                         <p class="profile-kpi-label">último ingreso</p>
-                        <p class="profile-kpi-value">{{ $lastAttendanceLabel }}</p>
+                        <p class="profile-kpi-value"><?php echo e($lastAttendanceLabel); ?></p>
                     </div>
                 </article>
 
             </section>
-        @endif
-        @if ($screen === 'physical')
+        <?php endif; ?>
+        <?php if($screen === 'physical'): ?>
             <section id="physical-view" class="space-y-4">
                 <article class="glass-card rounded-3xl p-4">
                     <div class="profile-header-row">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Datos físicos</h2>
-                        <button id="open-physical-edit" type="button" class="profile-edit-toggle">{{ $fitnessProfileCompleted ? 'Editar datos' : 'Completar ahora' }}</button>
+                        <button id="open-physical-edit" type="button" class="profile-edit-toggle"><?php echo e($fitnessProfileCompleted ? 'Editar datos' : 'Completar ahora'); ?></button>
                     </div>
                     <p class="mt-2 text-xs text-slate-300">Resumen de tu estado físico y cálculos para seguimiento en el gimnasio.</p>
                 </article>
 
-                @if (session('fitness_status'))
-                    <p class="profile-message profile-message-success">{{ (string) session('fitness_status') }}</p>
-                @endif
+                <?php if(session('fitness_status')): ?>
+                    <p class="profile-message profile-message-success"><?php echo e((string) session('fitness_status')); ?></p>
+                <?php endif; ?>
 
-                <article id="physical-edit-panel" class="profile-edit-panel space-y-3 {{ $fitnessEditOpen ? '' : 'hidden' }}">
+                <article id="physical-edit-panel" class="profile-edit-panel space-y-3 <?php echo e($fitnessEditOpen ? '' : 'hidden'); ?>">
                     <div class="flex items-start justify-between gap-2">
                         <div>
                             <p class="profile-edit-title">Editar datos físicos</p>
@@ -2660,7 +2696,7 @@
                         </div>
                         <button id="close-physical-edit" type="button" class="profile-edit-toggle">Cerrar</button>
                     </div>
-                    @include('client-mobile.partials.fitness-profile-form', [
+                    <?php echo $__env->make('client-mobile.partials.fitness-profile-form', [
                         'gym' => $gym,
                         'fitnessProfileModel' => $fitnessProfileModel,
                         'fitnessGoalOptions' => $fitnessGoalOptions,
@@ -2672,109 +2708,109 @@
                         'nextScreen' => 'physical',
                         'isModalForm' => false,
                         'submitLabel' => 'Guardar datos físicos',
-                    ])
+                    ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </article>
 
                 <article class="glass-card rounded-3xl p-4 space-y-3">
-                    @if ($fitnessProfileCompleted)
+                    <?php if($fitnessProfileCompleted): ?>
                         <div class="fitness-meta-grid">
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Edad</p>
-                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' años' : '-' }}</p>
+                                <p class="fitness-meta-value"><?php echo e((int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' años' : '-'); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Sexo</p>
-                                <p class="fitness-meta-value">{{ $fitnessSexLabel }}</p>
+                                <p class="fitness-meta-value"><?php echo e($fitnessSexLabel); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Altura</p>
-                                <p class="fitness-meta-value">{{ $formatMetric($fitnessProfileModel?->height_cm, 'cm') }}</p>
+                                <p class="fitness-meta-value"><?php echo e($formatMetric($fitnessProfileModel?->height_cm, 'cm')); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Peso actual</p>
-                                <p class="fitness-meta-value">{{ $formatMetric($fitnessProfileModel?->weight_kg, 'kg') }}</p>
+                                <p class="fitness-meta-value"><?php echo e($formatMetric($fitnessProfileModel?->weight_kg, 'kg')); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Objetivo</p>
-                                <p class="fitness-meta-value">{{ $fitnessGoalLabel }}</p>
+                                <p class="fitness-meta-value"><?php echo e($fitnessGoalLabel); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Nivel</p>
-                                <p class="fitness-meta-value">{{ $fitnessLevelLabel }}</p>
+                                <p class="fitness-meta-value"><?php echo e($fitnessLevelLabel); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Disponibilidad</p>
-                                <p class="fitness-meta-value">{{ $fitnessDaysLabel }}</p>
+                                <p class="fitness-meta-value"><?php echo e($fitnessDaysLabel); ?></p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Duración sesión</p>
-                                <p class="fitness-meta-value">{{ $fitnessMinutesLabel }}</p>
+                                <p class="fitness-meta-value"><?php echo e($fitnessMinutesLabel); ?></p>
                             </div>
                         </div>
 
-                        @if ($hasBodyMetrics)
+                        <?php if($hasBodyMetrics): ?>
                             <div class="fitness-meta-grid">
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">IMC</p>
-                                    <p class="fitness-meta-value">{{ $fitnessBmiValue }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessBmiValue); ?></p>
                                 </div>
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">Categoría IMC</p>
-                                    <p class="fitness-meta-value">{{ $fitnessBmiCategory }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessBmiCategory); ?></p>
                                 </div>
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">Metabolismo basal</p>
-                                    <p class="fitness-meta-value">{{ $fitnessBmrValue }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessBmrValue); ?></p>
                                 </div>
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">Calorías mantenimiento</p>
-                                    <p class="fitness-meta-value">{{ $fitnessMaintenanceValue }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessMaintenanceValue); ?></p>
                                 </div>
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">Calorías objetivo</p>
-                                    <p class="fitness-meta-value">{{ $fitnessTargetCaloriesValue }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessTargetCaloriesValue); ?></p>
                                 </div>
                                 <div class="fitness-meta-card">
                                     <p class="fitness-meta-label">Grasa corporal estimada</p>
-                                    <p class="fitness-meta-value">{{ $fitnessBodyFatValue }}</p>
+                                    <p class="fitness-meta-value"><?php echo e($fitnessBodyFatValue); ?></p>
                                 </div>
                             </div>
-                        @else
+                        <?php else: ?>
                             <p class="fitness-profile-note">Completa altura y peso para generar tus cálculos de IMC y metabolismo.</p>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="profile-kpi">
                             <p class="profile-kpi-label">Limitaciones</p>
-                            <p class="profile-kpi-value">{{ $fitnessLimitationsLabel !== '' ? $fitnessLimitationsLabel : '-' }}</p>
+                            <p class="profile-kpi-value"><?php echo e($fitnessLimitationsLabel !== '' ? $fitnessLimitationsLabel : '-'); ?></p>
                         </div>
 
-                        @if ($fitnessGoalTrackLabel !== '')
+                        <?php if($fitnessGoalTrackLabel !== ''): ?>
                             <div class="profile-kpi">
                                 <p class="profile-kpi-label">Enfoque según objetivo</p>
-                                <p class="profile-kpi-value">{{ $fitnessGoalTrackLabel }}</p>
+                                <p class="profile-kpi-value"><?php echo e($fitnessGoalTrackLabel); ?></p>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        @if ($fitnessUpdatedLabel !== '')
-                            <p class="fitness-profile-note">última actualización: {{ $fitnessUpdatedLabel }}</p>
-                        @endif
-                    @else
+                        <?php if($fitnessUpdatedLabel !== ''): ?>
+                            <p class="fitness-profile-note">última actualización: <?php echo e($fitnessUpdatedLabel); ?></p>
+                        <?php endif; ?>
+                    <?php else: ?>
                         <p class="text-xs text-slate-300">Aún no completas tus datos físicos iniciales.</p>
-                    @endif
+                    <?php endif; ?>
                 </article>
             </section>
-        @endif
+        <?php endif; ?>
 
-        @if (! $fitnessProfileCompleted)
+        <?php if(! $fitnessProfileCompleted): ?>
             <div
                 id="fitness-onboarding-modal"
-                class="fitness-modal {{ $showFitnessModal ? '' : 'hidden' }}"
-                aria-hidden="{{ $showFitnessModal ? 'false' : 'true' }}"
+                class="fitness-modal <?php echo e($showFitnessModal ? '' : 'hidden'); ?>"
+                aria-hidden="<?php echo e($showFitnessModal ? 'false' : 'true'); ?>"
                 data-require-redirect-on-close="1"
-                data-cancel-url="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home']) }}"
+                data-cancel-url="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home'])); ?>"
             >
                 <a
-                    href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()]) }}"
+                    href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()])); ?>"
                     class="fitness-modal-backdrop"
                     aria-label="Volver al panel anterior"
                 ></a>
@@ -2785,10 +2821,10 @@
                                 <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos físicos</h3>
                                 <p class="fitness-onboarding-help">Necesitamos estos datos para calcular IMC, metabolismo y habilitar tu pantalla de rendimiento.</p>
                             </div>
-                            <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()]) }}" class="fitness-modal-close" aria-label="Volver al panel anterior">Cerrar</a>
+                            <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()])); ?>" class="fitness-modal-close" aria-label="Volver al panel anterior">Cerrar</a>
                         </div>
 
-                        @include('client-mobile.partials.fitness-profile-form', [
+                        <?php echo $__env->make('client-mobile.partials.fitness-profile-form', [
                             'gym' => $gym,
                             'fitnessProfileModel' => $fitnessProfileModel,
                             'fitnessGoalOptions' => $fitnessGoalOptions,
@@ -2800,11 +2836,11 @@
                             'nextScreen' => 'progress',
                             'isModalForm' => true,
                             'submitLabel' => 'Guardar y continuar',
-                        ])
+                        ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </article>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
     </section>
 </main>
 
@@ -2825,7 +2861,7 @@
     const currentScreen = shell.dataset.screen || 'home';
     const bootStateKey = 'client-mobile-boot-seen';
     const csrfMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    const initialProgressPayload = @json($progress);
+    const initialProgressPayload = <?php echo json_encode($progress, 15, 512) ?>;
 
     const bootScreen = document.getElementById('boot-screen');
     const bootBar = document.getElementById('boot-progress-bar');
@@ -2929,16 +2965,16 @@
     const monthAttendanceEmptyEl = document.getElementById('month-attendance-empty');
 
     const mobileI18n = {
-        ready_to_scan: @json(__('messages.client_mobile.ready_to_scan')),
-        manual_token_empty: @json(__('messages.client_mobile.manual_token_empty')),
-        validating_entry: @json(__('messages.client_mobile.validating_entry')),
-        session_expired_reload: @json(__('messages.client_mobile.session_expired_reload')),
-        checkin_success: @json(__('messages.client_mobile.checkin_success')),
-        validation_failed: @json(__('messages.client_mobile.validation_failed')),
-        network_validation_failed: @json(__('messages.client_mobile.network_validation_failed')),
-        scan_in_progress: @json(__('messages.client_mobile.scan_in_progress')),
-        camera_open_failed: @json(__('messages.client_mobile.camera_open_failed')),
-        scan_qr_unsupported: @json(__('messages.client_mobile.browser_qr_not_supported')),
+        ready_to_scan: <?php echo json_encode(__('messages.client_mobile.ready_to_scan'), 15, 512) ?>,
+        manual_token_empty: <?php echo json_encode(__('messages.client_mobile.manual_token_empty'), 15, 512) ?>,
+        validating_entry: <?php echo json_encode(__('messages.client_mobile.validating_entry'), 15, 512) ?>,
+        session_expired_reload: <?php echo json_encode(__('messages.client_mobile.session_expired_reload'), 15, 512) ?>,
+        checkin_success: <?php echo json_encode(__('messages.client_mobile.checkin_success'), 15, 512) ?>,
+        validation_failed: <?php echo json_encode(__('messages.client_mobile.validation_failed'), 15, 512) ?>,
+        network_validation_failed: <?php echo json_encode(__('messages.client_mobile.network_validation_failed'), 15, 512) ?>,
+        scan_in_progress: <?php echo json_encode(__('messages.client_mobile.scan_in_progress'), 15, 512) ?>,
+        camera_open_failed: <?php echo json_encode(__('messages.client_mobile.camera_open_failed'), 15, 512) ?>,
+        scan_qr_unsupported: <?php echo json_encode(__('messages.client_mobile.browser_qr_not_supported'), 15, 512) ?>,
     };
 
     let stream = null;
@@ -5300,3 +5336,4 @@
 
 
 
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/client-mobile/app.blade.php ENDPATH**/ ?>
