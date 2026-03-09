@@ -126,8 +126,8 @@
             'action' => (string) ($oldDeleteClient['delete_url'] ?? ''),
             'id' => $oldDeleteClientId > 0 ? $oldDeleteClientId : null,
             'full_name' => (string) ($oldDeleteClient['full_name'] ?? ''),
-            'owner_scope_label' => (string) ($oldDeleteClient['owner_scope_label'] ?? 'dueÃ±o del gimnasio'),
-            'owner_modal_hint' => (string) ($oldDeleteClient['owner_modal_hint'] ?? 'Confirma con la contraseÃ±a del dueÃ±o del gimnasio.'),
+            'owner_scope_label' => (string) ($oldDeleteClient['owner_scope_label'] ?? 'dueño del gimnasio'),
+            'owner_modal_hint' => (string) ($oldDeleteClient['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'),
         ];
     @endphp
 
@@ -154,27 +154,27 @@
             <article class="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-4 shadow-lg dark:border-emerald-300/30 dark:bg-emerald-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-200">Activos</p>
                 <p class="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">{{ $stats['active'] }}</p>
-                <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">MembresÃ­a vigente</p>
+                <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Membresía vigente</p>
             </article>
             <article class="rounded-2xl border border-amber-400/35 bg-amber-500/10 p-4 shadow-lg dark:border-amber-300/30 dark:bg-amber-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-amber-800 dark:text-amber-200">Por vencer</p>
                 <p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">{{ $stats['expiring'] }}</p>
-                <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los prÃ³ximos 7 dÃ­as</p>
+                <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los próximos 7 días</p>
             </article>
             <article class="rounded-2xl border border-rose-400/35 bg-rose-500/10 p-4 shadow-lg dark:border-rose-300/30 dark:bg-rose-400/15">
                 <p class="text-xs font-semibold uppercase tracking-widest text-rose-800 dark:text-rose-200">Vencid@s</p>
                 <p class="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">{{ $stats['expired'] }}</p>
-                <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovaciÃ³n</p>
+                <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovación</p>
             </article>
         </section>
 
         @if ($isGlobalScope)
             <div class="ui-alert ui-alert-warning">
-                Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal especÃ­fica.
+                Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal específica.
             </div>
         @endif
 
-        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepciÃ³n, renovaciones y retenciÃ³n.">
+        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención.">
             <div class="space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
@@ -223,9 +223,9 @@
                             <th class="px-3 py-3">Cliente</th>
                             <th class="px-3 py-3">Plan</th>
                             <th class="px-3 py-3">Vence</th>
-                            <th class="px-3 py-3">DÃ­as restantes</th>
+                            <th class="px-3 py-3">Días restantes</th>
                             <th class="px-3 py-3">Pago</th>
-                            <th class="px-3 py-3">Ãºltima asistencia</th>
+                            <th class="px-3 py-3">Última asistencia</th>
                             <th class="px-3 py-3">Estado</th>
                             @if ($isGlobalScope)
                                 <th class="px-3 py-3">Sede</th>
@@ -319,8 +319,8 @@
                                                         action: @js((string) ($client['delete_url'] ?? '')),
                                                         id: {{ (int) $client['id'] }},
                                                         full_name: @js((string) ($client['full_name'] ?? '')),
-                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueÃ±o del gimnasio')),
-                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseÃ±a del dueÃ±o del gimnasio.'))
+                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueño del gimnasio')),
+                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'))
                                                     })">
                                                 Eliminar
                                             </button>
@@ -372,7 +372,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Crear cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Alta rÃ¡pida de cliente con membresÃ­a opcional.</p>
+                            <p class="mt-1 text-sm text-slate-400">Alta rápida de cliente con membresía opcional.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -438,7 +438,7 @@
                                        required
                                        class="ui-input"
                                        x-bind:class="clientValidationErrors.document_number ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
-                                       placeholder="CÃ©dula, DNI o pasaporte">
+                                       placeholder="Cédula, DNI o pasaporte">
                                 <p x-cloak x-show="clientValidationErrors.document_number" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.document_number"></p>
                                 @error('document_number')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
@@ -455,7 +455,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                <span>TelÃ©fono</span>
+                                <span>Teléfono</span>
                                 <input type="text"
                                        name="phone"
                                        x-model="form.phone"
@@ -471,7 +471,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                <span>GÃ©nero</span>
+                                <span>Género</span>
                                 <select name="gender" x-model="form.gender" class="ui-input">
                                     <option value="male">Hombre</option>
                                     <option value="female">Mujer</option>
@@ -491,7 +491,7 @@
                                                    value="1"
                                                    x-model="form.create_app_account"
                                                    class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400/40">
-                                            Crear usuario y contraseÃ±a para app cliente
+                                            Crear usuario y contraseña para app cliente
                                         </label>
                                         <span class="inline-flex rounded-full border border-cyan-400/30 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-100">
                                             Premium / Sucursales
@@ -516,7 +516,7 @@
                                         </label>
 
                                         <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                            <span>ContraseÃ±a app</span>
+                                            <span>Contraseña app</span>
                                             <input type="password"
                                                    name="app_password"
                                                    x-model="form.app_password"
@@ -524,7 +524,7 @@
                                                    autocomplete="new-password"
                                                    class="ui-input"
                                                    x-bind:class="clientValidationErrors.app_password ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
-                                                   placeholder="MÃ­nimo 8 caracteres">
+                                                   placeholder="Mínimo 8 caracteres">
                                             <p x-cloak x-show="clientValidationErrors.app_password" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password"></p>
                                             @error('app_password')
                                                 <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
@@ -532,7 +532,7 @@
                                         </label>
 
                                         <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
-                                            <span>Confirmar contraseÃ±a app</span>
+                                            <span>Confirmar contraseña app</span>
                                             <input type="password"
                                                    name="app_password_confirmation"
                                                    x-model="form.app_password_confirmation"
@@ -540,7 +540,7 @@
                                                    autocomplete="new-password"
                                                    class="ui-input"
                                                    x-bind:class="clientValidationErrors.app_password_confirmation ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
-                                                   placeholder="Repite la contraseÃ±a">
+                                                   placeholder="Repite la contraseña">
                                             <p x-cloak x-show="clientValidationErrors.app_password_confirmation" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password_confirmation"></p>
                                             @error('app_password_confirmation')
                                                 <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
@@ -580,7 +580,7 @@
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-200">
                                     <input type="checkbox" name="start_membership" value="1" x-model="form.start_membership" x-on:change="onMembershipToggle()" class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400/40">
-                                    Iniciar membresÃ­a ahora
+                                    Iniciar membresía ahora
                                 </label>
 
                                 <span class="inline-flex rounded-full border border-slate-600 bg-slate-800 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-200"
@@ -619,9 +619,9 @@
 
                                 @if ($canManagePromotions)
                                     <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                        <span>PromociÃ³n (opcional)</span>
+                                        <span>Promoción (opcional)</span>
                                         <select name="promotion_id" x-model="form.promotion_id" x-on:change="onPromotionChange()" x-bind:disabled="!form.start_membership" class="ui-input">
-                                            <option value="">Sin promociÃ³n</option>
+                                            <option value="">Sin promoción</option>
                                             <template x-for="promo in availablePromotions()" :key="promo.id">
                                                 <option :value="String(promo.id)" x-text="promotionOptionLabel(promo)"></option>
                                             </template>
@@ -640,7 +640,7 @@
                                 @endif
 
                                 <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                    <span>MÃ©todo de pago</span>
+                                    <span>Método de pago</span>
                                     <select name="payment_method" x-model="form.payment_method" x-bind:disabled="!form.start_membership" class="ui-input">
                                         <option value="cash">Efectivo</option>
                                         <option value="transfer">Transferencia</option>
@@ -670,7 +670,7 @@
                             </div>
 
                             <p x-cloak x-show="form.start_membership && plans.length === 0" class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
-                                No hay planes activos. Crea un plan antes de iniciar membresÃ­as desde este modal.
+                                No hay planes activos. Crea un plan antes de iniciar membresías desde este modal.
                             </p>
                             @error('cash')
                                 <div class="mt-3 rounded-xl border-2 border-rose-400/80 bg-rose-500/20 p-3 text-rose-100 shadow-lg">
@@ -719,7 +719,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Editar cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Solo puedes actualizar nombre, apellido y telÃ©fono.</p>
+                            <p class="mt-1 text-sm text-slate-400">Solo puedes actualizar nombre, apellido y teléfono.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -779,7 +779,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
-                                <span>TelÃ©fono</span>
+                                <span>Teléfono</span>
                                 <input type="text"
                                        name="edit_phone"
                                        x-model="editForm.phone"
@@ -826,7 +826,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Eliminar cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Esta acciÃ³n borrarÃ¡ tambiÃ©n sus membresÃ­as y datos vinculados.</p>
+                            <p class="mt-1 text-sm text-slate-400">Esta acción borrará también sus membresías y datos vinculados.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -851,11 +851,11 @@
                         <div class="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-4">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-rose-200/80">Cliente a eliminar</p>
                             <p class="mt-2 text-lg font-black text-white" x-text="deleteForm.full_name || 'Cliente sin nombre'"></p>
-                            <p class="mt-3 text-sm text-rose-100/90" x-text="deleteForm.owner_modal_hint || 'Confirma con la contraseÃ±a del dueÃ±o autorizado.'"></p>
+                            <p class="mt-3 text-sm text-rose-100/90" x-text="deleteForm.owner_modal_hint || 'Confirma con la contraseña del dueño autorizado.'"></p>
                         </div>
 
                         <label class="space-y-1 text-sm font-semibold text-slate-300">
-                            <span>ContraseÃ±a del <span class="lowercase" x-text="deleteForm.owner_scope_label || 'dueÃ±o del gimnasio'"></span></span>
+                            <span>Contraseña del <span class="lowercase" x-text="deleteForm.owner_scope_label || 'dueño del gimnasio'"></span></span>
                             <input type="password"
                                    name="owner_password"
                                    x-model="deleteForm.owner_password"
@@ -937,8 +937,8 @@
                     action: config.deleteModal?.action ?? '',
                     id: config.deleteModal?.id ?? '',
                     full_name: config.deleteModal?.full_name ?? '',
-                    owner_scope_label: config.deleteModal?.owner_scope_label ?? 'dueÃ±o del gimnasio',
-                    owner_modal_hint: config.deleteModal?.owner_modal_hint ?? 'Confirma con la contraseÃ±a del dueÃ±o del gimnasio.',
+                    owner_scope_label: config.deleteModal?.owner_scope_label ?? 'dueño del gimnasio',
+                    owner_modal_hint: config.deleteModal?.owner_modal_hint ?? 'Confirma con la contraseña del dueño del gimnasio.',
                     owner_password: '',
                 },
                 photoPreview: null,
@@ -1030,8 +1030,8 @@
                         action: payload?.action ?? '',
                         id: payload?.id ?? '',
                         full_name: payload?.full_name ?? '',
-                        owner_scope_label: payload?.owner_scope_label ?? 'dueÃ±o del gimnasio',
-                        owner_modal_hint: payload?.owner_modal_hint ?? 'Confirma con la contraseÃ±a del dueÃ±o del gimnasio.',
+                        owner_scope_label: payload?.owner_scope_label ?? 'dueño del gimnasio',
+                        owner_modal_hint: payload?.owner_modal_hint ?? 'Confirma con la contraseña del dueño del gimnasio.',
                         owner_password: '',
                     };
                     this.deleteModalOpen = true;
@@ -1171,7 +1171,7 @@
                     }
 
                     if (!/^[A-Za-z0-9\- ]+$/.test(raw)) {
-                        return 'El documento solo puede usar letras, nÃºmeros, espacios y guion.';
+                        return 'El documento solo puede usar letras, números, espacios y guion.';
                     }
 
                     if (canonical.length < 6 || canonical.length > 20) {
@@ -1179,15 +1179,15 @@
                     }
 
                     if (!/\d/.test(canonical)) {
-                        return 'El documento debe incluir al menos un nÃºmero.';
+                        return 'El documento debe incluir al menos un número.';
                     }
 
                     if (/^(.)\1+$/.test(canonical)) {
-                        return 'El documento ingresado no parece vÃ¡lido.';
+                        return 'El documento ingresado no parece válido.';
                     }
 
                     if (/^\d+$/.test(canonical) && this.isSequentialDigits(canonical)) {
-                        return 'El documento ingresado no parece vÃ¡lido.';
+                        return 'El documento ingresado no parece válido.';
                     }
 
                     return '';
@@ -1202,23 +1202,23 @@
                     const digits = raw.replace(/\D/g, '');
 
                     if (raw === '') {
-                        return 'Ingresa el telÃ©fono del cliente.';
+                        return 'Ingresa el teléfono del cliente.';
                     }
 
                     if (!/^[0-9+\-\s()]+$/.test(raw)) {
-                        return 'El telÃ©fono solo puede contener nÃºmeros y los sÃ­mbolos + - ( ).';
+                        return 'El teléfono solo puede contener números y los símbolos + - ( ).';
                     }
 
                     if (digits.length < 7 || digits.length > 15) {
-                        return 'El telÃ©fono debe tener entre 7 y 15 dÃ­gitos.';
+                        return 'El teléfono debe tener entre 7 y 15 dígitos.';
                     }
 
                     if (/^(\d)\1+$/.test(digits)) {
-                        return 'El telÃ©fono ingresado no parece vÃ¡lido.';
+                        return 'El teléfono ingresado no parece válido.';
                     }
 
                     if (this.isSequentialDigits(digits)) {
-                        return 'El telÃ©fono ingresado no parece vÃ¡lido.';
+                        return 'El teléfono ingresado no parece válido.';
                     }
 
                     return '';
@@ -1235,7 +1235,7 @@
                     }
 
                     if (!/^[a-z0-9._-]+$/.test(username)) {
-                        return 'El usuario solo puede usar letras minÃºsculas, nÃºmeros, punto, guion y guion bajo.';
+                        return 'El usuario solo puede usar letras minúsculas, números, punto, guion y guion bajo.';
                     }
 
                     return '';
@@ -1260,7 +1260,7 @@
                     if (documentError !== '') {
                         this.setClientFieldError('document_number', documentError);
                     } else if (this.documentState === 'exists') {
-                        this.setClientFieldError('document_number', 'Este documento ya estÃ¡ registrado en este gimnasio.');
+                        this.setClientFieldError('document_number', 'Este documento ya está registrado en este gimnasio.');
                     }
 
                     if (phoneError !== '') {
@@ -1277,13 +1277,13 @@
                         }
 
                         if (appPassword.length < 8) {
-                            this.setClientFieldError('app_password', 'La contraseÃ±a debe tener al menos 8 caracteres.');
+                            this.setClientFieldError('app_password', 'La contraseña debe tener al menos 8 caracteres.');
                         }
 
                         if (appPasswordConfirmation === '') {
-                            this.setClientFieldError('app_password_confirmation', 'Confirma la contraseÃ±a de la app cliente.');
+                            this.setClientFieldError('app_password_confirmation', 'Confirma la contraseña de la app cliente.');
                         } else if (appPasswordConfirmation !== appPassword) {
-                            this.setClientFieldError('app_password_confirmation', 'La confirmaciÃ³n de contraseÃ±a no coincide.');
+                            this.setClientFieldError('app_password_confirmation', 'La confirmación de contraseña no coincide.');
                         }
                     }
 
@@ -1358,7 +1358,7 @@
                     this.clearDeleteValidationErrors();
 
                     if (String(this.deleteForm.owner_password || '').trim() === '') {
-                        this.setDeleteFieldError('owner_password', 'Ingresa la contraseÃ±a del dueÃ±o autorizado.');
+                        this.setDeleteFieldError('owner_password', 'Ingresa la contraseña del dueño autorizado.');
                     }
 
                     return Object.keys(this.deleteValidationErrors).length === 0;
@@ -1484,7 +1484,7 @@
                         percentage: `-${value}%`,
                         fixed: `-${value.toFixed(2)}`,
                         final_price: `Precio final ${value.toFixed(2)}`,
-                        bonus_days: `+${Math.max(0, Math.round(value))} dÃ­as`,
+                        bonus_days: `+${Math.max(0, Math.round(value))} días`,
                         two_for_one: '2x1',
                         bring_friend: 'Trae a un amigo',
                     };
@@ -1514,7 +1514,7 @@
                         summary += `: precio final ${finalPrice.toFixed(2)}`;
                     } else if (promo.type === 'bonus_days') {
                         bonusDays = Math.max(0, Math.round(value));
-                        summary += `: +${bonusDays} dÃ­as`;
+                        summary += `: +${bonusDays} días`;
                     } else if (promo.type === 'two_for_one' || promo.type === 'bring_friend') {
                         const percent = value > 0 ? Math.min(Math.max(value, 0), 100) : 50;
                         finalPrice = Math.max(0, base - (base * percent / 100));
@@ -1634,14 +1634,14 @@
 
                 get membershipBadgeLabel() {
                     if (!this.form.start_membership) {
-                        return 'Sin membresÃ­a';
+                        return 'Sin membresía';
                     }
 
                     if (this.membershipEndLabel === 'N/A') {
                         return 'Pendiente de datos';
                     }
 
-                    return 'Activa (automÃ¡tica)';
+                    return 'Activa (automática)';
                 },
 
                 get paymentStatusLabel() {
@@ -1652,11 +1652,11 @@
                         return 'Pendiente';
                     }
 
-                    return paid >= price ? 'AL DÃA' : 'PENDIENTE';
+                    return paid >= price ? 'AL DÍA' : 'PENDIENTE';
                 },
 
                 get paymentBadgeClass() {
-                    return this.paymentStatusLabel === 'AL DÃA'
+                    return this.paymentStatusLabel === 'AL DÍA'
                         ? 'border border-emerald-400/40 bg-emerald-500/20 text-emerald-200'
                         : 'border border-amber-400/40 bg-amber-500/20 text-amber-200';
                 },
