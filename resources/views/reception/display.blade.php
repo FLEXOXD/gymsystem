@@ -994,7 +994,7 @@
             }
 
             if (monthVisits !== null && monthVisits >= 12) {
-                return 'Muy buen progreso mensual. Sigue asi.';
+                return 'Muy buen progreso mensual. Sigue así.';
             }
 
             if (daysInfo.days !== null && daysInfo.days >= 0 && daysInfo.days <= 5) {

@@ -1,4 +1,4 @@
-﻿@if ($legalAcceptanceRequired)
+@if ($legalAcceptanceRequired)
     <section id="legal-acceptance-overlay" class="legal-accept-overlay" aria-modal="true" role="dialog" aria-labelledby="legal-accept-title">
         <div class="legal-accept-dialog">
             <header class="legal-accept-header">

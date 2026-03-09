@@ -259,7 +259,7 @@ class SuperAdminDashboardController extends Controller
             'remember_token' => null,
         ])->save();
 
-        return back()->with('status', 'Contrasena del admin actualizada correctamente.');
+        return back()->with('status', 'Contraseña del admin actualizada correctamente.');
     }
 
     /**

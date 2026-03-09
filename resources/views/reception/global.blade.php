@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', 'Recepcion global')
-@section('page-title', 'Recepcion consolidada')
+@section('title', 'Recepción global')
+@section('page-title', 'Recepción consolidada')
 
 @section('content')
     <div class="space-y-4">
@@ -22,7 +22,7 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Ultimos check-ins" subtitle="Actividad mas reciente combinada de todas las sedes.">
+        <x-ui.card title="Ultimos check-ins" subtitle="Actividad más reciente combinada de todas las sedes.">
             <div class="overflow-x-auto">
                 <table class="ui-table min-w-[980px]">
                     <thead>
@@ -31,7 +31,7 @@
                             <th>Hora</th>
                             <th>Sede</th>
                             <th>Cliente</th>
-                            <th>Metodo</th>
+                            <th>Método</th>
                         </tr>
                     </thead>
                     <tbody>

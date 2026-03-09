@@ -221,8 +221,8 @@ class ReportController extends Controller
         fputcsv($handle, ['Total movimientos', (int) $incomeSummary['total_movements']]);
         fputcsv($handle, []);
 
-        fputcsv($handle, ['INGRESOS POR METODO']);
-        fputcsv($handle, ['Metodo', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
+        fputcsv($handle, ['INGRESOS POR Método']);
+        fputcsv($handle, ['Método', 'Ingresos', 'Egresos', 'Balance', 'Movimientos']);
         foreach ($incomeByMethod as $row) {
             fputcsv($handle, [
                 match ($row->method) {
@@ -247,14 +247,14 @@ class ReportController extends Controller
         }
         fputcsv($handle, []);
 
-        fputcsv($handle, ['MEMBRESIAS']);
+        fputcsv($handle, ['Membresías']);
         fputcsv($handle, ['Activos', (int) $membershipSummary['active']]);
         fputcsv($handle, ['Vencidos', (int) $membershipSummary['expired']]);
         fputcsv($handle, ['Total clientes', (int) $membershipSummary['total_clients']]);
         fputcsv($handle, []);
 
         fputcsv($handle, ['DETALLE MOVIMIENTOS']);
-        fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto', 'Cliente', 'Usuario', 'Descripcion']);
+        fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Usuario', 'Descripción']);
         $resolvedGymIds = collect($gymIds)
             ->map(static fn ($id): int => (int) $id)
             ->filter(static fn (int $id): bool => $id > 0)

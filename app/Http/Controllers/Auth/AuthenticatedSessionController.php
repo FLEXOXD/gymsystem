@@ -60,7 +60,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerateToken();
 
             throw ValidationException::withMessages([
-                'email' => 'Tu usuario esta desactivado. Contacta al administrador del gimnasio.',
+                'email' => 'Tu usuario está desactivado. Contacta al administrador del gimnasio.',
             ]);
         }
 
@@ -77,7 +77,7 @@ class AuthenticatedSessionController extends Controller
         $gymSlug = trim((string) ($user?->gym?->slug ?? ''));
         if ($gymSlug === '') {
             return redirect()->route('login')->withErrors([
-                'email' => 'Tu usuario no tiene un gimnasio valido asignado.',
+                'email' => 'Tu usuario no tiene un gimnasio válido asignado.',
             ]);
         }
         $gymId = (int) ($user?->gym_id ?? 0);
@@ -161,7 +161,7 @@ class AuthenticatedSessionController extends Controller
                 $demoSessionService->terminateSession($demoSession);
                 $ended = true;
             } catch (\Throwable $exception) {
-                Log::warning('No se pudo finalizar completamente la sesion demo.', [
+                Log::warning('No se pudo finalizar completamente la sesión demo.', [
                     'user_id' => $userId,
                     'demo_session_id' => $demoSession->id,
                     'error' => $exception->getMessage(),

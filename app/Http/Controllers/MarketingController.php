@@ -111,9 +111,9 @@ class MarketingController extends Controller
             'quote_notes' => ['nullable', 'string', 'max:1000'],
             'quote_privacy_accepted' => ['accepted'],
         ], [
-            'quote_privacy_accepted.accepted' => 'Debes aceptar el tratamiento de datos para recibir tu cotizacion.',
-            'quote_phone_country_code.regex' => 'El prefijo telefonico debe tener formato internacional, por ejemplo +593.',
-            'quote_phone_number.regex' => 'Ingresa un numero telefonico valido.',
+            'quote_privacy_accepted.accepted' => 'Debes aceptar el tratamiento de datos para recibir tu cotización.',
+            'quote_phone_country_code.regex' => 'El prefijo telefónico debe tener formato internacional, por ejemplo +593.',
+            'quote_phone_number.regex' => 'Ingresa un número telefónico válido.',
         ]);
 
         $sanitizedPhoneNumber = preg_replace('/\D+/', '', (string) $data['quote_phone_number']) ?? '';
@@ -133,7 +133,7 @@ class MarketingController extends Controller
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        return back()->with('quote_status', 'Solicitud enviada. Te contactaremos con tu cotizacion.');
+        return back()->with('quote_status', 'Solicitud enviada. Te contactaremos con tu cotización.');
     }
 
     public function privacy(Request $request): View|\Illuminate\Http\RedirectResponse
@@ -161,14 +161,14 @@ class MarketingController extends Controller
             'email' => strtolower((string) $request->validated('email')),
             'document_key' => $documentKey,
             'document_label' => (string) $document['label'],
-            'legal_version' => LegalTerms::VERSION,
+            'legal_version' => LegalTerms::Versión,
             'accepted' => true,
             'accepted_at' => now(),
             'ip_address' => $request->ip(),
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        return back()->with('status', 'Aceptación registrada para '.$document['label'].' (versión '.LegalTerms::VERSION.').');
+        return back()->with('status', 'Aceptación registrada para '.$document['label'].' (versión '.LegalTerms::Versión.').');
     }
 
     private function renderLandingPage(Request $request, string $pageMode): View|RedirectResponse
@@ -185,7 +185,7 @@ class MarketingController extends Controller
             'content' => MarketingContent::load(),
             'publicPlanCards' => $this->resolvePublicPlanCards(),
             'pageMode' => $pageMode,
-            'legalVersion' => LegalTerms::VERSION,
+            'legalVersion' => LegalTerms::Versión,
         ]);
     }
 
@@ -238,8 +238,8 @@ class MarketingController extends Controller
         return redirect()
             ->route('panel.index', ['contextGym' => $session->gym->slug])
             ->with('status', $isNewDemo
-                ? 'Registro temporal activo. Los cambios se eliminan automaticamente al expirar.'
-                : 'Se reanudo tu registro temporal activo en este dispositivo.');
+                ? 'Registro temporal activo. Los cambios se eliminan automáticamente al expirar.'
+                : 'Se reanudó tu registro temporal activo en este dispositivo.');
     }
 
     private function redirectAuthenticatedUser(Request $request): ?RedirectResponse
@@ -447,6 +447,9 @@ class MarketingController extends Controller
             'discount_percent' => $discountPercent,
             'summary' => (string) ($meta['summary'] ?? ''),
             'features' => array_values((array) ($meta['features'] ?? [])),
+            'ideal_for' => (string) ($meta['ideal_for'] ?? ''),
+            'ops_focus' => (string) ($meta['ops_focus'] ?? ''),
+            'setup_note' => (string) ($meta['setup_note'] ?? ''),
             'featured' => (bool) ($meta['featured'] ?? false),
             'contact_mode' => (bool) ($meta['contact_mode'] ?? false),
             'cta' => (string) ($meta['cta'] ?? 'Demo gratis'),

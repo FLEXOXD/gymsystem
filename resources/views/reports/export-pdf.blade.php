@@ -22,7 +22,7 @@
         $currencyFormatter = \App\Support\Currency::class;
     @endphp
     <h1>Reportes Profesionales - Gimnasio</h1>
-    <p class="muted">Periodo: {{ $from->toDateString() }} a {{ $to->toDateString() }}</p>
+    <p class="muted">Período: {{ $from->toDateString() }} a {{ $to->toDateString() }}</p>
 
     <h2>Resumen Financiero</h2>
     <table class="kpis">

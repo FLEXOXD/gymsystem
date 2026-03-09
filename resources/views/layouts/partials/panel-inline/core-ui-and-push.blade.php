@@ -1,11 +1,11 @@
-﻿        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebar = document.getElementById('panel-sidebar');
         const sidebarToggleLabel = sidebarToggle?.querySelector('.panel-menu-trigger-label');
 
         function syncSidebarToggleUi(collapsed) {
             if (!sidebarToggle) return;
-            const label = collapsed ? 'Abrir menu' : 'Ocultar menu';
-            const ariaLabel = collapsed ? 'Abrir menu' : 'Ocultar menu';
+            const label = collapsed ? 'Abrir menú' : 'Ocultar menú';
+            const ariaLabel = collapsed ? 'Abrir menú' : 'Ocultar menú';
             if (sidebarToggleLabel) {
                 sidebarToggleLabel.textContent = label;
             }
@@ -82,7 +82,7 @@
             if (withFailsafe) {
                 uiLoadingTimeoutId = window.setTimeout(function () {
                     hideUiLoading();
-                    showPushAccessAlert('La accion esta tardando mas de lo esperado. Intenta de nuevo.', 'warning');
+                    showPushAccessAlert('La acción está tardando más de lo esperado. Intenta de nuevo.', 'warning');
                 }, 15000);
             }
         }
@@ -400,7 +400,7 @@
                 pwaInstallPromptEvent = null;
                 markPwaInstalled();
                 hidePwaInstallButton();
-                showPwaAccessAlert('Aplicacion instalada correctamente.', 'warning');
+                showPwaAccessAlert('Aplicación instalada correctamente.', 'warning');
                 reportPwaEvent('app_installed');
             });
 
@@ -453,7 +453,7 @@
                 throw new Error('Falta WEBPUSH_VAPID_PUBLIC_KEY en .env.');
             }
             if (!/^[A-Za-z0-9\-_]+$/.test(normalized)) {
-                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY invalida. Regenera llaves VAPID.');
+                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY inválida. Regenera llaves VAPID.');
             }
 
             const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
@@ -462,7 +462,7 @@
             try {
                 rawData = window.atob(base64);
             } catch (_error) {
-                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY invalida. Ejecuta notifications:webpush-keys y actualiza .env.');
+                throw new Error('WEBPUSH_VAPID_PUBLIC_KEY inválida. Ejecuta notifications:webpush-keys y actualiza .env.');
             }
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; i += 1) {
@@ -484,10 +484,10 @@
                 body: JSON.stringify(payload || {}),
             });
             const data = await response.json().catch(function () {
-                return { ok: false, message: 'Respuesta invalida del servidor.' };
+                return { ok: false, message: 'Respuesta inválida del servidor.' };
             });
             if (!response.ok || data.ok === false) {
-                const errorMessage = (data && data.message) ? String(data.message) : 'No se pudo completar la operacion.';
+                const errorMessage = (data && data.message) ? String(data.message) : 'No se pudo completar la operación.';
                 throw new Error(errorMessage);
             }
 
@@ -606,7 +606,7 @@
             [
                 'Recordatorios de renovaciones y vencimientos.',
                 'Alertas operativas importantes de tu gimnasio.',
-                'Mensajes inmediatos sin tener que recargar la pagina.',
+                'Mensajes inmediatos sin tener que recargar la página.',
             ].forEach(function (item) {
                 const li = document.createElement('li');
                 li.className = 'flex items-start gap-2';
@@ -658,7 +658,7 @@
             }
 
             if (isDemoMode) {
-                pushUnsupportedReason = 'Las notificaciones push no estan disponibles en la cuenta demo.';
+                pushUnsupportedReason = 'Las notificaciones push no están disponibles en la cuenta demo.';
                 updatePushButtonState('unsupported');
                 return;
             }
@@ -719,7 +719,7 @@
             try {
                 urlBase64ToUint8Array(pushVapidPublicKey);
             } catch (error) {
-                pushUnsupportedReason = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY invalida.';
+                pushUnsupportedReason = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY inválida.';
                 updatePushButtonState('unsupported');
                 showPushAccessAlert(pushUnsupportedReason, 'warning');
                 return;
@@ -752,7 +752,7 @@
             }
 
             if (statusOnServer && statusOnServer.webpush_ready === false) {
-                showPushAccessAlert('El servidor aun no tiene llaves VAPID activas.', 'warning');
+                showPushAccessAlert('El servidor aún no tiene llaves VAPID activas.', 'warning');
             }
 
             pushNotificationsButton.addEventListener('click', async function () {
@@ -766,7 +766,7 @@
                 try {
                     registration = await resolvePushServiceWorkerRegistration();
                     if (!registration || !registration.pushManager) {
-                        throw new Error('No se pudo inicializar Service Worker para push. Recarga la pagina.');
+                        throw new Error('No se pudo inicializar Service Worker para push. Recarga la página.');
                     }
 
                     currentSubscription = await registration.pushManager.getSubscription();
@@ -789,7 +789,7 @@
                     const permissionResult = await Notification.requestPermission();
                     if (permissionResult !== 'granted') {
                         updatePushButtonState(permissionResult === 'denied' ? 'denied' : 'idle');
-                        showPushAccessAlert('No se concedio permiso de notificaciones.', 'warning');
+                        showPushAccessAlert('No se concedió permiso de notificaciones.', 'warning');
 
                         return;
                     }
@@ -955,7 +955,7 @@
             const anchor = target.closest('a[href]');
             if (!anchor) return;
             if (shouldIgnoreLinkForLoading(anchor, event)) return;
-            showUiLoadingForNavigation('Cargando pagina...');
+            showUiLoadingForNavigation('Cargando página...');
         });
 
         document.addEventListener('submit', function (event) {
@@ -975,7 +975,7 @@
         });
 
         window.addEventListener('popstate', function () {
-            showUiLoadingForNavigation('Cargando pagina...');
+            showUiLoadingForNavigation('Cargando página...');
         });
         window.addEventListener('beforeunload', function () {
             markUiNavigationStarted();

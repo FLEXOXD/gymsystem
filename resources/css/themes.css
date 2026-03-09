@@ -528,7 +528,7 @@
         color: var(--sidebar-muted);
     }
 
-    /* Superficies claras dentro de tema oscuro (ej: tarjetas internas en Configuracion). */
+    /* Superficies claras dentro de tema oscuro (ej: tarjetas internas en Configuración). */
     .theme-dark .theme-surface-light .ui-heading,
     .theme-dark .theme-surface-light .ui-text {
         color: #0f172a;

@@ -1835,7 +1835,7 @@
                         </div>
                         <button id="client-push-toggle" type="button" class="module-action module-action-secondary">Activar</button>
                     </div>
-                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal esté en riesgo o cuando lo completes.</p>
+                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal está en riesgo o cuando lo completes.</p>
                 </article>
 
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o código">
@@ -1954,7 +1954,7 @@
                             @endif
                         @endforeach
                     </ul>
-                    <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">Todavia no registras asistencias en este mes.</p>
+                    <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">Todavía no registras asistencias en este mes.</p>
                 </article>
             </section>
         @endif
@@ -2022,7 +2022,7 @@
                         <div class="weekly-progress-meta">
                             <span id="weekly-goal-progress-label">Completado: {{ $weeklyGoalCompletion }}%</span>
                             <span id="weekly-goal-remaining-label">Faltan: {{ $weeklyGoalRemaining }}</span>
-                            <span id="weekly-goal-days-left-label">Dias restantes: {{ $weeklyGoalDaysLeft }}</span>
+                            <span id="weekly-goal-days-left-label">Días restantes: {{ $weeklyGoalDaysLeft }}</span>
                         </div>
 
                         <div id="weekly-alert-list" class="weekly-alert-list">
@@ -2163,7 +2163,7 @@
                                 <span id="body-state-discipline-value" class="body-state-value">{{ $bodyStateDiscipline }}</span>
                             </div>
                             <div class="body-state-row">
-                                <span class="body-state-label">Recuperacion</span>
+                                <span class="body-state-label">Recuperación</span>
                                 <span class="body-state-track" aria-hidden="true">
                                     <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: {{ $bodyStateRecovery }}%;"></span>
                                 </span>
@@ -2353,7 +2353,7 @@
                         </div>
                     </div>
                     <div class="profile-kpi">
-                        <p class="profile-kpi-label">Último ingreso</p>
+                        <p class="profile-kpi-label">último ingreso</p>
                         <p class="profile-kpi-value">{{ $lastAttendanceLabel }}</p>
                     </div>
                 </article>
@@ -2478,7 +2478,7 @@
                         @endif
 
                         @if ($fitnessUpdatedLabel !== '')
-                            <p class="fitness-profile-note">Última actualización: {{ $fitnessUpdatedLabel }}</p>
+                            <p class="fitness-profile-note">última actualización: {{ $fitnessUpdatedLabel }}</p>
                         @endif
                     @else
                         <p class="text-xs text-slate-300">Aún no completas tus datos físicos iniciales.</p>
@@ -2701,7 +2701,7 @@
         if (directPermissionPromptDone) return;
         directPermissionPromptDone = true;
 
-        // Primero camara para aprovechar el gesto de usuario y mostrar popup nativo.
+        // Primero cámara para aprovechar el gesto de usuario y mostrar popup nativo.
         if (checkinUrl !== '') {
             try {
                 const previewStream = await requestCameraStream();
@@ -2756,7 +2756,7 @@
             || errorName === 'OverconstrainedError'
             || errorName === 'ConstraintNotSatisfiedError'
         ) {
-            // Error tecnico de dispositivo/camara, no bloqueo de permiso.
+            // Error técnico de dispositivo/cámara, no bloqueó de permiso.
             cameraPermissionProbeState = 'granted';
         }
     }
@@ -3247,7 +3247,7 @@
             openActionGuide(
                 mode,
                 'Paso 1: registra asistencia',
-                'Primero valida tu ingreso por QR, RFID o documento en recepción.',
+                'Primero válida tu ingreso por QR, RFID o documento en recepción.',
                 'Ir a registrar asistencia',
                 () => navigateToAppScreen('checkin')
             );
@@ -4421,22 +4421,22 @@
     function resolveCameraErrorMessage(error) {
         const errorName = String(error && error.name ? error.name : '').trim();
         if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
-            return 'No se concedio permiso de camara. Pulsa Escanear QR y acepta el popup del navegador.';
+            return 'No se concedió permiso de cámara. Pulsa Escanear QR y acepta el popup del navegador.';
         }
         if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
-            return 'No se encontro una camara disponible en este dispositivo.';
+            return 'No se encontró una cámara disponible en este dispositivo.';
         }
         if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
-            return 'La camara esta en uso por otra app o pestana. Cierra la otra app e intenta de nuevo.';
+            return 'La cámara está en uso por otra app o pestaña. Cierra la otra app e intenta de nuevo.';
         }
         if (errorName === 'OverconstrainedError' || errorName === 'ConstraintNotSatisfiedError') {
-            return 'No se pudo usar la camara trasera. Intenta otra vez y usa la camara principal.';
+            return 'No se pudo usar la cámara trasera. Intenta otra vez y usa la cámara principal.';
         }
         if (errorName === 'SecurityError') {
-            return 'El navegador bloqueo la camara por seguridad.';
+            return 'El navegador bloqueó la cámara por seguridad.';
         }
         if (errorName === 'AbortError') {
-            return 'Se interrumpio la apertura de la camara. Intenta nuevamente.';
+            return 'Se interrumpio la apertura de la cámara. Intenta nuevamente.';
         }
         return mobileI18n.camera_open_failed;
     }
@@ -4516,14 +4516,14 @@
         }
 
         if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-            statusEl.textContent = 'Este navegador no permite abrir la camara.';
+            statusEl.textContent = 'Este navegador no permite abrir la cámara.';
             return;
         }
 
         stopScan();
         startBtn.disabled = true;
         resetScanMarkers();
-        statusEl.textContent = 'Abriendo camara...';
+        statusEl.textContent = 'Abriendo cámara...';
 
         const canUseNativeQr = await supportsNativeQrDetection();
         if (canUseNativeQr) {

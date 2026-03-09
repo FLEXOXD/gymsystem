@@ -210,7 +210,7 @@
     ];
     $openPromotionModal = ! $isReadOnlyScope && $canManagePromotions && (string) old('promotion_form', '0') === '1';
     $readOnlyMessage = $isGlobalScope
-        ? 'Modo global activo: planes y promociones en solo lectura. Selecciona una sede especifica para crear, editar o eliminar.'
+        ? 'Modo global activo: planes y promociones en solo lectura. Selecciona una sede específica para crear, editar o eliminar.'
         : 'Modo sucursal secundaria: planes y promociones en solo lectura. La sede principal administra estos cambios.';
     $readOnlyActionLabel = $isGlobalScope ? 'Solo lectura global' : 'Solo lectura sucursal';
     $defaultStatus = old('status', 'active');
@@ -265,7 +265,7 @@
                         </div>
 
                         <div id="duration-presets-row" class="space-y-2 {{ $defaultDurationUnit === 'months' ? 'opacity-50' : '' }}">
-                            <p class="ui-muted text-xs font-bold uppercase tracking-wide">Duración rapida</p>
+                            <p class="ui-muted text-xs font-bold uppercase tracking-wide">Duración rápida</p>
                             <div class="flex flex-wrap gap-2" role="group" aria-label="Presets de duración">
                                 @foreach ([1, 7, 15, 30, 60, 90] as $preset)
                                     <button type="button" class="chip-btn js-duration-chip {{ $defaultDurationUnit === 'months' ? 'cursor-not-allowed' : '' }}" data-days="{{ $preset }}" @disabled($defaultDurationUnit === 'months')>{{ $preset }} días</button>
@@ -322,8 +322,8 @@
                                         <input type="number" name="daily_checkin_limit" min="1" step="1" value="{{ old('daily_checkin_limit') }}" class="ui-input" placeholder="Ilimitado" aria-label="Límite de ingresos por día">
                                     </label>
                                     <label class="plans-advanced-switch flex items-center gap-2 rounded-xl border px-3 py-3">
-                                        <input type="checkbox" name="quick_sale_enabled" value="1" class="h-4 w-4" @checked(old('quick_sale_enabled', '1') === '1') aria-label="Mostrar en venta rapida">
-                                        <span class="plans-advanced-switch-text text-sm font-semibold">Mostrar en venta rapida</span>
+                                        <input type="checkbox" name="quick_sale_enabled" value="1" class="h-4 w-4" @checked(old('quick_sale_enabled', '1') === '1') aria-label="Mostrar en venta rápida">
+                                        <span class="plans-advanced-switch-text text-sm font-semibold">Mostrar en venta rápida</span>
                                     </label>
                                 </div>
                                 {{-- Backend mapping pendiente:
@@ -366,8 +366,8 @@
     <x-ui.card title="Crear plan" subtitle="Modo de solo lectura.">
         <p class="ui-muted text-sm">
             {{ $isGlobalScope
-                ? 'Para crear o editar planes, cambia el selector de sucursal arriba y entra en una sede especifica.'
-                : 'La sede secundaria no puede crear ni editar planes. Esta gestion se realiza desde la sede principal.' }}
+                ? 'Para crear o editar planes, cambia el selector de sucursal arriba y entra en una sede específica.'
+                : 'La sede secundaria no puede crear ni editar planes. Esta gestión se realiza desde la sede principal.' }}
         </p>
     </x-ui.card>
     @endif
@@ -690,7 +690,7 @@
         <div class="space-y-3">
             <h2 class="ui-heading text-lg font-black">Promociones comerciales</h2>
             <p class="ui-muted text-sm">
-                Este modulo no esta disponible en tu plan actual. Para habilitar promociones cambia al Plan profesional o superior.
+                Este módulo no está disponible en tu plan actual. Para habilitar promociones cambia al Plan profesional o superior.
             </p>
         </div>
     </x-ui.card>

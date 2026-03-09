@@ -45,7 +45,7 @@ class SendSubscriptionNotificationPushJob implements ShouldQueue
             $targetUrl = route('app.entry');
         }
 
-        $title = 'Suscripcion GymSystem';
+        $title = 'Suscripción GymSystem';
         $planName = trim((string) ($notification->subscription?->plan_name ?? ''));
         if ($planName !== '') {
             $title .= ' - '.$planName;
@@ -53,7 +53,7 @@ class SendSubscriptionNotificationPushJob implements ShouldQueue
 
         $pushNotificationService->sendToGymUsers((int) $notification->gym_id, [
             'title' => $title,
-            'body' => (string) ($notification->message_snapshot ?? 'Tienes un recordatorio de suscripcion pendiente.'),
+            'body' => (string) ($notification->message_snapshot ?? 'Tienes un recordatorio de suscripción pendiente.'),
             'tag' => 'subscription-notification-'.(int) $notification->id,
             'url' => $targetUrl,
             'data' => [

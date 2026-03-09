@@ -62,7 +62,7 @@ class UpdateClientAppAccountRequest extends FormRequest
             'app_username.required' => 'Ingresa un usuario para el acceso cliente.',
             'app_username.min' => 'El usuario debe tener al menos 4 caracteres.',
             'app_username.max' => 'El usuario no puede superar 80 caracteres.',
-            'app_username.regex' => 'El usuario solo puede usar letras minusculas, numeros, punto, guion y guion bajo.',
+            'app_username.regex' => 'El usuario solo puede usar letras minúsculas, números, punto, guion y guion bajo.',
             'app_username.unique' => 'Este usuario ya existe en este gimnasio.',
         ];
     }

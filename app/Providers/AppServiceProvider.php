@@ -102,7 +102,7 @@ class AppServiceProvider extends ServiceProvider
 
                     return redirect()
                         ->route('landing')
-                        ->with('error', 'Alcanzaste el maximo de 3 intentos de demo. Espera para volver a intentarlo.')
+                        ->with('error', 'Alcanzaste el máximo de 3 intentos de demo. Espera para volver a intentarlo.')
                         ->with('demo_limit_modal', [
                             'retry_after_seconds' => $retryAfter,
                         ]);

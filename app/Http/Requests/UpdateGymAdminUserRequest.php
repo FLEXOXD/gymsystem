@@ -51,7 +51,7 @@ class UpdateGymAdminUserRequest extends FormRequest
             ],
             'admin_gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other', 'prefer_not_say'])],
             'admin_birth_date' => ['nullable', 'date', 'before_or_equal:today'],
-            'admin_identification_type' => ['nullable', 'string', Rule::in(['cedula', 'dni', 'passport'])],
+            'admin_identification_type' => ['nullable', 'string', Rule::in(['cédula', 'dni', 'passport'])],
             'admin_identification_number' => ['nullable', 'string', 'min:4', 'max:30', 'regex:/^[A-Z0-9\-]+$/'],
             'admin_country_iso' => ['nullable', 'string', Rule::in(array_keys(GymLocationCatalog::catalog()))],
             'admin_address_state' => ['nullable', 'string', 'max:120'],

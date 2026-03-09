@@ -44,11 +44,11 @@ class UpdateGymAdminPasswordRequest extends FormRequest
             'reset_password_gym_id.required' => 'No se pudo identificar el gimnasio.',
             'reset_password_user_id.required' => 'No se pudo identificar el usuario administrador.',
             'reset_password_user_id.exists' => 'El usuario administrador no existe.',
-            'reset_password.required' => 'Ingresa la nueva contrasena.',
-            'reset_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
-            'reset_password.max' => 'La contrasena no puede superar 72 caracteres.',
-            'reset_password.confirmed' => 'La confirmacion de contrasena no coincide.',
-            'reset_password_confirmation.required' => 'Confirma la nueva contrasena.',
+            'reset_password.required' => 'Ingresa la nueva contraseña.',
+            'reset_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
+            'reset_password.max' => 'La contraseña no puede superar 72 caracteres.',
+            'reset_password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'reset_password_confirmation.required' => 'Confirma la nueva contraseña.',
         ];
     }
 

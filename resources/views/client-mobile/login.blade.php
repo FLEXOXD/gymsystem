@@ -197,7 +197,7 @@
             </button>
 
             <button id="client-pwa-install" type="button" class="login-install hidden">Instalar app</button>
-            <p id="client-pwa-install-note" class="login-install-note hidden">Para instalar: abre el menu del navegador y elige "Instalar app".</p>
+            <p id="client-pwa-install-note" class="login-install-note hidden">Para instalar: abre el menú del navegador y elige "Instalar app".</p>
         </form>
 
         <p class="px-1 text-center text-[11px] text-emerald-100/80">Tu sesión es privada y segura en este dispositivo.</p>

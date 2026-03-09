@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Clientes')
 @section('page-title', 'Clientes')
@@ -126,8 +126,8 @@
             'action' => (string) ($oldDeleteClient['delete_url'] ?? ''),
             'id' => $oldDeleteClientId > 0 ? $oldDeleteClientId : null,
             'full_name' => (string) ($oldDeleteClient['full_name'] ?? ''),
-            'owner_scope_label' => (string) ($oldDeleteClient['owner_scope_label'] ?? 'dueno del gimnasio'),
-            'owner_modal_hint' => (string) ($oldDeleteClient['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.'),
+            'owner_scope_label' => (string) ($oldDeleteClient['owner_scope_label'] ?? 'dueño del gimnasio'),
+            'owner_modal_hint' => (string) ($oldDeleteClient['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'),
         ];
     @endphp
 
@@ -170,7 +170,7 @@
 
         @if ($isGlobalScope)
             <div class="ui-alert ui-alert-warning">
-                Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal especifica.
+                Modo global activo: listado consolidado por sede. Para crear o editar clientes selecciona una sucursal específica.
             </div>
         @endif
 
@@ -225,7 +225,7 @@
                             <th class="px-3 py-3">Vence</th>
                             <th class="px-3 py-3">Días restantes</th>
                             <th class="px-3 py-3">Pago</th>
-                            <th class="px-3 py-3">Ultima asistencia</th>
+                            <th class="px-3 py-3">última asistencia</th>
                             <th class="px-3 py-3">Estado</th>
                             @if ($isGlobalScope)
                                 <th class="px-3 py-3">Sede</th>
@@ -319,8 +319,8 @@
                                                         action: @js((string) ($client['delete_url'] ?? '')),
                                                         id: {{ (int) $client['id'] }},
                                                         full_name: @js((string) ($client['full_name'] ?? '')),
-                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueno del gimnasio')),
-                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.'))
+                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueño del gimnasio')),
+                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'))
                                                     })">
                                                 Eliminar
                                             </button>
@@ -372,7 +372,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Crear cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Alta rapida de cliente con membresía opcional.</p>
+                            <p class="mt-1 text-sm text-slate-400">Alta rápida de cliente con membresía opcional.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -438,7 +438,7 @@
                                        required
                                        class="ui-input"
                                        x-bind:class="clientValidationErrors.document_number ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
-                                       placeholder="Cedula, DNI o pasaporte">
+                                       placeholder="Cédula, DNI o pasaporte">
                                 <p x-cloak x-show="clientValidationErrors.document_number" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.document_number"></p>
                                 @error('document_number')
                                     <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
@@ -471,7 +471,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300">
-                                <span>Genero</span>
+                                <span>Género</span>
                                 <select name="gender" x-model="form.gender" class="ui-input">
                                     <option value="male">Hombre</option>
                                     <option value="female">Mujer</option>
@@ -524,7 +524,7 @@
                                                    autocomplete="new-password"
                                                    class="ui-input"
                                                    x-bind:class="clientValidationErrors.app_password ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/30' : ''"
-                                                   placeholder="Minimo 8 caracteres">
+                                                   placeholder="Mínimo 8 caracteres">
                                             <p x-cloak x-show="clientValidationErrors.app_password" class="text-xs font-semibold text-rose-300" x-text="clientValidationErrors.app_password"></p>
                                             @error('app_password')
                                                 <span class="text-xs font-semibold text-rose-300">{{ $message }}</span>
@@ -719,7 +719,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Editar cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Solo puedes actualizar nombre, apellido y telefono.</p>
+                            <p class="mt-1 text-sm text-slate-400">Solo puedes actualizar nombre, apellido y teléfono.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -779,7 +779,7 @@
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2">
-                                <span>Telefono</span>
+                                <span>Teléfono</span>
                                 <input type="text"
                                        name="edit_phone"
                                        x-model="editForm.phone"
@@ -826,7 +826,7 @@
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
                         <div>
                             <h3 class="text-xl font-black text-slate-100">Eliminar cliente</h3>
-                            <p class="mt-1 text-sm text-slate-400">Esta accion borrara tambien sus membresias y datos vinculados.</p>
+                            <p class="mt-1 text-sm text-slate-400">Esta acción borrará también sus membresías y datos vinculados.</p>
                         </div>
                         <button type="button"
                                 class="ui-button ui-button-ghost px-2 py-1 text-sm"
@@ -851,11 +851,11 @@
                         <div class="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-4">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-rose-200/80">Cliente a eliminar</p>
                             <p class="mt-2 text-lg font-black text-white" x-text="deleteForm.full_name || 'Cliente sin nombre'"></p>
-                            <p class="mt-3 text-sm text-rose-100/90" x-text="deleteForm.owner_modal_hint || 'Confirma con la contrasena del dueno autorizado.'"></p>
+                            <p class="mt-3 text-sm text-rose-100/90" x-text="deleteForm.owner_modal_hint || 'Confirma con la contraseña del dueño autorizado.'"></p>
                         </div>
 
                         <label class="space-y-1 text-sm font-semibold text-slate-300">
-                            <span>Contrasena del <span class="lowercase" x-text="deleteForm.owner_scope_label || 'dueno del gimnasio'"></span></span>
+                            <span>Contraseña del <span class="lowercase" x-text="deleteForm.owner_scope_label || 'dueño del gimnasio'"></span></span>
                             <input type="password"
                                    name="owner_password"
                                    x-model="deleteForm.owner_password"
@@ -937,8 +937,8 @@
                     action: config.deleteModal?.action ?? '',
                     id: config.deleteModal?.id ?? '',
                     full_name: config.deleteModal?.full_name ?? '',
-                    owner_scope_label: config.deleteModal?.owner_scope_label ?? 'dueno del gimnasio',
-                    owner_modal_hint: config.deleteModal?.owner_modal_hint ?? 'Confirma con la contrasena del dueno del gimnasio.',
+                    owner_scope_label: config.deleteModal?.owner_scope_label ?? 'dueño del gimnasio',
+                    owner_modal_hint: config.deleteModal?.owner_modal_hint ?? 'Confirma con la contraseña del dueño del gimnasio.',
                     owner_password: '',
                 },
                 photoPreview: null,
@@ -1030,8 +1030,8 @@
                         action: payload?.action ?? '',
                         id: payload?.id ?? '',
                         full_name: payload?.full_name ?? '',
-                        owner_scope_label: payload?.owner_scope_label ?? 'dueno del gimnasio',
-                        owner_modal_hint: payload?.owner_modal_hint ?? 'Confirma con la contrasena del dueno del gimnasio.',
+                        owner_scope_label: payload?.owner_scope_label ?? 'dueño del gimnasio',
+                        owner_modal_hint: payload?.owner_modal_hint ?? 'Confirma con la contraseña del dueño del gimnasio.',
                         owner_password: '',
                     };
                     this.deleteModalOpen = true;
@@ -1171,7 +1171,7 @@
                     }
 
                     if (!/^[A-Za-z0-9\- ]+$/.test(raw)) {
-                        return 'El documento solo puede usar letras, numeros, espacios y guion.';
+                        return 'El documento solo puede usar letras, números, espacios y guion.';
                     }
 
                     if (canonical.length < 6 || canonical.length > 20) {
@@ -1179,15 +1179,15 @@
                     }
 
                     if (!/\d/.test(canonical)) {
-                        return 'El documento debe incluir al menos un numero.';
+                        return 'El documento debe incluir al menos un número.';
                     }
 
                     if (/^(.)\1+$/.test(canonical)) {
-                        return 'El documento ingresado no parece valido.';
+                        return 'El documento ingresado no parece válido.';
                     }
 
                     if (/^\d+$/.test(canonical) && this.isSequentialDigits(canonical)) {
-                        return 'El documento ingresado no parece valido.';
+                        return 'El documento ingresado no parece válido.';
                     }
 
                     return '';
@@ -1202,23 +1202,23 @@
                     const digits = raw.replace(/\D/g, '');
 
                     if (raw === '') {
-                        return 'Ingresa el telefono del cliente.';
+                        return 'Ingresa el teléfono del cliente.';
                     }
 
                     if (!/^[0-9+\-\s()]+$/.test(raw)) {
-                        return 'El telefono solo puede contener numeros y los simbolos + - ( ).';
+                        return 'El teléfono solo puede contener números y los símbolos + - ( ).';
                     }
 
                     if (digits.length < 7 || digits.length > 15) {
-                        return 'El telefono debe tener entre 7 y 15 digitos.';
+                        return 'El teléfono debe tener entre 7 y 15 dígitos.';
                     }
 
                     if (/^(\d)\1+$/.test(digits)) {
-                        return 'El telefono ingresado no parece valido.';
+                        return 'El teléfono ingresado no parece válido.';
                     }
 
                     if (this.isSequentialDigits(digits)) {
-                        return 'El telefono ingresado no parece valido.';
+                        return 'El teléfono ingresado no parece válido.';
                     }
 
                     return '';
@@ -1235,7 +1235,7 @@
                     }
 
                     if (!/^[a-z0-9._-]+$/.test(username)) {
-                        return 'El usuario solo puede usar letras minusculas, numeros, punto, guion y guion bajo.';
+                        return 'El usuario solo puede usar letras minúsculas, números, punto, guion y guion bajo.';
                     }
 
                     return '';
@@ -1260,7 +1260,7 @@
                     if (documentError !== '') {
                         this.setClientFieldError('document_number', documentError);
                     } else if (this.documentState === 'exists') {
-                        this.setClientFieldError('document_number', 'Este documento ya esta registrado en este gimnasio.');
+                        this.setClientFieldError('document_number', 'Este documento ya está registrado en este gimnasio.');
                     }
 
                     if (phoneError !== '') {
@@ -1277,13 +1277,13 @@
                         }
 
                         if (appPassword.length < 8) {
-                            this.setClientFieldError('app_password', 'La contrasena debe tener al menos 8 caracteres.');
+                            this.setClientFieldError('app_password', 'La contraseña debe tener al menos 8 caracteres.');
                         }
 
                         if (appPasswordConfirmation === '') {
-                            this.setClientFieldError('app_password_confirmation', 'Confirma la contrasena de la app cliente.');
+                            this.setClientFieldError('app_password_confirmation', 'Confirma la contraseña de la app cliente.');
                         } else if (appPasswordConfirmation !== appPassword) {
-                            this.setClientFieldError('app_password_confirmation', 'La confirmacion de contrasena no coincide.');
+                            this.setClientFieldError('app_password_confirmation', 'La confirmación de contraseña no coincide.');
                         }
                     }
 
@@ -1358,7 +1358,7 @@
                     this.clearDeleteValidationErrors();
 
                     if (String(this.deleteForm.owner_password || '').trim() === '') {
-                        this.setDeleteFieldError('owner_password', 'Ingresa la contrasena del dueno autorizado.');
+                        this.setDeleteFieldError('owner_password', 'Ingresa la contraseña del dueño autorizado.');
                     }
 
                     return Object.keys(this.deleteValidationErrors).length === 0;
@@ -1641,7 +1641,7 @@
                         return 'Pendiente de datos';
                     }
 
-                    return 'Activa (automatica)';
+                    return 'Activa (automática)';
                 },
 
                 get paymentStatusLabel() {

@@ -60,7 +60,7 @@ class UpdateUserProfileRequest extends FormRequest
             'user_country_name' => ['required', 'string', 'min:2', 'max:80'],
             'user_gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other', 'prefer_not_say'])],
             'user_birth_date' => ['nullable', 'date', 'before_or_equal:today'],
-            'user_identification_type' => ['nullable', 'string', Rule::in(['cedula', 'dni', 'passport'])],
+            'user_identification_type' => ['nullable', 'string', Rule::in(['cédula', 'dni', 'passport'])],
             'user_identification_number' => ['nullable', 'string', 'min:4', 'max:30', 'regex:/^[A-Z0-9\-]+$/'],
             'user_phone_country_iso' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
             'user_phone_country_dial' => ['required', 'string', 'max:8', 'regex:/^\+\d{1,4}$/'],

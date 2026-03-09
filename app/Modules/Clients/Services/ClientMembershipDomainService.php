@@ -32,7 +32,7 @@ class ClientMembershipDomainService
         float $basePrice,
         ?Promotion $promotion
     ): string {
-        $description = 'Cobro membresia #'.$membershipId
+        $description = 'Cobro membresía #'.$membershipId
             .' - Plan '.$planName
             .' (PVP '.number_format($basePrice, 2, '.', '').')';
 

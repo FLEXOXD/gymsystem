@@ -345,7 +345,7 @@
     $demoServerNowIso = trim((string) ($demo_server_now_iso ?? ''));
     $demoGuideSteps = is_array($demo_guide_steps ?? null) ? array_values($demo_guide_steps) : [];
     $demoExpiresLabel = $demoExpiresAt ? $demoExpiresAt->timezone(config('app.timezone'))->format('d/m/Y H:i') : null;
-    $legalCurrentVersion = LegalTerms::VERSION;
+    $legalCurrentVersion = LegalTerms::Versión;
     $acceptedVersion = trim((string) ($user?->legal_accepted_version ?? ''));
     $legalAcceptanceColumnsReady = \Illuminate\Support\Facades\Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version']);
     $canAcceptLegalTerms = app(LegalAcceptanceEligibilityService::class)->canUserAccept($user);
@@ -1527,7 +1527,7 @@
                                         </a>
                                     @empty
                                         <p class="rounded-xl border border-dashed border-slate-300 px-3 py-6 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-300">
-                                            Aun no hay mensajes nuevos desde la web.
+                                            Aún no hay mensajes nuevos desde la web.
                                         </p>
                                     @endforelse
                                 </div>
@@ -1614,7 +1614,7 @@
                 <section class="rounded-2xl border border-cyan-200 bg-cyan-50/90 px-4 py-3 text-sm text-cyan-900 shadow-sm dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
                     <p class="font-bold uppercase tracking-wide">Modo Cajero</p>
                     <p class="mt-1 text-xs">
-                        Acceso operativo habilitado para panel, recepcion, clientes, membresias y cobros.
+                        Acceso operativo habilitado para panel, recepción, clientes, membresías y cobros.
                     </p>
                 </section>
             @endif

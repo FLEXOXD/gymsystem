@@ -153,7 +153,7 @@ class CashSessionService
     {
         $user = $this->resolveOperator($gymId, $userId);
         if ($user && ! $user->canOpenCashBox()) {
-            throw new RuntimeException('No tienes permiso para abrir caja. Esta accion la controla el dueno del gimnasio.');
+            throw new RuntimeException('No tienes permiso para abrir caja. Esta acción la controla el dueño del gimnasio.');
         }
     }
 
@@ -161,7 +161,7 @@ class CashSessionService
     {
         $user = $this->resolveOperator($gymId, $userId);
         if ($user && ! $user->canCloseCashBox()) {
-            throw new RuntimeException('No tienes permiso para cerrar caja. Esta accion la controla el dueno del gimnasio.');
+            throw new RuntimeException('No tienes permiso para cerrar caja. Esta acción la controla el dueño del gimnasio.');
         }
     }
 
@@ -207,7 +207,7 @@ class CashSessionService
         }
 
         if (! $user->isActiveAccount()) {
-            throw new RuntimeException('Tu usuario esta desactivado.');
+            throw new RuntimeException('Tu usuario está desactivado.');
         }
 
         return $user;

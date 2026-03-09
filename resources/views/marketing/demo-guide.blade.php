@@ -1,4 +1,4 @@
-﻿@php($content = $content ?? \App\Support\MarketingContent::defaults())
+@php($content = $content ?? \App\Support\MarketingContent::defaults())
 @php($demoCtaLabel = 'Demo gratis')
 <!DOCTYPE html>
 <html lang="es">
@@ -166,17 +166,17 @@
             <article class="step">
                 <span class="step-index">3</span>
                 <h2>{{ $content['guide_step_3_title'] ?? 'Paso 3' }}</h2>
-                <p>{{ $content['guide_step_3_text'] ?? 'Activa membresias y prueba recepcion.' }}</p>
+                <p>{{ $content['guide_step_3_text'] ?? 'Activa membresías y prueba recepción.' }}</p>
             </article>
             <article class="step">
                 <span class="step-index">4</span>
                 <h2>{{ $content['guide_step_4_title'] ?? 'Paso 4' }}</h2>
-                <p>{{ $content['guide_step_4_text'] ?? 'Valida caja, cobros y reportes.' }}</p>
+                <p>{{ $content['guide_step_4_text'] ?? 'Válida caja, cobros y reportes.' }}</p>
             </article>
             <article class="step" style="grid-column: 1 / -1;">
                 <span class="step-index">5</span>
                 <h2>{{ $content['guide_step_5_title'] ?? 'Paso 5' }}</h2>
-                <p>{{ $content['guide_step_5_text'] ?? 'Confirma configuracion final antes de operar.' }}</p>
+                <p>{{ $content['guide_step_5_text'] ?? 'Confirma configuración final antes de operar.' }}</p>
             </article>
         </section>
 

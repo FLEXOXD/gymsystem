@@ -26,7 +26,7 @@
                     <span class="text-slate-500">|</span>
                     <span>Restan: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $remainingLabel }}</span></span>
                     <span class="text-slate-500">|</span>
-                    <span>Ultima asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></span>
+                    <span>última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></span>
                 </div>
             </div>
         </div>

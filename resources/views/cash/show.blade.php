@@ -12,7 +12,7 @@
             'transfer' => 'Transferencia',
         ];
     @endphp
-    <x-ui.card title="Sesion #{{ $session->id }}" subtitle="Apertura {{ $session->opened_at?->format('Y-m-d H:i') }} por {{ $session->openedBy?->name ?? 'N/D' }}">
+    <x-ui.card title="Sesión #{{ $session->id }}" subtitle="Apertura {{ $session->opened_at?->format('Y-m-d H:i') }} por {{ $session->openedBy?->name ?? 'N/D' }}">
         <div class="flex flex-wrap items-center gap-2">
             <x-ui.badge :variant="$session->status === 'open' ? 'success' : 'info'">{{ $session->status }}</x-ui.badge>
             <x-ui.button :href="route('cash.index')" size="sm" variant="secondary">Caja actual</x-ui.button>
@@ -126,7 +126,7 @@
     @php
         $auditLogs = $auditLogs ?? collect();
     @endphp
-    <x-ui.card title="Auditoria del turno" subtitle="Eventos clave: movimientos, anulaciones, cierre y aprobaciones.">
+    <x-ui.card title="Auditoría del turno" subtitle="Eventos clave: movimientos, anulaciones, cierre y aprobaciones.">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[980px]">
                 <thead>
@@ -172,7 +172,7 @@
     </x-ui.card>
 
     {{--
-    TODO backend minimo:
+    TODO backend mínimo:
     1) Pasar variable $auditLogs en CashController@show.
        Estructura sugerida por item: event_type, detail, created_at, user_name (o relación user).
     2) Registrar eventos al crear/anular movimiento y al cerrar turno (normal o con diferencia).

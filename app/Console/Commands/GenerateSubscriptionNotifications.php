@@ -35,7 +35,7 @@ class GenerateSubscriptionNotifications extends Command
                 ? Carbon::parse((string) $dateOption)->toDateString()
                 : Carbon::today()->toDateString();
         } catch (Throwable $exception) {
-            $this->error('Fecha invalida. Use formato YYYY-MM-DD.');
+            $this->error('Fecha inválida. Use formato YYYY-MM-DD.');
 
             return self::FAILURE;
         }

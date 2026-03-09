@@ -262,7 +262,7 @@
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">País (solo lectura)</label>
                                 <select id="gym-address-country" name="address_country_code" class="ui-input">
-                                    <option value="">Selecciona pais</option>
+                                    <option value="">Selecciona país</option>
                                     @foreach ($locationCatalog as $countryCode => $countryMeta)
                                         <option value="{{ $countryCode }}" @selected($gymAddressCountryCode === $countryCode)>{{ $countryMeta['label'] }}</option>
                                     @endforeach
@@ -433,7 +433,7 @@
                                     <input id="timezone-search"
                                            type="text"
                                            class="ui-input min-w-[220px] flex-1"
-                                           placeholder="Buscar por pais, ciudad o zona (ej: ecuador, bogota, mexico)">
+                                           placeholder="Buscar por país, ciudad o zona (ej: ecuador, bogota, mexico)">
                                     <button id="timezone-detect-btn" type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold">
                                         Usar navegador
                                     </button>
@@ -734,7 +734,7 @@
                 syncGymStates(selectedState, selectedCity);
 
                 if (locationSectionHint) {
-                    locationSectionHint.textContent = 'Actualiza nombre comercial, telefono y ubicacion del gimnasio.';
+                    locationSectionHint.textContent = 'Actualiza nombre comercial, teléfono y ubicación del gimnasio.';
                 }
 
                 gymProfileForm?.querySelectorAll('label').forEach((label) => {
@@ -754,7 +754,7 @@
                 if (timezoneDetectHint) {
                     timezoneDetectHint.textContent = detectedInfo
                         ? `Detectada en este equipo: ${detectedInfo.geo} (${detectedInfo.offset})`
-                        : 'No se pudo detectar automaticamente la zona horaria del navegador.';
+                        : 'No se pudo detectar automáticamente la zona horaria del navegador.';
                 }
 
                 if (timezoneDetectBtn) {

@@ -73,7 +73,7 @@ class RegisterClientAction
             );
 
             if (! empty($data['promotion_id']) && ! $pricing['promotion']) {
-                throw new RuntimeException('La promocion seleccionada no aplica para este plan, fecha o ya alcanzo su limite.');
+                throw new RuntimeException('La promoción seleccionada no aplica para este plan, fecha o ya alcanzó su límite.');
             }
 
             $startsAt = Carbon::parse((string) $data['membership_starts_at'])->startOfDay();

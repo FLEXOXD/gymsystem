@@ -298,11 +298,11 @@ class MarketingContent
         $legacyMap = [
             'section_1_text' => [
                 'Todo lo que tu equipo necesita en una sola vista.',
-                'Todo lo que tu equipo necesita en una sola vista: alta rapida de cliente, cobro inmediato, renovacion de membresia y control de caja por turno.',
+                'Todo lo que tu equipo necesita en una sola vista: alta rápida de cliente, cobro inmediato, renovación de membresía y control de caja por turno.',
                 'Todo lo que tu equipo necesita en una sola vista: alta rápida de cliente, cobro inmediato, renovación de membresía y control de caja por turno.',
             ],
             'section_1_item_1' => [
-                'Cobros de membresia con control de metodo de pago',
+                'Cobros de membresía con control de método de pago',
                 'Cobros de membresía con control de método de pago',
             ],
             'section_1_item_2' => [
@@ -340,18 +340,18 @@ class MarketingContent
                 'Datos separados por gimnasio para evitar cruces',
             ],
             'section_2_text' => [
-                'GymSystem trabaja con contexto de gimnasio en cada modulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
+                'GymSystem trabaja con contexto de gimnasio en cada módulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
                 'Aislamiento de datos y seguridad multi-tenant real.',
             ],
             'section_2_item_1' => [
                 'Rutas con contexto de gimnasio y control de acceso',
             ],
             'section_2_item_2' => [
-                'Filtros por gym_id en operaciones criticas',
+                'Filtros por gym_id en operaciones críticas',
                 'Filtros por gym_id en operaciones críticas',
             ],
             'section_2_item_3' => [
-                'Auditoria y pruebas de aislamiento multi-tenant',
+                'Auditoría y pruebas de aislamiento multi-tenant',
                 'Auditoría y pruebas de aislamiento multi-tenant',
             ],
         ];

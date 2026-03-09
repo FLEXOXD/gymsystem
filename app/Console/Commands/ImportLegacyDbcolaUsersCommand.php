@@ -13,21 +13,21 @@ class ImportLegacyDbcolaUsersCommand extends Command
      */
     protected $signature = 'legacy:import-dbcola-users
         {path? : Ruta al archivo SQL legacy}
-        {--basic-name=DB Cola Basico : Nombre del gym basico}
-        {--basic-slug=dbcola-basico : Slug del gym basico}
-        {--basic-owner-name=Owner DB Cola Basico : Nombre del owner del gym basico}
-        {--basic-owner-email=dbcola.basico@gymsystem.local : Correo del owner basico}
-        {--basic-owner-password=DbcolaBasico#2026 : Contrasena del owner basico}
+        {--basic-name=DB Cola Básico : Nombre del gym básico}
+        {--basic-slug=dbcola-basico : Slug del gym básico}
+        {--basic-owner-name=Owner DB Cola Básico : Nombre del owner del gym básico}
+        {--basic-owner-email=dbcola.basico@gymsystem.local : Correo del owner básico}
+        {--basic-owner-password=DbcolaBasico#2026 : Contraseña del owner básico}
         {--premium-name=DB Cola Premium : Nombre del gym premium}
         {--premium-slug=dbcola-premium : Slug del gym premium}
         {--premium-owner-name=Owner DB Cola Premium : Nombre del owner del gym premium}
         {--premium-owner-email=dbcola.premium@gymsystem.local : Correo del owner premium}
-        {--premium-owner-password=DbcolaPremium#2026 : Contrasena del owner premium}';
+        {--premium-owner-password=DbcolaPremium#2026 : Contraseña del owner premium}';
 
     /**
      * @var string
      */
-    protected $description = 'Importa clientes legacy de DB Cola a dos gyms locales: uno basico y otro premium.';
+    protected $description = 'Importa clientes legacy de DB Cola a dos gyms locales: uno básico y otro premium.';
 
     public function __construct(
         private readonly LegacyDbcolaImportService $importService
@@ -62,7 +62,7 @@ class ImportLegacyDbcolaUsersCommand extends Command
         $this->line('Clientes legacy detectados: '.$result['legacy_clients_total']);
         $this->line('Mensualidades legacy detectadas: '.$result['legacy_monthly_payments_total']);
 
-        foreach (['basic' => 'Basico', 'premium' => 'Premium'] as $key => $label) {
+        foreach (['basic' => 'Básico', 'premium' => 'Premium'] as $key => $label) {
             /** @var array{gym:\App\Models\Gym,owner:\App\Models\User,summary:array<string,int>,memberships:array<string,int>} $context */
             $context = $result[$key];
             $this->newLine();
@@ -72,7 +72,7 @@ class ImportLegacyDbcolaUsersCommand extends Command
             $this->line('['.$label.'] Clientes creados: '.$context['summary']['created'].' | actualizados: '.$context['summary']['updated']);
             $this->line('['.$label.'] QR activos: '.$context['summary']['with_qr']);
             $this->line('['.$label.'] Planes legacy creados: '.$context['memberships']['plans_created'].' | actualizados: '.$context['memberships']['plans_updated']);
-            $this->line('['.$label.'] Membresias creadas: '.$context['memberships']['memberships_created'].' | actualizadas: '.$context['memberships']['memberships_updated'].' | omitidas: '.$context['memberships']['skipped']);
+            $this->line('['.$label.'] Membresías creadas: '.$context['memberships']['memberships_created'].' | actualizadas: '.$context['memberships']['memberships_updated'].' | omitidas: '.$context['memberships']['skipped']);
             if ($key === 'premium') {
                 $this->line('['.$label.'] Cuentas app con hash legacy: '.$context['summary']['with_app_account']);
                 $this->line('['.$label.'] Clientes premium sin hash app: '.$context['summary']['without_app_account']);

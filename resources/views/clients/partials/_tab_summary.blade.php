@@ -1,6 +1,6 @@
-﻿<div class="grid gap-6 xl:grid-cols-12">
+<div class="grid gap-6 xl:grid-cols-12">
     <div class="space-y-6 xl:col-span-8">
-        <x-ui.card title="Estado de membresía" subtitle="Vista rapida para recepción y renovación.">
+        <x-ui.card title="Estado de membresía" subtitle="Vista rápida para recepción y renovación.">
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Estado actual</p>
@@ -19,13 +19,13 @@
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Cliente</p>
                     <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">Estado general: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $statusLabels[$client->status] ?? $client->status }}</span></p>
                     <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Teléfono: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $client->phone ?: '-' }}</span></p>
-                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">Ultima asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">última asistencia: <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $lastAttendanceLabel }}</span></p>
                 </div>
             </div>
         </x-ui.card>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <x-ui.card title="Últimas asistencias" subtitle="Últimos ingresos registrados.">
+            <x-ui.card title="últimas asistencias" subtitle="últimos ingresos registrados.">
                 @if ($attendancePreview->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($attendancePreview as $attendance)
@@ -44,13 +44,13 @@
                             </svg>
                         </div>
                         <p class="font-semibold">Aún no hay asistencias registradas.</p>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cuando el cliente haga check-in aparecera aqui.</p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cuando el cliente haga check-in aparecerá aquí.</p>
                         <x-ui.button :href="route('reception.index')" variant="ghost" size="sm" class="mt-3">Ir a recepción</x-ui.button>
                     </div>
                 @endif
             </x-ui.card>
 
-            <x-ui.card title="Últimos pagos" subtitle="Movimientos de caja vinculados al cliente.">
+            <x-ui.card title="últimos pagos" subtitle="Movimientos de caja vinculados al cliente.">
                 @if ($paymentsPreview->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($paymentsPreview as $movement)
@@ -72,7 +72,7 @@
                                 <path d="M4 17h16"/>
                             </svg>
                         </div>
-                        <p class="font-semibold">Sin pagos vinculados todavia.</p>
+                        <p class="font-semibold">Sin pagos vinculados todavía.</p>
                         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cobra una membresía para registrar el primer pago.</p>
                         <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Cobrar / Renovar</x-ui.button>
                     </div>

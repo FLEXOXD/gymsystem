@@ -289,7 +289,7 @@ class CashController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return [
                 'blocked' => true,
-                'reason' => 'Selecciona una sucursal especifica para operar caja.',
+                'reason' => 'Selecciona una sucursal específica para operar caja.',
             ];
         }
 

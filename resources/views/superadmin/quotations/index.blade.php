@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', 'Solicitudes de cotizacion')
-@section('page-title', 'Solicitudes de cotizacion')
+@section('title', 'Solicitudes de cotización')
+@section('page-title', 'Solicitudes de cotización')
 
 @section('content')
     @php
@@ -14,11 +14,11 @@
             $panelTimezone = 'America/Guayaquil';
         }
     @endphp
-    <x-ui.card title="Solicitudes de cotizacion" subtitle="Leads enviados desde el modal comercial de la landing principal.">
+    <x-ui.card title="Solicitudes de cotización" subtitle="Leads enviados desde el modal comercial de la landing principal.">
         @if ($unreadCount > 0)
             <div class="mb-4 rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-500/30 dark:bg-cyan-900/20 dark:text-cyan-100">
                 <p class="font-bold">Tienes {{ $unreadCount }} solicitud(es) pendientes de revisar.</p>
-                <p class="mt-1">Abre cada solicitud para ver telefono, pais, cantidad de personal y observaciones.</p>
+                <p class="mt-1">Abre cada solicitud para ver teléfono, país, cantidad de personal y observaciones.</p>
             </div>
         @endif
 
@@ -38,7 +38,7 @@
                     <option value="unread" @selected($filters['status'] === 'unread')>Sin revisar</option>
                     <option value="read" @selected($filters['status'] === 'read')>Revisados</option>
                 </select>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="ui-input" placeholder="Buscar por nombre, correo, pais o plan">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="ui-input" placeholder="Buscar por nombre, correo, país o plan">
                 <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
             </form>
         </div>
@@ -65,7 +65,7 @@
                                 @endif
                             </div>
                             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">{{ $quote->email }}</p>
-                            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">{{ $phoneDisplay !== '' ? $phoneDisplay : 'Sin telefono' }}</p>
+                            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">{{ $phoneDisplay !== '' ? $phoneDisplay : 'Sin teléfono' }}</p>
                             <div class="mt-2 flex flex-wrap items-center gap-1.5">
                                 <span class="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                                     {{ $quote->country }}
@@ -97,7 +97,7 @@
                         $selectedFullName = trim($selectedQuote->first_name.' '.$selectedQuote->last_name);
                         $selectedPlanLabel = trim((string) ($selectedQuote->requested_plan ?? ''));
                         $selectedPlanLabel = $selectedPlanLabel !== '' ? \Illuminate\Support\Str::headline(str_replace(['-', '_'], ' ', $selectedPlanLabel)) : '';
-                        $requestTypeLabel = $selectedPlanLabel !== '' ? 'Plan '.$selectedPlanLabel : 'Cotizacion general';
+                        $requestTypeLabel = $selectedPlanLabel !== '' ? 'Plan '.$selectedPlanLabel : 'Cotización general';
                         $selectedReceivedAt = $selectedQuote->created_at?->copy()->timezone($panelTimezone);
                     @endphp
                     <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-700">
@@ -122,11 +122,11 @@
 
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <article class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
-                            <p class="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">Telefono</p>
+                            <p class="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">Teléfono</p>
                             <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ trim($selectedQuote->phone_country_code.' '.$selectedQuote->phone_number) }}</p>
                         </article>
                         <article class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
-                            <p class="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">Pais</p>
+                            <p class="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">País</p>
                             <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $selectedQuote->country }}</p>
                         </article>
                         <article class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">

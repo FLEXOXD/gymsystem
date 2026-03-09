@@ -72,7 +72,7 @@ class StoreClientRequest extends FormRequest
                     }
 
                     if (! preg_match('/^[A-Z0-9\- ]+$/', $document)) {
-                        $fail('El documento solo puede contener letras, numeros, espacios y guion.');
+                        $fail('El documento solo puede contener letras, números, espacios y guion.');
                         return;
                     }
 
@@ -83,22 +83,22 @@ class StoreClientRequest extends FormRequest
                     }
 
                     if (! preg_match('/\d/', $canonical)) {
-                        $fail('El documento debe incluir al menos un numero.');
+                        $fail('El documento debe incluir al menos un número.');
                         return;
                     }
 
                     if (preg_match('/^(.)\1+$/', $canonical) === 1) {
-                        $fail('El documento ingresado no parece valido.');
+                        $fail('El documento ingresado no parece válido.');
                         return;
                     }
 
                     if (preg_match('/^\d+$/', $canonical) === 1 && $this->isSequentialDigits($canonical)) {
-                        $fail('El documento ingresado no parece valido.');
+                        $fail('El documento ingresado no parece válido.');
                         return;
                     }
 
                     if ($this->isKnownGarbageDocument($canonical)) {
-                        $fail('El documento ingresado no parece valido.');
+                        $fail('El documento ingresado no parece válido.');
                         return;
                     }
 
@@ -122,23 +122,23 @@ class StoreClientRequest extends FormRequest
                     $digits = preg_replace('/\D+/', '', (string) $value) ?? '';
 
                     if ($digits === '') {
-                        $fail('Ingresa el telefono del cliente.');
+                        $fail('Ingresa el teléfono del cliente.');
                         return;
                     }
 
                     $length = strlen($digits);
                     if ($length < 7 || $length > 15) {
-                        $fail('El telefono debe tener entre 7 y 15 digitos.');
+                        $fail('El teléfono debe tener entre 7 y 15 dígitos.');
                         return;
                     }
 
                     if (preg_match('/^(\d)\1+$/', $digits) === 1) {
-                        $fail('El telefono ingresado no parece valido.');
+                        $fail('El teléfono ingresado no parece válido.');
                         return;
                     }
 
                     if ($this->isSequentialDigits($digits)) {
-                        $fail('El telefono ingresado no parece valido.');
+                        $fail('El teléfono ingresado no parece válido.');
                     }
                 },
             ],
@@ -205,24 +205,24 @@ class StoreClientRequest extends FormRequest
             'last_name.required' => 'Ingresa el apellido del cliente.',
             'last_name.max' => 'El apellido no puede superar 120 caracteres.',
             'document_number.required' => 'Ingresa el documento del cliente.',
-            'phone.required' => 'Ingresa el telefono del cliente.',
-            'phone.regex' => 'El telefono solo puede contener numeros y los simbolos + - ( ).',
-            'phone.max' => 'El telefono no puede superar 25 caracteres.',
+            'phone.required' => 'Ingresa el teléfono del cliente.',
+            'phone.regex' => 'El teléfono solo puede contener números y los símbolos + - ( ).',
+            'phone.max' => 'El teléfono no puede superar 25 caracteres.',
             'app_username.required' => 'Ingresa un usuario para el acceso cliente.',
             'app_username.min' => 'El usuario debe tener al menos 4 caracteres.',
             'app_username.max' => 'El usuario no puede superar 80 caracteres.',
-            'app_username.regex' => 'El usuario solo puede usar letras minusculas, numeros, punto, guion y guion bajo.',
+            'app_username.regex' => 'El usuario solo puede usar letras minúsculas, números, punto, guion y guion bajo.',
             'app_username.unique' => 'Este usuario ya existe en este gimnasio.',
-            'app_password.required' => 'Ingresa una contrasena para el acceso cliente.',
-            'app_password.min' => 'La contrasena debe tener al menos 8 caracteres.',
-            'app_password.confirmed' => 'La confirmacion de contrasena no coincide.',
-            'photo.image' => 'La foto debe ser una imagen valida.',
+            'app_password.required' => 'Ingresa una contraseña para el acceso cliente.',
+            'app_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'app_password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'photo.image' => 'La foto debe ser una imagen válida.',
             'photo.max' => 'La foto no puede superar 2MB.',
-            'plan_id.required' => 'Selecciona un plan para iniciar la membresia.',
+            'plan_id.required' => 'Selecciona un plan para iniciar la membresía.',
             'membership_starts_at.required' => 'La fecha de inicio es obligatoria.',
-            'membership_price.required' => 'El precio de la membresia es obligatorio.',
-            'promotion_id.exists' => 'La promocion seleccionada no es valida o no esta disponible.',
-            'payment_method.required' => 'Selecciona el metodo de pago.',
+            'membership_price.required' => 'El precio de la membresía es obligatorio.',
+            'promotion_id.exists' => 'La promoción seleccionada no es válida o no está disponible.',
+            'payment_method.required' => 'Selecciona el método de pago.',
             'amount_paid.required' => 'Ingresa el monto pagado.',
         ];
     }
@@ -236,18 +236,18 @@ class StoreClientRequest extends FormRequest
             'first_name' => 'nombre',
             'last_name' => 'apellido',
             'document_number' => 'documento',
-            'phone' => 'telefono',
+            'phone' => 'teléfono',
             'create_app_account' => 'crear cuenta app',
             'app_username' => 'usuario app',
-            'app_password' => 'contrasena app',
-            'app_password_confirmation' => 'confirmacion de contrasena app',
-            'gender' => 'genero',
+            'app_password' => 'contraseña app',
+            'app_password_confirmation' => 'confirmación de contraseña app',
+            'gender' => 'género',
             'photo' => 'foto',
             'plan_id' => 'plan',
             'membership_starts_at' => 'fecha de inicio',
-            'membership_price' => 'precio de membresia',
-            'promotion_id' => 'promocion',
-            'payment_method' => 'metodo de pago',
+            'membership_price' => 'precio de membresía',
+            'promotion_id' => 'promoción',
+            'payment_method' => 'método de pago',
             'amount_paid' => 'monto pagado',
         ];
     }

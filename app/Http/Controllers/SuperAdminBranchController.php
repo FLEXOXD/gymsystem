@@ -90,7 +90,7 @@ class SuperAdminBranchController extends Controller
             'locationCatalog' => GymLocationCatalog::catalog(),
             'defaultBranchCountry' => 'ec',
             'branchPlanOptions' => [
-                'basico' => 'Basico',
+                'basico' => 'Básico',
                 'profesional' => 'Profesional',
                 'premium' => 'Premium',
             ],
@@ -112,7 +112,7 @@ class SuperAdminBranchController extends Controller
         if (! $hubGym) {
             return redirect()
                 ->route('superadmin.branches.index')
-                ->withErrors(['hub_gym_id' => 'Selecciona una sede principal valida.'])
+                ->withErrors(['hub_gym_id' => 'Selecciona una sede principal válida.'])
                 ->withInput();
         }
 

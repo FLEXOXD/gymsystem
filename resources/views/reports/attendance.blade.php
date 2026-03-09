@@ -40,13 +40,13 @@
 
     <section class="grid gap-4 md:grid-cols-3">
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Periodo actual</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Período actual</p>
             <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $comparison['current_total'] }}</p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $from->toDateString() }} al {{ $to->toDateString() }}</p>
         </x-ui.card>
 
         <x-ui.card>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Periodo anterior</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Período anterior</p>
             <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $comparison['previous_total'] }}</p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $comparison['previous_from']->toDateString() }} al {{ $comparison['previous_to']->toDateString() }}</p>
         </x-ui.card>
@@ -115,7 +115,7 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Periodo actual',
+                        label: 'Período actual',
                         data: currentSeries,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.15)',
@@ -123,7 +123,7 @@
                         tension: 0.28,
                     },
                     {
-                        label: 'Periodo anterior',
+                        label: 'Período anterior',
                         data: previousSeries,
                         borderColor: '#f59e0b',
                         backgroundColor: 'rgba(245, 158, 11, 0.10)',

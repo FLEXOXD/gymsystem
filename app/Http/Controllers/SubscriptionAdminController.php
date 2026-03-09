@@ -40,8 +40,8 @@ class SubscriptionAdminController extends Controller
             ], [
                 'custom_price.numeric' => 'El precio personalizado debe ser numerico.',
                 'custom_price.min' => 'El precio personalizado no puede ser negativo.',
-                'custom_price.max' => 'El precio personalizado supera el limite permitido.',
-                'apply_intro_50.boolean' => 'El indicador de descuento de introduccion no es valido.',
+                'custom_price.max' => 'El precio personalizado supera el límite permitido.',
+                'apply_intro_50.boolean' => 'El indicador de descuento de introducción no es válido.',
             ]);
 
             $gymModel = Gym::query()
@@ -87,8 +87,8 @@ class SubscriptionAdminController extends Controller
             return redirect()
                 ->route('superadmin.gyms.index')
                 ->with('status', $selectedPlanName !== ''
-                    ? 'Suscripcion renovada con plan "'.$selectedPlanName.'" y pago por '.$paymentMethod.'.'
-                    : 'Suscripcion renovada por '.$months.' mes(es) con pago por '.$paymentMethod.'.');
+                    ? 'Suscripción renovada con plan "'.$selectedPlanName.'" y pago por '.$paymentMethod.'.'
+                    : 'Suscripción renovada por '.$months.' mes(es) con pago por '.$paymentMethod.'.');
         } catch (InvalidArgumentException $exception) {
             return redirect()
                 ->route('superadmin.gyms.index')
@@ -111,7 +111,7 @@ class SubscriptionAdminController extends Controller
 
             return redirect()
                 ->route('superadmin.gyms.index')
-                ->with('status', 'Suscripcion suspendida.');
+                ->with('status', 'Suscripción suspendida.');
         } catch (InvalidArgumentException $exception) {
             return redirect()
                 ->route('superadmin.gyms.index')
@@ -129,7 +129,7 @@ class SubscriptionAdminController extends Controller
             return;
         }
 
-        throw new InvalidArgumentException('Esta sucursal esta gestionada por su sede principal y no se renueva ni suspende de forma directa.');
+        throw new InvalidArgumentException('Esta sucursal está gestionada por su sede principal y no se renueva ni suspende de forma directa.');
     }
 }
 

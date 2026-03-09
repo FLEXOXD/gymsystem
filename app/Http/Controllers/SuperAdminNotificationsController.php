@@ -145,11 +145,11 @@ class SuperAdminNotificationsController extends Controller
         if ($shouldDispatchSync) {
             SendPushCampaignJob::dispatchSync((int) $campaign->id);
 
-            return back()->with('status', 'Campana push enviada y procesada al instante.');
+            return back()->with('status', 'Campaña push enviada y procesada al instante.');
         }
 
         SendPushCampaignJob::dispatch((int) $campaign->id);
 
-        return back()->with('status', 'Campana push enviada a cola. Se procesara en segundos.');
+        return back()->with('status', 'Campaña push enviada a cola. Se procesará en segundos.');
     }
 }

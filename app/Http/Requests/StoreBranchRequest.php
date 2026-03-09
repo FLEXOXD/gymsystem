@@ -48,7 +48,7 @@ class StoreBranchRequest extends FormRequest
                     $state = (string) $this->input('branch_state', '');
                     $city = (string) $value;
                     if (! GymLocationCatalog::isValid($country, $state, $city)) {
-                        $fail('Selecciona una ciudad valida para el pais y provincia/estado elegidos.');
+                        $fail('Selecciona una ciudad válida para el país y provincia/estado elegidos.');
                     }
                 },
             ],
@@ -68,19 +68,19 @@ class StoreBranchRequest extends FormRequest
     {
         return [
             'branch_name.required' => 'Ingresa el nombre de la sucursal.',
-            'branch_phone.regex' => 'El telefono solo puede contener numeros, espacios y + - ( ).',
-            'branch_country.required' => 'Selecciona el pais de la sucursal.',
-            'branch_country.in' => 'Selecciona un pais valido.',
+            'branch_phone.regex' => 'El teléfono solo puede contener números, espacios y + - ( ).',
+            'branch_country.required' => 'Selecciona el país de la sucursal.',
+            'branch_country.in' => 'Selecciona un país válido.',
             'branch_state.required' => 'Selecciona la provincia/estado.',
             'branch_city.required' => 'Selecciona la ciudad.',
             'branch_plan_key.required' => 'Selecciona el plan operativo de la sucursal.',
-            'branch_plan_key.in' => 'Plan operativo no valido.',
+            'branch_plan_key.in' => 'Plan operativo no válido.',
             'branch_admin_name.required' => 'Ingresa el nombre del usuario de la sucursal.',
-            'branch_admin_email.email' => 'Ingresa un correo de usuario valido.',
+            'branch_admin_email.email' => 'Ingresa un correo de usuario válido.',
             'branch_admin_email.unique' => 'Ese correo ya existe en otro usuario.',
-            'branch_admin_password.required' => 'Ingresa una contrasena para la sucursal.',
-            'branch_admin_password.confirmed' => 'La confirmacion de contrasena no coincide.',
-            'branch_admin_password.min' => 'La contrasena debe tener minimo 8 caracteres.',
+            'branch_admin_password.required' => 'Ingresa una contraseña para la sucursal.',
+            'branch_admin_password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'branch_admin_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
         ];
     }
 

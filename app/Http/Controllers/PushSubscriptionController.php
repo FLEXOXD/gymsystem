@@ -37,7 +37,7 @@ class PushSubscriptionController extends Controller
         if ($this->isDemoUser($user)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Las notificaciones push no estan disponibles en la cuenta demo.',
+                'message' => 'Las notificaciones push no están disponibles en la cuenta demo.',
             ], 403);
         }
 
@@ -122,7 +122,7 @@ class PushSubscriptionController extends Controller
                 ->count(),
             'message' => $updated > 0
                 ? 'Notificaciones desactivadas para este dispositivo.'
-                : 'No se encontro una suscripcion activa para revocar.',
+                : 'No se encontró una suscripción activa para revocar.',
         ]);
     }
 
@@ -133,7 +133,7 @@ class PushSubscriptionController extends Controller
         if ($this->isDemoUser($user)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Las notificaciones push no estan disponibles en la cuenta demo.',
+                'message' => 'Las notificaciones push no están disponibles en la cuenta demo.',
             ], 403);
         }
 

@@ -65,7 +65,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar planes.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -88,7 +88,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar planes.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -108,7 +108,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar planes.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -134,7 +134,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar planes.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar planes.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -165,7 +165,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar promociones.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -188,7 +188,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar promociones.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -211,7 +211,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar promociones.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -237,7 +237,7 @@ class PlanController extends Controller
     {
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()->route('plans.index')
-                ->withErrors(['plans' => 'Selecciona una sucursal especifica para gestionar promociones.']);
+                ->withErrors(['plans' => 'Selecciona una sucursal específica para gestionar promociones.']);
         }
 
         $gymId = $this->resolveGymId($request);

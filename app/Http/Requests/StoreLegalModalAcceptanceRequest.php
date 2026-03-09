@@ -27,7 +27,7 @@ class StoreLegalModalAcceptanceRequest extends FormRequest
     {
         return [
             'accepted' => ['accepted'],
-            'terms_version' => ['required', 'string', 'max:30', 'in:'.LegalTerms::VERSION],
+            'terms_version' => ['required', 'string', 'max:30', 'in:'.LegalTerms::Versión],
             'location_permission' => ['nullable', 'string', 'in:granted,denied,prompt,unavailable,error,skipped'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],

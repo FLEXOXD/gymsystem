@@ -129,7 +129,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para crear cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para crear cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -144,7 +144,7 @@ class GymStaffController extends Controller
         if (! $this->cashierQuotaService->canCreateForGym($gymId)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['cashier_quota' => 'Ya alcanzaste el cupo maximo de cajeros para este plan.'])
+                ->withErrors(['cashier_quota' => 'Ya alcanzaste el cupo máximo de cajeros para este plan.'])
                 ->withInput();
         }
 
@@ -156,13 +156,13 @@ class GymStaffController extends Controller
             'name.required' => 'Ingresa el nombre del cajero.',
             'name.max' => 'El nombre no puede superar 120 caracteres.',
             'email.required' => 'Ingresa el correo del cajero.',
-            'email.email' => 'Ingresa un correo electronico valido.',
+            'email.email' => 'Ingresa un correo electrónico válido.',
             'email.max' => 'El correo no puede superar 150 caracteres.',
-            'email.unique' => 'Ese correo ya esta registrado.',
-            'password.required' => 'Ingresa la contrasena del cajero.',
-            'password.min' => 'La contrasena debe tener al menos 8 caracteres.',
-            'password.max' => 'La contrasena no puede superar 72 caracteres.',
-            'password.confirmed' => 'La confirmacion de contrasena no coincide.',
+            'email.unique' => 'Ese correo ya está registrado.',
+            'password.required' => 'Ingresa la contraseña del cajero.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.max' => 'La contraseña no puede superar 72 caracteres.',
+            'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
         User::query()->create([
@@ -193,7 +193,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para actualizar permisos de cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para actualizar permisos de cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -227,7 +227,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para actualizar cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para actualizar cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -236,10 +236,10 @@ class GymStaffController extends Controller
         $data = $request->validate([
             'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
         ], [
-            'password.required' => 'Ingresa la nueva contrasena.',
-            'password.min' => 'La contrasena debe tener al menos 8 caracteres.',
-            'password.max' => 'La contrasena no puede superar 72 caracteres.',
-            'password.confirmed' => 'La confirmacion de contrasena no coincide.',
+            'password.required' => 'Ingresa la nueva contraseña.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.max' => 'La contraseña no puede superar 72 caracteres.',
+            'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
         $cashierUser->update([
@@ -249,7 +249,7 @@ class GymStaffController extends Controller
 
         return redirect()
             ->route('staff.index', $this->staffRouteParams($request))
-            ->with('status', 'Contrasena del cajero actualizada.');
+            ->with('status', 'Contraseña del cajero actualizada.');
     }
 
     public function disableCashier(Request $request, string $contextGym, int $cashier): RedirectResponse
@@ -263,7 +263,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para actualizar cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para actualizar cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -296,7 +296,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para actualizar cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para actualizar cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -334,7 +334,7 @@ class GymStaffController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'Selecciona una sede especifica para actualizar cajeros.']);
+                ->withErrors(['staff' => 'Selecciona una sede específica para actualizar cajeros.']);
         }
 
         $gymId = $this->resolveGymId($request);

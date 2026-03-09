@@ -1,4 +1,4 @@
-﻿<nav class="theme-mobile-nav fixed inset-x-0 bottom-0 z-30 border-t p-2 backdrop-blur lg:hidden">
+<nav class="theme-mobile-nav fixed inset-x-0 bottom-0 z-30 border-t p-2 backdrop-blur lg:hidden">
     <div class="mx-auto flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
         @foreach ($navItems as $item)
             @php

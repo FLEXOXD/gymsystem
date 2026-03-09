@@ -1,4 +1,4 @@
-﻿        const demoCountdownSource = document.getElementById('demo-countdown-source');
+        const demoCountdownSource = document.getElementById('demo-countdown-source');
         let demoCountdownManagedExternally = false;
         if (demoCountdownSource) {
             const expiresAtRaw = (demoCountdownSource.getAttribute('data-demo-expires-at') || '').trim();
@@ -461,7 +461,7 @@
                             openRouteBtn.classList.add('hidden');
                         } else {
                             openRouteBtn.classList.toggle('hidden', canAdvance);
-                            openRouteBtn.textContent = sameRoute ? 'Ir al modulo' : 'Ir al paso';
+                            openRouteBtn.textContent = sameRoute ? 'Ir al módulo' : 'Ir al paso';
                         }
                     }
 

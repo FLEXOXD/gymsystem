@@ -35,7 +35,7 @@ class MembershipController extends Controller
             return redirect()
                 ->route('clients.index')
                 ->withErrors([
-                    'membership' => 'Selecciona una sucursal especifica para vender membresias.',
+                    'membership' => 'Selecciona una sucursal específica para vender membresías.',
                 ]);
         }
 

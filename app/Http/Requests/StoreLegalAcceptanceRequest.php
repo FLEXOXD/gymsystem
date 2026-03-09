@@ -41,9 +41,9 @@ class StoreLegalAcceptanceRequest extends FormRequest
         return [
             'full_name.required' => 'Ingresa tu nombre completo para registrar la aceptacion.',
             'email.required' => 'Ingresa tu correo para registrar la aceptacion.',
-            'email.email' => 'Ingresa un correo valido.',
+            'email.email' => 'Ingresa un correo válido.',
             'accepted.accepted' => 'Debes aceptar el documento legal para continuar.',
-            'document_key.in' => 'El documento legal seleccionado no es valido.',
+            'document_key.in' => 'El documento legal seleccionado no es válido.',
         ];
     }
 

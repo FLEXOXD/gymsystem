@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Caja profesional')
 @section('page-title', 'Caja por turno')
@@ -52,7 +52,7 @@
         @if ($isCurrentCashView)
             @if (! $openSession)
                 @if ($cashWriteBlocked)
-                    <x-ui.card title="Caja en solo lectura" subtitle="Operacion administrada desde sede principal.">
+                    <x-ui.card title="Caja en solo lectura" subtitle="Operación administrada desde sede principal.">
                         <p class="ui-alert ui-alert-warning">
                             {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'No tienes permisos para abrir o cerrar caja en esta sucursal.' }}
                         </p>
@@ -60,7 +60,7 @@
                 @elseif (! $canOpenCash)
                     <x-ui.card title="Apertura restringida" subtitle="Solo usuarios autorizados pueden abrir caja.">
                         <p class="ui-alert ui-alert-warning">
-                            Tu perfil no tiene permiso para abrir caja. Solicita al dueno del gimnasio que abra el turno o te habilite este permiso.
+                            Tu perfil no tiene permiso para abrir caja. Solicita al dueño del gimnasio que abra el turno o te habilite este permiso.
                         </p>
                     </x-ui.card>
                 @else
@@ -216,7 +216,7 @@
                         <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
                             @if (! $canCloseCash)
                                 <p class="ui-alert ui-alert-warning mb-3">
-                                    Tu perfil no tiene permiso para cerrar caja. Esta accion la realiza el dueno o un usuario autorizado.
+                                    Tu perfil no tiene permiso para cerrar caja. Esta acción la realiza el dueño o un usuario autorizado.
                                 </p>
                             @endif
 
@@ -266,7 +266,7 @@
 
                             <label class="space-y-1 text-sm font-semibold ui-muted">
                                 <span>Motivo de diferencia (obligatorio si no cuadra)</span>
-                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por que hay diferencia.">{{ old('difference_reason') }}</textarea>
+                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por qué hay diferencia.">{{ old('difference_reason') }}</textarea>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -284,7 +284,7 @@
                     @endif
                 </section>
 
-                <x-ui.card title="Últimos 10 movimientos">
+                <x-ui.card title="últimos 10 movimientos">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
@@ -359,7 +359,7 @@
                 $historyRows = $sessions ?? collect();
             @endphp
 
-            <x-ui.card title="Historial de caja" subtitle="Revision de cierres, diferencias y responsables.">
+            <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables.">
                 @if ($isGlobalScope)
                     <p class="mb-4 ui-alert ui-alert-info">
                         Modo global activo: historial consolidado de todas tus sedes en solo lectura.
@@ -428,7 +428,7 @@
 @endsection
 
 {{-- 
-TODO backend minimo:
+TODO backend mínimo:
 1) Route sugerida: PATCH /cash/movements/{movement}/void -> cash.movements.void
 2) CashMovement: status, void_reason, voided_at, voided_by (solo Admin puede anular).
 3) Cierre con diferencia: validar difference_reason + supervisor_password + permiso admin.

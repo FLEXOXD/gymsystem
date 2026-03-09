@@ -6,7 +6,7 @@
 @section('content')
     <x-ui.card title="Suscripciones" subtitle="Vista anterior unificada al layout del panel.">
         <p class="mb-4 text-sm text-slate-600 dark:text-slate-300">
-            Esta pantalla se mantiene por compatibilidad. La gestion principal esta en <strong>SuperAdmin -> Gimnasios</strong>.
+            Esta pantalla se mantiene por compatibilidad. La gestión principal está en <strong>SuperAdmin -> Gimnasios</strong>.
         </p>
 
         @if (!empty($gyms))

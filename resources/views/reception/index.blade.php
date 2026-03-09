@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Recepción')
 @section('page-title', 'Modo recepción PRO')
@@ -150,7 +150,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Últimos 10 ingresos">
+    <x-ui.card title="últimos 10 ingresos">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p class="text-xs text-slate-500 dark:text-slate-300">
                 Historial detallado disponible para los últimos 2 meses.
@@ -1432,7 +1432,7 @@
             let value = String(rawValue || '').replace(/[\u0000-\u001f\u007f]/g, '').trim();
             if (value === '') return '';
 
-            const prefixed = value.match(/^(?:uid|rfid|qr|code|codigo)\s*[:\-]\s*(.+)$/i);
+            const prefixed = value.match(/^(?:uid|rfid|qr|code|código)\s*[:\-]\s*(.+)$/i);
             if (prefixed && prefixed[1]) {
                 value = prefixed[1].trim();
             }
@@ -1689,7 +1689,7 @@
             }
 
             if (monthVisits !== null && monthVisits >= 12) {
-                return 'Muy buen progreso mensual. Sigue asi.';
+                return 'Muy buen progreso mensual. Sigue así.';
             }
 
             if (daysInfo.days !== null && daysInfo.days >= 0 && daysInfo.days <= 5) {

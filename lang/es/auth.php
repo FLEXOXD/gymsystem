@@ -2,7 +2,7 @@
 
 return [
     'failed' => 'Las credenciales no coinciden con nuestros registros.',
-    'password' => 'La contrasena es incorrecta.',
+    'password' => 'La contraseña es incorrecta.',
     'throttle' => 'Demasiados intentos. Intenta nuevamente en :seconds segundos.',
 ];
 

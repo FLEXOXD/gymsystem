@@ -15,7 +15,7 @@ class EnsureClientMobileSessionMiddleware
         $gymId = (int) ($session['gym_id'] ?? 0);
 
         if ($clientId <= 0 || $gymId <= 0) {
-            $message = 'Inicia sesion para continuar.';
+            $message = 'Inicia sesión para continuar.';
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

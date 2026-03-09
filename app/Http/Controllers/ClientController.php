@@ -152,8 +152,8 @@ class ClientController extends Controller
                 $row = $this->buildClientCardRow($client, $paymentsByMembership, $now);
                 $mutationPolicy = $clientMutationPolicies[(int) ($client->gym_id ?? 0)] ?? [
                     'can_manage' => false,
-                    'owner_scope_label' => 'dueno del gimnasio',
-                    'owner_modal_hint' => 'Confirma con la contrasena del dueno del gimnasio.',
+                    'owner_scope_label' => 'dueño del gimnasio',
+                    'owner_modal_hint' => 'Confirma con la contraseña del dueño del gimnasio.',
                 ];
                 $row['show_url'] = $this->buildClientShowUrl(
                     $request,
@@ -162,8 +162,8 @@ class ClientController extends Controller
                     trim((string) ($client->gym_slug ?? ''))
                 );
                 $row['can_manage'] = (bool) ($mutationPolicy['can_manage'] ?? false);
-                $row['owner_scope_label'] = (string) ($mutationPolicy['owner_scope_label'] ?? 'dueno del gimnasio');
-                $row['owner_modal_hint'] = (string) ($mutationPolicy['owner_modal_hint'] ?? 'Confirma con la contrasena del dueno del gimnasio.');
+                $row['owner_scope_label'] = (string) ($mutationPolicy['owner_scope_label'] ?? 'dueño del gimnasio');
+                $row['owner_modal_hint'] = (string) ($mutationPolicy['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.');
                 $row['edit_url'] = $row['can_manage']
                     ? $this->buildClientActionUrl(
                         $request,
@@ -262,7 +262,7 @@ class ClientController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['clients' => 'Selecciona una sucursal especifica para crear clientes.']);
+                ->withErrors(['clients' => 'Selecciona una sucursal específica para crear clientes.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -289,7 +289,7 @@ class ClientController extends Controller
         if ($createAppAccount && ! $canManageClientAccounts) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['app_username' => 'Tu plan actual no incluye cuentas cliente con usuario y contrasena.'])
+                ->withErrors(['app_username' => 'Tu plan actual no incluye cuentas cliente con usuario y contraseña.'])
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
@@ -322,7 +322,7 @@ class ClientController extends Controller
     public function updateBasic(Request $request, string $contextGym, int $client): RedirectResponse
     {
         if (ActiveGymContext::isGlobal($request)) {
-            return back()->withErrors(['clients' => 'Selecciona una sede especifica para editar clientes.']);
+            return back()->withErrors(['clients' => 'Selecciona una sede específica para editar clientes.']);
         }
 
         $this->resolveGymId($request);
@@ -347,9 +347,9 @@ class ClientController extends Controller
             'edit_first_name.max' => 'El nombre no puede superar 120 caracteres.',
             'edit_last_name.required' => 'Ingresa el apellido del cliente.',
             'edit_last_name.max' => 'El apellido no puede superar 120 caracteres.',
-            'edit_phone.required' => 'Ingresa el telefono del cliente.',
-            'edit_phone.max' => 'El telefono no puede superar 30 caracteres.',
-            'edit_phone.regex' => 'El telefono solo puede contener numeros y los simbolos + - ( ).',
+            'edit_phone.required' => 'Ingresa el teléfono del cliente.',
+            'edit_phone.max' => 'El teléfono no puede superar 30 caracteres.',
+            'edit_phone.regex' => 'El teléfono solo puede contener números y los símbolos + - ( ).',
         ]);
 
         if ((int) $data['edit_client_id'] !== (int) $clientModel->id) {
@@ -370,7 +370,7 @@ class ClientController extends Controller
     public function destroy(Request $request, string $contextGym, int $client): RedirectResponse
     {
         if (ActiveGymContext::isGlobal($request)) {
-            return back()->withErrors(['clients' => 'Selecciona una sede especifica para eliminar clientes.']);
+            return back()->withErrors(['clients' => 'Selecciona una sede específica para eliminar clientes.']);
         }
 
         $this->resolveGymId($request);
@@ -389,7 +389,7 @@ class ClientController extends Controller
             'delete_client_id' => ['required', 'integer'],
             'owner_password' => ['required', 'string'],
         ], [
-            'owner_password.required' => 'Ingresa la contrasena del dueno autorizado.',
+            'owner_password.required' => 'Ingresa la contraseña del dueño autorizado.',
         ]);
 
         if ((int) $data['delete_client_id'] !== (int) $clientModel->id) {
@@ -401,13 +401,13 @@ class ClientController extends Controller
         /** @var User|null $approvingOwner */
         $approvingOwner = $authorization['owner'];
         if (! $approvingOwner instanceof User) {
-            return back()->withErrors(['clients' => 'No se encontro un dueno autorizado para validar esta accion.']);
+            return back()->withErrors(['clients' => 'No se encontró un dueño autorizado para validar esta acción.']);
         }
 
         if (! Hash::check((string) $data['owner_password'], (string) $approvingOwner->password)) {
             $passwordMessage = (bool) ($authorization['is_branch_managed'] ?? false)
-                ? 'La contrasena del dueno principal no es correcta.'
-                : 'La contrasena del dueno del gimnasio no es correcta.';
+                ? 'La contraseña del dueño principal no es correcta.'
+                : 'La contraseña del dueño del gimnasio no es correcta.';
 
             return back()
                 ->withErrors(['owner_password' => $passwordMessage])
@@ -643,7 +643,7 @@ class ClientController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['clients' => 'Selecciona una sucursal especifica para editar clientes.']);
+                ->withErrors(['clients' => 'Selecciona una sucursal específica para editar clientes.']);
         }
 
         $this->resolveGymId($request);
@@ -1147,10 +1147,10 @@ class ClientController extends Controller
                     && $currentUser->isOwner()
                     && $approvingOwner instanceof User
                     && (int) $currentUser->id === (int) $approvingOwner->id,
-                'owner_scope_label' => $isBranchManaged ? 'dueno principal' : 'dueno del gimnasio',
+                'owner_scope_label' => $isBranchManaged ? 'dueño principal' : 'dueño del gimnasio',
                 'owner_modal_hint' => $isBranchManaged
-                    ? 'Confirma con la contrasena del dueno principal de la sede matriz.'
-                    : 'Confirma con la contrasena del dueno del gimnasio.',
+                    ? 'Confirma con la contraseña del dueño principal de la sede matriz.'
+                    : 'Confirma con la contraseña del dueño del gimnasio.',
             ];
         }
 
@@ -1167,7 +1167,7 @@ class ClientController extends Controller
             return [
                 'owner' => null,
                 'is_branch_managed' => false,
-                'message' => 'Solo el dueno autorizado puede editar o eliminar clientes.',
+                'message' => 'Solo el dueño autorizado puede editar o eliminar clientes.',
             ];
         }
 
@@ -1190,7 +1190,7 @@ class ClientController extends Controller
             return [
                 'owner' => null,
                 'is_branch_managed' => $isBranchManaged,
-                'message' => 'No se encontro un dueno autorizado para esta operacion.',
+                'message' => 'No se encontró un dueño autorizado para esta operación.',
             ];
         }
 
@@ -1199,8 +1199,8 @@ class ClientController extends Controller
                 'owner' => $approvingOwner,
                 'is_branch_managed' => $isBranchManaged,
                 'message' => $isBranchManaged
-                    ? 'Solo el dueno principal puede editar o eliminar clientes de una sucursal.'
-                    : 'Solo el dueno del gimnasio puede editar o eliminar clientes.',
+                    ? 'Solo el dueño principal puede editar o eliminar clientes de una sucursal.'
+                    : 'Solo el dueño del gimnasio puede editar o eliminar clientes.',
             ];
         }
 

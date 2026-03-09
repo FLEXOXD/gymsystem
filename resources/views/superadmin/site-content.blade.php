@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Administrar página web')
 @section('page-title', 'Administrar página web')
@@ -29,34 +29,131 @@
         ];
 
         $landingPreviewUrl = route('landing', ['preview_guest' => 1]);
+        $heroSlidesConfigured = collect(range(1, 4))->filter(fn ($slide) => filled($content['hero_slide_'.$slide.'_url'] ?? null))->count();
+        $serviceSectionsConfigured = collect([1, 2, 3])->filter(fn ($section) => filled($content['section_'.$section.'_title'] ?? null) || filled($content['section_'.$section.'_text'] ?? null))->count();
+        $serviceImagesConfigured = collect([1, 2, 3])->filter(fn ($section) => filled($content[$sectionImageMap[$section]['url']] ?? null))->count();
+        $marqueeLogosConfigured = collect(range(1, 6))->filter(fn ($item) => filled($content[$marqueeLogoMap[$item]['url']] ?? null))->count();
+        $brandReady = filled($content['brand_name'] ?? null) && filled($content['demo_button_label'] ?? null);
+        $heroReady = filled($content['hero_title'] ?? null) && filled($content['hero_subtitle'] ?? null);
+        $footerReady = filled($content['footer_text'] ?? null) && filled($content['footer_contact_email'] ?? null);
+        $whatsappReady = filled($content['whatsapp_phone'] ?? null) && filled($content['whatsapp_message'] ?? null);
+        $editorReadiness = collect([$brandReady, $heroReady, $footerReady, $whatsappReady])->filter()->count();
     @endphp
 
-    <div class="grid items-start gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+    <div class="sa-shell">
+        <section class="sa-hero">
+            <div class="sa-hero-grid">
+                <div>
+                    <span class="sa-kicker">Editor comercial</span>
+                    <h2 class="sa-title">Gestiona la landing como un sistema editorial, no como un formulario largo.</h2>
+                    <p class="sa-subtitle">
+                        Reorganicé la experiencia para que primero entiendas estado, cobertura y checklist de publicación.
+                        El editor sigue siendo el mismo en funcionalidad, pero ahora trabaja con mejor contexto, mejor navegación y acceso más directo al preview.
+                    </p>
+                    <div class="sa-actions">
+                        <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-primary">Abrir vista previa</button>
+                        <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing pública</a>
+                        <span class="sa-pill is-info">Edición en vivo con preview</span>
+                    </div>
+                </div>
+
+                <div class="sa-note-card">
+                    <p class="sa-note-label">Flujo editorial recomendado</p>
+                    <div class="sa-note-list">
+                        <div class="sa-note-item">
+                            <strong>1. Ajusta narrativa</strong>
+                            <span>Marca, hero y servicios deben contar la propuesta antes de tocar detalles cosméticos.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>2. Válida conversión</strong>
+                            <span>WhatsApp, CTA y botones de planes deben quedar listos antes de publicar cambios.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>3. Revisa en preview</strong>
+                            <span>Comprueba desktop, tablet y mobile desde la misma vista antes de guardar.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sa-stat-grid">
+            <article class="sa-stat-card {{ $editorReadiness >= 3 ? 'is-success' : 'is-warning' }}">
+                <p class="sa-stat-label">Base editorial</p>
+                <p class="sa-stat-value">{{ $editorReadiness }}/4</p>
+                <p class="sa-stat-meta">Marca, WhatsApp, hero y footer con mínimos listos para publicar.</p>
+            </article>
+            <article class="sa-stat-card is-info">
+                <p class="sa-stat-label">Slides hero</p>
+                <p class="sa-stat-value">{{ $heroSlidesConfigured }}/4</p>
+                <p class="sa-stat-meta">Cobertura visual del bloque principal de captación.</p>
+            </article>
+            <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Servicios documentados</p>
+                <p class="sa-stat-value">{{ $serviceSectionsConfigured }}/3</p>
+                <p class="sa-stat-meta">{{ $serviceImagesConfigured }}/3 secciones ya tienen imagen cargada.</p>
+            </article>
+            <article class="sa-stat-card is-warning">
+                <p class="sa-stat-label">Logos de banda</p>
+                <p class="sa-stat-value">{{ $marqueeLogosConfigured }}/6</p>
+                <p class="sa-stat-meta">Prueba visual y soporte comercial para la franja de credibilidad.</p>
+            </article>
+        </section>
+
+        @if ($errors->any())
+            <div class="ui-alert ui-alert-danger" role="alert" aria-labelledby="site-content-errors-title">
+                <p id="site-content-errors-title" class="font-semibold">Hay errores en el contenido web.</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div class="grid items-start gap-6 2xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.65fr)]">
         <div class="space-y-4">
             <x-ui.card title="Contenido comercial" subtitle="Editor visual de landing para editar por secciones y ver la vista previa al instante.">
-                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2">
+                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2" aria-describedby="site-content-form-help">
                     @csrf
 
-                    <div class="lg:col-span-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Navegación rápida</p>
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <p id="site-content-form-help" class="sr-only">
+                        Editor de contenido comercial con navegación rápida, vista previa en vivo y bloques para marca, WhatsApp, hero, banda, servicios y footer.
+                    </p>
+
+                    <div class="sa-toolbar lg:col-span-2 space-y-3">
+                        <div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                            <div>
+                                <p class="sa-section-title">Panel de edición</p>
+                                <p class="sa-section-copy">Muévete por bloques, monitorea cambios sin guardar y abre la vista previa sin salir del flujo.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-secondary">Vista previa</button>
+                                <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing</a>
+                                <span id="editor-change-indicator"
+                                      role="status"
+                                      aria-live="polite"
+                                      class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                                    Sin cambios
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
                             @foreach ($editorSections as $editorSection)
                                 <button type="button"
                                         data-scroll-target="#{{ $editorSection['id'] }}"
+                                        aria-label="Ir a la sección {{ $editorSection['label'] }}"
                                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900">
                                     {{ $editorSection['label'] }}
                                 </button>
                             @endforeach
-                            <span id="editor-change-indicator"
-                                  class="ml-auto rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                                Sin cambios
-                            </span>
                         </div>
                     </div>
 
-                    <section id="editor-brand" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-brand" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Marca y header</p>
+                            <h3 class="sa-section-title">Marca y header</h3>
+                            <p class="sa-section-copy">Define cómo se presenta la marca, qué CTA ve el usuario y qué logo se replica en la navegación.</p>
                         </div>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
@@ -92,9 +189,10 @@
                         </div>
                     </section>
 
-                    <section id="editor-whatsapp" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-whatsapp" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">WhatsApp automático</p>
+                            <h3 class="sa-section-title">WhatsApp automático</h3>
+                            <p class="sa-section-copy">Asegura la salida de conversión principal: teléfono válido, mensaje base y rutas por plan.</p>
                         </div>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
@@ -118,7 +216,7 @@
 
                             <div class="mt-3 grid gap-3 lg:grid-cols-2">
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                                    Mensaje plan basico
+                                    Mensaje plan básico
                                     <textarea id="wa-plan-basico-message" name="whatsapp_message_plan_basico" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_basico', $content['whatsapp_message_plan_basico'] ?? '') }}</textarea>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
@@ -137,7 +235,7 @@
 
                             <div class="mt-3 grid gap-3 lg:grid-cols-2">
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                                    URL plan basico
+                                    URL plan básico
                                     <input type="text" id="wa-plan-basico-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_basico'] ?? '' }}" readonly>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
@@ -155,9 +253,10 @@
                             </div>
                         </div>
                     </section>
-                    <section id="editor-hero" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-hero" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Hero principal</p>
+                            <h3 class="sa-section-title">Hero principal</h3>
+                            <p class="sa-section-copy">Aqué se juega la primera impresión: narrativa, promesa y soporte visual del carrusel inicial.</p>
                         </div>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
@@ -209,9 +308,10 @@
                         </div>
                     </section>
 
-                    <section id="editor-marquee" class="editor-block lg:col-span-2 grid gap-4 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-marquee" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Banda en movimiento (carrusel continuo)</p>
+                            <h3 class="sa-section-title">Banda en movimiento</h3>
+                            <p class="sa-section-copy">Usa este bloque para reforzar prueba visual, alianzas o mensajes breves de confianza.</p>
                         </div>
 
                         @foreach ([1, 2, 3, 4, 5, 6] as $item)
@@ -236,9 +336,10 @@
                         @endforeach
                     </section>
 
-                    <section id="editor-services" class="editor-block lg:col-span-2 grid gap-4 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-services" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Secciones de servicios</p>
+                            <h3 class="sa-section-title">Secciones de servicios</h3>
+                            <p class="sa-section-copy">Organiza beneficios en bloques legibles. Cada sección debe explicar una ventaja concreta y visual.</p>
                         </div>
 
                         @foreach ([1, 2, 3] as $section)
@@ -278,9 +379,10 @@
                             </details>
                         @endforeach
                     </section>
-                    <section id="editor-footer" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
+                    <section id="editor-footer" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Footer</p>
+                            <h3 class="sa-section-title">Footer</h3>
+                            <p class="sa-section-copy">Cierra con contacto claro y texto legal consistente. Debe resolver dudas básicas y dar salida de soporte.</p>
                         </div>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
@@ -294,13 +396,76 @@
                         </label>
                     </section>
 
-                    <div class="lg:col-span-2 flex justify-end">
+                    <div class="lg:col-span-2 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-500/40 dark:bg-amber-900/20 lg:flex-row lg:items-center lg:justify-between">
+                        <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                            Antes de guardar, revisa preview y CTA de WhatsApp. Son las dos superficies con más impacto comercial inmediato.
+                        </p>
                         <x-ui.button type="submit">Guardar contenido web</x-ui.button>
                     </div>
                 </form>
             </x-ui.card>
         </div>
 
+        <aside class="space-y-4 2xl:sticky 2xl:top-6">
+            <div class="ui-card space-y-4">
+                <div>
+                    <h3 class="sa-section-title">Checklist de publicación</h3>
+                    <p class="sa-section-copy">Estado rápido de los bloques que más afectan percepción y conversión.</p>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                        <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Marca y CTA</span>
+                        <span class="sa-pill {{ $brandReady ? 'is-success' : 'is-warning' }}">{{ $brandReady ? 'Listo' : 'Revisar' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                        <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Hero principal</span>
+                        <span class="sa-pill {{ $heroReady ? 'is-success' : 'is-warning' }}">{{ $heroReady ? 'Listo' : 'Revisar' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                        <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">WhatsApp</span>
+                        <span class="sa-pill {{ $whatsappReady ? 'is-success' : 'is-warning' }}">{{ $whatsappReady ? 'Listo' : 'Revisar' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                        <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Footer</span>
+                        <span class="sa-pill {{ $footerReady ? 'is-success' : 'is-warning' }}">{{ $footerReady ? 'Listo' : 'Revisar' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui-card space-y-4">
+                <div>
+                    <h3 class="sa-section-title">Acciones rápidas</h3>
+                    <p class="sa-section-copy">Atajos para validar contenido sin perder contexto de edición.</p>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-secondary w-full justify-center">Abrir vista previa</button>
+                    <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost w-full justify-center">Abrir landing pública</a>
+                </div>
+                <div class="space-y-2">
+                    @foreach ($editorSections as $editorSection)
+                        <button type="button"
+                                data-scroll-target="#{{ $editorSection['id'] }}"
+                                aria-label="Ir a la sección {{ $editorSection['label'] }}"
+                                class="ui-button ui-button-ghost w-full justify-start">
+                            {{ $editorSection['label'] }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="ui-card space-y-4">
+                <div>
+                    <h3 class="sa-section-title">Criterio editorial</h3>
+                    <p class="sa-section-copy">Buenas prácticas aplicadas para que la página principal convierta mejor y se mantenga coherente.</p>
+                </div>
+                <ul class="sa-check-list">
+                    <li>La propuesta principal debe entenderse sin depender del carrusel.</li>
+                    <li>Los botones de planes deben abrir WhatsApp con intención clara y específica.</li>
+                    <li>Servicios y banda visual deben reforzar credibilidad, no repetir el mismo mensaje.</li>
+                    <li>Footer y correo de soporte deben resolver confianza operativa y contacto.</li>
+                </ul>
+            </div>
+        </aside>
     </div>
 
     <style>
@@ -446,15 +611,15 @@
         }
     </style>
 
-    <button id="live-preview-open" type="button" class="web-preview-fab">Vista previa en vivo</button>
+    <button id="live-preview-open" type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="web-preview-fab">Vista previa en vivo</button>
 
     <div id="live-preview-modal" class="web-preview-modal" aria-hidden="true">
         <div id="live-preview-backdrop" class="web-preview-backdrop"></div>
-        <div class="web-preview-dialog">
+        <div class="web-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="live-preview-title" aria-describedby="live-preview-description" tabindex="-1">
             <div class="web-preview-head">
                 <div class="web-preview-title">
-                    <strong>Vista previa en vivo</strong>
-                    <span>Landing publica en vivo mientras editas</span>
+                    <strong id="live-preview-title">Vista previa en vivo</strong>
+                    <span id="live-preview-description">Landing pública en vivo mientras editas</span>
                 </div>
                 <div class="web-preview-actions">
                     <button type="button" data-preview-device="desktop" class="web-preview-btn is-active">Desktop</button>
@@ -470,6 +635,7 @@
                     <iframe id="landing-preview-modal"
                             src="{{ $landingPreviewUrl }}"
                             title="Preview landing modal"
+                            tabindex="-1"
                             class="web-preview-frame"></iframe>
                 </div>
             </div>
@@ -504,14 +670,16 @@
             const modalIframe = document.getElementById('landing-preview-modal');
             const previewViewport = document.getElementById('preview-modal-viewport');
             const modalReloadBtn = document.getElementById('preview-modal-reload');
-            const openModalBtn = document.getElementById('live-preview-open');
+            const openModalButtons = Array.from(document.querySelectorAll('[data-open-live-preview]'));
             const closeModalBtn = document.getElementById('live-preview-close');
             const modalEl = document.getElementById('live-preview-modal');
             const modalBackdrop = document.getElementById('live-preview-backdrop');
+            const modalDialog = modalEl ? modalEl.querySelector('.web-preview-dialog') : null;
             const deviceButtons = Array.from(document.querySelectorAll('[data-preview-device]'));
             const quickNavButtons = Array.from(document.querySelectorAll('[data-scroll-target]'));
             const imageFields = Array.from(document.querySelectorAll('[data-preview-image]'));
             const previewFrames = [modalIframe].filter(Boolean);
+            let lastFocusedElement = null;
 
             if (!form || previewFrames.length === 0 || !previewViewport) {
                 return;
@@ -852,6 +1020,11 @@
                     const target = document.querySelector(button.getAttribute('data-scroll-target') || '');
                     if (target) {
                         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        window.setTimeout(function () {
+                            if (typeof target.focus === 'function') {
+                                target.focus({ preventScroll: true });
+                            }
+                        }, 160);
                     }
                 });
             });
@@ -883,9 +1056,18 @@
                     return;
                 }
 
+                lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
                 modalEl.classList.add('is-open');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
+                window.setTimeout(function () {
+                    if (closeModalBtn) {
+                        closeModalBtn.focus();
+                        return;
+                    }
+
+                    modalDialog?.focus();
+                }, 0);
                 queuePreviewRefresh();
             };
 
@@ -897,6 +1079,9 @@
                 modalEl.classList.remove('is-open');
                 modalEl.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
+                if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                    lastFocusedElement.focus();
+                }
             };
 
             setDevice('desktop');
@@ -910,9 +1095,9 @@
                 modalReloadBtn.addEventListener('click', reloadAllPreviews);
             }
 
-            if (openModalBtn) {
-                openModalBtn.addEventListener('click', openModal);
-            }
+            openModalButtons.forEach(function (button) {
+                button.addEventListener('click', openModal);
+            });
 
             if (closeModalBtn) {
                 closeModalBtn.addEventListener('click', closeModal);
@@ -923,6 +1108,30 @@
             }
 
             document.addEventListener('keydown', function (event) {
+                if (event.key === 'Tab' && modalEl && modalEl.classList.contains('is-open') && modalDialog) {
+                    const focusable = Array.from(modalDialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                        .filter(function (element) {
+                            return element instanceof HTMLElement && !element.hasAttribute('hidden');
+                        });
+
+                    if (focusable.length > 0) {
+                        const first = focusable[0];
+                        const last = focusable[focusable.length - 1];
+
+                        if (event.shiftKey && document.activeElement === first) {
+                            event.preventDefault();
+                            last.focus();
+                            return;
+                        }
+
+                        if (!event.shiftKey && document.activeElement === last) {
+                            event.preventDefault();
+                            first.focus();
+                            return;
+                        }
+                    }
+                }
+
                 if (event.key === 'Escape') {
                     closeModal();
                 }

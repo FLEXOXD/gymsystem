@@ -12,7 +12,7 @@ class SuperAdminPlanCatalog
         return [
             [
                 'plan_key' => 'basico',
-                'name' => 'Plan basico',
+                'name' => 'Plan básico',
                 'duration_unit' => 'days',
                 'duration_days' => 30,
                 'duration_months' => 1,

@@ -464,12 +464,12 @@ class LegacyDbcolaImportService
 
         foreach ($legacyClients as $legacyClient) {
             $documentNumber = $this->normalizeDocumentNumber(
-                $legacyClient['cedula'] ?? null,
+                $legacyClient['cÃ©dula'] ?? null,
                 (int) ($legacyClient['id'] ?? 0)
             );
             [$firstName, $lastName] = $this->splitLegacyName($legacyClient['nombre'] ?? null);
-            $phone = $this->normalizePhone($legacyClient['telefono'] ?? null);
-            $hasUsablePassword = $this->isBcryptHash($legacyClient['contrasena'] ?? null);
+            $phone = $this->normalizePhone($legacyClient['telÃ©fono'] ?? null);
+            $hasUsablePassword = $this->isBcryptHash($legacyClient['contraseÃ±a'] ?? null);
 
             $appUsername = null;
             $appPassword = null;
@@ -479,7 +479,7 @@ class LegacyDbcolaImportService
                     email: $legacyClient['correo'] ?? null,
                     reserved: $reservedUsernames
                 );
-                $appPassword = $hasUsablePassword ? trim((string) $legacyClient['contrasena']) : null;
+                $appPassword = $hasUsablePassword ? trim((string) $legacyClient['contraseÃ±a']) : null;
             }
 
             $client = Client::query()
@@ -603,7 +603,7 @@ class LegacyDbcolaImportService
             }
 
             $legacyUser = $legacyUsersById[$legacyClientId];
-            $documentNumber = $this->normalizeDocumentNumber($legacyUser['cedula'] ?? null, $legacyClientId);
+            $documentNumber = $this->normalizeDocumentNumber($legacyUser['cÃ©dula'] ?? null, $legacyClientId);
             $client = Client::query()
                 ->where('gym_id', (int) $gym->id)
                 ->where('document_number', $documentNumber)

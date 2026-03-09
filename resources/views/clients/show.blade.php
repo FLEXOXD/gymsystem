@@ -316,7 +316,7 @@
                         await navigator.clipboard.writeText(value);
                         this.whatsappCopyFeedback = 'Mensaje de WhatsApp copiado.';
                     } catch (error) {
-                        this.whatsappCopyFeedback = 'No se pudo copiar el mensaje automaticamente.';
+                        this.whatsappCopyFeedback = 'No se pudo copiar el mensaje automáticamente.';
                     }
                 },
             };

@@ -94,7 +94,7 @@ class SuperAdminPlanTemplateController extends Controller
     {
         return redirect()
             ->route('superadmin.plan-templates.index')
-            ->with('status', 'No se puede eliminar planes base del catalogo fijo.');
+            ->with('status', 'No se puede eliminar planes base del catálogo fijo.');
     }
 
     public function storePromotion(Request $request): RedirectResponse
@@ -122,7 +122,7 @@ class SuperAdminPlanTemplateController extends Controller
 
         return redirect()
             ->route('superadmin.plan-templates.index')
-            ->with('status', 'Promocion base creada correctamente.');
+            ->with('status', 'Promoción base creada correctamente.');
     }
 
     public function togglePromotion(Request $request, int $promotion): RedirectResponse
@@ -137,7 +137,7 @@ class SuperAdminPlanTemplateController extends Controller
 
         return redirect()
             ->route('superadmin.plan-templates.index')
-            ->with('status', 'Estado de promocion base actualizado.');
+            ->with('status', 'Estado de promoción base actualizado.');
     }
 
     public function destroyPromotion(int $promotion): RedirectResponse
@@ -147,6 +147,6 @@ class SuperAdminPlanTemplateController extends Controller
 
         return redirect()
             ->route('superadmin.plan-templates.index')
-            ->with('status', 'Promocion base eliminada.');
+            ->with('status', 'Promoción base eliminada.');
     }
 }

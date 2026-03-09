@@ -29,7 +29,7 @@
 
             <label class="text-sm font-semibold ui-muted">
                 Versión
-                <input type="text" name="version" value="{{ $filters['version'] ?? '' }}" class="ui-input mt-1 block min-w-[140px]" placeholder="{{ $currentVersion }}">
+                <input type="text" name="versión" value="{{ $filters['versión'] ?? '' }}" class="ui-input mt-1 block min-w-[140px]" placeholder="{{ $currentVersion }}">
             </label>
 
             <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
@@ -89,7 +89,7 @@
                             </td>
                             <td class="px-3 py-3 dark:text-slate-200">
                                 <span class="inline-flex rounded bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                    {{ $acceptance->contract_code ?: 'SIN-CÓDIGO' }}
+                    {{ $acceptance->contract_code ?: 'SIN-CÓDIGO' }}
                                 </span>
                             </td>
                             <td class="px-3 py-3">

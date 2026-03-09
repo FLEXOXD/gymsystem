@@ -634,10 +634,10 @@
 
                 <p class="hero-subtitle">Gestiona asistencia, membresías, caja y rendimiento del gimnasio desde un centro operativo rápido, seguro y en tiempo real.</p>
 
-                <div class="hero-modules" aria-label="Modulos principales">
+                <div class="hero-modules" aria-label="Módulos principales">
                     <button class="module-chip" type="button">
-                        <span>Modulo</span>
-                        <strong>01</strong><b>Recepcion</b>
+                        <span>Módulo</span>
+                        <strong>01</strong><b>Recepción</b>
                     </button>
                     <button class="module-chip" type="button">
                         <span>Control</span>
@@ -686,11 +686,11 @@
                         autocomplete="username"
                         value="{{ old('email') }}"
                         class="input"
-                        placeholder="recepcion@gym.com">
+                        placeholder="recepción@gym.com">
                 </div>
 
                 <div class="field">
-                    <label for="password">Contrasena</label>
+                    <label for="password">Contraseña</label>
                     <div class="input-wrap">
                         <input
                             id="password"
@@ -700,12 +700,12 @@
                             required
                             autocomplete="current-password"
                             class="input password"
-                            placeholder="Ingresa tu contrasena">
+                            placeholder="Ingresa tu contraseña">
                         <button
                             type="button"
                             id="toggle-password-visibility"
                             class="toggle-password"
-                            aria-label="Mostrar contrasena"
+                            aria-label="Mostrar contraseña"
                             aria-controls="password"
                             aria-pressed="false">
                             <svg id="password-eye-open" class="h-5 w-5 is-hidden" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -756,7 +756,7 @@
             eyeOpen.classList.toggle('is-hidden', !isVisible);
             eyeClosed.classList.toggle('is-hidden', isVisible);
             toggle.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
-            toggle.setAttribute('aria-label', isVisible ? 'Ocultar contrasena' : 'Mostrar contrasena');
+            toggle.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
         };
 
         syncPasswordIconState();

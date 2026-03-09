@@ -33,7 +33,7 @@ const createToggleButton = (input) => {
     button.className = 'ui-password-toggle-button';
     button.setAttribute('data-password-toggle-button', '1');
     button.setAttribute('aria-controls', input.id);
-    button.setAttribute('aria-label', 'Mostrar contrasena');
+    button.setAttribute('aria-label', 'Mostrar contraseña');
     button.setAttribute('aria-pressed', 'false');
     button.innerHTML = `
         <span class="ui-password-icon ui-password-icon-open is-hidden">${OPEN_ICON}</span>
@@ -46,7 +46,7 @@ const createToggleButton = (input) => {
     const syncState = () => {
         const visible = input.type === 'text';
         button.setAttribute('aria-pressed', visible ? 'true' : 'false');
-        button.setAttribute('aria-label', visible ? 'Ocultar contrasena' : 'Mostrar contrasena');
+        button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
         iconOpen?.classList.toggle('is-hidden', !visible);
         iconClosed?.classList.toggle('is-hidden', visible);
     };

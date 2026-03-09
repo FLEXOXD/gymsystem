@@ -1,4 +1,4 @@
-﻿        // SuperAdmin-only visual sync:
+        // SuperAdmin-only visual sync:
         // if top-right avatar exists, mirror it into the sidebar brand badge.
         const isSuperAdminViewer = @json($isSuperAdmin);
         if (isSuperAdminViewer) {

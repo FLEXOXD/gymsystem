@@ -1,4 +1,4 @@
-﻿@if ($showBranchContextSwitcher)
+@if ($showBranchContextSwitcher)
                 <section class="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                     <details class="group" open>
                         <summary class="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">

@@ -18,12 +18,12 @@
     <header class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700/40 bg-slate-900/40 px-4 py-3">
         <div>
             <p class="ui-muted text-xs font-bold uppercase tracking-widest">Pantalla QR</p>
-            <h1 class="ui-heading text-xl font-black md:text-2xl">QR dinamico - {{ $gymName }}</h1>
+            <h1 class="ui-heading text-xl font-black md:text-2xl">QR dinámico - {{ $gymName }}</h1>
         </div>
         <span class="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cyan-200">Live</span>
     </header>
 
-    <x-ui.card title="Check-in movil" subtitle="Escanea este QR desde la app cliente.">
+    <x-ui.card title="Check-in móvil" subtitle="Escanea este QR desde la app cliente.">
         <div id="mobile-qr-screen-svg" class="flex min-h-[420px] items-center justify-center rounded-2xl border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-900/70">
             <p class="text-sm text-slate-500 dark:text-slate-300">Generando QR...</p>
         </div>

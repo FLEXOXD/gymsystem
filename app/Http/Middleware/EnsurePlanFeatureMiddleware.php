@@ -31,7 +31,7 @@ class EnsurePlanFeatureMiddleware
 
         $featureKey = trim($feature);
         if ($featureKey === '') {
-            abort(403, 'No se definio la funcionalidad del plan requerida para esta ruta.');
+            abort(403, 'No se definió la funcionalidad del plan requerida para esta ruta.');
         }
 
         $activeGymId = (int) ($request->attributes->get('active_gym_id') ?? $user->gym_id ?? 0);
@@ -42,7 +42,7 @@ class EnsurePlanFeatureMiddleware
         $planKey = $activeGymId > 0
             ? $this->planAccessService->currentPlanKeyForGym($activeGymId)
             : $this->planAccessService->currentPlanKey($user);
-        $message = 'Tu plan actual no incluye este modulo.';
+        $message = 'Tu plan actual no incluye este módulo.';
 
         if ($request->expectsJson()) {
             return response()->json([

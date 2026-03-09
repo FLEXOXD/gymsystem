@@ -87,7 +87,7 @@ class Client extends Model
     }
 
     /**
-     * Suscripciones push activas/inactivas del cliente en PWA movil.
+     * Suscripciones push activas/inactivas del cliente en PWA móvil.
      */
     public function pushSubscriptions(): HasMany
     {

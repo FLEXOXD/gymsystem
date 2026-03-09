@@ -52,7 +52,7 @@ class ReceptionCheckInRequest extends FormRequest
         $value = trim($value);
 
         // Common prefix patterns from scanners (e.g. "UID: 12345").
-        if (preg_match('/^(?:uid|rfid|qr|code|codigo)\s*[:\-]\s*(.+)$/i', $value, $matches) === 1) {
+        if (preg_match('/^(?:uid|rfid|qr|code|código)\s*[:\-]\s*(.+)$/i', $value, $matches) === 1) {
             $value = trim((string) ($matches[1] ?? ''));
         }
 

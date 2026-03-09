@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Caja profesional')
 @section('page-title', 'Caja por turno')
@@ -223,7 +223,7 @@
 
                             <label class="space-y-1 text-sm font-semibold ui-muted">
                                 <span>Motivo de diferencia (obligatorio si no cuadra)</span>
-                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por que hay diferencia.">{{ old('difference_reason') }}</textarea>
+                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por qué hay diferencia.">{{ old('difference_reason') }}</textarea>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -240,7 +240,7 @@
                     </x-ui.card>
                 </section>
 
-                <x-ui.card title="Últimos 10 movimientos">
+                <x-ui.card title="últimos 10 movimientos">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
@@ -364,7 +364,7 @@
                 $historyRows = $sessions ?? collect();
             @endphp
 
-            <x-ui.card title="Historial de caja" subtitle="Revision de cierres, diferencias y responsables.">
+            <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables.">
                 <div class="overflow-x-auto">
                     <table class="ui-table min-w-[1040px]">
                         <thead>
@@ -723,7 +723,7 @@
 @endpush
 
 {{--
-TODO backend minimo:
+TODO backend mínimo:
 1) Route sugerida: PATCH /cash/movements/{movement}/void -> cash.movements.void
 2) CashMovement: status, void_reason, voided_at, voided_by (solo Admin puede anular).
 3) Cierre con diferencia: validar difference_reason + supervisor_password + permiso admin.

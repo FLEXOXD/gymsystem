@@ -1,4 +1,4 @@
-<x-ui.card title="Credenciales" subtitle="Gestion de QR y RFID con acciones directas.">
+<x-ui.card title="Credenciales" subtitle="Gestión de QR y RFID con acciones directas.">
     @php
         $clientPhoneRaw = trim((string) ($client->phone ?? ''));
         $gymCountryCode = strtolower(trim((string) ($client->gym?->address_country_code ?? '')));
@@ -67,7 +67,7 @@
             $filtered = array_values(array_filter($parts, static function (string $part): bool {
                 $digits = preg_replace('/\D+/', '', $part) ?? '';
                 $looksLikePhone = strlen($digits) >= 7;
-                $hasPhoneKeyword = preg_match('/\b(tel|telefono|cel|movil|whatsapp|phone)\b/i', $part) === 1;
+                $hasPhoneKeyword = preg_match('/\b(tel|teléfono|cel|móvil|whatsapp|phone)\b/i', $part) === 1;
                 if ($hasPhoneKeyword) {
                     return false;
                 }
@@ -162,7 +162,7 @@
                         </x-ui.button>
                         <x-ui.button type="button" variant="ghost" size="sm" x-on:click="copyWhatsappMessage(@js($whatsappQrMessage))">Copiar mensaje WA</x-ui.button>
                     @else
-                        <x-ui.button type="button" variant="ghost" size="sm" disabled title="Registra un telefono valido para enviar por WhatsApp.">WhatsApp no disponible</x-ui.button>
+                        <x-ui.button type="button" variant="ghost" size="sm" disabled title="Registra un teléfono válido para enviar por WhatsApp.">WhatsApp no disponible</x-ui.button>
                     @endif
                 </div>
                 <p class="text-xs text-cyan-700 dark:text-cyan-300" x-text="qrCopyFeedback"></p>
@@ -175,7 +175,7 @@
                 @endif
                 @if (! $hasWhatsappPhone)
                     <p class="text-xs text-amber-700 dark:text-amber-300">
-                        Este cliente no tiene telefono valido para WhatsApp. Guarda el numero con codigo de pais (ej: 593...).
+                        Este cliente no tiene teléfono válido para WhatsApp. Guarda el número con código de país (ej: 593...).
                     </p>
                 @endif
             </div>

@@ -75,7 +75,7 @@ class UpdateGymProfileRequest extends FormRequest
             }
 
             if ($country === '') {
-                $validator->errors()->add('address_country_code', 'Selecciona el pais.');
+                $validator->errors()->add('address_country_code', 'Selecciona el país.');
             }
 
             if ($state === '') {
@@ -91,11 +91,11 @@ class UpdateGymProfileRequest extends FormRequest
             }
 
             if (GymLocationCatalog::resolveState($country, $state) === null) {
-                $validator->errors()->add('address_state', 'Selecciona una provincia/estado valido.');
+                $validator->errors()->add('address_state', 'Selecciona una provincia/estado válido.');
             }
 
             if (GymLocationCatalog::resolveCity($country, $state, $city) === null) {
-                $validator->errors()->add('address_city', 'Selecciona una ciudad valida para la provincia/estado elegidos.');
+                $validator->errors()->add('address_city', 'Selecciona una ciudad válida para la provincia/estado elegidos.');
             }
         });
     }

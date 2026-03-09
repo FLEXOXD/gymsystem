@@ -4,7 +4,7 @@ namespace App\Support;
 
 class LegalTerms
 {
-    public const VERSION = '2026-02-26';
+    public const Versión = '2026-02-26';
 
     /**
      * @return array<string, array{label:string,summary:string,points:list<string>}>

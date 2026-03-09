@@ -1,4 +1,4 @@
-﻿@php
+@php
     $content = $content ?? \App\Support\MarketingContent::load();
     $demoCtaLabel = 'Demo gratis';
     $loginLabel = trim((string) ($content['login_button_label'] ?? 'Iniciar sesión'));
@@ -12,7 +12,7 @@
     $demoLimitModal = session('demo_limit_modal');
     $demoLimitSeconds = max(0, (int) data_get($demoLimitModal, 'retry_after_seconds', 0));
     $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rápido'));
-    $heroTitleText = trim((string) preg_replace('/\bsin\s+friccion\b\.?/i', '', $heroTitleText));
+    $heroTitleText = trim((string) preg_replace('/\bsin\s+fricción\b\.?/i', '', $heroTitleText));
     $heroSlides = [];
     for ($slide = 1; $slide <= 4; $slide++) {
         $slideUrl = trim((string) ($content['hero_slide_'.$slide.'_url'] ?? ''));
@@ -105,10 +105,10 @@
         ],
         [
             'index' => '2',
-            'title' => trim((string) ($content['section_2_title'] ?? 'Mas control, menos caos operativo')),
-            'text' => trim((string) ($content['section_2_text'] ?? 'Convierte tu operacion diaria en procesos claros, medibles y faciles de ejecutar.')),
+            'title' => trim((string) ($content['section_2_title'] ?? 'Más control, menos caos operativo')),
+            'text' => trim((string) ($content['section_2_text'] ?? 'Convierte tu operación diaria en procesos claros, medibles y fáciles de ejecutar.')),
             'items' => [
-                trim((string) ($content['section_2_item_1'] ?? 'Flujo de recepcion optimizado')),
+                trim((string) ($content['section_2_item_1'] ?? 'Flujo de recepción optimizado')),
                 trim((string) ($content['section_2_item_2'] ?? 'Caja por turnos con control real')),
                 trim((string) ($content['section_2_item_3'] ?? 'Panel simple para ver ingresos, vencimientos y clientes activos')),
             ],
@@ -130,6 +130,51 @@
         ['q' => '¿La demo afecta mi sistema actual?', 'a' => 'No. La demo trabaja en un entorno temporal aislado y los registros se eliminan automáticamente al expirar la sesión.'],
         ['q' => '¿Puedo usar el sistema desde celular?', 'a' => 'Sí. La interfaz es responsive y cuenta con base PWA para operación diaria en móvil y escritorio.'],
         ['q' => '¿Cómo solicitar acompañamiento comercial?', 'a' => 'Puedes escribir por WhatsApp desde esta página y te ayudamos a definir la mejor implementación para tu gimnasio.'],
+    ];
+
+    $heroProofItems = [
+        ['title' => 'Cobro diario ordenado', 'text' => 'Caja por turnos, membresías y movimientos en una sola operación.'],
+        ['title' => 'Recepción más rápida', 'text' => 'Check-in con flujo claro para escritorio, tablet y móvil.'],
+        ['title' => 'Listo para crecer', 'text' => 'Desde una sede hasta operación multi-gym sin cambiar de sistema.'],
+    ];
+
+    $outcomeCards = [
+        [
+            'eyebrow' => 'Recepción',
+            'title' => 'Tu recepción trabaja más rápido',
+            'text' => 'Check-in, membresías y cobros quedan a mano para atender mejor y perder menos tiempo.',
+            'metric' => 'Menos filas',
+        ],
+        [
+            'eyebrow' => 'Control',
+            'title' => 'Ves lo importante en un solo lugar',
+            'text' => 'Pagos, vencimientos, ingresos y clientes activos se revisan rápido sin buscar en varias pantallas.',
+            'metric' => 'Control diario',
+        ],
+        [
+            'eyebrow' => 'Crecimiento',
+            'title' => 'Creces sin volver al desorden',
+            'text' => 'Empiezas con una sede y, si abres más, sigues trabajando sobre el mismo sistema.',
+            'metric' => 'Listo para crecer',
+        ],
+    ];
+
+    $journeySteps = [
+        [
+            'step' => '01',
+            'title' => 'Configuras tu gimnasio y das accesos',
+            'text' => 'Dejas lista la sede, el plan y el usuario principal para empezar a trabajar sin enredos.',
+        ],
+        [
+            'step' => '02',
+            'title' => 'Tu equipo cobra y atiende mejor',
+            'text' => 'Recepción, membresías y caja quedan conectadas para cometer menos errores y trabajar más rápido.',
+        ],
+        [
+            'step' => '03',
+            'title' => 'Sabes como va el gimnasio cada día',
+            'text' => 'Ves vencimientos, ingresos y movimiento diario para tomar decisiones con más claridad.',
+        ],
     ];
 
     $publicPlanCards = collect($publicPlanCards ?? [])->filter(fn ($card) => is_array($card))->values();
@@ -547,6 +592,33 @@
         .hero-actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; }
         .hero-note { margin-top: .8rem; font-size: .87rem; color: #b4cfbf; line-height: 1.45; max-width: 64ch; }
         .hero-note b { color: #f1f7ff; }
+        .hero-proof-strip {
+            margin-top: 1.15rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .7rem;
+            max-width: 70ch;
+        }
+        .hero-proof-card {
+            border: 1px solid rgba(61, 110, 78, .7);
+            border-radius: 1rem;
+            background: linear-gradient(145deg, rgba(10, 19, 13, .96), rgba(8, 18, 12, .88));
+            padding: .85rem .9rem;
+            box-shadow: 0 18px 32px rgba(4, 18, 10, .22);
+        }
+        .hero-proof-title {
+            margin: 0;
+            color: #f6fff9;
+            font-size: .9rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .hero-proof-copy {
+            margin: .45rem 0 0;
+            color: #b5cabd;
+            font-size: .82rem;
+            line-height: 1.45;
+        }
 
         .hero-panel {
             border-radius: 1.2rem; border: 0;
@@ -817,6 +889,170 @@
             object-position: top center;
             border-radius: .58rem;
             background: rgba(6, 11, 8, .98);
+        }
+
+        .outcome-band {
+            margin-top: 1.5rem;
+        }
+        .outcome-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .outcome-card {
+            border: 1px solid #2c5b41;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, rgba(9, 18, 12, .94), rgba(12, 25, 17, .96));
+            padding: 1rem;
+        }
+        .outcome-card small {
+            display: inline-block;
+            color: #9cf7b1;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+        .outcome-card h3 {
+            margin: .65rem 0 0;
+            font-size: 1.2rem;
+            line-height: 1.18;
+        }
+        .outcome-card p {
+            margin: .7rem 0 0;
+            color: #b6cabf;
+            line-height: 1.58;
+        }
+        .outcome-metric {
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid rgba(84, 255, 144, .36);
+            background: rgba(76, 255, 140, .1);
+            color: #dcffe7;
+            padding: .28rem .72rem;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .workflow-card {
+            border: 1px solid #2f5d43;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, rgba(10, 18, 13, .95), rgba(13, 25, 18, .98));
+            padding: 1rem;
+        }
+        .workflow-step {
+            width: 2.6rem;
+            height: 2.6rem;
+            border-radius: .8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #57ff54, #20dc78);
+            color: #09120d;
+            font-size: .82rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+        .workflow-card h3 {
+            margin: .8rem 0 0;
+            font-size: 1.18rem;
+        }
+        .workflow-card p {
+            margin: .65rem 0 0;
+            color: #b6c9be;
+            line-height: 1.58;
+        }
+
+        .pricing-summary-strip {
+            margin: 1rem auto 0;
+            width: min(980px, 100%);
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .8rem;
+        }
+        .pricing-summary-item {
+            border: 1px solid #2f5b41;
+            border-radius: .95rem;
+            background: rgba(9, 18, 12, .86);
+            padding: .8rem .9rem;
+        }
+        .pricing-summary-item strong {
+            display: block;
+            color: #f5fff8;
+            font-size: 1rem;
+        }
+        .pricing-summary-item span {
+            display: block;
+            margin-top: .35rem;
+            color: #b4c8bd;
+            line-height: 1.45;
+            font-size: .85rem;
+        }
+
+        .plan-meta-grid {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .6rem;
+        }
+        .plan-meta-item {
+            border: 1px solid rgba(57, 97, 71, .72);
+            border-radius: .85rem;
+            background: rgba(9, 18, 12, .82);
+            padding: .7rem;
+        }
+        .plan-meta-item strong {
+            display: block;
+            color: #f4fff8;
+            font-size: .84rem;
+        }
+        .plan-meta-item span {
+            display: block;
+            margin-top: .3rem;
+            color: #b6cabe;
+            line-height: 1.45;
+            font-size: .78rem;
+        }
+
+        .cta-band {
+            margin-top: 1.5rem;
+            border: 1px solid #2d5c42;
+            border-radius: 1.25rem;
+            background:
+                radial-gradient(circle at 90% 18%, rgba(87, 255, 84, .14), transparent 26%),
+                linear-gradient(145deg, rgba(9, 18, 12, .96), rgba(11, 26, 17, .98));
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) auto;
+            gap: 1rem;
+            align-items: center;
+        }
+        .cta-band h2 {
+            margin: .55rem 0 0;
+            font-size: clamp(1.45rem, 2.8vw, 2.35rem);
+            line-height: 1.08;
+        }
+        .cta-band p {
+            margin: .7rem 0 0;
+            color: #b7ccbf;
+            line-height: 1.58;
+            max-width: 60ch;
+        }
+        .cta-band-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .65rem;
+            justify-content: flex-end;
         }
 
         .pricing-grid { margin-top: 1.2rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
@@ -1122,7 +1358,7 @@
             box-shadow: 0 0 10px rgba(91, 255, 150, .76);
         }
         .about-highlights.is-checks li::before {
-            content: "✓";
+            content: "?";
             width: auto;
             height: auto;
             margin-top: 0;
@@ -2119,9 +2355,15 @@
                 padding: .52rem .78rem;
             }
             .hero { grid-template-columns: 1fr; }
+            .hero-proof-strip,
+            .outcome-grid,
+            .workflow-grid,
+            .plan-meta-grid,
             .service-grid,
             .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .service-grid .service:last-child { grid-column: 1 / -1; }
+            .pricing-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pricing-summary-strip .pricing-summary-item:last-child { grid-column: 1 / -1; }
             .footer-panel { padding: 1.5rem 1.2rem 1rem; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
             .hero-insight-grid { grid-template-columns: 1fr 1fr; }
@@ -2166,6 +2408,8 @@
             .hero h1 { line-height: 1.08; }
             .hero p,
             .heading p { font-size: .98rem; }
+            .cta-band { grid-template-columns: 1fr; }
+            .cta-band-actions { justify-content: flex-start; }
             .hero-media-frame,
             .hero-slide-image,
             .hero-media-placeholder { min-height: 300px; }
@@ -2203,6 +2447,11 @@
             .brand-chip span { font-size: .83rem; }
             .service-grid,
             .pricing-grid,
+            .hero-proof-strip,
+            .outcome-grid,
+            .workflow-grid,
+            .pricing-summary-strip,
+            .plan-meta-grid,
             .footer-grid,
             .hero-insight-grid,
             .about-team-grid,
@@ -2211,6 +2460,7 @@
             .legal-grid { grid-template-columns: 1fr; }
             .service-grid .service:last-child,
             .pricing-grid .plan:last-child,
+            .pricing-summary-strip .pricing-summary-item:last-child,
             .contact-info-grid .contact-info-card:last-child { grid-column: auto; }
             .plan,
             .service { min-height: auto; }
@@ -2245,6 +2495,9 @@
             .hero-actions { gap: .5rem; }
             .hero-actions .btn,
             .hero-actions .inline-form { width: 100%; }
+            .cta-band-actions { width: 100%; }
+            .cta-band-actions .btn,
+            .cta-band-actions .inline-form { width: 100%; }
             .about-story-copy,
             .about-proof { padding: .88rem; }
             .about-year-badge {
@@ -2290,7 +2543,7 @@
                         data-mobile-menu-toggle
                         aria-expanded="false"
                         aria-controls="landing-mobile-nav"
-                        aria-label="Abrir menu">
+                        aria-label="Abrir menú">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -2389,6 +2642,15 @@
                 </div>
 
                 <p class="hero-note"><b>{{ $demoCtaLabel }}:</b> crea un acceso temporal de prueba. Si superas 3 intentos, espera 60 minutos para volver a solicitar. <b>{{ $loginLabel }}:</b> abre tus datos reales.</p>
+
+                <div class="hero-proof-strip">
+                    @foreach ($heroProofItems as $item)
+                        <article class="hero-proof-card">
+                            <p class="hero-proof-title">{{ $item['title'] }}</p>
+                            <p class="hero-proof-copy">{{ $item['text'] }}</p>
+                        </article>
+                    @endforeach
+                </div>
             </div>
 
             <article class="hero-panel reveal">
@@ -2407,8 +2669,8 @@
                                 </figure>
                             @endforeach
                             @if (count($heroSlides) > 1)
-                                <button type="button" class="hero-carousel-control prev" data-hero-prev aria-label="Slide anterior">‹</button>
-                                <button type="button" class="hero-carousel-control next" data-hero-next aria-label="Slide siguiente">›</button>
+                                <button type="button" class="hero-carousel-control prev" data-hero-prev aria-label="Slide anterior"><</button>
+                                <button type="button" class="hero-carousel-control next" data-hero-next aria-label="Slide siguiente">></button>
                                 <div class="hero-carousel-dots">
                                     @foreach ($heroSlides as $slideIndex => $slideUrl)
                                         <button type="button"
@@ -2429,7 +2691,7 @@
                         <span class="hero-insight-value">{{ number_format((int) ($stats['gyms'] ?? 0)) }}</span>
                     </article>
                     <article class="hero-insight-card">
-                        <span class="hero-insight-label">Con suscripcion activa</span>
+                        <span class="hero-insight-label">Con suscripción activa</span>
                         <span class="hero-insight-value">{{ number_format((int) ($stats['active_sessions'] ?? 0)) }}</span>
                     </article>
                 </div>
@@ -2473,6 +2735,24 @@
             </div>
         </section>
 
+        <section class="shell outcome-band">
+            <header class="heading reveal">
+                <small>Lo que ganas</small>
+                <h2>Lo que tu gimnasio mejora desde el primer día</h2>
+                <p>La página ahora explica mejor beneficios concretos: atender más rápido, controlar mejor y crecer sin desorden.</p>
+            </header>
+            <div class="outcome-grid">
+                @foreach ($outcomeCards as $outcome)
+                    <article class="outcome-card reveal">
+                        <small>{{ $outcome['eyebrow'] }}</small>
+                        <h3>{{ $outcome['title'] }}</h3>
+                        <p>{{ $outcome['text'] }}</p>
+                        <span class="outcome-metric">{{ $outcome['metric'] }}</span>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+
         <section id="features" class="shell section">
             <header class="heading reveal">
                 <small>Servicios</small>
@@ -2507,12 +2787,43 @@
             </div>
         </section>
 
+        <section class="shell section">
+            <header class="heading reveal">
+                <small>Como funciona</small>
+                <h2>Así te ayuda en el día a día del gimnasio</h2>
+                <p>El recorrido muestra de forma simple como pasas de configurar tu cuenta a cobrar, controlar y crecer con orden.</p>
+            </header>
+            <div class="workflow-grid">
+                @foreach ($journeySteps as $journeyStep)
+                    <article class="workflow-card reveal">
+                        <span class="workflow-step">{{ $journeyStep['step'] }}</span>
+                        <h3>{{ $journeyStep['title'] }}</h3>
+                        <p>{{ $journeyStep['text'] }}</p>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+
         <section id="pricing" class="shell section">
             <header class="heading reveal">
                 <small>Precios</small>
                 <h2>Planes claros para cada etapa</h2>
-                <p>Escala de una sede a operación multi-gym sin cambiar de plataforma.</p>
+                <p>Empieza con el plan que necesitas hoy y crece sin cambiar de sistema.</p>
             </header>
+            <div class="pricing-summary-strip reveal">
+                <article class="pricing-summary-item">
+                    <strong>Planes fáciles de comparar</strong>
+                    <span>Ves rápido cuál se ajusta mejor al tamaño y ritmo de tu gimnasio.</span>
+                </article>
+                <article class="pricing-summary-item">
+                    <strong>Precios claros desde el inicio</strong>
+                    <span>Entiendes cuánto pagas y qué incluye cada plan sin leer de más.</span>
+                </article>
+                <article class="pricing-summary-item">
+                    <strong>Si creces, el sistema crece contigo</strong>
+                    <span>Puedes empezar con una sede y luego pasar a un plan más completo o multi sede.</span>
+                </article>
+            </div>
             <div class="pricing-grid">
                 @foreach ($publicPlanCards as $planCard)
                     @php
@@ -2524,7 +2835,7 @@
                         $discountPrice = $discountPriceRaw !== null ? (float) $discountPriceRaw : null;
                         $discountPercent = isset($planCard['discount_percent']) ? (int) $planCard['discount_percent'] : null;
                         $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
-                        $planCtaLabel = 'SOLICITA TU COTIZACION';
+                        $planCtaLabel = 'SOLICITA TU Cotización';
                     @endphp
                     <article class="plan reveal {{ $isFeatured ? 'popular' : '' }}">
                         @if ($isFeatured)
@@ -2562,6 +2873,20 @@
                             </div>
                         @endif
                         <p>{{ $planCard['summary'] }}</p>
+                        <div class="plan-meta-grid">
+                            <article class="plan-meta-item">
+                                <strong>Este plan es para ti si...</strong>
+                                <span>{{ $planCard['ideal_for'] ?? 'Operación en crecimiento.' }}</span>
+                            </article>
+                            <article class="plan-meta-item">
+                                <strong>Lo que más te ayuda</strong>
+                                <span>{{ $planCard['ops_focus'] ?? 'Control operativo.' }}</span>
+                            </article>
+                            <article class="plan-meta-item">
+                                <strong>Como empiezas</strong>
+                                <span>{{ $planCard['setup_note'] ?? 'Configuración según necesidad.' }}</span>
+                            </article>
+                        </div>
                         <ul>
                             @foreach ($planFeatures as $feature)
                                 @php
@@ -2623,6 +2948,35 @@
                 @endforeach
             </div>
         </section>
+
+        <section class="shell cta-band reveal">
+            <div>
+                <small class="kicker">Siguiente paso</small>
+                <h2>Prueba la demo o pide una cotización con contexto operativo real.</h2>
+                <p>La auditoría de UX también simplificó el cierre: menos fricción para probar y un CTA más claro para equipos que necesitan asesoría comercial.</p>
+            </div>
+            <div class="cta-band-actions">
+                <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
+                    @csrf
+                    <button class="btn btn-demo" type="submit">{{ $demoCtaLabel }}</button>
+                </form>
+                <button class="btn btn-wa btn-quote-trigger"
+                        type="button"
+                        data-open-quote-modal
+                        data-quote-source="cta_band"
+                        aria-controls="quote-request-modal">
+                    <span class="quote-cta-icon-badge" aria-hidden="true">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                            <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span>Solicita tu cotización</span>
+                </button>
+                <a href="{{ $contactHref }}" class="btn btn-outline">Ir a contacto</a>
+            </div>
+        </section>
         @endif
 
         @if ($showAboutSection)
@@ -2664,7 +3018,7 @@
 
             <div class="shell about-proof reveal">
                 <p class="about-proof-kicker">Fundador</p>
-                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrollé GymSystem para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
+                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrolló GymSystem para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
                 <div class="about-proof-author">
                     David Israel Quintana Tapia
                     <span>Fundador de FlexJok y creador de GymSystem</span>
@@ -3037,7 +3391,7 @@
          role="dialog"
          aria-modal="true"
          aria-labelledby="quote-request-title">
-        <button id="quote-request-close" type="button" class="quote-modal-close" aria-label="Cerrar formulario de cotizacion">
+        <button id="quote-request-close" type="button" class="quote-modal-close" aria-label="Cerrar formulario de cotización">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 5 15 15M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
@@ -3046,7 +3400,7 @@
         <div class="quote-modal-shell">
             <section class="quote-modal-side">
                 <div>
-                    <p class="quote-modal-kicker">Cotizacion personalizada</p>
+                    <p class="quote-modal-kicker">Cotización personalizada</p>
                     <h3 class="quote-modal-title">Completa el formulario y recibe una propuesta clara para tu gimnasio.</h3>
                     <p class="quote-modal-copy">Cuéntanos tu contexto operativo y te ayudamos a elegir el plan correcto para implementar GymSystem sin fricciones.</p>
                 </div>
@@ -3054,7 +3408,7 @@
                 <div class="quote-modal-visual" aria-hidden="true">
                     <div class="quote-modal-stat">
                         <span>Respuesta comercial</span>
-                        <strong>Te contactamos por correo o telefono.</strong>
+                        <strong>Te contactamos por correo o teléfono.</strong>
                     </div>
 
                     <div class="quote-modal-bubble is-a">
@@ -3093,9 +3447,9 @@
 
             <section class="quote-modal-form-panel">
                 <header class="quote-form-header">
-                    <p class="quote-modal-kicker">Solicita tu cotizacion</p>
-                    <h3 id="quote-request-title">Queremos entender tu operacion actual</h3>
-                    <p>Comparte tus datos y el tamaño de tu equipo para prepararte una cotizacion ajustada a tu gimnasio.</p>
+                    <p class="quote-modal-kicker">Solicita tu cotización</p>
+                    <h3 id="quote-request-title">Queremos entender tu operación actual</h3>
+                    <p>Comparte tus datos y el tamaño de tu equipo para prepararte una cotización ajustada a tu gimnasio.</p>
                 </header>
 
                 @if ($quoteModalMessage !== '')
@@ -3132,7 +3486,7 @@
                         </label>
 
                         <label class="quote-form-field">
-                            Telefono de contacto*
+                            Teléfono de contacto*
                             <span class="quote-form-inline">
                                 <select class="contact-input quote-form-prefix" name="quote_phone_country_code" data-quote-prefix-select required>
                                     @foreach ($quotePhonePrefixes as $prefix)
@@ -3150,7 +3504,7 @@
                         </label>
 
                         <label class="quote-form-field">
-                            Correo electronico*
+                            Correo electrónico*
                             <input type="email" class="contact-input" name="quote_email" value="{{ old('quote_email') }}" placeholder="correo@tugym.com" required>
                             @error('quote_email', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
@@ -3158,9 +3512,9 @@
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
-                            Pais de residencia*
+                            País de residencia*
                             <select class="contact-input" name="quote_country" data-quote-country-select required>
-                                <option value="">Selecciona tu pais</option>
+                                <option value="">Selecciona tu país</option>
                                 @foreach ($quoteCountryPrefixes as $country => $prefix)
                                     <option value="{{ $country }}"
                                             data-phone-prefix="{{ $prefix ?? '' }}"
@@ -3173,9 +3527,9 @@
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
-                            Cuantos profesionales atienden en tu gimnasio?*
+                            ¿Cuántos profesionales atienden en tu gimnasio?*
                             <input type="number" class="contact-input" name="quote_professionals_count" value="{{ old('quote_professionals_count') }}" min="1" max="5000" placeholder="Ej: 6" required>
-                            <span class="quote-form-help">Considera recepcion, entrenadores, administracion y personal operativo.</span>
+                            <span class="quote-form-help">Considera recepción, entrenadores, administración y personal operativo.</span>
                             @error('quote_professionals_count', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3183,7 +3537,7 @@
 
                         <label class="quote-form-field quote-form-field--full">
                             Comentarios adicionales
-                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuentanos si manejas varias sedes, caja, recepcion o procesos especiales.">{{ old('quote_notes') }}</textarea>
+                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuéntanos si manejas varias sedes, caja, recepción o procesos especiales.">{{ old('quote_notes') }}</textarea>
                             @error('quote_notes', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3192,9 +3546,9 @@
                         <div class="quote-form-checkbox quote-form-field--full">
                             <label>
                                 <input type="checkbox" name="quote_privacy_accepted" value="1" @checked(old('quote_privacy_accepted'))>
-                                <span>Acepto el tratamiento de mis datos para recibir mi cotizacion y seguimiento comercial.</span>
+                                <span>Acepto el tratamiento de mis datos para recibir mi cotización y seguimiento comercial.</span>
                             </label>
-                            <p class="quote-form-legal">Usaremos esta informacion solo para responder tu solicitud y coordinar una propuesta personalizada.</p>
+                            <p class="quote-form-legal">Usaremos esta información solo para responder tu solicitud y coordinar una propuesta personalizada.</p>
                             @error('quote_privacy_accepted', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3216,7 +3570,7 @@
          aria-labelledby="demo-limit-title"
          data-retry-seconds="{{ $demoLimitSeconds }}">
         <h4 id="demo-limit-title">Limite de demos alcanzado</h4>
-        <p>Alcanzaste el maximo de 3 intentos por hora. Debes esperar antes de volver a solicitar tu demo.</p>
+        <p>Alcanzaste el máximo de 3 intentos por hora. Debes esperar antes de volver a solicitar tu demo.</p>
         <div class="modal-time">Tiempo restante: <span id="demo-limit-countdown">--:--</span></div>
         <div class="modal-actions">
             <button id="demo-limit-close" type="button" class="modal-close">Entendido</button>

@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'reset' => 'Tu contrasena ha sido restablecida.',
-    'sent' => 'Te enviamos por correo el enlace para restablecer tu contrasena.',
+    'reset' => 'Tu contraseña ha sido restablecida.',
+    'sent' => 'Te enviamos por correo el enlace para restablecer tu contraseña.',
     'throttled' => 'Por favor espera antes de volver a intentarlo.',
-    'token' => 'El token para restablecer la contrasena no es valido.',
-    'user' => 'No encontramos un usuario con ese correo electronico.',
+    'token' => 'El token para restablecer la contraseña no es válido.',
+    'user' => 'No encontramos un usuario con ese correo electrónico.',
 ];
 

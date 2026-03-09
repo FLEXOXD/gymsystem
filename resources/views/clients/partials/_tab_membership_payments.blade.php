@@ -92,7 +92,7 @@
                     </svg>
                 </div>
                 <p class="font-semibold">No hay pagos registrados para este cliente.</p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Los pagos apareceran aqui luego de cobrar una membresía.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Los pagos aparecerán aquí luego de cobrar una membresía.</p>
                 <x-ui.button type="button" variant="ghost" size="sm" class="mt-3" x-on:click="openMembershipModal()">Cobrar ahora</x-ui.button>
             </div>
         @endif

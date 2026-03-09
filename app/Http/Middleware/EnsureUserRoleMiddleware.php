@@ -20,12 +20,12 @@ class EnsureUserRoleMiddleware
         }
 
         if (! $user->isActiveAccount()) {
-            abort(403, 'Tu usuario esta desactivado. Contacta al administrador del gimnasio.');
+            abort(403, 'Tu usuario está desactivado. Contacta al administrador del gimnasio.');
         }
 
         // SuperAdmin access is controlled via dedicated middleware/routes.
         if ($user->gym_id === null) {
-            abort(403, 'Solo usuarios de gimnasio pueden acceder a este modulo.');
+            abort(403, 'Solo usuarios de gimnasio pueden acceder a este módulo.');
         }
 
         $normalizedAllowed = collect($allowedRoles)
@@ -39,7 +39,7 @@ class EnsureUserRoleMiddleware
         }
 
         if (! $user->hasRole(...$normalizedAllowed)) {
-            abort(403, 'No tienes permisos para este modulo.');
+            abort(403, 'No tienes permisos para este módulo.');
         }
 
         return $next($request);

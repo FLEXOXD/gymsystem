@@ -10,7 +10,7 @@
         $historyRows = $sessions ?? collect();
     @endphp
 
-    <x-ui.card title="Historial de caja" subtitle="Revision de cierres, diferencias y responsables.">
+    <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables.">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[1040px]">
                 <thead>
@@ -65,7 +65,7 @@
     </x-ui.card>
 
     {{--
-    TODO backend minimo:
+    TODO backend mínimo:
     1) Si usas esta vista como ruta principal de historial, actualizar controlador para `return view('cash.history', ...)`.
     2) Exponer bandera consolidada `closed_with_difference` para no recalcular en Blade.
     --}}

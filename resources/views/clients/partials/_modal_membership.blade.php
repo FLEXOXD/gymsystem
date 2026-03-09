@@ -1,4 +1,4 @@
-﻿@php
+@php
     $canManagePromotions = (bool) ($canManagePromotions ?? false);
 @endphp
 
@@ -98,7 +98,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-slate-400">La promoción valida precio final y días extra automáticamente.</p>
+                            <p class="text-xs text-slate-400">La promoción válida precio final y días extra automáticamente.</p>
                         </label>
                     @else
                         <div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200 md:col-span-2 xl:col-span-4">

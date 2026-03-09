@@ -62,7 +62,7 @@ class BranchProvisioningService
 
         $resolvedPlanKey = strtolower(trim($branchPlanKey));
         if (! in_array($resolvedPlanKey, self::ALLOWED_BRANCH_PLAN_KEYS, true)) {
-            throw new InvalidArgumentException('Plan de sucursal no valido. Usa basico, profesional o premium.');
+            throw new InvalidArgumentException('Plan de sucursal no válido. Usa basico, profesional o premium.');
         }
 
         $resolvedCountryCode = strtolower(trim((string) ($countryCode ?? '')));
@@ -104,7 +104,7 @@ class BranchProvisioningService
 
         $normalizedAdminPassword = trim($branchAdminPassword);
         if (mb_strlen($normalizedAdminPassword) < 8) {
-            throw new InvalidArgumentException('La contrasena de la sucursal debe tener al menos 8 caracteres.');
+            throw new InvalidArgumentException('La contraseña de la sucursal debe tener al menos 8 caracteres.');
         }
 
         $slug = $this->generateUniqueGymSlug($normalizedBranchName);
@@ -130,7 +130,7 @@ class BranchProvisioningService
             ->firstWhere('plan_key', $resolvedPlanKey);
 
         if (! is_array($defaults)) {
-            throw new InvalidArgumentException('No se pudo resolver el catalogo base para el plan de sucursal.');
+            throw new InvalidArgumentException('No se pudo resolver el catálogo base para el plan de sucursal.');
         }
 
         return DB::transaction(function () use (
@@ -261,7 +261,7 @@ class BranchProvisioningService
         $candidate = strtolower($hubToken.'.'.$branchToken.'@'.$domain);
 
         if (User::query()->whereRaw('LOWER(email) = ?', [$candidate])->exists()) {
-            throw new InvalidArgumentException('Ese correo ya esta en uso, revisalo por favor.');
+            throw new InvalidArgumentException('Ese correo ya está en uso, revísalo por favor.');
         }
 
         return $candidate;
@@ -270,11 +270,11 @@ class BranchProvisioningService
     private function validateCustomBranchAdminEmail(string $email): string
     {
         if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException('El correo del administrador de sucursal no es valido.');
+            throw new InvalidArgumentException('El correo del administrador de sucursal no es válido.');
         }
 
         if (User::query()->whereRaw('LOWER(email) = ?', [$email])->exists()) {
-            throw new InvalidArgumentException('Ese correo ya esta en uso, revisalo por favor.');
+            throw new InvalidArgumentException('Ese correo ya está en uso, revísalo por favor.');
         }
 
         return $email;

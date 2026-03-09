@@ -91,7 +91,7 @@
         </x-ui.card>
     </section>
 
-    <x-ui.card title="Navegación rapida de reportes">
+    <x-ui.card title="Navegación rápida de reportes">
         <div class="flex flex-wrap gap-2">
             <x-ui.button id="reports-go-income" :href="route('reports.income', request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
             <x-ui.button :href="route('reports.attendance', request()->query())" variant="ghost">Detalle asistencias</x-ui.button>

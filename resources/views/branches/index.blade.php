@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Sucursales')
-@section('page-title', 'Modulo multisucursal')
+@section('page-title', 'Módulo multisucursal')
 
 @section('content')
     @php
@@ -20,7 +20,7 @@
                     <p class="mt-1 text-2xl font-black text-sky-700 dark:text-sky-200">{{ number_format((int) ($kpis['total_clients'] ?? 0)) }}</p>
                 </div>
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-700/60 dark:bg-emerald-900/20">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Membresias activas</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Membresías activas</p>
                     <p class="mt-1 text-2xl font-black text-emerald-700 dark:text-emerald-200">{{ number_format((int) ($kpis['active_memberships'] ?? 0)) }}</p>
                 </div>
                 <div class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-700/60 dark:bg-indigo-900/20">
@@ -31,21 +31,21 @@
 
             <div class="mt-4 grid gap-3 sm:grid-cols-3">
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-700/60 dark:bg-emerald-900/20">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Ingresos 30 dias</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Ingresos 30 días</p>
                     <p class="mt-1 text-xl font-black text-emerald-700 dark:text-emerald-200">{{ $money((float) ($kpis['income_30d'] ?? 0)) }}</p>
                 </div>
                 <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-700/60 dark:bg-rose-900/20">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-rose-700 dark:text-rose-300">Egresos 30 dias</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-rose-700 dark:text-rose-300">Egresos 30 días</p>
                     <p class="mt-1 text-xl font-black text-rose-700 dark:text-rose-200">{{ $money((float) ($kpis['expense_30d'] ?? 0)) }}</p>
                 </div>
                 <div class="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 dark:border-cyan-700/60 dark:bg-cyan-900/20">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Balance 30 dias</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Balance 30 días</p>
                     <p class="mt-1 text-xl font-black text-cyan-700 dark:text-cyan-200">{{ $money((float) ($kpis['balance_30d'] ?? 0)) }}</p>
                 </div>
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Gestion de vinculos" subtitle="Las sucursales se crean y administran desde SuperAdmin.">
+        <x-ui.card title="Gestión de vinculos" subtitle="Las sucursales se crean y administran desde SuperAdmin.">
             <p class="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-900 dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
                 Tu gimnasio solo puede visualizar las sedes vinculadas. Para crear, editar o desvincular sucursales, usa el panel de SuperAdmin.
             </p>
@@ -60,12 +60,12 @@
                             <th class="px-3 py-3">Plan</th>
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Clientes</th>
-                            <th class="px-3 py-3">Membresias</th>
+                            <th class="px-3 py-3">Membresías</th>
                             <th class="px-3 py-3">Check-ins hoy</th>
                             <th class="px-3 py-3">Ingresos 30d</th>
                             <th class="px-3 py-3">Egresos 30d</th>
                             <th class="px-3 py-3">Balance 30d</th>
-                            <th class="px-3 py-3">Gestion</th>
+                            <th class="px-3 py-3">Gestión</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -108,7 +108,7 @@
                         @empty
                             <tr>
                                 <td colspan="10" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
-                                    No hay sedes vinculadas todavia.
+                                    No hay sedes vinculadas todavía.
                                 </td>
                             </tr>
                         @endforelse

@@ -333,7 +333,7 @@ class ClientMobileController extends Controller
         if ($existingTodaySession && (string) $existingTodaySession->status === ClientTrainingSession::STATUS_COMPLETED) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Tu entrenamiento de hoy ya esta completado.',
+                'message' => 'Tu entrenamiento de hoy ya está completado.',
                 'training_status' => $this->resolveTrainingStatusPayload(
                     gymId: (int) $gym->id,
                     clientId: (int) $client->id,
@@ -590,29 +590,29 @@ class ClientMobileController extends Controller
             'next_screen' => ['nullable', 'string', 'in:home,progress,physical'],
         ], [
             'age.required' => 'Ingresa tu edad.',
-            'age.integer' => 'La edad debe ser un numero entero.',
-            'age.min' => 'Edad minima permitida: 12.',
-            'age.max' => 'Edad maxima permitida: 90.',
+            'age.integer' => 'La edad debe ser un número entero.',
+            'age.min' => 'Edad mínima permitida: 12.',
+            'age.max' => 'Edad máxima permitida: 90.',
             'sex.required' => 'Selecciona tu sexo.',
             'sex.in' => 'Selecciona una opción válida de sexo.',
             'height_cm.numeric' => 'La altura debe ser numerica.',
-            'height_cm.min' => 'La altura minima es 120 cm.',
-            'height_cm.max' => 'La altura maxima es 250 cm.',
+            'height_cm.min' => 'La altura mínima es 120 cm.',
+            'height_cm.max' => 'La altura máxima es 250 cm.',
             'weight_kg.numeric' => 'El peso debe ser numerico.',
-            'weight_kg.min' => 'El peso minimo es 30 kg.',
-            'weight_kg.max' => 'El peso maximo es 400 kg.',
+            'weight_kg.min' => 'El peso mínimo es 30 kg.',
+            'weight_kg.max' => 'El peso máximo es 400 kg.',
             'goal.required' => 'Selecciona tu objetivo del gimnasio.',
-            'goal.in' => 'Selecciona un objetivo valido.',
+            'goal.in' => 'Selecciona un objetivo válido.',
             'experience_level.required' => 'Selecciona tu nivel.',
-            'experience_level.in' => 'Selecciona un nivel valido.',
+            'experience_level.in' => 'Selecciona un nivel válido.',
             'days_per_week.required' => 'Selecciona tus días por semana.',
             'days_per_week.in' => 'Selecciona 3, 4, 5, 6 o 7 días.',
             'session_minutes.required' => 'Selecciona el tiempo por entrenamiento.',
             'session_minutes.in' => 'Selecciona 45, 60, 90 o 120 minutos.',
             'limitations.array' => 'Las limitaciones deben enviarse como lista.',
-            'limitations.max' => 'Puedes seleccionar maximo 5 limitaciones.',
-            'limitations.*.in' => 'Hay una limitacion no valida.',
-            'next_screen.in' => 'Pantalla de retorno no valida.',
+            'limitations.max' => 'Puedes seleccionar máximo 5 limitaciones.',
+            'limitations.*.in' => 'Hay una limitacion no válida.',
+            'next_screen.in' => 'Pantalla de retorno no válida.',
         ]);
 
         $limitations = collect($data['limitations'] ?? [])
@@ -1595,39 +1595,39 @@ class ClientMobileController extends Controller
                 $fatLossKg = max(0.5, min(3.6, $fatLossKg));
 
                 $primaryLine = 'Podrías perder '.number_format($fatLossKg, 1, '.', '').' kg de grasa en 30 días.';
-                $secondaryLine = 'Tambien podrias mejorar +'.(int) round($strengthGainPct).'% tu fuerza base.';
+                $secondaryLine = 'También podrías mejorar +'.(int) round($strengthGainPct).'% tu fuerza base.';
                 break;
             case 'ganar_musculo':
                 $muscleGainKg = 0.25 + ($adherenceRatio * 0.75 * $experienceMultiplier);
                 $muscleGainKg = max(0.2, min(1.4, $muscleGainKg));
 
                 $primaryLine = 'Podrías ganar '.number_format($muscleGainKg, 1, '.', '').' kg de masa muscular en 30 días.';
-                $secondaryLine = 'Tu fuerza podria subir +'.(int) round($strengthGainPct).'% en ejercicios principales.';
+                $secondaryLine = 'Tu fuerza podría subir +'.(int) round($strengthGainPct).'% en ejercicios principales.';
                 break;
             case 'mantener_forma':
                 $variationKg = max(0.3, min(0.8, 0.9 - ($adherenceRatio * 0.45)));
 
                 $primaryLine = 'Podrías mantener tu peso dentro de ±'.number_format($variationKg, 1, '.', '').' kg en 30 días.';
-                $secondaryLine = 'Tu resistencia podria mejorar +'.(int) round($resistanceGainPct).'% con este ritmo.';
+                $secondaryLine = 'Tu resistencia podría mejorar +'.(int) round($resistanceGainPct).'% con este ritmo.';
                 break;
             case 'definir':
                 $fatLossKg = 0.5 + ($adherenceRatio * 1.3);
                 $fatLossKg = max(0.4, min(2.4, $fatLossKg));
 
                 $primaryLine = 'Podrías bajar '.number_format($fatLossKg, 1, '.', '').' kg de grasa manteniendo masa muscular.';
-                $secondaryLine = 'Se proyecta +'.(int) round($strengthGainPct * 0.8).'% en fuerza y control tecnico.';
+                $secondaryLine = 'Se proyecta +'.(int) round($strengthGainPct * 0.8).'% en fuerza y control técnico.';
                 break;
             case 'aumentar_fuerza':
                 $primaryLine = 'Podrías aumentar +'.(int) round($strengthGainPct + 1.5).'% tu fuerza en 30 días.';
-                $secondaryLine = 'Tu capacidad de trabajo podria subir +'.(int) round($resistanceGainPct * 0.7).'%.';
+                $secondaryLine = 'Tu capacidad de trabajo podría subir +'.(int) round($resistanceGainPct * 0.7).'%.';
                 break;
             case 'mejorar_resistencia':
                 $primaryLine = 'Podrías mejorar +'.(int) round($resistanceGainPct + 1.2).'% tu resistencia en 30 días.';
-                $secondaryLine = 'Con eso podrias sostener +'.(int) round($strengthGainPct * 0.6).'% de volumen efectivo.';
+                $secondaryLine = 'Con eso podrías sostener +'.(int) round($strengthGainPct * 0.6).'% de volumen efectivo.';
                 break;
             default:
                 $primaryLine = 'Manteniendo este ritmo, tu condición física puede mejorar en 30 días.';
-                $secondaryLine = 'Tu fuerza podria subir alrededor de +'.(int) round($strengthGainPct).'%';
+                $secondaryLine = 'Tu fuerza podría subir alrededor de +'.(int) round($strengthGainPct).'%';
                 break;
         }
 
@@ -1789,7 +1789,7 @@ class ClientMobileController extends Controller
         $summaryLine = 'Racha actual: '.$streakDays.' días | Semana: '.$weekVisits.' entrenamientos.';
         $contextLine = 'Calculado con descanso, intensidad y constancia de los últimos 45 días.';
         if ($daysSinceLast !== null) {
-            $contextLine = $contextLine.' Último entrenamiento: hace '.$daysSinceLast.' días.';
+            $contextLine = $contextLine.' último entrenamiento: hace '.$daysSinceLast.' días.';
         }
 
         return [
@@ -1878,7 +1878,7 @@ class ClientMobileController extends Controller
                     ['name' => 'Sentadilla goblet', 'prescription' => '4 x 12'],
                     ['name' => 'Remo en polea', 'prescription' => '4 x 12'],
                     ['name' => 'Press inclinado con mancuernas', 'prescription' => '3 x 12'],
-                    ['name' => 'Bicicleta estatica', 'prescription' => '12 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '12 min'],
                 ]],
                 ['focus' => 'Circuito metabólico B', 'exercises' => [
                     ['name' => 'Peso muerto rumano', 'prescription' => '4 x 10'],
@@ -1910,7 +1910,7 @@ class ClientMobileController extends Controller
                     ['name' => 'Peso muerto rumano', 'prescription' => '3 x 10'],
                     ['name' => 'Press inclinado con mancuernas', 'prescription' => '3 x 12'],
                     ['name' => 'Curl martillo', 'prescription' => '3 x 12'],
-                    ['name' => 'Bicicleta estatica', 'prescription' => '15 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '15 min'],
                 ]],
             ],
             'definir' => [
@@ -1955,7 +1955,7 @@ class ClientMobileController extends Controller
             ],
             'mejorar_resistencia' => [
                 ['focus' => 'Capacidad aerobica', 'exercises' => [
-                    ['name' => 'Bicicleta estatica', 'prescription' => '18 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '18 min'],
                     ['name' => 'Remo en polea', 'prescription' => '4 x 15'],
                     ['name' => 'Sentadilla goblet', 'prescription' => '4 x 15'],
                     ['name' => 'Plancha abdominal', 'prescription' => '3 x 45 seg'],
@@ -2046,7 +2046,7 @@ class ClientMobileController extends Controller
         if ($weekVisits < max(1, $daysPerWeek - 1)) {
             $adaptationLine = 'Vas por debajo de tu frecuencia. Intenta sumar una sesión extra.';
         } elseif ($weekVisits > $daysPerWeek) {
-            $adaptationLine = 'Semana intensa. Prioriza descanso y tecnica limpia.';
+            $adaptationLine = 'Semana intensa. Prioriza descanso y técnica limpia.';
         }
 
         $limitationsLine = $limitations === []
@@ -2110,7 +2110,7 @@ class ClientMobileController extends Controller
 
         if ($streakDays >= 3 && $daysSinceLast !== null && $daysSinceLast <= 1) {
             $line1 = 'Si entrenas hoy, mantendrás tu racha de '.$streakDays.' días.';
-            $line2 = 'No la rompas. Estas cerca de un nuevo record personal.';
+            $line2 = 'No la rompas. Estás cerca de un nuevo récord personal.';
         } elseif ($weekVisits < $daysPerWeek) {
             $missing = max(0, $daysPerWeek - $weekVisits);
             $line1 = 'Te faltan '.$missing.' entrenamientos para cumplir tu meta semanal.';
@@ -2123,9 +2123,9 @@ class ClientMobileController extends Controller
             $line2 = 'Mantén constancia para consolidar resultados en los próximos días.';
         }
 
-        $contextLine = 'Mes actual: '.$monthVisits.' visitas | Recuperacion estimada: '.$recoveryScore.'/100.';
+        $contextLine = 'Mes actual: '.$monthVisits.' visitas | Recuperación estimada: '.$recoveryScore.'/100.';
         if ((int) $nowAtGym->format('N') >= 6) {
-            $contextLine .= ' Fin de semana ideal para tecnica y movilidad.';
+            $contextLine .= ' Fin de semana ideal para técnica y movilidad.';
         }
 
         return [
@@ -2224,7 +2224,7 @@ class ClientMobileController extends Controller
         if ($recoveryScore < 45) {
             $alerts[] = [
                 'type' => 'warning',
-                'text' => 'Recuperacion baja. Prioriza descanso activo y tecnica.',
+                'text' => 'Recuperación baja. Prioriza descanso activo y técnica.',
             ];
         }
 
@@ -2235,16 +2235,16 @@ class ClientMobileController extends Controller
         $restDaysPlanned = max(0, $evaluableDays - $effectiveWeeklyGoal);
         if (! $isSundayClose) {
             $commitmentLine = 'Resumen semanal disponible el domingo. Avance actual: '.$weekVisits.' de '.$effectiveWeeklyGoal.'.';
-            $restLine = 'Dias evaluables esta semana: '.$evaluableDays.'.';
+            $restLine = 'Días evaluables esta semana: '.$evaluableDays.'.';
         } elseif ($effectiveWeeklyGoal <= 0) {
             $commitmentLine = 'Esta semana no tuvo días evaluables por inicio de suscripción.';
-            $restLine = 'Dias evaluables esta semana: '.$evaluableDays.'.';
+            $restLine = 'Días evaluables esta semana: '.$evaluableDays.'.';
         } else {
             $commitmentLine = $weekVisits >= $effectiveWeeklyGoal
                 ? 'Has asistido los '.$effectiveWeeklyGoal.' días que prometiste. Excelente.'
                 : 'Esta semana asististe '.$weekVisits.' de los '.$effectiveWeeklyGoal.' días que prometiste.';
             $restLine = $restDaysPlanned > 0
-                ? 'Dias de descanso planificados: '.$restDaysPlanned.'.'
+                ? 'Días de descanso planificados: '.$restDaysPlanned.'.'
                 : 'Sin días de descanso planificados esta semana.';
         }
 
@@ -2674,7 +2674,7 @@ class ClientMobileController extends Controller
             $lockReason = 'Entrenamiento en curso. Panel desbloqueado.';
         } elseif (! $hasAttendanceToday) {
             $statusLabel = 'Registra asistencia para habilitar entrenamiento.';
-            $hintLine = 'Valida tu ingreso por QR, RFID o documento en recepción.';
+            $hintLine = 'Válida tu ingreso por QR, RFID o documento en recepción.';
             $lockReason = 'Registra asistencia e inicia tu sesión para desbloquear el panel.';
         } elseif ($completedToday) {
             $statusLabel = 'Entrenamiento de hoy completado.';
@@ -2783,7 +2783,7 @@ class ClientMobileController extends Controller
             : 'Excelente trabajo. Tu progreso de hoy ya se actualizó.';
 
         $this->clientPushNotificationService->sendToClient($gymId, $clientId, [
-            'title' => 'Sesion de hoy completada',
+            'title' => 'Sesión de hoy completada',
             'body' => $body,
             'tag' => 'client-training-completed-'.$clientId.'-'.$normalizedSessionDate,
             'url' => $progressUrl,
@@ -2897,7 +2897,7 @@ class ClientMobileController extends Controller
         }
 
         $this->clientPushNotificationService->sendToClient($gymId, $clientId, [
-            'title' => 'Tu meta semanal esta en riesgo',
+            'title' => 'Tu meta semanal está en riesgo',
             'body' => $this->buildWeeklyGoalRiskPushMessage($remaining, $daysLeftWeek),
             'tag' => 'client-weekly-goal-risk-'.$clientId.'-'.$today,
             'url' => $progressUrl,

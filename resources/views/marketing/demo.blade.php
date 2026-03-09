@@ -1,4 +1,4 @@
-﻿@php($content = $content ?? \App\Support\MarketingContent::defaults())
+@php($content = $content ?? \App\Support\MarketingContent::defaults())
 @php($demoCtaLabel = 'Demo gratis')
 @php($brandName = trim((string) ($content['brand_name'] ?? 'GymSystem')))
 @php($brandLogoUrl = trim((string) ($content['brand_logo_url'] ?? '')))

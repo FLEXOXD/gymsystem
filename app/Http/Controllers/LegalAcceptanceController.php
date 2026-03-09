@@ -31,7 +31,7 @@ class LegalAcceptanceController extends Controller
             return back();
         }
         if (! $eligibilityService->canUserAccept($user)) {
-            return back()->with('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
+            return back()->with('error', 'Solo el dueño principal de la sede principal puede aceptar condiciones legales.');
         }
         if (! Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version'])) {
             return back()->with('error', 'Falta actualizar base de datos. Ejecuta: php artisan migrate');
@@ -54,7 +54,7 @@ class LegalAcceptanceController extends Controller
             return back()->with('error', 'Falta actualizar tabla legal_acceptances. Ejecuta: php artisan migrate');
         }
 
-        $version = LegalTerms::VERSION;
+        $versión = LegalTerms::Versión;
         $acceptedAt = now();
         $permission = (string) ($request->validated('location_permission') ?? 'skipped');
         $latitude = $permission === 'granted' ? $request->validated('latitude') : null;
@@ -64,7 +64,7 @@ class LegalAcceptanceController extends Controller
         $acceptance = LegalAcceptance::query()
             ->where('user_id', (int) $user->id)
             ->where('document_key', 'all_terms')
-            ->where('legal_version', $version)
+            ->where('legal_version', $versión)
             ->first();
 
         if (! $acceptance) {
@@ -75,7 +75,7 @@ class LegalAcceptanceController extends Controller
                 'email' => strtolower((string) ($user->email ?? '')),
                 'document_key' => 'all_terms',
                 'document_label' => 'Aceptación integral de condiciones legales',
-                'legal_version' => $version,
+                'legal_version' => $versión,
                 'accepted' => true,
                 'accepted_via' => 'login_modal',
                 'session_id' => (string) ($request->session()->getId() ?? ''),
@@ -84,7 +84,7 @@ class LegalAcceptanceController extends Controller
                 'latitude' => $latitude !== null ? (float) $latitude : null,
                 'longitude' => $longitude !== null ? (float) $longitude : null,
                 'location_accuracy_m' => $accuracy !== null ? (float) $accuracy : null,
-                'contract_code' => $this->buildContractCode($user, $version, $acceptedAt),
+                'contract_code' => $this->buildContractCode($user, $versión, $acceptedAt),
                 'accepted_at' => $acceptedAt,
                 'ip_address' => $request->ip(),
                 'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
@@ -108,7 +108,7 @@ class LegalAcceptanceController extends Controller
                 $updates['location_accuracy_m'] = $accuracy !== null ? (float) $accuracy : null;
             }
             if (trim((string) $acceptance->contract_code) === '') {
-                $updates['contract_code'] = $this->buildContractCode($user, $version, $acceptance->accepted_at ?? $acceptedAt);
+                $updates['contract_code'] = $this->buildContractCode($user, $versión, $acceptance->accepted_at ?? $acceptedAt);
             }
             if (! $acceptance->accepted_at) {
                 $updates['accepted_at'] = $acceptedAt;
@@ -119,7 +119,7 @@ class LegalAcceptanceController extends Controller
 
         $user->forceFill([
             'legal_accepted_at' => $acceptance->accepted_at ?? $acceptedAt,
-            'legal_accepted_version' => $version,
+            'legal_accepted_version' => $versión,
         ])->save();
 
         return back()->with('status', 'Condiciones legales aceptadas y registradas.');
@@ -134,7 +134,7 @@ class LegalAcceptanceController extends Controller
             'q' => ['nullable', 'string', 'max:120'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
-            'version' => ['nullable', 'string', 'max:30'],
+            'versión' => ['nullable', 'string', 'max:30'],
         ]);
         $queryText = trim((string) ($filters['q'] ?? ''));
 
@@ -145,9 +145,9 @@ class LegalAcceptanceController extends Controller
                     'q' => $queryText,
                     'from' => (string) ($filters['from'] ?? ''),
                     'to' => (string) ($filters['to'] ?? ''),
-                    'version' => (string) ($filters['version'] ?? ''),
+                    'versión' => (string) ($filters['versión'] ?? ''),
                 ],
-                'currentVersion' => LegalTerms::VERSION,
+                'currentVersion' => LegalTerms::Versión,
                 'dbNotReady' => true,
             ]);
         }
@@ -182,8 +182,8 @@ class LegalAcceptanceController extends Controller
         if (! empty($filters['to'])) {
             $query->where('accepted_at', '<=', (string) $filters['to'].' 23:59:59');
         }
-        if (! empty($filters['version'])) {
-            $query->where('legal_version', (string) $filters['version']);
+        if (! empty($filters['versión'])) {
+            $query->where('legal_version', (string) $filters['versión']);
         }
 
         return view('superadmin.legal-acceptances.index', [
@@ -192,9 +192,9 @@ class LegalAcceptanceController extends Controller
                 'q' => $queryText,
                 'from' => (string) ($filters['from'] ?? ''),
                 'to' => (string) ($filters['to'] ?? ''),
-                'version' => (string) ($filters['version'] ?? ''),
+                'versión' => (string) ($filters['versión'] ?? ''),
             ],
-            'currentVersion' => LegalTerms::VERSION,
+            'currentVersion' => LegalTerms::Versión,
             'dbNotReady' => false,
         ]);
     }
@@ -209,9 +209,9 @@ class LegalAcceptanceController extends Controller
                 ->with('error', 'Falta crear tabla legal_acceptances. Ejecuta: php artisan migrate');
         }
         if ($acceptance->gym()->whereHas('demoSession')->exists()) {
-            abort(404, 'La aceptacion legal no esta disponible.');
+            abort(404, 'La aceptación legal no está disponible.');
         }
-        abort_if(! $acceptance->accepted, 404, 'La aceptacion legal no esta confirmada.');
+        abort_if(! $acceptance->accepted, 404, 'La aceptación legal no está confirmada.');
 
         $terms = LegalTerms::orderedDocuments();
         $contractCode = trim((string) $acceptance->contract_code);
@@ -235,12 +235,12 @@ class LegalAcceptanceController extends Controller
         return $pdf->stream($filename);
     }
 
-    private function buildContractCode(User $user, string $version, mixed $acceptedAt): string
+    private function buildContractCode(User $user, string $versión, mixed $acceptedAt): string
     {
         $seed = implode('|', [
             (string) ($user->id ?? 0),
             strtolower((string) ($user->email ?? '')),
-            $version,
+            $versión,
             (string) (is_object($acceptedAt) && method_exists($acceptedAt, 'format') ? $acceptedAt->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s')),
             (string) now()->valueOf(),
         ]);

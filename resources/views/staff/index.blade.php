@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Cajeros')
-@section('page-title', 'Gestion de cajeros')
+@section('page-title', 'Gestión de cajeros')
 
 @section('content')
     @php
@@ -13,7 +13,7 @@
         $totalCashiers = (int) ($totalCashiers ?? ($cashiers instanceof \Illuminate\Support\Collection ? $cashiers->count() : 0));
         $activeCashiers = (int) ($activeCashiers ?? $currentCashiers ?? 0);
         $currentPlanLabel = match ($currentPlanKey ?? '') {
-            'basico' => 'Basico',
+            'basico' => 'Básico',
             'profesional' => 'Profesional',
             'premium' => 'Premium',
             'sucursales' => 'Sucursales',
@@ -29,7 +29,7 @@
     <div class="space-y-5">
         @if (! $roleSchemaReady)
             <div class="ui-alert ui-alert-danger text-sm">
-                {{ $schemaErrorMessage !== '' ? $schemaErrorMessage : 'Falta la migracion de roles de usuarios.' }}
+                {{ $schemaErrorMessage !== '' ? $schemaErrorMessage : 'Falta la migración de roles de usuarios.' }}
             </div>
         @endif
 
@@ -37,7 +37,7 @@
             :title="$isGlobalStaffView ? 'Resumen global de cajeros' : 'Cupo de cajeros'"
             :subtitle="$isGlobalStaffView
                 ? 'Vista consolidada de cajeros en todas las sedes vinculadas (solo lectura).'
-                : 'Limites aplicados segun el plan activo de esta sede.'">
+                : 'Límites aplicados según el plan activo de esta sede.'">
             <div class="grid gap-3 sm:grid-cols-4">
                 <article class="rounded-xl border border-slate-300/60 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Plan actual</p>
@@ -75,7 +75,7 @@
 
             @if ($isGlobalStaffView)
                 <div class="ui-alert ui-alert-info mt-4 text-sm">
-                    Modo global activo: puedes consultar cajeros de todas las sedes, pero crear/editar/eliminar se realiza desde una sede especifica.
+                    Modo global activo: puedes consultar cajeros de todas las sedes, pero crear/editar/eliminar se realiza desde una sede específica.
                 </div>
             @elseif ((int) $maxCashiers <= 0)
                 <div class="ui-alert ui-alert-warning mt-4 text-sm">
@@ -85,7 +85,7 @@
         </x-ui.card>
 
         @if (! $isGlobalStaffView)
-            <x-ui.card title="Crear cajero" subtitle="Acceso a panel/recepcion/clientes. Por defecto no abre ni cierra caja.">
+            <x-ui.card title="Crear cajero" subtitle="Acceso a panel/recepción/clientes. Por defecto no abre ni cierra caja.">
                 <form method="POST" action="{{ route('staff.cashiers.store', $contextParams) }}" class="grid gap-3 lg:grid-cols-4">
                     @csrf
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
@@ -97,11 +97,11 @@
                         <input type="email" name="email" class="ui-input" value="{{ old('email') }}" required>
                     </label>
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        Contrasena
+                        Contraseña
                         <input type="password" name="password" class="ui-input" required>
                     </label>
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        Confirmar contrasena
+                        Confirmar contraseña
                         <input type="password" name="password_confirmation" class="ui-input" required>
                     </label>
                     <div class="flex items-end lg:col-span-2">
@@ -127,7 +127,7 @@
                             @endif
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Creado</th>
-                            <th class="px-3 py-3">Ultimo acceso</th>
+                            <th class="px-3 py-3">último acceso</th>
                             <th class="px-3 py-3">Permisos caja</th>
                             @if (! $isGlobalStaffView)
                                 <th class="px-3 py-3">Acciones</th>
@@ -194,7 +194,7 @@
                                             <form method="POST" action="{{ route('staff.cashiers.password.update', $contextParams + ['cashier' => $cashier->id]) }}" class="flex items-center gap-2">
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="password" name="password" class="ui-input !w-40" placeholder="Nueva contrasena" required>
+                                                <input type="password" name="password" class="ui-input !w-40" placeholder="Nueva contraseña" required>
                                                 <input type="password" name="password_confirmation" class="ui-input !w-40" placeholder="Confirmar" required>
                                                 <x-ui.button type="submit" size="sm" variant="ghost">Actualizar clave</x-ui.button>
                                             </form>

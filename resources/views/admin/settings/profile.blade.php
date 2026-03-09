@@ -192,7 +192,7 @@
             $profileDefaultPanel = 'contact';
         }
         $profileCardSubtitle = $isSuperAdmin
-            ? 'Cuenta maestra de SuperAdmin y canales publicos de soporte.'
+            ? 'Cuenta maestra de SuperAdmin y canales públicos de soporte.'
             : __('ui.profile.card_subtitle');
         $profilePersonalReadOnly = ! $isSuperAdmin;
         $personalEditErrorKeys = [
@@ -303,7 +303,7 @@
                                                 <span id="profile-read-identification-number" class="profile-summary-value">{{ $profileIdentificationNumber !== '' ? $profileIdentificationNumber : '-' }}</span>
                                             </div>
                                             <div class="profile-summary-item md:col-span-2">
-                                                <span class="profile-summary-label">Ubicacion</span>
+                                                <span class="profile-summary-label">Ubicación</span>
                                                 <span id="profile-read-location" class="profile-summary-value">{{ $profileLocationLabel !== '' ? $profileLocationLabel : '-' }}</span>
                                             </div>
                                         </div>
@@ -405,7 +405,7 @@
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.identification_type') }}</label>
                                     <select id="profile-identification-type" name="user_identification_type" class="ui-input">
                                         <option value="">{{ __('ui.profile.identification_options.not_set') }}</option>
-                                        <option value="cedula" @selected($profileIdentificationType === 'cedula')>{{ __('ui.profile.identification_options.cedula') }}</option>
+                                        <option value="cédula" @selected($profileIdentificationType === 'cédula')>{{ __('ui.profile.identification_options.cédula') }}</option>
                                         <option value="dni" @selected($profileIdentificationType === 'dni')>{{ __('ui.profile.identification_options.dni') }}</option>
                                         <option value="passport" @selected($profileIdentificationType === 'passport')>{{ __('ui.profile.identification_options.passport') }}</option>
                                     </select>
@@ -488,7 +488,7 @@
                                     <input type="text" class="ui-input" value="{{ $profileAddressCity !== '' ? $profileAddressCity : '-' }}" readonly>
                                 </div>
                                 <div>
-                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Direccion (linea)</label>
+                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Dirección (línea)</label>
                                     <input type="text" class="ui-input" value="{{ $profileAddressLine !== '' ? $profileAddressLine : '-' }}" readonly>
                                 </div>
                             </div>
@@ -540,7 +540,7 @@
 
                             <div class="grid gap-3 md:grid-cols-2">
                                 <div>
-                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Telefono</label>
+                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Teléfono</label>
                                     <input type="text" name="support_contact_phone" value="{{ $supportContactPhone }}" class="ui-input" placeholder="+593 999 999 999">
                                     @error('support_contact_phone')
                                         <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
@@ -587,7 +587,7 @@
                                                    name="support_contact_logo_light"
                                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                                    class="ui-input">
-                                            <p class="ui-muted mt-1 text-xs">PNG recomendado. Maximo 4MB.</p>
+                                            <p class="ui-muted mt-1 text-xs">PNG recomendado. Máximo 4MB.</p>
                                         </div>
                                     </div>
                                     @error('support_contact_logo_light')
@@ -609,7 +609,7 @@
                                                    name="support_contact_logo_dark"
                                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                                    class="ui-input">
-                                            <p class="ui-muted mt-1 text-xs">PNG recomendado. Maximo 4MB.</p>
+                                            <p class="ui-muted mt-1 text-xs">PNG recomendado. Máximo 4MB.</p>
                                         </div>
                                     </div>
                                     @error('support_contact_logo_dark')
@@ -1211,7 +1211,7 @@
                 };
                 const genderFallback = @js(__('ui.profile.gender_options.not_set'));
                 const identificationLabels = {
-                    cedula: @js(__('ui.profile.identification_options.cedula')),
+                    cédula: @js(__('ui.profile.identification_options.cédula')),
                     dni: @js(__('ui.profile.identification_options.dni')),
                     passport: @js(__('ui.profile.identification_options.passport')),
                 };
@@ -1365,7 +1365,7 @@
 
             const initBillingMirror = () => {
                 const identificationLabels = {
-                    cedula: @js(__('ui.profile.identification_options.cedula')),
+                    cédula: @js(__('ui.profile.identification_options.cédula')),
                     dni: @js(__('ui.profile.identification_options.dni')),
                     passport: @js(__('ui.profile.identification_options.passport')),
                 };

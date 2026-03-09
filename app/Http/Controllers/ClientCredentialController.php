@@ -21,7 +21,7 @@ class ClientCredentialController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['rfid' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+                ->withErrors(['rfid' => 'Selecciona una sucursal específica para gestionar credenciales.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -65,7 +65,7 @@ class ClientCredentialController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['qr' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+                ->withErrors(['qr' => 'Selecciona una sucursal específica para gestionar credenciales.']);
         }
 
         $gymId = $this->resolveGymId($request);
@@ -98,7 +98,7 @@ class ClientCredentialController extends Controller
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('clients.index')
-                ->withErrors(['credential' => 'Selecciona una sucursal especifica para gestionar credenciales.']);
+                ->withErrors(['credential' => 'Selecciona una sucursal específica para gestionar credenciales.']);
         }
 
         $gymId = $this->resolveGymId($request);

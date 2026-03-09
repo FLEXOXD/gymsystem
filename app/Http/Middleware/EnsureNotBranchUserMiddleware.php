@@ -27,9 +27,9 @@ class EnsureNotBranchUserMiddleware
             'manage_plans' => 'La sucursal secundaria solo puede ver planes.',
             'manage_promotions' => 'La sucursal secundaria solo puede ver promociones.',
             'manage_cash' => 'La sucursal secundaria no puede abrir ni cerrar caja.',
-            'manage_branches' => 'Solo la sede principal puede usar el modulo de sucursales.',
+            'manage_branches' => 'Solo la sede principal puede usar el módulo de sucursales.',
             'export_reports' => 'La sucursal secundaria no puede exportar reportes.',
-            default => 'Accion no autorizada para sucursal secundaria.',
+            default => 'Acción no autorizada para sucursal secundaria.',
         };
 
         if ($request->expectsJson()) {
