@@ -371,11 +371,20 @@ class ThemeController extends Controller
     /**
      * Download membership invoice summary PDF for current gym.
      */
-    public function membershipInvoicePdf(Request $request, int $subscription): Response|RedirectResponse
+    public function membershipInvoicePdf(
+        Request $request,
+        string|int $contextGymOrSubscription,
+        ?int $subscription = null
+    ): Response|RedirectResponse
     {
         $user = $request->user();
-        $gymId = (int) ($user?->gym_id ?? 0);
+        $gym = $this->resolveGymForContext($request);
+        $gymId = (int) ($gym?->id ?? 0);
         abort_if($gymId === 0, 403, __('messages.user_without_gym'));
+
+        if ($subscription === null) {
+            $subscription = (int) $contextGymOrSubscription;
+        }
 
         $subscriptionModel = Subscription::query()
             ->where('gym_id', $gymId)
@@ -400,10 +409,10 @@ class ThemeController extends Controller
         ];
 
         $pdf = Pdf::loadView('admin.settings.membership-invoice-pdf', [
-            'gymName' => (string) ($user?->gym?->name ?? 'GymSystem'),
+            'gymName' => (string) ($gym?->name ?? 'GymSystem'),
             'userName' => (string) ($user?->name ?? ''),
             'invoice' => $invoiceData,
-            'currencyCode' => (string) ($user?->gym?->currency_code ?? 'USD'),
+            'currencyCode' => (string) ($gym?->currency_code ?? 'USD'),
         ])->setPaper('a4', 'portrait');
 
         $filename = 'membership_invoice_'.$subscriptionModel->id.'.pdf';

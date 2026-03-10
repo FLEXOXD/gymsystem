@@ -123,6 +123,31 @@ it('does not redirect superadmin to gym context on global profile invoice route'
         ->assertForbidden();
 });
 
+it('serves the membership invoice pdf from the gym context route', function () {
+    $gym = makeIsolationGym('invoice-pdf');
+    $user = User::factory()->create([
+        'gym_id' => $gym->id,
+    ]);
+
+    $subscription = $gym->latestSubscription()->firstOrFail();
+    $subscription->update([
+        'plan_name' => 'Plan premium',
+        'price' => 50,
+        'starts_at' => Carbon::parse('2026-02-27'),
+        'ends_at' => Carbon::parse('2026-03-28'),
+        'status' => 'active',
+        'last_payment_method' => 'transferencia',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('gym.profile.membership-invoice.pdf', [
+            'contextGym' => $gym->slug,
+            'subscription' => $subscription->id,
+        ]))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf');
+});
+
 it('redirects hub gym login to global scope when multi-branch is enabled and branches exist', function () {
     $hubGym = makeIsolationGym('hub-login');
     $branchGym = makeIsolationGym('branch-login');
