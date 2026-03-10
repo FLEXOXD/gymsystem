@@ -12,6 +12,7 @@ use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\PresenceSession;
 use App\Models\User;
+use App\Support\FitnessGoalSupport;
 use App\Services\AttendanceCheckinService;
 use App\Services\ClientPushNotificationService;
 use App\Services\MobileCheckInTokenService;
@@ -582,6 +583,7 @@ class ClientMobileController extends Controller
             'height_cm' => ['nullable', 'numeric', 'min:120', 'max:250'],
             'weight_kg' => ['nullable', 'numeric', 'min:30', 'max:400'],
             'goal' => ['required', 'string', 'in:ganar_musculo,perder_grasa,mantener_forma,definir,aumentar_fuerza,mejorar_resistencia'],
+            'secondary_goal' => ['nullable', 'string', 'in:ganar_musculo,perder_grasa,mantener_forma,definir,aumentar_fuerza,mejorar_resistencia'],
             'experience_level' => ['required', 'string', 'in:principiante,intermedio,avanzado'],
             'days_per_week' => ['required', 'integer', 'in:3,4,5,6,7'],
             'session_minutes' => ['required', 'integer', 'in:45,60,90,120'],
@@ -603,6 +605,7 @@ class ClientMobileController extends Controller
             'weight_kg.max' => 'El peso máximo es 400 kg.',
             'goal.required' => 'Selecciona tu objetivo del gimnasio.',
             'goal.in' => 'Selecciona un objetivo válido.',
+            'secondary_goal.in' => 'Selecciona un objetivo secundario valido.',
             'experience_level.required' => 'Selecciona tu nivel.',
             'experience_level.in' => 'Selecciona un nivel válido.',
             'days_per_week.required' => 'Selecciona tus días por semana.',
@@ -627,17 +630,36 @@ class ClientMobileController extends Controller
 
         $heightCm = $this->normalizeNumericInput($data['height_cm'] ?? null);
         $weightKg = $this->normalizeNumericInput($data['weight_kg'] ?? null);
+        $submittedSecondaryGoal = FitnessGoalSupport::normalize(isset($data['secondary_goal']) ? (string) $data['secondary_goal'] : null);
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($data['goal'] ?? ''),
+            isset($data['secondary_goal']) ? (string) $data['secondary_goal'] : null
+        );
+
+        if ($primaryGoal === null) {
+            return back()
+                ->withErrors(['goal' => 'Selecciona un objetivo valido.'])
+                ->withInput();
+        }
+
+        if ($submittedSecondaryGoal !== null && $secondaryGoal === null) {
+            return back()
+                ->withErrors(['secondary_goal' => 'El objetivo secundario debe ser diferente al principal.'])
+                ->withInput();
+        }
+
         $bodyMetrics = $this->buildBodyMetrics(
             age: (int) $data['age'],
             sex: (string) $data['sex'],
             heightCm: $heightCm,
             weightKg: $weightKg,
-            goal: (string) $data['goal'],
+            goal: $primaryGoal,
+            secondaryGoal: $secondaryGoal,
             daysPerWeek: (int) $data['days_per_week'],
             sessionMinutes: (int) $data['session_minutes'],
         );
 
-        ClientFitnessProfile::query()->updateOrCreate(
+        $fitnessProfile = ClientFitnessProfile::query()->updateOrCreate(
             [
                 'gym_id' => (int) $gym->id,
                 'client_id' => (int) $sessionClient->id,
@@ -647,7 +669,8 @@ class ClientMobileController extends Controller
                 'sex' => (string) $data['sex'],
                 'height_cm' => $heightCm,
                 'weight_kg' => $weightKg,
-                'goal' => (string) $data['goal'],
+                'goal' => $primaryGoal,
+                'secondary_goal' => $secondaryGoal,
                 'experience_level' => (string) $data['experience_level'],
                 'days_per_week' => (int) $data['days_per_week'],
                 'session_minutes' => (int) $data['session_minutes'],
@@ -656,6 +679,8 @@ class ClientMobileController extends Controller
                 'onboarding_completed_at' => now(),
             ]
         );
+
+        $this->forgetProgressSnapshot((int) $gym->id, (int) $fitnessProfile->client_id);
 
         $nextScreen = mb_strtolower(trim((string) ($data['next_screen'] ?? 'progress')));
         if (! in_array($nextScreen, ['home', 'progress', 'physical'], true)) {
@@ -703,6 +728,7 @@ class ClientMobileController extends Controller
             heightCm: $this->normalizeNumericInput($fitnessProfile->height_cm),
             weightKg: $this->normalizeNumericInput($fitnessProfile->weight_kg),
             goal: (string) $fitnessProfile->goal,
+            secondaryGoal: isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null,
             daysPerWeek: $weeklyGoal,
             sessionMinutes: (int) $fitnessProfile->session_minutes,
         );
@@ -714,6 +740,8 @@ class ClientMobileController extends Controller
             'days_per_week' => $weeklyGoal,
             'body_metrics' => $recalculatedBodyMetrics,
         ]);
+
+        $this->forgetProgressSnapshot((int) $gym->id, (int) $fitnessProfile->client_id);
 
         return redirect()
             ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'progress'])
@@ -911,6 +939,7 @@ class ClientMobileController extends Controller
                 'height_cm',
                 'weight_kg',
                 'goal',
+                'secondary_goal',
                 'experience_level',
                 'days_per_week',
                 'session_minutes',
@@ -946,6 +975,7 @@ class ClientMobileController extends Controller
         ?float $heightCm,
         ?float $weightKg,
         string $goal,
+        ?string $secondaryGoal,
         int $daysPerWeek,
         int $sessionMinutes
     ): array {
@@ -981,16 +1011,8 @@ class ClientMobileController extends Controller
         }
 
         $maintenanceKcal = $bmr !== null ? (int) round($bmr * $activityFactor) : null;
-
-        $goalAdjustment = match ($goal) {
-            'ganar_musculo' => 280,
-            'perder_grasa' => -320,
-            'mantener_forma' => 0,
-            'definir' => -180,
-            'aumentar_fuerza' => 160,
-            'mejorar_resistencia' => 80,
-            default => 0,
-        };
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair($goal, $secondaryGoal);
+        $goalAdjustment = FitnessGoalSupport::calorieAdjustment($primaryGoal, $secondaryGoal);
 
         $targetKcal = null;
         if ($maintenanceKcal !== null) {
@@ -1011,7 +1033,10 @@ class ClientMobileController extends Controller
             'maintenance_kcal' => $maintenanceKcal,
             'target_kcal' => $targetKcal,
             'estimated_body_fat_pct' => $estimatedBodyFatPct,
-            'goal_track' => $this->resolveGoalTrack($goal),
+            'goal_primary' => $primaryGoal,
+            'goal_secondary' => $secondaryGoal,
+            'goal_summary_label' => FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'General'),
+            'goal_track' => $this->resolveGoalTrack($primaryGoal, $secondaryGoal),
             'calculated_at' => now()->toIso8601String(),
         ];
     }
@@ -1045,17 +1070,21 @@ class ClientMobileController extends Controller
         return 'Obesidad grado III';
     }
 
-    private function resolveGoalTrack(string $goal): string
+    private function resolveGoalTrack(?string $goal, ?string $secondaryGoal = null): string
     {
-        return match ($goal) {
-            'ganar_musculo' => 'Enfoque en superavit calorico y progresion de fuerza.',
-            'perder_grasa' => 'Enfoque en deficit calorico con mantenimiento muscular.',
-            'mantener_forma' => 'Enfoque en balance calorico y constancia semanal.',
-            'definir' => 'Enfoque en recomposicion corporal y volumen de entrenamiento.',
-            'aumentar_fuerza' => 'Enfoque en ejercicios compuestos y cargas progresivas.',
-            'mejorar_resistencia' => 'Enfoque en volumen semanal y capacidad cardiovascular.',
-            default => 'Enfoque general de acondicionamiento físico.',
-        };
+        return FitnessGoalSupport::trackLine($goal, $secondaryGoal);
+    }
+
+    private function forgetProgressSnapshot(int $gymId, int $clientId): void
+    {
+        if (! Schema::hasTable('client_progress_snapshots')) {
+            return;
+        }
+
+        ClientProgressSnapshot::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->delete();
     }
 
     private function resolveMobileOperatorUserId(int $gymId): int
@@ -1780,7 +1809,11 @@ class ClientMobileController extends Controller
             ];
         }
 
-        $goal = trim((string) ($fitnessProfile->goal ?? ''));
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($fitnessProfile->goal ?? ''),
+            isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null
+        );
+        $goal = $primaryGoal;
         $experienceLevel = trim((string) ($fitnessProfile->experience_level ?? ''));
         $daysPerWeek = max(1, min(7, (int) ($fitnessProfile->days_per_week ?? 3)));
 
@@ -1863,6 +1896,38 @@ class ClientMobileController extends Controller
             'mejorar_resistencia' => 'Mejorar resistencia',
         ];
         $goalLabel = $goalLabels[$goal] ?? 'General';
+        $primaryLine = $this->buildPredictionGoalLine(
+            $primaryGoal,
+            $adherenceRatio,
+            $experienceMultiplier,
+            $strengthGainPct,
+            $resistanceGainPct,
+            true,
+            $primaryGoal,
+            $secondaryGoal
+        );
+        $secondaryLine = $secondaryGoal !== null
+            ? 'Apoyo secundario: '.$this->buildPredictionGoalLine(
+                $secondaryGoal,
+                $adherenceRatio,
+                $experienceMultiplier,
+                $strengthGainPct,
+                $resistanceGainPct,
+                false,
+                $primaryGoal,
+                $secondaryGoal
+            )
+            : $this->buildPredictionGoalLine(
+                $primaryGoal,
+                $adherenceRatio,
+                $experienceMultiplier,
+                $strengthGainPct,
+                $resistanceGainPct,
+                false,
+                $primaryGoal,
+                $secondaryGoal
+            );
+        $goalLabel = FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'General');
 
         return [
             'ready' => true,
@@ -1875,6 +1940,53 @@ class ClientMobileController extends Controller
             'period_visits' => $periodVisits,
             'total_visits' => $totalVisits,
         ];
+    }
+
+    private function buildPredictionGoalLine(
+        ?string $goal,
+        float $adherenceRatio,
+        float $experienceMultiplier,
+        float $strengthGainPct,
+        float $resistanceGainPct,
+        bool $isPrimaryLine,
+        ?string $primaryGoal,
+        ?string $secondaryGoal
+    ): string {
+        $goal = FitnessGoalSupport::normalize($goal);
+        if ($goal === null) {
+            return $isPrimaryLine
+                ? 'Manteniendo este ritmo, tu condicion fisica puede mejorar en 30 dias.'
+                : 'Tu fuerza podria subir alrededor de +'.(int) round($strengthGainPct).'%.';
+        }
+
+        $muscleBias = max(0.55, FitnessGoalSupport::predictionFactor('muscle_gain', $primaryGoal, $secondaryGoal));
+        $fatLossBias = max(0.55, FitnessGoalSupport::predictionFactor('fat_loss', $primaryGoal, $secondaryGoal));
+        $strengthBias = max(0.50, FitnessGoalSupport::predictionFactor('strength', $primaryGoal, $secondaryGoal));
+        $resistanceBias = max(0.50, FitnessGoalSupport::predictionFactor('resistance', $primaryGoal, $secondaryGoal));
+
+        return match ($goal) {
+            'perder_grasa' => $isPrimaryLine
+                ? 'Podrias perder '.number_format(max(0.5, min(3.6, (0.7 + ($adherenceRatio * 2.0)) * $fatLossBias)), 1, '.', '').' kg de grasa en 30 dias.'
+                : 'Tambien podrias mejorar +'.(int) round($strengthGainPct * $strengthBias).'% tu fuerza base.',
+            'ganar_musculo' => $isPrimaryLine
+                ? 'Podrias ganar '.number_format(max(0.2, min(1.6, (0.25 + ($adherenceRatio * 0.75 * $experienceMultiplier)) * $muscleBias)), 1, '.', '').' kg de masa muscular en 30 dias.'
+                : 'Tu fuerza podria subir +'.(int) round($strengthGainPct * $strengthBias).'% en ejercicios principales.',
+            'mantener_forma' => $isPrimaryLine
+                ? 'Podrias mantener tu peso dentro de +/-'.number_format(max(0.3, min(0.9, 0.95 - ($adherenceRatio * 0.42))), 1, '.', '').' kg en 30 dias.'
+                : 'Tu resistencia podria mejorar +'.(int) round($resistanceGainPct * $resistanceBias).'% con este ritmo.',
+            'definir' => $isPrimaryLine
+                ? 'Podrias bajar '.number_format(max(0.4, min(2.6, (0.5 + ($adherenceRatio * 1.3)) * $fatLossBias)), 1, '.', '').' kg de grasa manteniendo masa muscular.'
+                : 'Se proyecta +'.(int) round(($strengthGainPct * 0.8) * $strengthBias).'% en fuerza y control tecnico.',
+            'aumentar_fuerza' => $isPrimaryLine
+                ? 'Podrias aumentar +'.(int) round(($strengthGainPct + 1.5) * $strengthBias).'% tu fuerza en 30 dias.'
+                : 'Tu capacidad de trabajo podria subir +'.(int) round(($resistanceGainPct * 0.7) * $resistanceBias).'%.',
+            'mejorar_resistencia' => $isPrimaryLine
+                ? 'Podrias mejorar +'.(int) round(($resistanceGainPct + 1.2) * $resistanceBias).'% tu resistencia en 30 dias.'
+                : 'Con eso podrias sostener +'.(int) round(($strengthGainPct * 0.6) * $strengthBias).'% de volumen efectivo.',
+            default => $isPrimaryLine
+                ? 'Manteniendo este ritmo, tu condicion fisica puede mejorar en 30 dias.'
+                : 'Tu fuerza podria subir alrededor de +'.(int) round($strengthGainPct).'%.',
+        };
     }
 
     /**
@@ -1947,7 +2059,10 @@ class ClientMobileController extends Controller
 
         $daysPerWeek = max(1, min(7, (int) ($fitnessProfile->days_per_week ?? 3)));
         $sessionMinutes = max(30, min(180, (int) ($fitnessProfile->session_minutes ?? 60)));
-        $goal = trim((string) ($fitnessProfile->goal ?? ''));
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($fitnessProfile->goal ?? ''),
+            isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null
+        );
         $experienceLevel = trim((string) ($fitnessProfile->experience_level ?? ''));
 
         $expectedMonthVisits = max(1, (int) round($daysPerWeek * 4.3));
@@ -1959,12 +2074,7 @@ class ClientMobileController extends Controller
             60 => 58,
             default => 45,
         };
-        $goalIntensityBonus = match ($goal) {
-            'ganar_musculo', 'aumentar_fuerza' => 6,
-            'mejorar_resistencia' => 5,
-            'perder_grasa', 'definir' => 4,
-            default => 2,
-        };
+        $goalIntensityBonus = FitnessGoalSupport::intensityBonus($primaryGoal, $secondaryGoal);
         $trainingLoad = $intensityBase + ($weekVisits * 6) + $goalIntensityBonus;
         $trainingLoad = (int) round(max(15, min(98, $trainingLoad)));
 
@@ -1974,24 +2084,12 @@ class ClientMobileController extends Controller
             'avanzado' => 8,
             default => 5,
         };
-        $goalStrengthBonus = match ($goal) {
-            'aumentar_fuerza' => 12,
-            'ganar_musculo' => 10,
-            'definir' => 6,
-            'perder_grasa' => 4,
-            'mejorar_resistencia' => 3,
-            default => 4,
-        };
+        $goalStrengthBonus = FitnessGoalSupport::strengthBonus($primaryGoal, $secondaryGoal);
 
         $force = 30 + ($trainingLoad * 0.35) + ($monthAdherence * 22) + ($streakDays * 2) + $goalStrengthBonus + $experienceBonus;
         $force = (int) round(max(12, min(98, $force)));
 
-        $goalResistanceBonus = match ($goal) {
-            'mejorar_resistencia' => 12,
-            'perder_grasa', 'definir' => 8,
-            'mantener_forma' => 6,
-            default => 4,
-        };
+        $goalResistanceBonus = FitnessGoalSupport::resistanceBonus($primaryGoal, $secondaryGoal);
         $resistance = 26 + ($weekVisits * 8) + ($sessionMinutes * 0.24) + ($monthAdherence * 16) + $goalResistanceBonus;
         $resistance = (int) round(max(12, min(98, $resistance)));
 
@@ -2009,10 +2107,10 @@ class ClientMobileController extends Controller
         }
         $recovery = (int) round(max(10, min(98, $recovery)));
 
-        $summaryLine = 'Racha actual: '.$streakDays.' días | Semana: '.$weekVisits.' entrenamientos.';
-        $contextLine = 'Calculado con descanso, intensidad y constancia de los últimos 45 días.';
+        $summaryLine = 'Racha actual: '.$streakDays.' dias | Semana: '.$weekVisits.' entrenamientos.';
+        $contextLine = 'Objetivo: '.FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'General').'. Calculado con descanso, intensidad y constancia de los ultimos 45 dias.';
         if ($daysSinceLast !== null) {
-            $contextLine = $contextLine.' último entrenamiento: hace '.$daysSinceLast.' días.';
+            $contextLine = $contextLine.' Ultimo entrenamiento: hace '.$daysSinceLast.' dias.';
         }
 
         return [
@@ -2051,7 +2149,11 @@ class ClientMobileController extends Controller
             ];
         }
 
-        $goal = trim((string) ($fitnessProfile->goal ?? ''));
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($fitnessProfile->goal ?? ''),
+            isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null
+        );
+        $goal = $primaryGoal ?? 'mantener_forma';
         $experienceLevel = trim((string) ($fitnessProfile->experience_level ?? ''));
         $daysPerWeek = max(1, min(7, (int) ($fitnessProfile->days_per_week ?? 3)));
         $sessionMinutes = max(45, min(120, (int) ($fitnessProfile->session_minutes ?? 60)));
@@ -2202,8 +2304,21 @@ class ClientMobileController extends Controller
         $goalTemplates = $routineMap[$goalKey];
         $templateIndex = ((int) $nowAtGym->format('z') + $weekVisits) % max(1, count($goalTemplates));
         $selectedTemplate = $goalTemplates[$templateIndex] ?? $goalTemplates[0];
+        $selectedFocus = (string) ($selectedTemplate['focus'] ?? 'General');
 
         $rawExercises = is_array($selectedTemplate['exercises'] ?? null) ? $selectedTemplate['exercises'] : [];
+        if ($secondaryGoal !== null) {
+            $secondaryGoalKey = array_key_exists($secondaryGoal, $routineMap) ? $secondaryGoal : 'mantener_forma';
+            $secondaryTemplates = $routineMap[$secondaryGoalKey];
+            $secondaryTemplate = $secondaryTemplates[$templateIndex] ?? $secondaryTemplates[0];
+            $selectedFocus = trim($selectedFocus.' + '.(string) ($secondaryTemplate['focus'] ?? 'General'));
+            $rawExercises = array_merge(
+                array_slice($rawExercises, 0, 2),
+                array_slice(is_array($secondaryTemplate['exercises'] ?? null) ? $secondaryTemplate['exercises'] : [], 0, 2),
+                array_slice($rawExercises, 2)
+            );
+        }
+
         $adjustedExercises = [];
         foreach ($rawExercises as $exercise) {
             $name = trim((string) ($exercise['name'] ?? 'Ejercicio'));
@@ -2255,6 +2370,19 @@ class ClientMobileController extends Controller
             ];
         }
 
+        $exerciseNames = [];
+        $adjustedExercises = array_values(array_filter($adjustedExercises, static function (array $exercise) use (&$exerciseNames): bool {
+            $key = mb_strtolower(trim((string) ($exercise['name'] ?? '')));
+            if ($key === '' || isset($exerciseNames[$key])) {
+                return false;
+            }
+
+            $exerciseNames[$key] = true;
+
+            return true;
+        }));
+        $adjustedExercises = array_slice($adjustedExercises, 0, 5);
+
         $goalLabels = [
             'ganar_musculo' => 'Ganar musculo',
             'perder_grasa' => 'Perder grasa',
@@ -2264,6 +2392,7 @@ class ClientMobileController extends Controller
             'mejorar_resistencia' => 'Mejorar resistencia',
         ];
         $goalLabel = $goalLabels[$goalKey] ?? 'Acondicionamiento general';
+        $goalLabel = FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, $goalLabel);
 
         $adaptationLine = 'Semana equilibrada. Mantiene este volumen.';
         if ($weekVisits < max(1, $daysPerWeek - 1)) {
@@ -2282,10 +2411,10 @@ class ClientMobileController extends Controller
             'ready' => true,
             'title' => 'Entrenamiento de hoy',
             'objective_line' => 'Objetivo: '.$goalLabel,
-            'focus_line' => 'Enfoque: '.(string) ($selectedTemplate['focus'] ?? 'General'),
-            'rhythm_line' => 'Frecuencia: '.$daysPerWeek.' días/semana | Sesión sugerida: '.$sessionMinutes.' min | Estimada: '.$estimatedMinutes.' min',
+            'focus_line' => 'Enfoque: '.FitnessGoalSupport::focusLabel($primaryGoal, $secondaryGoal, $selectedFocus),
+            'rhythm_line' => 'Frecuencia: '.$daysPerWeek.' dias/semana | Sesion sugerida: '.$sessionMinutes.' min | Estimada: '.$estimatedMinutes.' min',
             'adaptation_line' => $adaptationLine,
-            'context_line' => $limitationsLine,
+            'context_line' => $limitationsLine.' '.FitnessGoalSupport::trackLine($primaryGoal, $secondaryGoal),
             'exercises' => $adjustedExercises,
             'week_visits' => $weekVisits,
         ];
@@ -2311,44 +2440,39 @@ class ClientMobileController extends Controller
             ];
         }
 
-        $goal = trim((string) ($fitnessProfile->goal ?? ''));
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($fitnessProfile->goal ?? ''),
+            isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null
+        );
         $daysPerWeek = max(1, min(7, (int) ($fitnessProfile->days_per_week ?? 3)));
         $streakDays = max(0, (int) ($bodyState['streak_days'] ?? 0));
         $weekVisits = max(0, (int) ($bodyState['week_visits'] ?? 0));
         $daysSinceLast = isset($bodyState['days_since_last']) ? (int) $bodyState['days_since_last'] : null;
         $recoveryScore = max(0, min(100, (int) ($bodyState['recovery'] ?? 0)));
 
-        $goalLabels = [
-            'ganar_musculo' => 'ganar musculo',
-            'perder_grasa' => 'perder grasa',
-            'mantener_forma' => 'mantener forma',
-            'definir' => 'definir',
-            'aumentar_fuerza' => 'aumentar fuerza',
-            'mejorar_resistencia' => 'mejorar resistencia',
-        ];
-        $goalLabel = $goalLabels[$goal] ?? 'progresar en el gimnasio';
+        $goalLabel = FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'Progresar en el gimnasio');
 
         $line1 = '';
         $line2 = '';
 
         if ($streakDays >= 3 && $daysSinceLast !== null && $daysSinceLast <= 1) {
-            $line1 = 'Si entrenas hoy, mantendrás tu racha de '.$streakDays.' días.';
-            $line2 = 'No la rompas. Estás cerca de un nuevo récord personal.';
+            $line1 = 'Si entrenas hoy, mantendras tu racha de '.$streakDays.' dias.';
+            $line2 = 'No la rompas. Estas cerca de un nuevo record personal.';
         } elseif ($weekVisits < $daysPerWeek) {
             $missing = max(0, $daysPerWeek - $weekVisits);
             $line1 = 'Te faltan '.$missing.' entrenamientos para cumplir tu meta semanal.';
             $line2 = 'Tu objetivo es '.$goalLabel.'. Este es buen momento para avanzar.';
         } elseif ($daysSinceLast !== null && $daysSinceLast >= 3) {
-            $line1 = 'Llevas '.$daysSinceLast.' días sin entrenar.';
-            $line2 = 'Vuelve hoy con una sesión corta para retomar el ritmo.';
+            $line1 = 'Llevas '.$daysSinceLast.' dias sin entrenar.';
+            $line2 = 'Vuelve hoy con una sesion corta para retomar el ritmo.';
         } else {
             $line1 = 'Vas bien: '.$weekVisits.' sesiones esta semana para '.$goalLabel.'.';
-            $line2 = 'Mantén constancia para consolidar resultados en los próximos días.';
+            $line2 = 'Manten constancia para consolidar resultados en los proximos dias.';
         }
 
-        $contextLine = 'Mes actual: '.$monthVisits.' visitas | Recuperación estimada: '.$recoveryScore.'/100.';
+        $contextLine = 'Mes actual: '.$monthVisits.' visitas | Recuperacion estimada: '.$recoveryScore.'/100.';
         if ((int) $nowAtGym->format('N') >= 6) {
-            $contextLine .= ' Fin de semana ideal para técnica y movilidad.';
+            $contextLine .= ' Fin de semana ideal para tecnica y movilidad.';
         }
 
         return [

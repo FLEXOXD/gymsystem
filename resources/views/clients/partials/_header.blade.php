@@ -36,6 +36,10 @@
                 Cobrar / Renovar
             </x-ui.button>
 
+            <x-ui.button :href="$progressTabUrl" variant="secondary" class="px-5 py-2.5">
+                Ver rendimiento
+            </x-ui.button>
+
             <div class="relative" x-on:keydown.escape.window="actionsOpen = false" x-on:click.outside="actionsOpen = false">
                 <x-ui.button type="button" variant="ghost" class="px-4 py-2 text-xs font-bold" x-on:click="actionsOpen = !actionsOpen">
                     Acciones v

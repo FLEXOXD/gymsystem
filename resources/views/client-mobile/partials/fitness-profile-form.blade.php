@@ -20,6 +20,7 @@
     $weightValue = old('weight_kg', $fitnessProfileModel?->weight_kg);
     $sexValue = mb_strtolower(trim((string) old('sex', (string) ($fitnessProfileModel?->sex ?? ''))));
     $goalValue = mb_strtolower(trim((string) old('goal', (string) ($fitnessProfileModel?->goal ?? ''))));
+    $secondaryGoalValue = mb_strtolower(trim((string) old('secondary_goal', (string) ($fitnessProfileModel?->secondary_goal ?? ''))));
     $experienceValue = mb_strtolower(trim((string) old('experience_level', (string) ($fitnessProfileModel?->experience_level ?? ''))));
     $daysValue = (string) old('days_per_week', $fitnessProfileModel?->days_per_week);
     $minutesValue = (string) old('session_minutes', $fitnessProfileModel?->session_minutes);
@@ -42,6 +43,7 @@
         || $errors->has('height_cm')
         || $errors->has('weight_kg')
         || $errors->has('goal')
+        || $errors->has('secondary_goal')
         || $errors->has('experience_level')
         || $errors->has('days_per_week')
         || $errors->has('session_minutes')
@@ -97,7 +99,7 @@
     </div>
 
     <div class="space-y-1">
-        <p class="fitness-field-label">Objetivo</p>
+        <p class="fitness-field-label">Objetivo principal</p>
         <div class="fitness-chip-grid">
             @foreach ($fitnessGoalOptions as $value => $label)
                 @php
@@ -111,6 +113,31 @@
             @endforeach
         </div>
         @error('goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+    </div>
+
+    <div class="space-y-1">
+        <p class="fitness-field-label">Objetivo secundario (opcional)</p>
+        <div class="fitness-chip-grid">
+            @php
+                $secondaryNoneId = $formIdPrefix.'-secondary-none';
+            @endphp
+            <label for="{{ $secondaryNoneId }}" class="fitness-chip">
+                <input id="{{ $secondaryNoneId }}" type="radio" name="secondary_goal" value="" class="fitness-chip-input" {{ $secondaryGoalValue === '' ? 'checked' : '' }}>
+                <span class="fitness-chip-label">Sin secundario</span>
+            </label>
+            @foreach ($fitnessGoalOptions as $value => $label)
+                @php
+                    $inputId = $formIdPrefix.'-secondary-goal-'.$value;
+                    $isChecked = $secondaryGoalValue === $value;
+                @endphp
+                <label for="{{ $inputId }}" class="fitness-chip">
+                    <input id="{{ $inputId }}" type="radio" name="secondary_goal" value="{{ $value }}" class="fitness-chip-input" {{ $isChecked ? 'checked' : '' }}>
+                    <span class="fitness-chip-label">{{ $label }}</span>
+                </label>
+            @endforeach
+        </div>
+        @error('secondary_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+        <p class="fitness-inline-help">Se usa para afinar prediccion, estado corporal y rutina sugerida.</p>
     </div>
 
     <div class="space-y-1">

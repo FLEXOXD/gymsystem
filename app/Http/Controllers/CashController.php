@@ -40,6 +40,8 @@ class CashController extends Controller
         $cashGuard = $this->resolveCashGuard($request, $gymId);
 
         if ($isGlobalScope) {
+            $this->autoCloseExpiredSessionsForGyms($gymIds);
+
             $sessions = CashSession::query()
                 ->forGyms($gymIds)
                 ->select([
@@ -54,6 +56,9 @@ class CashController extends Controller
                     'expected_balance',
                     'difference',
                     'status',
+                    'closing_notes',
+                    'difference_reason',
+                    'close_source',
                 ])
                 ->with(['gym:id,name,slug', 'openedBy:id,name', 'closedBy:id,name'])
                 ->orderByDesc('opened_at')
@@ -81,6 +86,24 @@ class CashController extends Controller
         ];
         $methodTotals = collect();
         $latestMovements = collect();
+        $recentClosedSessions = CashSession::query()
+            ->forGym($gymId)
+            ->where('status', 'closed')
+            ->select([
+                'id',
+                'gym_id',
+                'closed_by',
+                'closed_at',
+                'closing_balance',
+                'difference',
+                'closing_notes',
+                'difference_reason',
+                'close_source',
+            ])
+            ->with(['closedBy:id,name'])
+            ->orderByDesc('closed_at')
+            ->limit(8)
+            ->get();
 
         if ($openSession) {
             $summary = $this->cashSessionReadService->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance);
@@ -93,6 +116,7 @@ class CashController extends Controller
             'summary' => $summary,
             'methodTotals' => $methodTotals,
             'latestMovements' => $latestMovements,
+            'recentClosedSessions' => $recentClosedSessions,
             'cashWriteBlocked' => (bool) ($cashGuard['blocked'] ?? false),
             'cashWriteBlockedReason' => (string) ($cashGuard['reason'] ?? ''),
             'canOpenCash' => $canOpenCash,
@@ -189,6 +213,7 @@ class CashController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $this->autoCloseExpiredSessionsForGyms($gymIds);
 
         $sessions = CashSession::query()
             ->forGyms($gymIds)
@@ -204,6 +229,9 @@ class CashController extends Controller
                 'expected_balance',
                 'difference',
                 'status',
+                'closing_notes',
+                'difference_reason',
+                'close_source',
             ])
             ->with(['gym:id,name,slug', 'openedBy:id,name', 'closedBy:id,name'])
             ->orderByDesc('opened_at')
@@ -221,6 +249,7 @@ class CashController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $this->autoCloseExpiredSessionsForGyms($gymIds);
 
         $sessionModel = CashSession::query()
             ->forGyms($gymIds)
@@ -237,6 +266,9 @@ class CashController extends Controller
                 'difference',
                 'status',
                 'notes',
+                'closing_notes',
+                'difference_reason',
+                'close_source',
             ])
             ->with([
                 'openedBy:id,name',
@@ -331,6 +363,21 @@ class CashController extends Controller
         $guard = $this->resolveCashGuard($request, $activeGymId);
         if ((bool) ($guard['blocked'] ?? false)) {
             throw new RuntimeException((string) ($guard['reason'] ?? 'No autorizado para operar caja en esta sucursal.'));
+        }
+    }
+
+    /**
+     * @param  array<int, int>  $gymIds
+     */
+    private function autoCloseExpiredSessionsForGyms(array $gymIds): void
+    {
+        foreach ($gymIds as $gymId) {
+            $resolvedGymId = (int) $gymId;
+            if ($resolvedGymId <= 0) {
+                continue;
+            }
+
+            $this->cashSessionService->autoCloseExpiredSessions($resolvedGymId);
         }
     }
 }

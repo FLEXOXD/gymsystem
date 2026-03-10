@@ -13,3 +13,4 @@ Schedule::command('maintenance:cleanup-files --days=14')->dailyAt('03:20');
 Schedule::command('attendances:archive --months=2')->dailyAt('03:40')->withoutOverlapping();
 Schedule::command('demo:cleanup')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('landing-messages:prune')->everyMinute()->withoutOverlapping();
+Schedule::command('cash:auto-close-midnight')->everyMinute()->withoutOverlapping();

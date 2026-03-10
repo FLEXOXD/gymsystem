@@ -18,6 +18,7 @@ use App\Models\Plan;
 use App\Models\Promotion;
 use App\Models\User;
 use App\Services\CashSessionService;
+use App\Services\ClientProgressOverviewService;
 use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
 use Carbon\Carbon;
@@ -37,7 +38,8 @@ class ClientController extends Controller
     public function __construct(
         private readonly CashSessionService $cashSessionService,
         private readonly PlanAccessService $planAccessService,
-        private readonly RegisterClientAction $registerClientAction
+        private readonly RegisterClientAction $registerClientAction,
+        private readonly ClientProgressOverviewService $clientProgressOverviewService
     ) {
     }
 
@@ -161,6 +163,13 @@ class ClientController extends Controller
                     (int) $client->id,
                     (int) ($client->gym_id ?? 0),
                     trim((string) ($client->gym_slug ?? ''))
+                );
+                $row['progress_url'] = $this->buildClientShowUrl(
+                    $request,
+                    (int) $client->id,
+                    (int) ($client->gym_id ?? 0),
+                    trim((string) ($client->gym_slug ?? '')),
+                    ['tab' => 'progress']
                 );
                 $row['can_manage'] = (bool) ($mutationPolicy['can_manage'] ?? false);
                 $row['owner_scope_label'] = (string) ($mutationPolicy['owner_scope_label'] ?? 'dueño del gimnasio');
@@ -485,7 +494,8 @@ class ClientController extends Controller
                 'status',
             ])
             ->with([
-                'gym:id,address_country_code',
+                'gym:id,address_country_code,timezone',
+                'fitnessProfile:id,gym_id,client_id,goal,secondary_goal,experience_level,days_per_week,session_minutes',
                 'credentials' => fn ($query) => $query
                     ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status', 'created_at'])
                     ->orderByDesc('id'),
@@ -670,6 +680,12 @@ class ClientController extends Controller
                 ->get();
         }
 
+        $progressOverview = $this->clientProgressOverviewService->build(
+            client: $clientModel,
+            latestMembership: $latestMembership,
+            gymTimezone: (string) ($clientModel->gym?->timezone ?? '')
+        );
+
         return view('clients.show', [
             'client' => $clientModel,
             'plans' => $plans,
@@ -683,6 +699,7 @@ class ClientController extends Controller
             'canManagePromotions' => $canManagePromotions,
             'canManageClientAccounts' => $canManageClientAccounts,
             'canAdjustMemberships' => $canAdjustMemberships,
+            'progressOverview' => $progressOverview,
         ]);
     }
 
@@ -1079,7 +1096,8 @@ class ClientController extends Controller
         Request $request,
         int $clientId,
         int $clientGymId,
-        ?string $clientGymSlug = null
+        ?string $clientGymSlug = null,
+        array $extraQuery = []
     ): string {
         $isGlobal = ActiveGymContext::isGlobal($request);
 
@@ -1102,6 +1120,8 @@ class ClientController extends Controller
                     $params['pwa_mode'] = 'standalone';
                 }
 
+                $params = array_merge($params, $extraQuery);
+
                 return route('clients.show', $params);
             }
         }
@@ -1119,6 +1139,8 @@ class ClientController extends Controller
         if ($pwaMode === 'standalone') {
             $params['pwa_mode'] = 'standalone';
         }
+
+        $params = array_merge($params, $extraQuery);
 
         return route('clients.show', $params);
     }

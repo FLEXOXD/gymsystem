@@ -13,7 +13,7 @@ class CloseCashSessionAction
     }
 
     /**
-     * @param array{closing_balance: float|int|string, notes?: string|null} $data
+     * @param array{closing_balance: float|int|string, notes?: string|null, difference_reason?: string|null} $data
      */
     public function execute(int $gymId, int $userId, array $data): CashSession
     {
@@ -21,8 +21,8 @@ class CloseCashSessionAction
             gymId: $gymId,
             userId: $userId,
             closingBalance: (float) $data['closing_balance'],
-            notes: $data['notes'] ?? null
+            closingNotes: $data['notes'] ?? null,
+            differenceReason: $data['difference_reason'] ?? null
         );
     }
 }
-

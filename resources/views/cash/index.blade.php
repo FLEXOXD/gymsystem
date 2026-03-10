@@ -43,6 +43,7 @@
         $canOpenCash = (bool) ($canOpenCash ?? $isOwnerUser);
         $canCloseCash = (bool) ($canCloseCash ?? $isOwnerUser);
         $canManageMovements = (bool) ($canManageMovements ?? true);
+        $recentClosedSessions = $recentClosedSessions ?? collect();
     @endphp
 
     <div class="cash-page space-y-4"
@@ -83,6 +84,14 @@
                         </form>
                     </x-ui.card>
                 @endif
+
+                <x-ui.card title="Historial reciente de cierres" subtitle="Fecha, hora, motivo y notas del cierre.">
+                    @include('cash.partials.closure-history', [
+                        'sessions' => $recentClosedSessions,
+                        'currencyFormatter' => $currencyFormatter,
+                        'currencyCode' => $currencyCode,
+                    ])
+                </x-ui.card>
             @else
                 @php
                     $activeSummary = $summary ?? ['income_total' => 0, 'expense_total' => 0, 'expected_balance' => 0, 'movements_count' => 0];
@@ -211,6 +220,19 @@
                                     <x-ui.button id="movement-submit" type="submit" variant="success">Registrar ingreso</x-ui.button>
                                 </form>
                             @endif
+
+                            <div class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+                                <div class="mb-3">
+                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Historial reciente de cierres</h3>
+                                    <p class="text-sm ui-muted">Aqui puedes leer la fecha, hora, motivo y notas del ultimo cierre de caja.</p>
+                                </div>
+
+                                @include('cash.partials.closure-history', [
+                                    'sessions' => $recentClosedSessions,
+                                    'currencyFormatter' => $currencyFormatter,
+                                    'currencyCode' => $currencyCode,
+                                ])
+                            </div>
                         </x-ui.card>
 
                         <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
@@ -366,7 +388,7 @@
                     </p>
                 @endif
                 <div class="overflow-x-auto">
-                    <table class="ui-table min-w-[1040px]">
+                    <table class="ui-table min-w-[1480px]">
                         <thead>
                         <tr>
                             <th>ID</th>
@@ -377,9 +399,13 @@
                             <th>Cierre</th>
                             <th>Apertura por</th>
                             <th>Cierre por</th>
+                            <th>Tipo</th>
+                            <th>Mensaje</th>
                             <th>Esperado</th>
                             <th>Cierre</th>
                             <th>Diferencia</th>
+                            <th>Motivo</th>
+                            <th>Notas</th>
                             <th>Estado</th>
                             <th></th>
                         </tr>
@@ -398,10 +424,14 @@
                                 <td>{{ $session->opened_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 <td>{{ $session->closed_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 <td>{{ $session->openedBy?->name ?? '-' }}</td>
-                                <td>{{ $session->closedBy?->name ?? '-' }}</td>
+                                <td>{{ $session->wasAutoClosedAtMidnight() ? 'Sistema' : ($session->closedBy?->name ?? '-') }}</td>
+                                <td>{{ $session->closeSourceLabel() }}</td>
+                                <td>{{ $session->closeMessage() }}</td>
                                 <td>{{ $currencyFormatter::format((float) ($session->expected_balance ?? 0), $currencyCode) }}</td>
                                 <td>{{ $session->closing_balance !== null ? $currencyFormatter::format((float) $session->closing_balance, $currencyCode) : '-' }}</td>
                                 <td class="font-bold {{ $difference > 0 ? 'text-emerald-700 dark:text-emerald-300' : ($difference < 0 ? 'text-rose-700 dark:text-rose-300' : 'text-slate-700 dark:text-slate-200') }}">{{ $currencyFormatter::format($difference, $currencyCode) }}</td>
+                                <td>{{ $session->difference_reason ?: '-' }}</td>
+                                <td>{{ $session->closing_notes ?: '-' }}</td>
                                 <td>
                                     <x-ui.badge :variant="(string) $session->status === 'open' ? 'info' : 'success'">{{ $session->status }}</x-ui.badge>
                                     @if ($closedWithDifference)
@@ -412,7 +442,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isGlobalScope ? 11 : 10 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay sesiones registradas.</td>
+                                <td colspan="{{ $isGlobalScope ? 15 : 14 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay sesiones registradas.</td>
                             </tr>
                         @endforelse
                         </tbody>

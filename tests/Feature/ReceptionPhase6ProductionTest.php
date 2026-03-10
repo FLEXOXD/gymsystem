@@ -519,6 +519,7 @@ it('accepts 120 minutes in fitness profile session duration', function () {
         'height_cm' => 173,
         'weight_kg' => 77,
         'goal' => 'mantener_forma',
+        'secondary_goal' => 'mejorar_resistencia',
         'experience_level' => 'intermedio',
         'days_per_week' => 5,
         'session_minutes' => 120,
@@ -534,7 +535,53 @@ it('accepts 120 minutes in fitness profile session duration', function () {
     $this->assertDatabaseHas('client_fitness_profiles', [
         'gym_id' => $gym->id,
         'client_id' => $client->id,
+        'goal' => 'mantener_forma',
+        'secondary_goal' => 'mejorar_resistencia',
         'session_minutes' => 120,
+    ]);
+});
+
+it('rejects duplicate secondary fitness goal selections', function () {
+    $gym = phase6MakeGym('fitness-duplicate-goal');
+    phase6SetPlan($gym, 'premium');
+    $client = phase6CreateActiveClientWithMembership($gym, 'P6-FIT-DUP-001', 'FitDup');
+
+    $mobileSession = [
+        'client_mobile' => [
+            'client_id' => (int) $client->id,
+            'gym_id' => (int) $gym->id,
+            'login_at' => now()->toIso8601String(),
+        ],
+    ];
+
+    $response = $this->from(route('client-mobile.app', [
+        'gymSlug' => $gym->slug,
+        'screen' => 'physical',
+    ]))->withSession($mobileSession)->post(route('client-mobile.fitness-profile.save', [
+        'gymSlug' => $gym->slug,
+    ]), [
+        'age' => 29,
+        'sex' => 'masculino',
+        'height_cm' => 173,
+        'weight_kg' => 77,
+        'goal' => 'mantener_forma',
+        'secondary_goal' => 'mantener_forma',
+        'experience_level' => 'intermedio',
+        'days_per_week' => 5,
+        'session_minutes' => 60,
+        'limitations' => ['ninguna'],
+        'next_screen' => 'progress',
+    ]);
+
+    $response->assertRedirect(route('client-mobile.app', [
+        'gymSlug' => $gym->slug,
+        'screen' => 'physical',
+    ]));
+
+    $response->assertSessionHasErrors(['secondary_goal']);
+    $this->assertDatabaseMissing('client_fitness_profiles', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
     ]);
 });
 

@@ -31,6 +31,7 @@ class CloseCashSessionRequest extends FormRequest
         return [
             'closing_balance' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'difference_reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

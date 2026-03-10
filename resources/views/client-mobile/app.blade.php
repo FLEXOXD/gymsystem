@@ -1896,6 +1896,7 @@
             || $errors->has('height_cm')
             || $errors->has('weight_kg')
             || $errors->has('goal')
+            || $errors->has('secondary_goal')
             || $errors->has('experience_level')
             || $errors->has('days_per_week')
             || $errors->has('session_minutes')
@@ -1910,7 +1911,12 @@
             $formatted = rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
             return $unit !== '' ? $formatted.' '.$unit : $formatted;
         };
-        $fitnessGoalLabel = $fitnessGoalOptions[(string) ($fitnessProfileModel?->goal ?? '')] ?? '-';
+        $fitnessPrimaryGoalLabel = $fitnessGoalOptions[(string) ($fitnessProfileModel?->goal ?? '')] ?? '-';
+        $fitnessSecondaryGoalLabel = $fitnessGoalOptions[(string) ($fitnessProfileModel?->secondary_goal ?? '')] ?? '';
+        $fitnessGoalLabel = $fitnessPrimaryGoalLabel;
+        if ($fitnessPrimaryGoalLabel !== '-' && $fitnessSecondaryGoalLabel !== '') {
+            $fitnessGoalLabel = $fitnessPrimaryGoalLabel.' + '.$fitnessSecondaryGoalLabel;
+        }
         $fitnessLevelLabel = $fitnessLevelOptions[(string) ($fitnessProfileModel?->experience_level ?? '')] ?? '-';
         $fitnessSexLabel = $fitnessSexOptions[(string) ($fitnessProfileModel?->sex ?? '')] ?? '-';
         $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' días/semana' : '-';
@@ -1932,6 +1938,9 @@
         $fitnessTargetCaloriesValue = $formatMetric($fitnessBodyMetrics['target_kcal'] ?? null, 'kcal');
         $fitnessBodyFatValue = $formatMetric($fitnessBodyMetrics['estimated_body_fat_pct'] ?? null, '%');
         $fitnessGoalTrackLabel = trim((string) ($fitnessBodyMetrics['goal_track'] ?? ''));
+        if ($fitnessGoalTrackLabel === '') {
+            $fitnessGoalTrackLabel = trim((string) ($fitnessBodyMetrics['goal_summary_label'] ?? ''));
+        }
         $hasBodyMetrics = is_numeric($fitnessBodyMetrics['bmi'] ?? null)
             || is_numeric($fitnessBodyMetrics['bmr_kcal'] ?? null)
             || is_numeric($fitnessBodyMetrics['target_kcal'] ?? null);
@@ -2695,8 +2704,12 @@
                                 <p class="fitness-meta-value">{{ $formatMetric($fitnessProfileModel?->weight_kg, 'kg') }}</p>
                             </div>
                             <div class="fitness-meta-card">
-                                <p class="fitness-meta-label">Objetivo</p>
-                                <p class="fitness-meta-value">{{ $fitnessGoalLabel }}</p>
+                                <p class="fitness-meta-label">Objetivo principal</p>
+                                <p class="fitness-meta-value">{{ $fitnessPrimaryGoalLabel }}</p>
+                            </div>
+                            <div class="fitness-meta-card">
+                                <p class="fitness-meta-label">Objetivo secundario</p>
+                                <p class="fitness-meta-value">{{ $fitnessSecondaryGoalLabel !== '' ? $fitnessSecondaryGoalLabel : 'Sin secundario' }}</p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Nivel</p>
@@ -2709,6 +2722,10 @@
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Duración sesión</p>
                                 <p class="fitness-meta-value">{{ $fitnessMinutesLabel }}</p>
+                            </div>
+                            <div class="fitness-meta-card">
+                                <p class="fitness-meta-label">Objetivo combinado</p>
+                                <p class="fitness-meta-value">{{ $fitnessGoalLabel }}</p>
                             </div>
                         </div>
 

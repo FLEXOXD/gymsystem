@@ -22,6 +22,7 @@ class ClientFitnessProfile extends Model
         'height_cm',
         'weight_kg',
         'goal',
+        'secondary_goal',
         'experience_level',
         'days_per_week',
         'session_minutes',

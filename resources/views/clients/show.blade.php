@@ -212,8 +212,22 @@
             $errors->hasAny($appAccountErrorKeys) || old('active_tab') === 'app_access'
         );
 
+        $progressTabUrlParams = [
+            'client' => $client->id,
+            'tab' => 'progress',
+        ];
+        $contextGym = trim((string) request()->route('contextGym'));
+        if ($contextGym !== '') {
+            $progressTabUrlParams['contextGym'] = $contextGym;
+        }
+        $pwaMode = strtolower(trim((string) request()->query('pwa_mode', '')));
+        if ($pwaMode === 'standalone') {
+            $progressTabUrlParams['pwa_mode'] = 'standalone';
+        }
+        $progressTabUrl = route('clients.show', $progressTabUrlParams);
+
         $initialTab = 'summary';
-        $allowedTabs = ['summary', 'membership', 'attendance', 'credentials'];
+        $allowedTabs = ['summary', 'progress', 'membership', 'attendance', 'credentials'];
         if (! empty($canManageClientAccounts)) {
             $allowedTabs[] = 'app_access';
         }
@@ -309,6 +323,7 @@
             'lastAttendanceLabel' => $lastAttendanceLabel,
             'canAdjustMemberships' => $canAdjustMemberships,
             'latestMembership' => $latestMembership,
+            'progressTabUrl' => $progressTabUrl,
         ])
 
         @include('clients.partials._tabs')
@@ -333,6 +348,14 @@
                 'methodLabels' => $methodLabels,
                 'statusLabels' => $statusLabels,
                 'canAdjustMemberships' => $canAdjustMemberships,
+                'progressTabUrl' => $progressTabUrl,
+            ])
+        </section>
+
+        <section x-cloak x-show="activeTab === 'progress'" x-transition.opacity class="client-tab-panel">
+            @include('clients.partials._tab_progress', [
+                'client' => $client,
+                'progressOverview' => $progressOverview,
             ])
         </section>
 

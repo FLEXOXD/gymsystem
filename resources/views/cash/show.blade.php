@@ -15,6 +15,9 @@
     <x-ui.card title="Sesión #{{ $session->id }}" subtitle="Apertura {{ $session->opened_at?->format('Y-m-d H:i') }} por {{ $session->openedBy?->name ?? 'N/D' }}">
         <div class="flex flex-wrap items-center gap-2">
             <x-ui.badge :variant="$session->status === 'open' ? 'success' : 'info'">{{ $session->status }}</x-ui.badge>
+            @if ($session->status === 'closed')
+                <x-ui.badge :variant="$session->wasAutoClosedAtMidnight() ? 'warning' : 'info'">{{ $session->closeSourceLabel() }}</x-ui.badge>
+            @endif
             <x-ui.button :href="route('cash.index')" size="sm" variant="secondary">Caja actual</x-ui.button>
             <x-ui.button :href="route('cash.sessions.index')" size="sm" variant="ghost">Historial</x-ui.button>
         </div>
@@ -40,9 +43,13 @@
 
         <div class="mt-4 grid gap-2 text-sm text-slate-700 dark:text-slate-200 md:grid-cols-2">
             <p><span class="font-semibold text-slate-900 dark:text-slate-100">Cierre:</span> {{ $session->closed_at?->format('Y-m-d H:i') ?? 'Sin cerrar' }}</p>
-            <p><span class="font-semibold text-slate-900 dark:text-slate-100">Cerrada por:</span> {{ $session->closedBy?->name ?? '-' }}</p>
-            <p><span class="font-semibold text-slate-900 dark:text-slate-100">Notas:</span> {{ $session->notes ?: '-' }}</p>
+            <p><span class="font-semibold text-slate-900 dark:text-slate-100">Cerrada por:</span> {{ $session->wasAutoClosedAtMidnight() ? 'Sistema' : ($session->closedBy?->name ?? '-') }}</p>
+            <p><span class="font-semibold text-slate-900 dark:text-slate-100">Notas de apertura:</span> {{ $session->notes ?: '-' }}</p>
             @if ($session->status === 'closed')
+                <p><span class="font-semibold text-slate-900 dark:text-slate-100">Tipo de cierre:</span> {{ $session->closeSourceLabel() }}</p>
+                <p><span class="font-semibold text-slate-900 dark:text-slate-100">Mensaje:</span> {{ $session->closeMessage() }}</p>
+                <p><span class="font-semibold text-slate-900 dark:text-slate-100">Motivo de diferencia:</span> {{ $session->difference_reason ?: '-' }}</p>
+                <p><span class="font-semibold text-slate-900 dark:text-slate-100">Notas de cierre:</span> {{ $session->closing_notes ?: '-' }}</p>
                 <p>
                     <span class="font-semibold text-slate-900 dark:text-slate-100">Diferencia:</span>
                     <span class="{{ (float) $session->difference === 0.0 ? 'text-slate-800 dark:text-slate-200' : ((float) $session->difference > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300') }} font-bold">

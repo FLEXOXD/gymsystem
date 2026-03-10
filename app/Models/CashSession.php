@@ -29,6 +29,9 @@ class CashSession extends Model
         'difference',
         'status',
         'notes',
+        'closing_notes',
+        'difference_reason',
+        'close_source',
     ];
 
     /**
@@ -114,5 +117,22 @@ class CashSession extends Model
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('status', 'open');
+    }
+
+    public function wasAutoClosedAtMidnight(): bool
+    {
+        return (string) ($this->close_source ?? 'manual') === 'auto_midnight';
+    }
+
+    public function closeSourceLabel(): string
+    {
+        return $this->wasAutoClosedAtMidnight() ? 'Automatico' : 'Manual';
+    }
+
+    public function closeMessage(): string
+    {
+        return $this->wasAutoClosedAtMidnight()
+            ? 'Caja cerrada automaticamente a medianoche'
+            : 'Cierre manual registrado';
     }
 }
