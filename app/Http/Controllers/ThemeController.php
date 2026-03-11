@@ -477,6 +477,18 @@ class ThemeController extends Controller
 
     private function resolveGymForContext(Request $request): ?Gym
     {
+        $contextGymSlug = trim((string) ($request->attributes->get('active_gym_slug') ?? $request->route('contextGym') ?? ''));
+        if ($contextGymSlug !== '') {
+            $contextGym = Gym::query()
+                ->withoutDemoSessions()
+                ->whereRaw('LOWER(slug) = ?', [mb_strtolower($contextGymSlug)])
+                ->first();
+
+            if ($contextGym instanceof Gym) {
+                return $contextGym;
+            }
+        }
+
         $activeGym = $request->attributes->get('active_gym');
         if ($activeGym instanceof Gym) {
             return $activeGym;

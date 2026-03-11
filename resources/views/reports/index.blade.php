@@ -13,6 +13,11 @@
             && $activeGymId > 0
             && $planAccessService->canForGym($activeGymId, 'reports_export');
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $reportRouteParams = [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $membershipsRouteParams = $isGlobalScope ? ['scope' => 'global'] : [];
     @endphp
     @if ($isGlobalScope)
         <div class="mb-4 ui-alert ui-alert-info">
@@ -21,6 +26,9 @@
     @endif
     <x-ui.card title="Panel de reportes" subtitle="Resumen financiero y operativo del rango seleccionado.">
         <form id="reports-filter-form" method="GET" action="{{ route('reports.index') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
+            @if ($isGlobalScope)
+                <input type="hidden" name="scope" value="global">
+            @endif
             <label class="space-y-1 text-sm font-semibold ui-muted">
                 <span>Desde</span>
                 <input type="date" name="from" value="{{ $from->toDateString() }}" class="ui-input">
@@ -36,10 +44,10 @@
             <div class="flex flex-wrap gap-2">
                 @if ($canExportReports)
                     <x-ui.button id="reports-export-pdf"
-                                 :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 :href="route('reports.export.pdf', $reportRouteParams)"
                                  target="_blank" rel="noopener" variant="ghost" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
                     <x-ui.button id="reports-export-csv"
-                                 :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                                 :href="route('reports.export.csv', $reportRouteParams)"
                                  data-ui-loading-ignore="1"
                                  variant="ghost">Exportar CSV</x-ui.button>
                 @else

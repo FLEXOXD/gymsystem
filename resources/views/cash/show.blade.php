@@ -7,7 +7,7 @@
     @php
         $currencyFormatter = \App\Support\Currency::class;
         $isCashierScoped = (bool) ($isCashierScoped ?? false);
-        $scopedBalance = round((float) ($summary['income_total'] ?? 0) - (float) ($summary['expense_total'] ?? 0), 2);
+        $scopedBalance = round((float) $session->opening_balance + (float) ($summary['income_total'] ?? 0) - (float) ($summary['expense_total'] ?? 0), 2);
         $methodLabels = [
             'cash' => 'Efectivo',
             'card' => 'Tarjeta',
@@ -27,11 +27,11 @@
             <x-ui.button :href="route('cash.sessions.index')" size="sm" variant="ghost">Historial</x-ui.button>
         </div>
 
-        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             @if ($isCashierScoped)
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
-                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($summary['movements_count'] ?? 0) }}</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $session->opening_balance, $appCurrencyCode) }}</p>
                 </article>
             @else
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
@@ -48,9 +48,15 @@
                 <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $summary['expense_total'], $appCurrencyCode) }}</p>
             </article>
             <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Tu balance' : 'Esperado' }}</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Saldo visible' : 'Esperado' }}</p>
                 <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($isCashierScoped ? $scopedBalance : $summary['expected_balance']), $appCurrencyCode) }}</p>
             </article>
+            @if ($isCashierScoped)
+                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($summary['movements_count'] ?? 0) }}</p>
+                </article>
+            @endif
         </div>
 
         <div class="mt-4 grid gap-2 text-sm text-slate-700 dark:text-slate-200 md:grid-cols-2">

@@ -74,6 +74,8 @@ class ReportController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $showGymColumn = $isGlobalScope && count($gymIds) > 1;
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
         $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
@@ -92,6 +94,7 @@ class ReportController extends Controller
                 'occurred_at',
             ])
             ->with([
+                'gym:id,name',
                 'createdBy:id,name',
                 'membership:id,client_id',
                 'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
@@ -105,6 +108,7 @@ class ReportController extends Controller
             'to' => $to,
             'incomeSummary' => $incomeSummary,
             'movements' => $movements,
+            'showGymColumn' => $showGymColumn,
         ]);
     }
 
@@ -194,6 +198,8 @@ class ReportController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $showGymColumn = $isGlobalScope && count($gymIds) > 1;
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
         $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
@@ -212,6 +218,7 @@ class ReportController extends Controller
 
         fputcsv($handle, ['Reportes Profesionales - Gimnasio']);
         fputcsv($handle, ['Desde', $from->toDateString(), 'Hasta', $to->toDateString()]);
+        fputcsv($handle, ['Alcance', $showGymColumn ? 'Global multi-sede' : 'Sede actual']);
         fputcsv($handle, []);
 
         fputcsv($handle, ['RESUMEN INGRESOS']);
@@ -254,7 +261,16 @@ class ReportController extends Controller
         fputcsv($handle, []);
 
         fputcsv($handle, ['DETALLE MOVIMIENTOS']);
+        $detailHeaders = ['ID', 'Fecha', 'Tipo', 'Metodo', 'Monto'];
+        if ($showGymColumn) {
+            $detailHeaders[] = 'Sede';
+        }
+        $detailHeaders = array_merge($detailHeaders, ['Cliente', 'Alta cliente', 'Usuario', 'Descripcion']);
         fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Alta cliente', 'Usuario', 'Descripción']);
+        if ($showGymColumn) {
+            fputcsv($handle, $detailHeaders);
+        }
+
         $resolvedGymIds = collect($gymIds)
             ->map(static fn ($id): int => (int) $id)
             ->filter(static fn (int $id): bool => $id > 0)
@@ -265,6 +281,7 @@ class ReportController extends Controller
             ->whereIn('cash_movements.gym_id', $resolvedGymIds)
             ->whereBetween('cash_movements.occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->leftJoin('users as users', 'users.id', '=', 'cash_movements.created_by')
+            ->leftJoin('gyms as gyms', 'gyms.id', '=', 'cash_movements.gym_id')
             ->leftJoin('memberships as memberships', 'memberships.id', '=', 'cash_movements.membership_id')
             ->leftJoin('clients as clients', function ($join): void {
                 $join->on('clients.id', '=', 'memberships.client_id')
@@ -278,6 +295,7 @@ class ReportController extends Controller
                 'cash_movements.amount',
                 'cash_movements.description',
                 'users.name as user_name',
+                'gyms.name as gym_name',
                 'clients.first_name as client_first_name',
                 'clients.last_name as client_last_name',
                 'clients.created_by_name_snapshot as client_created_by_name_snapshot',
@@ -285,7 +303,7 @@ class ReportController extends Controller
             ])
             ->orderBy('cash_movements.id');
 
-        $movementsQuery->chunkById(1000, function ($rows) use ($handle): void {
+        $movementsQuery->chunkById(1000, function ($rows) use ($handle, $showGymColumn): void {
             foreach ($rows as $row) {
                 $clientName = trim(((string) ($row->client_first_name ?? '')).' '.((string) ($row->client_last_name ?? '')));
                 $clientCreator = \App\Support\ClientAudit::actorDisplay(
@@ -293,7 +311,7 @@ class ReportController extends Controller
                     (string) ($row->client_created_by_role_snapshot ?? '')
                 );
 
-                fputcsv($handle, [
+                $detailRow = [
                     $row->movement_id,
                     $row->occurred_at,
                     match ($row->type) {
@@ -308,11 +326,18 @@ class ReportController extends Controller
                         default => $row->method,
                     },
                     number_format((float) $row->amount, 2, '.', ''),
-                    $clientName,
-                    $clientCreator,
-                    (string) ($row->user_name ?? ''),
-                    (string) ($row->description ?? ''),
-                ]);
+                ];
+
+                if ($showGymColumn) {
+                    $detailRow[] = (string) ($row->gym_name ?? '');
+                }
+
+                $detailRow[] = $clientName;
+                $detailRow[] = $clientCreator;
+                $detailRow[] = (string) ($row->user_name ?? '');
+                $detailRow[] = (string) ($row->description ?? '');
+
+                fputcsv($handle, $detailRow);
             }
         }, 'cash_movements.id', 'movement_id');
 
@@ -335,6 +360,8 @@ class ReportController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $showGymColumn = $isGlobalScope && count($gymIds) > 1;
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
         $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
@@ -361,6 +388,7 @@ class ReportController extends Controller
                 'occurred_at',
             ])
             ->with([
+                'gym:id,name',
                 'createdBy:id,name',
                 'membership:id,client_id',
                 'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
@@ -380,6 +408,7 @@ class ReportController extends Controller
             'movementsCount' => $movementsCount,
             'isPdfDetailTruncated' => $isPdfDetailTruncated,
             'pdfMaxDetailRows' => self::PDF_MAX_DETAIL_ROWS,
+            'showGymColumn' => $showGymColumn,
             'movements' => $movements,
         ])->setPaper('a4', 'portrait');
 

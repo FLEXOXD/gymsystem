@@ -19,9 +19,11 @@
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $isCashierScoped = (bool) ($isCashierScoped ?? false);
         $panelSessionSummary = $openSessionScopedSummary ?? [
+            'opening_balance' => 0,
             'income_total' => 0,
             'expense_total' => 0,
             'net_total' => 0,
+            'visible_total' => 0,
             'movements_count' => 0,
         ];
         $clientShowUrl = static fn (int $clientId): string => route('clients.show', ['client' => $clientId] + ($isGlobalScope ? ['scope' => 'global'] : []));
@@ -149,11 +151,16 @@
             </div>
         @elseif ($openSession)
             @if ($isCashierScoped)
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
                         <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>
                         <p class="text-xs text-slate-500 dark:text-slate-300">Tus registros dentro del turno</p>
+                    </article>
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['opening_balance'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">Monto inicial del turno</p>
                     </article>
                     <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Tus ingresos</p>
@@ -166,9 +173,14 @@
                         <p class="text-xs text-rose-700 dark:text-rose-200">Salidas registradas por ti</p>
                     </article>
                     <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Tu balance</p>
-                        <p class="mt-1 text-xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['net_total'] ?? 0), $appCurrencyCode) }}</p>
-                        <p class="text-xs text-cyan-700 dark:text-cyan-200">{{ (int) ($panelSessionSummary['movements_count'] ?? 0) }} movimientos propios</p>
+                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Saldo visible</p>
+                        <p class="mt-1 text-xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['visible_total'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-cyan-700 dark:text-cyan-200">Apertura + tus movimientos</p>
+                    </article>
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($panelSessionSummary['movements_count'] ?? 0) }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">Registrados por tu usuario</p>
                     </article>
                 </div>
             @else

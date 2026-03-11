@@ -53,6 +53,7 @@ class ClientController extends Controller
         $gymIds = ActiveGymContext::ids($request);
         $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
         $canManageClientAccounts = $this->planAccessService->canForGym($gymId, 'client_accounts');
+        $clientAccountsAccessByGym = $this->planAccessService->canForGyms($gymIds, 'client_accounts');
         $search = trim((string) $request->query('q', ''));
         $quickFilter = (string) $request->query('filter', 'all');
         if (! in_array($quickFilter, ['all', 'active', 'expiring', 'expired', 'attended_today'], true)) {
@@ -159,26 +160,30 @@ class ClientController extends Controller
         $paymentsByMembership = $this->resolveMembershipPayments($gymIds, $clients);
         $clientMutationPolicies = $this->resolveClientMutationPolicies($request, $clients->getCollection());
         $clients->setCollection(
-            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now, $request, $clientMutationPolicies): array {
+            $clients->getCollection()->map(function (Client $client) use ($paymentsByMembership, $now, $request, $clientMutationPolicies, $clientAccountsAccessByGym): array {
                 $row = $this->buildClientCardRow($client, $paymentsByMembership, $now);
                 $mutationPolicy = $clientMutationPolicies[(int) ($client->gym_id ?? 0)] ?? [
                     'can_manage' => false,
                     'owner_scope_label' => 'dueño del gimnasio',
                     'owner_modal_hint' => 'Confirma con la contraseña del dueño del gimnasio.',
                 ];
+                $canShowProgress = (bool) ($clientAccountsAccessByGym[(int) ($client->gym_id ?? 0)] ?? false);
                 $row['show_url'] = $this->buildClientShowUrl(
                     $request,
                     (int) $client->id,
                     (int) ($client->gym_id ?? 0),
                     trim((string) ($client->gym_slug ?? ''))
                 );
-                $row['progress_url'] = $this->buildClientShowUrl(
-                    $request,
-                    (int) $client->id,
-                    (int) ($client->gym_id ?? 0),
-                    trim((string) ($client->gym_slug ?? '')),
-                    ['tab' => 'progress']
-                );
+                $row['can_show_progress'] = $canShowProgress;
+                $row['progress_url'] = $canShowProgress
+                    ? $this->buildClientShowUrl(
+                        $request,
+                        (int) $client->id,
+                        (int) ($client->gym_id ?? 0),
+                        trim((string) ($client->gym_slug ?? '')),
+                        ['tab' => 'progress']
+                    )
+                    : null;
                 $row['can_manage'] = (bool) ($mutationPolicy['can_manage'] ?? false);
                 $row['owner_scope_label'] = (string) ($mutationPolicy['owner_scope_label'] ?? 'dueño del gimnasio');
                 $row['owner_modal_hint'] = (string) ($mutationPolicy['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.');
@@ -571,6 +576,7 @@ class ClientController extends Controller
 
         $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
         $canManageClientAccounts = $this->planAccessService->canForGym($clientGymId, 'client_accounts');
+        $canShowProgress = $canManageClientAccounts;
         $canAdjustMemberships = $request->user() instanceof User && $request->user()->isOwner();
 
         $plans = Plan::query()
@@ -699,11 +705,13 @@ class ClientController extends Controller
                 ->get();
         }
 
-        $progressOverview = $this->clientProgressOverviewService->build(
-            client: $clientModel,
-            latestMembership: $latestMembership,
-            gymTimezone: (string) ($clientModel->gym?->timezone ?? '')
-        );
+        $progressOverview = $canShowProgress
+            ? $this->clientProgressOverviewService->build(
+                client: $clientModel,
+                latestMembership: $latestMembership,
+                gymTimezone: (string) ($clientModel->gym?->timezone ?? '')
+            )
+            : [];
 
         $clientTimezone = trim((string) ($clientModel->gym?->timezone ?? ''));
 
@@ -719,6 +727,7 @@ class ClientController extends Controller
             'promotions' => $promotions,
             'canManagePromotions' => $canManagePromotions,
             'canManageClientAccounts' => $canManageClientAccounts,
+            'canShowProgress' => $canShowProgress,
             'canAdjustMemberships' => $canAdjustMemberships,
             'progressOverview' => $progressOverview,
             'clientCreationAudit' => $this->buildClientAuditSummary(

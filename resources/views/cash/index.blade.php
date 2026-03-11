@@ -106,6 +106,7 @@
                     $closingMethodTotals = $closeMethodTotals ?? $activeMethodTotals;
                     $activeMovements = $latestMovements ?? collect();
                     $scopedNetTotal = round((float) ($activeSummary['income_total'] ?? 0) - (float) ($activeSummary['expense_total'] ?? 0), 2);
+                    $scopedVisibleTotal = round((float) $openSession->opening_balance + $scopedNetTotal, 2);
 
                     $methodMap = collect(['cash', 'card', 'transfer'])->map(function (string $method) use ($activeMethodTotals) {
                         $row = $activeMethodTotals->firstWhere('method', $method);
@@ -135,7 +136,11 @@
 
                 <x-ui.card title="{{ $isCashierScoped ? 'Tu producciÃ³n en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
                     @if ($isCashierScoped)
-                        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                            <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $currencyCode) }}</p>
+                            </article>
                             <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
                                 <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Tus ingresos</p>
                                 <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
@@ -145,8 +150,9 @@
                                 <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
                             </article>
                             <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Tu balance</p>
-                                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($scopedNetTotal, $currencyCode) }}</p>
+                                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Saldo visible</p>
+                                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($scopedVisibleTotal, $currencyCode) }}</p>
+                                <p class="text-xs text-cyan-700 dark:text-cyan-200">Apertura + tus movimientos</p>
                             </article>
                             <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>

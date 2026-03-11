@@ -225,18 +225,15 @@ class GymPanelController extends Controller
                 ->sum('amount');
 
             $openSessionScopedSummary = [
+                'opening_balance' => round((float) $openSession->opening_balance, 2),
                 'income_total' => round($sessionIncome, 2),
                 'expense_total' => round($sessionExpense, 2),
                 'net_total' => round($sessionIncome - $sessionExpense, 2),
+                'visible_total' => round((float) $openSession->opening_balance + $sessionIncome - $sessionExpense, 2),
                 'movements_count' => (int) $sessionMovementsBaseQuery()->count(),
             ];
 
-            $openSessionExpected = round(
-                $isCashierScoped
-                    ? (float) $openSessionScopedSummary['net_total']
-                    : (float) $openSession->opening_balance + $sessionIncome - $sessionExpense,
-                2
-            );
+            $openSessionExpected = round((float) $openSession->opening_balance + $sessionIncome - $sessionExpense, 2);
         }
 
         $upcomingRenewals = (clone $activeClientsBase)

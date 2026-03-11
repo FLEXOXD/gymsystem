@@ -212,22 +212,28 @@
             $errors->hasAny($appAccountErrorKeys) || old('active_tab') === 'app_access'
         );
 
-        $progressTabUrlParams = [
-            'client' => $client->id,
-            'tab' => 'progress',
-        ];
-        $contextGym = trim((string) request()->route('contextGym'));
-        if ($contextGym !== '') {
-            $progressTabUrlParams['contextGym'] = $contextGym;
+        $progressTabUrl = null;
+        if (! empty($canShowProgress)) {
+            $progressTabUrlParams = [
+                'client' => $client->id,
+                'tab' => 'progress',
+            ];
+            $contextGym = trim((string) request()->route('contextGym'));
+            if ($contextGym !== '') {
+                $progressTabUrlParams['contextGym'] = $contextGym;
+            }
+            $pwaMode = strtolower(trim((string) request()->query('pwa_mode', '')));
+            if ($pwaMode === 'standalone') {
+                $progressTabUrlParams['pwa_mode'] = 'standalone';
+            }
+            $progressTabUrl = route('clients.show', $progressTabUrlParams);
         }
-        $pwaMode = strtolower(trim((string) request()->query('pwa_mode', '')));
-        if ($pwaMode === 'standalone') {
-            $progressTabUrlParams['pwa_mode'] = 'standalone';
-        }
-        $progressTabUrl = route('clients.show', $progressTabUrlParams);
 
         $initialTab = 'summary';
-        $allowedTabs = ['summary', 'progress', 'membership', 'attendance', 'credentials'];
+        $allowedTabs = ['summary', 'membership', 'attendance', 'credentials'];
+        if (! empty($canShowProgress)) {
+            $allowedTabs[] = 'progress';
+        }
         if (! empty($canManageClientAccounts)) {
             $allowedTabs[] = 'app_access';
         }
@@ -324,9 +330,12 @@
             'canAdjustMemberships' => $canAdjustMemberships,
             'latestMembership' => $latestMembership,
             'progressTabUrl' => $progressTabUrl,
+            'canShowProgress' => $canShowProgress,
         ])
 
-        @include('clients.partials._tabs')
+        @include('clients.partials._tabs', [
+            'canShowProgress' => $canShowProgress,
+        ])
 
         <section x-cloak x-show="activeTab === 'summary'" x-transition.opacity class="client-tab-panel">
             @include('clients.partials._tab_summary', [
@@ -352,12 +361,14 @@
             ])
         </section>
 
-        <section x-cloak x-show="activeTab === 'progress'" x-transition.opacity class="client-tab-panel">
-            @include('clients.partials._tab_progress', [
-                'client' => $client,
-                'progressOverview' => $progressOverview,
-            ])
-        </section>
+        @if (! empty($canShowProgress))
+            <section x-cloak x-show="activeTab === 'progress'" x-transition.opacity class="client-tab-panel">
+                @include('clients.partials._tab_progress', [
+                    'client' => $client,
+                    'progressOverview' => $progressOverview,
+                ])
+            </section>
+        @endif
 
         <section x-cloak x-show="activeTab === 'membership'" x-transition.opacity class="client-tab-panel">
             @include('clients.partials._tab_membership_payments', [

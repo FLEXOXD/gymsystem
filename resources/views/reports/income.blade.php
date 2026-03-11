@@ -27,6 +27,11 @@
         $canExportReports = ! $isBranchContext
             && $activeGymId > 0
             && $planAccessService->canForGym($activeGymId, 'reports_export');
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $reportRouteParams = [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
         $methodLabels = [
             'cash' => 'Efectivo',
             'card' => 'Tarjeta',
@@ -36,6 +41,9 @@
     <div class="report-income space-y-4">
     <x-ui.card title="Filtro" subtitle="Consulta movimientos por rango de fecha.">
         <form method="GET" action="{{ route('reports.income') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
+            @if ($isGlobalScope)
+                <input type="hidden" name="scope" value="global">
+            @endif
             <label class="space-y-1 text-sm font-semibold ui-muted">
                 <span>Desde</span>
                 <input type="date" name="from" value="{{ $from->toDateString() }}" class="ui-input">
@@ -50,9 +58,9 @@
 
             <div class="flex gap-2">
                 @if ($canExportReports)
-                    <x-ui.button id="reports-income-export-pdf" :href="route('reports.export.pdf', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                    <x-ui.button id="reports-income-export-pdf" :href="route('reports.export.pdf', $reportRouteParams)"
                                  target="_blank" rel="noopener" class="js-loading-link" data-loading-text="Generando PDF...">Exportar PDF</x-ui.button>
-                    <x-ui.button id="reports-income-export-csv" :href="route('reports.export.csv', ['from' => $from->toDateString(), 'to' => $to->toDateString()])"
+                    <x-ui.button id="reports-income-export-csv" :href="route('reports.export.csv', $reportRouteParams)"
                                  data-ui-loading-ignore="1"
                                  variant="secondary">Exportar CSV</x-ui.button>
                 @else
@@ -114,6 +122,9 @@
                     <th class="px-3 py-3">Tipo</th>
                     <th class="px-3 py-3">Método</th>
                     <th class="px-3 py-3">Monto</th>
+                    @if (! empty($showGymColumn))
+                        <th class="px-3 py-3">Sede</th>
+                    @endif
                     <th class="px-3 py-3">Cliente</th>
                     <th class="px-3 py-3">Alta cliente</th>
                     <th class="px-3 py-3">Usuario</th>
@@ -128,6 +139,7 @@
                             (string) $movement->id,
                             (string) ($movement->occurred_at?->format('Y-m-d H:i') ?? ''),
                             (string) ($methodLabels[$movement->method] ?? $movement->method),
+                            (string) ($movement->gym?->name ?? ''),
                             (string) ($movement->membership?->client?->full_name ?? ''),
                             (string) (\App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? ''))),
                             (string) ($movement->createdBy?->name ?? ''),
@@ -148,6 +160,9 @@
                                 {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
                             </span>
                         </td>
+                        @if (! empty($showGymColumn))
+                            <td class="px-3 py-3">{{ $movement->gym?->name ?? '-' }}</td>
+                        @endif
                         <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                         <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
@@ -155,11 +170,11 @@
                     </tr>
                 @empty
                     <tr id="movement-empty-range">
-                        <td colspan="9" class="px-3 py-6 text-center text-sm text-slate-500">No hay movimientos en este rango.</td>
+                        <td colspan="{{ ! empty($showGymColumn) ? 10 : 9 }}" class="px-3 py-6 text-center text-sm text-slate-500">No hay movimientos en este rango.</td>
                     </tr>
                 @endforelse
                 <tr id="movement-empty-filter" class="hidden">
-                    <td colspan="9" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
+                    <td colspan="{{ ! empty($showGymColumn) ? 10 : 9 }}" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
                 </tr>
                 </tbody>
             </table>

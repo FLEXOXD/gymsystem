@@ -85,18 +85,24 @@ it('shows a cashier only their own income and movements in panel and cash', func
         ->get(route('panel.index', ['contextGym' => $gym->slug]))
         ->assertOk()
         ->assertSee('Vista privada')
+        ->assertSee('Apertura')
         ->assertSee('Cobro cajero visible')
         ->assertDontSee('Cobro owner oculto')
+        ->assertSee('20.00')
         ->assertSee('37.55')
+        ->assertSee('57.55')
         ->assertDontSee('111.11');
 
     $this->actingAs($cashier)
         ->get(route('cash.index', ['contextGym' => $gym->slug]))
         ->assertOk()
         ->assertSee('Vista privada')
+        ->assertSee('Apertura')
         ->assertSee('Cobro cajero visible')
         ->assertDontSee('Cobro owner oculto')
+        ->assertSee('20.00')
         ->assertSee('37.55')
+        ->assertSee('57.55')
         ->assertDontSee('111.11');
 });
 

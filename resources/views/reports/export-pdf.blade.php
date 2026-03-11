@@ -22,6 +22,9 @@
         $currencyFormatter = \App\Support\Currency::class;
     @endphp
     <h1>Reportes Profesionales - Gimnasio</h1>
+    @if (! empty($showGymColumn))
+        <p class="muted">Alcance: Global multi-sede</p>
+    @endif
     <p class="muted">Período: {{ $from->toDateString() }} a {{ $to->toDateString() }}</p>
 
     <h2>Resumen Financiero</h2>
@@ -104,6 +107,9 @@
             <th>Tipo</th>
             <th>Método</th>
             <th>Monto</th>
+            @if (! empty($showGymColumn))
+                <th>Sede</th>
+            @endif
             <th>Cliente</th>
             <th>Alta cliente</th>
             <th>Usuario</th>
@@ -118,13 +124,16 @@
                 <td>{{ match ($movement->type) { 'income' => 'Ingreso', 'expense' => 'Egreso', default => $movement->type } }}</td>
                 <td>{{ match ($movement->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $movement->method } }}</td>
                 <td>{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode) }}</td>
+                @if (! empty($showGymColumn))
+                    <td>{{ $movement->gym?->name ?? '-' }}</td>
+                @endif
                 <td>{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                 <td>{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                 <td>{{ $movement->createdBy?->name ?? '-' }}</td>
                 <td>{{ $movement->description ?: '-' }}</td>
             </tr>
         @empty
-            <tr><td colspan="9">Sin movimientos en este rango.</td></tr>
+            <tr><td colspan="{{ ! empty($showGymColumn) ? 10 : 9 }}">Sin movimientos en este rango.</td></tr>
         @endforelse
         </tbody>
     </table>

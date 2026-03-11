@@ -7,12 +7,14 @@
             Resumen
         </button>
 
-        <button type="button"
-                class="ui-button px-4 py-2 text-xs font-bold uppercase tracking-wide"
-                x-bind:class="activeTab === 'progress' ? 'ui-button-primary' : 'ui-button-ghost'"
-                x-on:click="setTab('progress')">
-            Rendimiento
-        </button>
+        @if (! empty($canShowProgress))
+            <button type="button"
+                    class="ui-button px-4 py-2 text-xs font-bold uppercase tracking-wide"
+                    x-bind:class="activeTab === 'progress' ? 'ui-button-primary' : 'ui-button-ghost'"
+                    x-on:click="setTab('progress')">
+                Rendimiento
+            </button>
+        @endif
 
         <button type="button"
                 class="ui-button px-4 py-2 text-xs font-bold uppercase tracking-wide"

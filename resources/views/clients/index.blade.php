@@ -301,10 +301,12 @@
                                             Ver
                                         </a>
 
-                                        <a href="{{ (string) ($client['progress_url'] ?? ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))) }}"
-                                           class="ui-button ui-button-ghost inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
-                                            Rendimiento
-                                        </a>
+                                        @if (! empty($client['can_show_progress']))
+                                            <a href="{{ (string) ($client['progress_url'] ?? ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))) }}"
+                                               class="ui-button ui-button-ghost inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
+                                                Rendimiento
+                                            </a>
+                                        @endif
 
                                         @if (! empty($client['can_manage']))
                                             <button type="button"

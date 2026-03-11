@@ -6,9 +6,11 @@ use App\Models\ClientFitnessProfile;
 use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -36,9 +38,36 @@ function makeProgressUser(Gym $gym, string $email): User
     ]);
 }
 
+function setProgressPlan(Gym $gym, string $planKey): void
+{
+    $payload = [
+        'plan_key' => $planKey,
+        'feature_version' => 'v1',
+        'status' => 'active',
+        'starts_at' => Carbon::today()->subDay()->toDateString(),
+        'ends_at' => Carbon::today()->addDays(30)->toDateString(),
+    ];
+
+    $updated = Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update($payload);
+
+    if ($updated === 0) {
+        Subscription::query()->create([
+            'gym_id' => $gym->id,
+            'plan_name' => ucfirst($planKey),
+            'price' => 29.99,
+            ...$payload,
+        ]);
+    }
+
+    Cache::forget('plan_access:gym:'.$gym->id.':plan_key');
+}
+
 it('renders the progress tab on client detail with computed metrics', function () {
     $gym = makeProgressGym('detail');
     $owner = makeProgressUser($gym, 'progress-detail@example.test');
+    setProgressPlan($gym, 'premium');
 
     $client = Client::query()->create([
         'gym_id' => $gym->id,
@@ -113,6 +142,7 @@ it('renders the progress tab on client detail with computed metrics', function (
 it('shows a progress shortcut on the clients index', function () {
     $gym = makeProgressGym('index');
     $owner = makeProgressUser($gym, 'progress-index@example.test');
+    setProgressPlan($gym, 'premium');
 
     Client::query()->create([
         'gym_id' => $gym->id,
@@ -129,4 +159,36 @@ it('shows a progress shortcut on the clients index', function () {
         ->assertOk()
         ->assertSee('Rendimiento')
         ->assertSee('tab=progress', false);
+});
+
+it('hides progress actions for plans without client pwa access', function () {
+    $gym = makeProgressGym('hidden');
+    $owner = makeProgressUser($gym, 'progress-hidden@example.test');
+    setProgressPlan($gym, 'profesional');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Cliente',
+        'last_name' => 'Sin Pwa',
+        'document_number' => 'PROG-HIDDEN-001',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('clients.index', ['contextGym' => $gym->slug]))
+        ->assertOk()
+        ->assertDontSee('Rendimiento')
+        ->assertDontSee('tab=progress', false);
+
+    $this->actingAs($owner)
+        ->get(route('clients.show', [
+            'contextGym' => $gym->slug,
+            'client' => $client->id,
+            'tab' => 'progress',
+        ]))
+        ->assertOk()
+        ->assertDontSee('Ver rendimiento')
+        ->assertDontSee('Analisis de rendimiento');
 });
