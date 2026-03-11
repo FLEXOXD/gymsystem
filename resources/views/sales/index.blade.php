@@ -1,0 +1,493 @@
+@extends('layouts.panel')
+
+@section('title', 'Ventas e inventario')
+@section('page-title', 'Ventas e inventario')
+
+@section('content')
+    @php
+        $currencyFormatter = \App\Support\Currency::class;
+        $planAccessService = app(\App\Services\PlanAccessService::class);
+        $contextGym = (string) request()->route('contextGym');
+        $isGlobalScope = (bool) ($isGlobalScope ?? false);
+        $activeGymId = (int) ($activeGymId ?? request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $canViewSalesReports = auth()->user()?->isOwner()
+            && $activeGymId > 0
+            && $planAccessService->canForGym($activeGymId, 'sales_inventory_reports');
+        $indexRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $methodLabels = [
+            'cash' => 'Efectivo',
+            'card' => 'Tarjeta',
+            'transfer' => 'Transferencia',
+        ];
+        $selectedProductId = (int) old('product_id', $selectedProductId ?? 0);
+        $selectedClientId = (int) old('client_id', 0);
+        $saleProductsPayload = $saleProducts->map(function ($product) {
+            return [
+                'id' => (int) $product->id,
+                'name' => (string) $product->name,
+                'sku' => (string) ($product->sku ?? ''),
+                'barcode' => (string) ($product->barcode ?? ''),
+                'stock' => (int) $product->stock,
+                'sale_price' => round((float) $product->sale_price, 2),
+            ];
+        })->values();
+    @endphp
+
+    <div class="space-y-5">
+        <div class="space-y-2">
+            @if (session('status'))
+                <div class="ui-alert ui-alert-success">{{ session('status') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="ui-alert ui-alert-danger">{{ $errors->first() }}</div>
+            @endif
+            @if ($isGlobalScope)
+                <div class="ui-alert ui-alert-info">Vista global activa: aqui analizas ventas e inventario consolidados, pero las ventas y ajustes se registran solo desde una sede especifica.</div>
+            @endif
+            @if (! $schemaReady)
+                <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para activar el modulo de ventas e inventario.</div>
+            @endif
+        </div>
+
+        <x-ui.card title="Centro comercial del gimnasio" subtitle="Separa ganancias, clientes y productos para que la operacion no quede mezclada.">
+            <div class="flex flex-wrap gap-2">
+                <x-ui.button :href="route('panel.index', $indexRouteParams)" variant="ghost">Ganancias del gimnasio</x-ui.button>
+                <x-ui.button :href="route('clients.index', $indexRouteParams)" variant="ghost">Panel de clientes</x-ui.button>
+                <x-ui.button :href="route('products.index', $indexRouteParams)" variant="secondary">Gestionar productos</x-ui.button>
+                @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
+                    <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Reportes del modulo</x-ui.button>
+                @endif
+            </div>
+        </x-ui.card>
+
+        <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ventas hoy</p>
+                <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($todaySummary['total_sales'] ?? 0) }}</p>
+                <p class="ui-muted mt-2 text-sm">{{ (int) ($todaySummary['units_sold'] ?? 0) }} unidades vendidas.</p>
+            </x-ui.card>
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ingreso hoy</p>
+                <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($todaySummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
+                <p class="ui-muted mt-2 text-sm">Ticket promedio {{ $currencyFormatter::format((float) ($todaySummary['average_ticket'] ?? 0), $appCurrencyCode) }}</p>
+            </x-ui.card>
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Utilidad hoy</p>
+                <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($todaySummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
+                <p class="ui-muted mt-2 text-sm">Costo {{ $currencyFormatter::format((float) ($todaySummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
+            </x-ui.card>
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ventas de la semana</p>
+                <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($weekSummary['total_sales'] ?? 0) }}</p>
+                <p class="ui-muted mt-2 text-sm">{{ (int) ($weekSummary['units_sold'] ?? 0) }} unidades esta semana.</p>
+            </x-ui.card>
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ingreso del mes</p>
+                <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($monthSummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
+                <p class="ui-muted mt-2 text-sm">{{ (int) ($monthSummary['total_sales'] ?? 0) }} ventas registradas.</p>
+            </x-ui.card>
+            <x-ui.card>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Utilidad del mes</p>
+                <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($monthSummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
+                <p class="ui-muted mt-2 text-sm">Costo {{ $currencyFormatter::format((float) ($monthSummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
+            </x-ui.card>
+        </section>
+
+        <section class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+            <x-ui.card title="Registrar venta de producto" subtitle="Cada venta descuenta stock y se envia directo a caja.">
+                @if (! $schemaReady)
+                    <p class="ui-alert ui-alert-warning">El formulario se activara despues de correr las migraciones del modulo.</p>
+                @elseif ($isGlobalScope)
+                    <p class="ui-alert ui-alert-info">Selecciona una sede puntual para registrar ventas. Desde vista global este modulo queda en modo analitico.</p>
+                @elseif ($saleProducts->isEmpty())
+                    <p class="ui-alert ui-alert-warning">No hay productos activos para vender. Crea al menos un producto y carga stock primero.</p>
+                    <div class="mt-3">
+                        <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="secondary">Ir a productos</x-ui.button>
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2" id="sales-form">
+                        @csrf
+
+                        <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
+                            <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                                <label class="space-y-1 text-sm font-semibold ui-muted">
+                                    <span>Escanear codigo</span>
+                                    <input id="sale-scan-input" type="text" class="ui-input" placeholder="Usa lector o el boton flotante para enviar SKU / codigo" autocomplete="off">
+                                </label>
+                                <x-ui.button type="button" id="sale-scan-search" variant="secondary">Buscar codigo</x-ui.button>
+                            </div>
+                            <p class="mt-2 text-xs ui-muted">Con lector fisico solo enfoca este campo y escanea. Si usas el boton flotante, el codigo llega en vivo desde el celular. Si el producto ya estaba seleccionado, otro escaneo suma una unidad.</p>
+                            <div id="sale-scan-feedback" class="mt-3 hidden rounded-xl border px-3 py-2 text-sm font-semibold"></div>
+                            <div id="sale-selected-preview" class="mt-3 hidden rounded-2xl border border-slate-200 bg-white/80 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <p id="sale-preview-name" class="text-base font-black text-slate-900 dark:text-slate-100"></p>
+                                        <p id="sale-preview-code" class="text-xs ui-muted"></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p id="sale-preview-price" class="text-sm font-bold text-emerald-700 dark:text-emerald-300"></p>
+                                        <p id="sale-preview-stock" class="text-xs ui-muted"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
+                            <span>Producto</span>
+                            <select name="product_id" id="sale-product-select" class="ui-input" required>
+                                <option value="">Selecciona un producto</option>
+                                @foreach ($saleProducts as $product)
+                                    <option value="{{ $product->id }}" @selected($selectedProductId === (int) $product->id)>
+                                        {{ $product->name }} | SKU {{ $product->sku ?: '---' }} | BAR {{ $product->barcode ?: '---' }} | stock {{ (int) $product->stock }} | {{ $currencyFormatter::format((float) $product->sale_price, $appCurrencyCode) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Cantidad</span>
+                            <input type="number" min="1" max="999999" name="quantity" id="sale-quantity-input" class="ui-input" required value="{{ old('quantity', 1) }}">
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Metodo</span>
+                            <select name="payment_method" class="ui-input" required>
+                                <option value="cash" @selected(old('payment_method') === 'cash')>Efectivo</option>
+                                <option value="card" @selected(old('payment_method') === 'card')>Tarjeta</option>
+                                <option value="transfer" @selected(old('payment_method') === 'transfer')>Transferencia</option>
+                            </select>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
+                            <span>Cliente opcional</span>
+                            <select name="client_id" class="ui-input">
+                                <option value="">Venta sin cliente vinculado</option>
+                                @foreach ($saleClients as $client)
+                                    <option value="{{ $client->id }}" @selected($selectedClientId === (int) $client->id)>
+                                        {{ $client->full_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
+                            <span>Notas</span>
+                            <textarea name="notes" rows="3" class="ui-input" placeholder="Ej: bebida, guantes, proteina, promo del dia">{{ old('notes') }}</textarea>
+                        </label>
+
+                        <div class="flex flex-wrap gap-2 md:col-span-2">
+                            <x-ui.button type="submit">Registrar venta</x-ui.button>
+                            <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="ghost">Abrir productos</x-ui.button>
+                            @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
+                                <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym])" variant="ghost">Ver reportes</x-ui.button>
+                            @endif
+                        </div>
+                    </form>
+                @endif
+            </x-ui.card>
+
+            <x-ui.card title="Control rapido de inventario" subtitle="Lectura operativa del mes actual para reponer a tiempo.">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos del mes</p>
+                        <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
+                    </article>
+                    <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Unidades que entraron</p>
+                        <p class="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ (int) ($inventorySummary['units_in'] ?? 0) }}</p>
+                    </article>
+                    <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Unidades que salieron</p>
+                        <p class="mt-2 text-2xl font-black text-rose-800 dark:text-rose-100">{{ (int) ($inventorySummary['units_out'] ?? 0) }}</p>
+                    </article>
+                    <article class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200">Ajustes manuales</p>
+                        <p class="mt-2 text-2xl font-black text-amber-800 dark:text-amber-100">{{ (int) ($inventorySummary['manual_adjustments'] ?? 0) }}</p>
+                    </article>
+                    <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Productos con stock bajo</p>
+                        <p class="mt-2 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $lowStockProducts->count() }}</p>
+                    </article>
+                </div>
+            </x-ui.card>
+        </section>
+
+        <section class="grid gap-4 xl:grid-cols-2">
+            <x-ui.card title="Productos mas vendidos del mes" subtitle="Los articulos que mas estan empujando ingresos.">
+                <div class="smart-list-wrap">
+                    <table class="ui-table w-full min-w-[720px] text-sm">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                @if ($showGymColumn)
+                                    <th>Sede</th>
+                                @endif
+                                <th>Categoria</th>
+                                <th>Unidades</th>
+                                <th>Ingreso</th>
+                                <th>Utilidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($topProducts as $product)
+                                <tr>
+                                    <td class="font-semibold">{{ $product->product_name }}</td>
+                                    @if ($showGymColumn)
+                                        <td>{{ $product->gym_name ?? '-' }}</td>
+                                    @endif
+                                    <td>{{ $product->product_category ?: '-' }}</td>
+                                    <td>{{ (int) $product->units_sold }}</td>
+                                    <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
+                                    <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">Aun no hay ventas registradas en este periodo.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-ui.card>
+
+            <x-ui.card title="Stock bajo o critico" subtitle="Productos activos que ya llegaron al minimo.">
+                <div class="smart-list-wrap">
+                    <table class="ui-table w-full min-w-[660px] text-sm">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                @if ($showGymColumn)
+                                    <th>Sede</th>
+                                @endif
+                                <th>Categoria</th>
+                                <th>Stock</th>
+                                <th>Minimo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($lowStockProducts as $product)
+                                <tr>
+                                    <td class="font-semibold">{{ $product->name }}</td>
+                                    @if ($showGymColumn)
+                                        <td>{{ $product->gym_name ?? '-' }}</td>
+                                    @endif
+                                    <td>{{ $product->category ?: '-' }}</td>
+                                    <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
+                                    <td>{{ (int) $product->min_stock }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="py-8 text-center ui-muted">No hay productos en alerta de stock.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-ui.card>
+        </section>
+
+        <x-ui.card title="Ultimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos.">
+            <div class="smart-list-wrap">
+                <table class="ui-table w-full min-w-[1120px] text-sm">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            @if ($showGymColumn)
+                                <th>Sede</th>
+                            @endif
+                            <th>Producto</th>
+                            <th>Cliente</th>
+                            <th>Usuario</th>
+                            <th>Metodo</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Utilidad</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($recentSales as $sale)
+                            <tr>
+                                <td>{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                @if ($showGymColumn)
+                                    <td>{{ $sale->gym?->name ?? '-' }}</td>
+                                @endif
+                                <td>
+                                    <div class="font-semibold">{{ $sale->product?->name ?? '-' }}</div>
+                                    <div class="ui-muted text-xs">{{ $sale->product?->category ?: 'Sin categoria' }}</div>
+                                </td>
+                                <td>{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
+                                <td>{{ $sale->soldBy?->name ?? '-' }}</td>
+                                <td>{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
+                                <td>{{ (int) $sale->quantity }}</td>
+                                <td class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
+                                <td class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
+                                <td>{{ $sale->notes ?: '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">Todavia no hay ventas de productos registradas.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-ui.card>
+    </div>
+
+    @include('sales_inventory.partials.remote-scanner-fab', [
+        'scanContext' => 'sales',
+        'contextGym' => $contextGym,
+        'schemaReady' => $schemaReady,
+        'isGlobalScope' => $isGlobalScope,
+    ])
+@endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const products = @json($saleProductsPayload);
+        const scanInput = document.getElementById('sale-scan-input');
+        const searchButton = document.getElementById('sale-scan-search');
+        const select = document.getElementById('sale-product-select');
+        const quantityInput = document.getElementById('sale-quantity-input');
+        const feedback = document.getElementById('sale-scan-feedback');
+        const preview = document.getElementById('sale-selected-preview');
+        const previewName = document.getElementById('sale-preview-name');
+        const previewCode = document.getElementById('sale-preview-code');
+        const previewPrice = document.getElementById('sale-preview-price');
+        const previewStock = document.getElementById('sale-preview-stock');
+
+        if (!scanInput || !select || !quantityInput) {
+            return;
+        }
+
+        let autoSearchTimer = null;
+
+        function normalize(value) {
+            return (value || '')
+                .toString()
+                .trim()
+                .toUpperCase()
+                .replace(/\s+/g, '');
+        }
+
+        function setFeedback(text, tone) {
+            if (!feedback) return;
+
+            feedback.textContent = text;
+            feedback.classList.remove('hidden', 'border-emerald-300', 'bg-emerald-50', 'text-emerald-800', 'border-rose-300', 'bg-rose-50', 'text-rose-800', 'border-cyan-300', 'bg-cyan-50', 'text-cyan-800');
+
+            if (tone === 'success') {
+                feedback.classList.add('border-emerald-300', 'bg-emerald-50', 'text-emerald-800');
+            } else if (tone === 'error') {
+                feedback.classList.add('border-rose-300', 'bg-rose-50', 'text-rose-800');
+            } else {
+                feedback.classList.add('border-cyan-300', 'bg-cyan-50', 'text-cyan-800');
+            }
+        }
+
+        function renderPreview(product) {
+            if (!preview || !previewName || !previewCode || !previewPrice || !previewStock) return;
+
+            if (!product) {
+                preview.classList.add('hidden');
+                return;
+            }
+
+            preview.classList.remove('hidden');
+            previewName.textContent = product.name;
+            previewCode.textContent = 'SKU ' + (product.sku || '---') + ' | BAR ' + (product.barcode || '---');
+            previewPrice.textContent = '$' + Number(product.sale_price || 0).toFixed(2);
+            previewStock.textContent = 'Stock disponible: ' + Number(product.stock || 0);
+        }
+
+        function findProductByCode(rawCode) {
+            const code = normalize(rawCode);
+            if (code === '') return null;
+
+            return products.find(function (product) {
+                return normalize(product.barcode) === code || normalize(product.sku) === code;
+            }) || null;
+        }
+
+        function getSelectedProduct() {
+            const productId = Number(select.value || 0);
+            return products.find(function (product) {
+                return Number(product.id) === productId;
+            }) || null;
+        }
+
+        function applyProduct(product, incrementQuantity) {
+            if (!product) return;
+
+            const currentProductId = Number(select.value || 0);
+            select.value = String(product.id);
+
+            if (incrementQuantity && currentProductId === Number(product.id)) {
+                quantityInput.value = String(Math.max(1, Number(quantityInput.value || 0) + 1));
+            } else if (!quantityInput.value || Number(quantityInput.value) < 1) {
+                quantityInput.value = '1';
+            }
+
+            renderPreview(product);
+        }
+
+        function resolveScan() {
+            if (autoSearchTimer) {
+                clearTimeout(autoSearchTimer);
+                autoSearchTimer = null;
+            }
+
+            const product = findProductByCode(scanInput.value);
+
+            if (!product) {
+                setFeedback('No encontre un producto con ese SKU o codigo de barras.', 'error');
+                return;
+            }
+
+            applyProduct(product, true);
+            setFeedback('Producto detectado: ' + product.name, 'success');
+            scanInput.select();
+            quantityInput.focus();
+        }
+
+        searchButton?.addEventListener('click', resolveScan);
+
+        scanInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                resolveScan();
+            }
+        });
+
+        scanInput.addEventListener('input', function () {
+            if (autoSearchTimer) {
+                clearTimeout(autoSearchTimer);
+            }
+
+            autoSearchTimer = window.setTimeout(function () {
+                if (normalize(scanInput.value).length >= 6) {
+                    resolveScan();
+                }
+            }, 220);
+        });
+
+        select.addEventListener('change', function () {
+            renderPreview(getSelectedProduct());
+        });
+
+        window.addEventListener('remote-scanner:scan', function (event) {
+            const code = (event.detail?.code || '').toString().trim();
+            if (code === '') {
+                return;
+            }
+
+            scanInput.value = code;
+            resolveScan();
+        });
+
+        renderPreview(getSelectedProduct());
+    })();
+</script>
+@endpush

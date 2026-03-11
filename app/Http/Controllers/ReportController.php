@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashMovement;
+use App\Models\ProductSale;
 use App\Services\ReportService;
 use App\Support\ActiveGymContext;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -10,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class ReportController extends Controller
 {
@@ -188,6 +190,69 @@ class ReportController extends Controller
             'membershipSummary' => $membershipSummary,
             'activeClients' => $membershipLists['active_clients'],
             'expiredClients' => $membershipLists['expired_clients'],
+        ]);
+    }
+
+    /**
+     * Sales and inventory report detail.
+     */
+    public function salesInventory(Request $request): View
+    {
+        $this->resolveGymId($request);
+        $gymIds = ActiveGymContext::ids($request);
+        $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $showGymColumn = $isGlobalScope && count($gymIds) > 1;
+        ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
+
+        $schemaReady = Schema::hasTable('products')
+            && Schema::hasTable('product_sales')
+            && Schema::hasTable('product_stock_movements');
+
+        $salesSummary = [
+            'total_sales' => 0,
+            'units_sold' => 0,
+            'total_revenue' => 0,
+            'total_cost' => 0,
+            'total_profit' => 0,
+            'average_ticket' => 0,
+        ];
+        $inventorySummary = [
+            'movement_count' => 0,
+            'units_in' => 0,
+            'units_out' => 0,
+            'manual_adjustments' => 0,
+        ];
+        $salesByDay = collect();
+        $topProducts = collect();
+        $lowStockProducts = collect();
+        $recentSales = null;
+
+        if ($schemaReady) {
+            $salesSummary = $this->reportService->getProductSalesSummary($gymIds, $from, $to);
+            $inventorySummary = $this->reportService->getInventoryMovementSummary($gymIds, $from, $to);
+            $salesByDay = $this->reportService->getProductSalesByDay($gymIds, $from, $to);
+            $topProducts = $this->reportService->getTopSellingProducts($gymIds, $from, $to, 10);
+            $lowStockProducts = $this->reportService->getLowStockProducts($gymIds, 10);
+            $recentSales = ProductSale::query()
+                ->forGyms($gymIds)
+                ->betweenSoldAt($from, $to)
+                ->with(['product:id,name,category', 'soldBy:id,name', 'client:id,first_name,last_name', 'gym:id,name'])
+                ->orderByDesc('sold_at')
+                ->paginate(40)
+                ->withQueryString();
+        }
+
+        return view('reports.sales-inventory', [
+            'from' => $from,
+            'to' => $to,
+            'schemaReady' => $schemaReady,
+            'showGymColumn' => $showGymColumn,
+            'salesSummary' => $salesSummary,
+            'inventorySummary' => $inventorySummary,
+            'salesByDay' => $salesByDay,
+            'topProducts' => $topProducts,
+            'lowStockProducts' => $lowStockProducts,
+            'recentSales' => $recentSales,
         ]);
     }
 

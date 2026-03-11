@@ -23,6 +23,8 @@ return [
             'multi_branch' => false,
             'pwa_install' => false,
             'client_accounts' => false,
+            'sales_inventory' => false,
+            'sales_inventory_reports' => false,
         ],
         'profesional' => [
             'promotions' => true,
@@ -31,6 +33,8 @@ return [
             'multi_branch' => false,
             'pwa_install' => true,
             'client_accounts' => false,
+            'sales_inventory' => true,
+            'sales_inventory_reports' => true,
         ],
         'premium' => [
             'promotions' => true,
@@ -39,6 +43,8 @@ return [
             'multi_branch' => false,
             'pwa_install' => true,
             'client_accounts' => true,
+            'sales_inventory' => true,
+            'sales_inventory_reports' => true,
         ],
         'sucursales' => [
             'promotions' => true,
@@ -47,6 +53,8 @@ return [
             'multi_branch' => true,
             'pwa_install' => true,
             'client_accounts' => true,
+            'sales_inventory' => true,
+            'sales_inventory_reports' => true,
         ],
     ],
 ];

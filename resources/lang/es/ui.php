@@ -26,6 +26,8 @@ return [
         'plans' => 'Planes',
         'cash' => 'Caja',
         'reports' => 'Reportes',
+        'sales_inventory' => 'Ventas e inventario',
+        'products' => 'Productos',
     ],
 
     'toast' => [

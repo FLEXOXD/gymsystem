@@ -96,6 +96,30 @@ class Gym extends Model
     }
 
     /**
+     * Get products that belong to the gym.
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Get product sales for this gym.
+     */
+    public function productSales(): HasMany
+    {
+        return $this->hasMany(ProductSale::class);
+    }
+
+    /**
+     * Get stock movements for this gym.
+     */
+    public function productStockMovements(): HasMany
+    {
+        return $this->hasMany(ProductStockMovement::class);
+    }
+
+    /**
      * Get subscriptions that belong to the gym.
      */
     public function subscriptions(): HasMany

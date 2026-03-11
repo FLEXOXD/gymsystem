@@ -1,8 +1,8 @@
 
 @extends('layouts.panel')
 
-@section('title', 'Panel de control')
-@section('page-title', 'Panel de control')
+@section('title', 'Ganancias del gimnasio')
+@section('page-title', 'Ganancias del gimnasio')
 
 @section('content')
     @php
@@ -18,6 +18,11 @@
         $monthlyBarsMax = max(1, (float) collect($incomeLast6Months)->max('income'));
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $isCashierScoped = (bool) ($isCashierScoped ?? false);
+        $planAccessService = app(\App\Services\PlanAccessService::class);
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $canUseSalesInventory = $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
+        $contextGym = (string) request()->route('contextGym');
+        $panelRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
         $panelSessionSummary = $openSessionScopedSummary ?? [
             'opening_balance' => 0,
             'income_total' => 0,
@@ -70,7 +75,10 @@
 
         <div class="mt-4 flex flex-wrap gap-2">
             <x-ui.button :href="route('reception.index')" variant="primary">Ir a recepción</x-ui.button>
-            <x-ui.button id="tour-panel-go-clients" :href="route('clients.index')" variant="secondary">Gestionar clientes</x-ui.button>
+            <x-ui.button id="tour-panel-go-clients" :href="route('clients.index')" variant="secondary">Panel de clientes</x-ui.button>
+            @if ($canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index'))
+                <x-ui.button :href="route('sales.index', $panelRouteParams)" variant="secondary">Ventas e inventario</x-ui.button>
+            @endif
             <x-ui.button :href="route('plans.index')" variant="ghost">Ver planes</x-ui.button>
             <x-ui.button :href="route('cash.index')" variant="ghost">Ir a caja</x-ui.button>
         </div>

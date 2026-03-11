@@ -166,6 +166,7 @@
         }
     }
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
+    $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
     $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
@@ -178,7 +179,7 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index', 'staff.index', 'client-portal.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
     $showGlobalBranchOption = ! request()->routeIs('client-portal.*');
@@ -271,6 +272,12 @@
             ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
             ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
         ];
+    if ($canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index')) {
+        $salesNavItem = ['label' => __('ui.nav.sales_inventory'), 'route' => 'sales.index', 'params' => $gymRouteParams, 'active' => 'sales.*', 'icon' => 'sales_inventory'];
+        $productsNavItem = ['label' => __('ui.nav.products'), 'route' => 'products.index', 'params' => $gymRouteParams, 'active' => 'products.*', 'icon' => 'products'];
+
+        array_splice($gymNavItems, 3, 0, [$salesNavItem, $productsNavItem]);
+    }
     if (! $isCashierMode && \Illuminate\Support\Facades\Route::has('staff.index')) {
         $gymNavItems[] = ['label' => 'Cajeros', 'route' => 'staff.index', 'params' => $gymRouteParams, 'active' => 'staff.*', 'icon' => 'staff'];
     }
@@ -1485,6 +1492,19 @@
                                     <rect x="7.5" y="2.8" width="9" height="18.4" rx="2.3" stroke="currentColor" stroke-width="1.8"/>
                                     <path d="M11 18.3h2M9.4 6.7h5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     <path d="M3.8 10h2.3M18 10h2.2M5.3 6.3 6.9 7.9M18.7 6.3 17.1 7.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('sales_inventory')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 18.5h16M7.5 15V9.5M12 15V6.5M16.5 15v-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M6 5.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                @break
+                            @case('products')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 3 4.5 7 12 11l7.5-4L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <path d="M4.5 7v10L12 21l7.5-4V7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <path d="M12 11v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
                                 @break
                             @default

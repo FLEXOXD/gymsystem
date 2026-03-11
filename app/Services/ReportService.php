@@ -7,6 +7,9 @@ use App\Models\AttendanceDailySummary;
 use App\Models\CashMovement;
 use App\Models\Client;
 use App\Models\Membership;
+use App\Models\Product;
+use App\Models\ProductSale;
+use App\Models\ProductStockMovement;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -215,6 +218,140 @@ class ReportService
         return [
             'active_clients' => $active->values(),
             'expired_clients' => $expired->values(),
+        ];
+    }
+
+    /**
+     * Product sales summary for selected period.
+     *
+     * @return array<string, float|int>
+     */
+    public function getProductSalesSummary(int|array $gymIdOrIds, Carbon $from, Carbon $to): array
+    {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
+        $totals = ProductSale::query()
+            ->forGyms($gymIds)
+            ->betweenSoldAt($from, $to)
+            ->selectRaw('COUNT(*) as total_sales')
+            ->selectRaw('COALESCE(SUM(quantity), 0) as units_sold')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_revenue')
+            ->selectRaw('COALESCE(SUM(total_cost), 0) as total_cost')
+            ->selectRaw('COALESCE(SUM(total_profit), 0) as total_profit')
+            ->first();
+
+        $salesCount = (int) ($totals->total_sales ?? 0);
+        $revenue = (float) ($totals->total_revenue ?? 0);
+
+        return [
+            'total_sales' => $salesCount,
+            'units_sold' => (int) ($totals->units_sold ?? 0),
+            'total_revenue' => $revenue,
+            'total_cost' => (float) ($totals->total_cost ?? 0),
+            'total_profit' => (float) ($totals->total_profit ?? 0),
+            'average_ticket' => $salesCount > 0 ? round($revenue / $salesCount, 2) : 0,
+        ];
+    }
+
+    public function getProductSalesByDay(int|array $gymIdOrIds, Carbon $from, Carbon $to): Collection
+    {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
+
+        return ProductSale::query()
+            ->forGyms($gymIds)
+            ->betweenSoldAt($from, $to)
+            ->selectRaw('DATE(sold_at) as date')
+            ->selectRaw('COUNT(*) as sales_count')
+            ->selectRaw('COALESCE(SUM(quantity), 0) as units_sold')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_revenue')
+            ->selectRaw('COALESCE(SUM(total_profit), 0) as total_profit')
+            ->groupByRaw('DATE(sold_at)')
+            ->orderByRaw('DATE(sold_at)')
+            ->get();
+    }
+
+    public function getTopSellingProducts(int|array $gymIdOrIds, Carbon $from, Carbon $to, int $limit = 8): Collection
+    {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
+
+        return ProductSale::query()
+            ->forGyms($gymIds)
+            ->betweenSoldAt($from, $to)
+            ->join('products', 'products.id', '=', 'product_sales.product_id')
+            ->leftJoin('gyms', 'gyms.id', '=', 'product_sales.gym_id')
+            ->select([
+                'product_sales.product_id',
+                'products.name as product_name',
+                'products.category as product_category',
+                'gyms.name as gym_name',
+            ])
+            ->selectRaw('COALESCE(SUM(product_sales.quantity), 0) as units_sold')
+            ->selectRaw('COALESCE(SUM(product_sales.total_amount), 0) as total_revenue')
+            ->selectRaw('COALESCE(SUM(product_sales.total_profit), 0) as total_profit')
+            ->groupBy('product_sales.product_id', 'products.name', 'products.category', 'gyms.name')
+            ->orderByDesc('units_sold')
+            ->orderByDesc('total_revenue')
+            ->limit(max(1, $limit))
+            ->get();
+    }
+
+    public function getLowStockProducts(int|array $gymIdOrIds, int $limit = 10): Collection
+    {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
+
+        return Product::query()
+            ->forGyms($gymIds)
+            ->leftJoin('gyms', 'gyms.id', '=', 'products.gym_id')
+            ->select([
+                'products.id',
+                'products.gym_id',
+                'products.name',
+                'products.category',
+                'products.stock',
+                'products.min_stock',
+                'products.status',
+                'gyms.name as gym_name',
+            ])
+            ->where('products.status', 'active')
+            ->whereColumn('products.stock', '<=', 'products.min_stock')
+            ->orderBy('products.stock')
+            ->orderBy('products.name')
+            ->limit(max(1, $limit))
+            ->get();
+    }
+
+    /**
+     * @return array<string, float|int>
+     */
+    public function getInventoryMovementSummary(int|array $gymIdOrIds, Carbon $from, Carbon $to): array
+    {
+        $gymIds = $this->normalizeGymIds($gymIdOrIds);
+        $movements = ProductStockMovement::query()
+            ->forGyms($gymIds)
+            ->betweenOccurredAt($from, $to)
+            ->get(['type', 'quantity_change']);
+
+        $unitsIn = 0;
+        $unitsOut = 0;
+        $manualAdjustments = 0;
+
+        foreach ($movements as $movement) {
+            $change = (int) ($movement->quantity_change ?? 0);
+            if ($change > 0) {
+                $unitsIn += $change;
+            } elseif ($change < 0) {
+                $unitsOut += abs($change);
+            }
+
+            if (str_starts_with((string) ($movement->type ?? ''), 'adjustment')) {
+                $manualAdjustments++;
+            }
+        }
+
+        return [
+            'movement_count' => (int) $movements->count(),
+            'units_in' => $unitsIn,
+            'units_out' => $unitsOut,
+            'manual_adjustments' => $manualAdjustments,
         ];
     }
 }

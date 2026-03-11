@@ -26,6 +26,9 @@ use App\Http\Controllers\SuperAdminQuotationController;
 use App\Http\Controllers\SubscriptionAdminController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\PwaEventController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RemoteScanController;
+use App\Http\Controllers\SalesInventoryController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Http\Request;
@@ -75,6 +78,13 @@ Route::get('/client-qr/{client}/image', [ClientCardController::class, 'publicQrI
 Route::get('/client-qr/{client}/download', [ClientCardController::class, 'publicQrDownload'])
     ->middleware('signed')
     ->name('clients.card.public-download');
+Route::get('/scan/{contextGym}/{channel}', [RemoteScanController::class, 'mobile'])
+    ->middleware(['signed:relative', 'throttle:240,1'])
+    ->name('remote-scanner.mobile');
+Route::post('/scan/{contextGym}/{channel}/capture', [RemoteScanController::class, 'capture'])
+    ->middleware(['signed:relative', 'throttle:240,1'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+    ->name('remote-scanner.capture');
 Route::get('/demo', [MarketingController::class, 'demo'])->name('demo');
 Route::get('/demo/guia', [MarketingController::class, 'demoGuide'])->name('demo.guide');
 Route::post('/demo/solicitar', [MarketingController::class, 'requestDemo'])
@@ -430,6 +440,38 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                     ->middleware('role:owner,cashier')
                     ->name('cash.sessions.show');
 
+                Route::get('/sales', [SalesInventoryController::class, 'index'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('sales.index');
+                Route::post('/sales', [SalesInventoryController::class, 'storeSale'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('sales.store');
+                Route::post('/remote-scanner/sessions', [RemoteScanController::class, 'createSession'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('remote-scanner.sessions.store');
+                Route::get('/remote-scanner/{channel}/stream', [RemoteScanController::class, 'stream'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('remote-scanner.stream');
+                Route::delete('/remote-scanner/{channel}', [RemoteScanController::class, 'close'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('remote-scanner.close');
+
+                Route::get('/products', [ProductController::class, 'index'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('products.index');
+                Route::post('/products', [ProductController::class, 'store'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('products.store');
+                Route::put('/products/{product}', [ProductController::class, 'update'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('products.update');
+                Route::patch('/products/{product}/toggle', [ProductController::class, 'toggle'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('products.toggle');
+                Route::post('/products/{product}/stock', [ProductController::class, 'adjustStock'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
+                    ->name('products.stock');
+
                 Route::get('/sucursales', [BranchController::class, 'index'])
                     ->middleware(['role:owner', 'not.branch:manage_branches', 'plan.feature:multi_branch'])
                     ->name('branches.index');
@@ -446,6 +488,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/reports/memberships', [ReportController::class, 'memberships'])
                     ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.memberships');
+                Route::get('/reports/sales-inventory', [ReportController::class, 'salesInventory'])
+                    ->middleware(['role:owner', 'plan.feature:sales_inventory_reports'])
+                    ->name('reports.sales-inventory');
                 Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])
                     ->middleware(['role:owner', 'plan.feature:reports_export', 'not.branch:export_reports'])
                     ->name('reports.export.csv');
