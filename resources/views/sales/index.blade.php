@@ -19,8 +19,27 @@
             'card' => 'Tarjeta',
             'transfer' => 'Transferencia',
         ];
+        $monthLabels = [
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre',
+        ];
         $selectedProductId = (int) old('product_id', $selectedProductId ?? 0);
         $selectedClientId = (int) old('client_id', 0);
+        $salesHistoryFilters = is_array($salesHistoryFilters ?? null) ? $salesHistoryFilters : ['year' => 0, 'month' => 0, 'day' => 0];
+        $selectedSalesYear = (int) ($salesHistoryFilters['year'] ?? 0);
+        $selectedSalesMonth = (int) ($salesHistoryFilters['month'] ?? 0);
+        $selectedSalesDay = (int) ($salesHistoryFilters['day'] ?? 0);
+        $openSalesHistoryModal = (bool) ($openSalesHistoryModal ?? false);
         $saleProductsPayload = $saleProducts->map(function ($product) {
             return [
                 'id' => (int) $product->id,
@@ -287,6 +306,11 @@
         </section>
 
         <x-ui.card title="Ultimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos.">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <p class="text-xs ui-muted">Esta vista muestra solo las ultimas 12 ventas.</p>
+                <x-ui.button type="button" id="open-sales-history-modal" variant="ghost" size="sm">Ver todas por fecha</x-ui.button>
+            </div>
+
             <div class="smart-list-wrap">
                 <table class="ui-table w-full min-w-[1120px] text-sm">
                     <thead>
@@ -333,6 +357,114 @@
                 </table>
             </div>
         </x-ui.card>
+
+        <div id="sales-history-modal"
+             data-auto-open="{{ $openSalesHistoryModal ? '1' : '0' }}"
+             class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-950/80 p-4">
+            <div class="w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
+                <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Historial completo</p>
+                        <h3 class="mt-2 text-2xl font-black text-slate-100">Ventas por dia, mes y ano</h3>
+                        <p class="mt-1 text-sm text-slate-300">
+                            Total encontrado: {{ (int) ($salesHistoryTotal ?? 0) }} venta{{ ((int) ($salesHistoryTotal ?? 0)) === 1 ? '' : 's' }}.
+                            @if ($salesHistoryTruncated ?? false)
+                                Mostrando las ultimas 300 para mantener la vista rapida.
+                            @endif
+                        </p>
+                    </div>
+                    <button type="button" id="close-sales-history-modal" class="ui-button ui-button-ghost px-3 py-2 text-sm font-semibold">Cerrar</button>
+                </div>
+
+                <div class="space-y-4 p-5">
+                    <form method="GET" action="{{ route('sales.index', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto] md:items-end">
+                        @if ($isGlobalScope)
+                            <input type="hidden" name="scope" value="global">
+                        @endif
+                        <input type="hidden" name="sales_history_open" value="1">
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Ano</span>
+                            <select name="sales_year" class="ui-input">
+                                <option value="0">Todos</option>
+                                @foreach (($salesHistoryYears ?? collect()) as $yearOption)
+                                    <option value="{{ (int) $yearOption }}" @selected($selectedSalesYear === (int) $yearOption)>{{ (int) $yearOption }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Mes</span>
+                            <select name="sales_month" class="ui-input">
+                                <option value="0">Todos</option>
+                                @foreach ($monthLabels as $monthValue => $monthName)
+                                    <option value="{{ $monthValue }}" @selected($selectedSalesMonth === $monthValue)>{{ $monthName }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Dia</span>
+                            <select name="sales_day" class="ui-input">
+                                <option value="0">Todos</option>
+                                @for ($dayOption = 1; $dayOption <= 31; $dayOption++)
+                                    <option value="{{ $dayOption }}" @selected($selectedSalesDay === $dayOption)>{{ str_pad((string) $dayOption, 2, '0', STR_PAD_LEFT) }}</option>
+                                @endfor
+                            </select>
+                        </label>
+
+                        <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
+                        <x-ui.button :href="route('sales.index', ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []) + ['sales_history_open' => 1])" variant="ghost">Limpiar</x-ui.button>
+                    </form>
+
+                    <div class="smart-list-wrap max-h-[56vh]">
+                        <table class="ui-table w-full min-w-[1240px] text-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    @if ($showGymColumn)
+                                        <th>Sede</th>
+                                    @endif
+                                    <th>Producto</th>
+                                    <th>Cliente</th>
+                                    <th>Usuario</th>
+                                    <th>Metodo</th>
+                                    <th>Cantidad</th>
+                                    <th>Total</th>
+                                    <th>Utilidad</th>
+                                    <th>Notas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse (($salesHistoryRows ?? collect()) as $sale)
+                                    <tr>
+                                        <td>{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                        @if ($showGymColumn)
+                                            <td>{{ $sale->gym?->name ?? '-' }}</td>
+                                        @endif
+                                        <td>
+                                            <div class="font-semibold">{{ $sale->product?->name ?? '-' }}</div>
+                                            <div class="ui-muted text-xs">{{ $sale->product?->category ?: 'Sin categoria' }}</div>
+                                        </td>
+                                        <td>{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
+                                        <td>{{ $sale->soldBy?->name ?? '-' }}</td>
+                                        <td>{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
+                                        <td>{{ (int) $sale->quantity }}</td>
+                                        <td class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
+                                        <td class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
+                                        <td>{{ $sale->notes ?: '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">No hay ventas en ese filtro.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @include('sales_inventory.partials.remote-scanner-fab', [
@@ -504,6 +636,51 @@
         }
 
         renderPreview(getSelectedProduct());
+    })();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    (function () {
+        const modal = document.getElementById('sales-history-modal');
+        const openButton = document.getElementById('open-sales-history-modal');
+        const closeButton = document.getElementById('close-sales-history-modal');
+
+        if (!modal || !openButton) {
+            return;
+        }
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        openButton.addEventListener('click', openModal);
+        closeButton?.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && modal.classList.contains('flex')) {
+                closeModal();
+            }
+        });
+
+        if (modal.dataset.autoOpen === '1') {
+            openModal();
+        }
     })();
 </script>
 @endpush

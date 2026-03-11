@@ -32,6 +32,16 @@ class SalesInventoryController extends Controller
         $showGymColumn = $isGlobalScope && count($gymIds) > 1;
         $schemaReady = $this->schemaReady();
         $selectedProductId = (int) $request->query('product_id', 0);
+        $salesHistoryFilters = [
+            'year' => max(0, (int) $request->query('sales_year', 0)),
+            'month' => max(0, min(12, (int) $request->query('sales_month', 0))),
+            'day' => max(0, min(31, (int) $request->query('sales_day', 0))),
+        ];
+        $openSalesHistoryModal = in_array(
+            strtolower(trim((string) $request->query('sales_history_open', '0'))),
+            ['1', 'true', 'yes'],
+            true
+        );
 
         $todayStart = now()->startOfDay();
         $todayEnd = now()->endOfDay();
@@ -61,6 +71,10 @@ class SalesInventoryController extends Controller
         $recentSales = collect();
         $saleProducts = collect();
         $saleClients = collect();
+        $salesHistoryRows = collect();
+        $salesHistoryYears = collect();
+        $salesHistoryTotal = 0;
+        $salesHistoryTruncated = false;
 
         if ($schemaReady) {
             $todaySummary = $this->reportService->getProductSalesSummary($gymIds, $todayStart, $todayEnd);
@@ -75,6 +89,46 @@ class SalesInventoryController extends Controller
                 ->orderByDesc('sold_at')
                 ->limit(12)
                 ->get();
+
+            $salesHistoryYears = ProductSale::query()
+                ->forGyms($gymIds)
+                ->selectRaw('YEAR(sold_at) as year')
+                ->whereNotNull('sold_at')
+                ->groupByRaw('YEAR(sold_at)')
+                ->orderByDesc('year')
+                ->pluck('year')
+                ->map(static fn ($year): int => (int) $year)
+                ->filter(static fn (int $year): bool => $year > 0)
+                ->values();
+
+            if ($salesHistoryYears->isEmpty()) {
+                $salesHistoryYears = collect([(int) now()->year]);
+            }
+
+            $historyBaseQuery = ProductSale::query()
+                ->forGyms($gymIds)
+                ->whereNotNull('sold_at');
+
+            if ($salesHistoryFilters['year'] > 0) {
+                $historyBaseQuery->whereYear('sold_at', $salesHistoryFilters['year']);
+            }
+
+            if ($salesHistoryFilters['month'] > 0) {
+                $historyBaseQuery->whereMonth('sold_at', $salesHistoryFilters['month']);
+            }
+
+            if ($salesHistoryFilters['day'] > 0) {
+                $historyBaseQuery->whereDay('sold_at', $salesHistoryFilters['day']);
+            }
+
+            $salesHistoryTotal = (int) (clone $historyBaseQuery)->count();
+            $salesHistoryRows = (clone $historyBaseQuery)
+                ->with(['product:id,name,category', 'soldBy:id,name', 'client:id,first_name,last_name', 'gym:id,name'])
+                ->orderByDesc('sold_at')
+                ->orderByDesc('id')
+                ->limit(300)
+                ->get();
+            $salesHistoryTruncated = $salesHistoryTotal > 300;
 
             if (! $isGlobalScope) {
                 $saleProducts = Product::query()
@@ -107,6 +161,12 @@ class SalesInventoryController extends Controller
             'saleProducts' => $saleProducts,
             'saleClients' => $saleClients,
             'selectedProductId' => $selectedProductId,
+            'salesHistoryFilters' => $salesHistoryFilters,
+            'salesHistoryRows' => $salesHistoryRows,
+            'salesHistoryYears' => $salesHistoryYears,
+            'salesHistoryTotal' => $salesHistoryTotal,
+            'salesHistoryTruncated' => $salesHistoryTruncated,
+            'openSalesHistoryModal' => $openSalesHistoryModal,
             'activeGymId' => $gymId,
         ]);
     }
