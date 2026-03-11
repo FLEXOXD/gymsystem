@@ -949,23 +949,70 @@
             if (!userMenuDropdown || !userMenuButton) return;
             userMenuDropdown.classList.add('hidden');
             userMenuButton.setAttribute('aria-expanded', 'false');
+            resetFloatingMenu(userMenuDropdown);
         }
 
         function openUserMenu() {
             if (!userMenuDropdown || !userMenuButton) return;
             userMenuDropdown.classList.remove('hidden');
             userMenuButton.setAttribute('aria-expanded', 'true');
+            positionFloatingMenu(userMenuDropdown, userMenuButton);
         }
         function closeBellMenu() {
             if (!headerBellDropdown || !headerBellButton) return;
             headerBellDropdown.classList.add('hidden');
             headerBellButton.setAttribute('aria-expanded', 'false');
+            resetFloatingMenu(headerBellDropdown);
         }
 
         function openBellMenu() {
             if (!headerBellDropdown || !headerBellButton) return;
             headerBellDropdown.classList.remove('hidden');
             headerBellButton.setAttribute('aria-expanded', 'true');
+            positionFloatingMenu(headerBellDropdown, headerBellButton);
+        }
+
+        function resetFloatingMenu(menu) {
+            if (!(menu instanceof HTMLElement)) return;
+            [
+                'position',
+                'top',
+                'right',
+                'left',
+                'width',
+                'maxWidth',
+                'maxHeight',
+                'overflowY',
+                'zIndex',
+            ].forEach(function (property) {
+                menu.style.removeProperty(property);
+            });
+        }
+
+        function positionFloatingMenu(menu, anchor) {
+            if (!(menu instanceof HTMLElement) || !(anchor instanceof HTMLElement)) return;
+
+            const isMobile = window.matchMedia('(max-width: 640px)').matches;
+            if (!isMobile) {
+                resetFloatingMenu(menu);
+                return;
+            }
+
+            const anchorRect = anchor.getBoundingClientRect();
+            const sideInset = 12;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+            const top = Math.max(anchorRect.bottom + 10, sideInset);
+            const maxHeight = Math.max(220, viewportHeight - top - sideInset);
+
+            menu.style.position = 'fixed';
+            menu.style.top = top + 'px';
+            menu.style.left = sideInset + 'px';
+            menu.style.right = sideInset + 'px';
+            menu.style.width = 'auto';
+            menu.style.maxWidth = 'none';
+            menu.style.maxHeight = maxHeight + 'px';
+            menu.style.overflowY = 'auto';
+            menu.style.zIndex = '140';
         }
 
         userMenuButton?.addEventListener('click', function (event) {
@@ -1014,6 +1061,24 @@
                 closeBellMenu();
             }
         });
+
+        window.addEventListener('resize', function () {
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && userMenuButton) {
+                positionFloatingMenu(userMenuDropdown, userMenuButton);
+            }
+            if (headerBellDropdown && !headerBellDropdown.classList.contains('hidden') && headerBellButton) {
+                positionFloatingMenu(headerBellDropdown, headerBellButton);
+            }
+        });
+
+        window.addEventListener('scroll', function () {
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && userMenuButton) {
+                positionFloatingMenu(userMenuDropdown, userMenuButton);
+            }
+            if (headerBellDropdown && !headerBellDropdown.classList.contains('hidden') && headerBellButton) {
+                positionFloatingMenu(headerBellDropdown, headerBellButton);
+            }
+        }, true);
 
         function shouldIgnoreLinkForLoading(anchor, clickEvent) {
             if (!(anchor instanceof HTMLAnchorElement)) return true;

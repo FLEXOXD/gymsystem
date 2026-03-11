@@ -141,10 +141,18 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
-            return redirect()->route('landing');
+            return $this->applyNoHistoryRedirectHeaders(redirect()->route('landing'));
         }
 
-        return redirect()->route('login');
+        return $this->applyNoHistoryRedirectHeaders(redirect()->route('login'));
+    }
+
+    /**
+     * Redirect stale /logout history entries back to login cleanly.
+     */
+    public function redirectAfterLogout(): RedirectResponse
+    {
+        return $this->applyNoHistoryRedirectHeaders(redirect()->route('login'));
     }
 
     /**
@@ -182,6 +190,15 @@ class AuthenticatedSessionController extends Controller
         return redirect()
             ->route('landing')
             ->with('status', 'Demo finalizada. Tus datos temporales fueron eliminados.');
+    }
+
+    private function applyNoHistoryRedirectHeaders(RedirectResponse $response): RedirectResponse
+    {
+        return $response->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0, private',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
+        ]);
     }
 
     /**

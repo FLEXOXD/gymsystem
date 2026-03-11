@@ -416,6 +416,9 @@
 
                     <div class="mt-4 flex flex-wrap gap-2">
                         <x-ui.button :href="route('clients.index')" variant="primary">Cobrar membresía</x-ui.button>
+                        <x-ui.button type="button" id="open-monthly-movements-modal" variant="secondary">
+                            {{ $isCashierScoped ? 'Ver mis movimientos del mes' : 'Ver movimientos del mes' }}
+                        </x-ui.button>
                         @if (! $isCashierUser || $canCloseCash)
                             <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
                         @endif

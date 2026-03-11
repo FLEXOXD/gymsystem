@@ -50,3 +50,36 @@
         </form>
     </div>
 </div>
+
+<div id="monthly-movements-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="monthlyMovementsTitle">
+    <div class="ui-modal-panel max-w-7xl p-0">
+        <div class="ui-modal-shell">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+                <div>
+                    <h3 id="monthlyMovementsTitle" class="ui-heading text-lg text-slate-100">
+                        {{ $isCashierScoped ? 'Tus movimientos del mes' : 'Movimientos del mes' }}
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-300">
+                        Revisión completa del mes actual sin salir de la caja.
+                    </p>
+                </div>
+                <button type="button" class="ui-button ui-button-ghost" data-close-monthly-modal>Cerrar</button>
+            </div>
+
+            <div class="ui-modal-scroll-body px-5 py-4">
+                @include('cash.partials.monthly-movements-content', [
+                    'monthlyMovements' => $monthlyMovements,
+                    'monthlySummary' => $monthlySummary,
+                    'monthStart' => $monthStart,
+                    'monthEnd' => $monthEnd,
+                    'isCashierScoped' => $isCashierScoped,
+                ])
+            </div>
+
+            <div class="ui-modal-sticky-footer flex justify-end gap-2 px-5 pt-4">
+                <x-ui.button type="button" variant="ghost" data-close-monthly-modal>Cerrar</x-ui.button>
+                <x-ui.button :href="route('clients.index')" variant="primary">Cobrar membresía</x-ui.button>
+            </div>
+        </div>
+    </div>
+</div>

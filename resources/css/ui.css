@@ -193,6 +193,51 @@
         @apply bg-white text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-800;
     }
 
+    .ui-action-grid {
+        display: grid;
+        gap: 0.5rem;
+        width: min(100%, 15rem);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ui-action-grid-end {
+        margin-left: auto;
+    }
+
+    .ui-action-button {
+        @apply w-full gap-2 rounded-xl px-3 py-2 text-xs font-bold whitespace-nowrap shadow-sm;
+        min-height: 2.35rem;
+        box-shadow: 0 12px 24px -18px rgb(15 23 42 / 0.72);
+    }
+
+    .ui-action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 30px -20px rgb(15 23 42 / 0.9);
+    }
+
+    .ui-action-button:active {
+        transform: translateY(0);
+    }
+
+    .ui-action-button-icon {
+        width: 0.95rem;
+        height: 0.95rem;
+        flex: 0 0 auto;
+        opacity: 0.82;
+    }
+
+    .ui-action-button-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (max-width: 640px) {
+        .ui-action-grid {
+            width: min(100%, 12rem);
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
     .ui-badge {
         @apply inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide;
     }

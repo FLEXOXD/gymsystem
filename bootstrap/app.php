@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,
             'pwa.standalone.access' => \App\Http\Middleware\EnsurePwaStandaloneAccessMiddleware::class,
             'client.mobile.session' => \App\Http\Middleware\EnsureClientMobileSessionMiddleware::class,
+            'no.history' => \App\Http\Middleware\PreventBackHistoryMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -51,6 +53,20 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()
                 ->withInput($request->except('password'))
                 ->withErrors(['throttle' => $message]);
+        });
+
+        $exceptions->render(function (TokenMismatchException $exception, Request $request) {
+            if ($request->is('logout')) {
+                return redirect()
+                    ->route('login')
+                    ->withHeaders([
+                        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0, private',
+                        'Pragma' => 'no-cache',
+                        'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
+                    ]);
+            }
+
+            return null;
         });
     })->create();
 

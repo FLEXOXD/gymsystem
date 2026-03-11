@@ -435,15 +435,42 @@
                                 <td class="px-4 py-3">
                                     <x-ui.badge :variant="$plan->status === 'active' ? 'success' : 'muted'">{{ $plan->status === 'active' ? 'Activo' : 'Oculto' }}</x-ui.badge>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 min-w-[16rem]">
                                     @if ($isReadOnlyScope)
                                         <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
                                     @else
-                                        <div class="flex justify-end gap-1.5">
-                                            <button type="button" class="mini-action js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">Editar</button>
-                                            <button type="button" class="mini-action js-duplicate-plan" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">Duplicar</button>
-                                            <button type="button" class="mini-action js-toggle-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</button>
-                                            <button type="button" class="mini-action danger js-delete-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">Eliminar</button>
+                                        <div class="ui-action-grid ui-action-grid-end">
+                                            <x-ui.button type="button" size="sm" variant="secondary" class="ui-action-button js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9"/>
+                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Editar</span>
+                                            </x-ui.button>
+                                            <x-ui.button type="button" size="sm" variant="ghost" class="ui-action-button js-duplicate-plan" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Duplicar</span>
+                                            </x-ui.button>
+                                            <x-ui.button type="button" size="sm" :variant="$plan->status === 'active' ? 'muted' : 'success'" class="ui-action-button js-toggle-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 2v10"/>
+                                                    <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
+                                            </x-ui.button>
+                                            <x-ui.button type="button" size="sm" variant="danger" class="ui-action-button js-delete-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6"/>
+                                                    <path d="M14 11v6"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Eliminar</span>
+                                            </x-ui.button>
                                         </div>
                                     @endif
                                 </td>
@@ -529,23 +556,36 @@
                             <td class="px-4 py-3">
                                 <x-ui.badge :variant="$promotion->status === 'active' ? 'success' : 'muted'">{{ $promotion->status === 'active' ? 'Activo' : 'Inactivo' }}</x-ui.badge>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 min-w-[16rem]">
                                 @if ($isReadOnlyScope)
                                     <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
                                 @else
-                                    <div class="flex justify-end gap-1.5">
-                                        <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}">
+                                    <div class="ui-action-grid ui-action-grid-end">
+                                        <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}" class="w-full">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="{{ $promotion->status === 'active' ? 'inactive' : 'active' }}">
-                                            <button type="submit" class="mini-action">
-                                                {{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}
-                                            </button>
+                                            <x-ui.button type="submit" size="sm" :variant="$promotion->status === 'active' ? 'muted' : 'success'" class="ui-action-button">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 2v10"/>
+                                                    <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">{{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
+                                            </x-ui.button>
                                         </form>
-                                        <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}">
+                                        <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}" class="w-full">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="mini-action danger">Eliminar</button>
+                                            <x-ui.button type="submit" size="sm" variant="danger" class="ui-action-button">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6"/>
+                                                    <path d="M14 11v6"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Eliminar</span>
+                                            </x-ui.button>
                                         </form>
                                     </div>
                                 @endif

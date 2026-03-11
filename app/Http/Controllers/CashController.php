@@ -9,6 +9,7 @@ use App\Modules\Cash\Actions\AddCashMovementAction;
 use App\Modules\Cash\Actions\CloseCashSessionAction;
 use App\Modules\Cash\Actions\OpenCashSessionAction;
 use App\Modules\Cash\Services\CashSessionReadService;
+use App\Models\CashMovement;
 use App\Models\CashSession;
 use App\Models\GymBranchLink;
 use App\Services\CashSessionService;
@@ -113,6 +114,17 @@ class CashController extends Controller
             ->orderByDesc('closed_at')
             ->limit(8)
             ->get();
+        $monthlyMovementData = [
+            'monthlyMovements' => collect(),
+            'monthlySummary' => [
+                'income_total' => 0.0,
+                'expense_total' => 0.0,
+                'movements_count' => 0,
+                'net_total' => 0.0,
+            ],
+            'monthStart' => now()->copy()->startOfMonth(),
+            'monthEnd' => now()->copy()->endOfMonth(),
+        ];
 
         if ($openSession) {
             $summary = $this->cashSessionReadService->buildSessionSummary(
@@ -130,6 +142,7 @@ class CashController extends Controller
             $closeMethodTotals = $canCloseCash && $isCashierScoped
                 ? $this->cashSessionReadService->buildMethodTotals($gymId, $openSession->id)
                 : $methodTotals;
+            $monthlyMovementData = $this->buildMonthlyMovementsData($gymId, $cashierScopeUserId);
         }
 
         return view('cash.index', [
@@ -146,6 +159,10 @@ class CashController extends Controller
             'canCloseCash' => $canCloseCash,
             'canManageMovements' => $canManageMovements,
             'isCashierScoped' => $isCashierScoped,
+            'monthlyMovements' => $monthlyMovementData['monthlyMovements'],
+            'monthlySummary' => $monthlyMovementData['monthlySummary'],
+            'monthStart' => $monthlyMovementData['monthStart'],
+            'monthEnd' => $monthlyMovementData['monthEnd'],
         ]);
     }
 
@@ -228,6 +245,31 @@ class CashController extends Controller
         return redirect()
             ->route('cash.sessions.show', $session->id)
             ->with('status', 'Turno de caja cerrado correctamente.');
+    }
+
+    /**
+     * Show current month movements for the active gym and current user scope.
+     */
+    public function monthlyMovements(Request $request): View
+    {
+        $gymId = $this->resolveGymId($request);
+        abort_if(
+            ActiveGymContext::isGlobal($request),
+            403,
+            'Selecciona una sucursal especifica para revisar movimientos del mes.'
+        );
+
+        $cashierScopeUserId = $this->resolveCashierScopeUserId($request);
+        $isCashierScoped = $cashierScopeUserId !== null;
+        $monthlyMovementData = $this->buildMonthlyMovementsData($gymId, $cashierScopeUserId);
+
+        return view('cash.monthly', [
+            'monthlyMovements' => $monthlyMovementData['monthlyMovements'],
+            'monthlySummary' => $monthlyMovementData['monthlySummary'],
+            'monthStart' => $monthlyMovementData['monthStart'],
+            'monthEnd' => $monthlyMovementData['monthEnd'],
+            'isCashierScoped' => $isCashierScoped,
+        ]);
     }
 
     /**
@@ -459,5 +501,68 @@ class CashController extends Controller
                     $movementQuery->where('created_by', $cashierScopeUserId);
                 });
         });
+    }
+
+    /**
+     * @return array{
+     *     monthlyMovements:\Illuminate\Support\Collection<int,\App\Models\CashMovement>,
+     *     monthlySummary:array{income_total:float,expense_total:float,movements_count:int,net_total:float},
+     *     monthStart:\Illuminate\Support\Carbon,
+     *     monthEnd:\Illuminate\Support\Carbon
+     * }
+     */
+    private function buildMonthlyMovementsData(int $gymId, ?int $cashierScopeUserId): array
+    {
+        $todayDate = now();
+        $monthStart = $todayDate->copy()->startOfMonth();
+        $monthEnd = $todayDate->copy()->endOfMonth();
+
+        $monthlyMovementsBaseQuery = CashMovement::query()
+            ->forGym($gymId)
+            ->betweenOccurredAt($monthStart, $monthEnd)
+            ->createdByUser($cashierScopeUserId);
+
+        $monthlyTotals = (clone $monthlyMovementsBaseQuery)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
+            ->selectRaw('COUNT(*) as movements_count')
+            ->first();
+
+        $incomeTotal = (float) ($monthlyTotals->income_total ?? 0);
+        $expenseTotal = (float) ($monthlyTotals->expense_total ?? 0);
+
+        $monthlyMovements = (clone $monthlyMovementsBaseQuery)
+            ->select([
+                'id',
+                'gym_id',
+                'cash_session_id',
+                'membership_id',
+                'created_by',
+                'type',
+                'amount',
+                'method',
+                'description',
+                'occurred_at',
+            ])
+            ->with([
+                'cashSession:id,opened_at,closed_at,status',
+                'createdBy:id,name',
+                'membership:id,client_id',
+                'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
+            ])
+            ->orderByDesc('occurred_at')
+            ->get();
+
+        return [
+            'monthlyMovements' => $monthlyMovements,
+            'monthlySummary' => [
+                'income_total' => $incomeTotal,
+                'expense_total' => $expenseTotal,
+                'movements_count' => (int) ($monthlyTotals->movements_count ?? 0),
+                'net_total' => round($incomeTotal - $expenseTotal, 2),
+            ],
+            'monthStart' => $monthStart,
+            'monthEnd' => $monthEnd,
+        ];
     }
 }

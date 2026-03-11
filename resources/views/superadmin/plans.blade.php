@@ -421,18 +421,33 @@
                                         {{ $isActive ? 'Activa' : 'Inactiva' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <form method="POST" action="{{ route('superadmin.plan-templates.promotions.toggle', $promotion->id) }}">
+                                <td class="min-w-[16rem]">
+                                    <div class="ui-action-grid">
+                                        <form method="POST" action="{{ route('superadmin.plan-templates.promotions.toggle', $promotion->id) }}" class="w-full">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="{{ $isActive ? 'inactive' : 'active' }}">
-                                            <x-ui.button type="submit" size="sm" variant="ghost">{{ $isActive ? 'Desactivar' : 'Activar' }}</x-ui.button>
+                                            <x-ui.button type="submit" size="sm" :variant="$isActive ? 'muted' : 'success'" class="ui-action-button">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 2v10"/>
+                                                    <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">{{ $isActive ? 'Desactivar' : 'Activar' }}</span>
+                                            </x-ui.button>
                                         </form>
                                         <form method="POST" action="{{ route('superadmin.plan-templates.promotions.destroy', $promotion->id) }}" onsubmit="return confirm('Esta acción eliminará la promoción base. ¿Deseas continuar?');">
                                             @csrf
                                             @method('DELETE')
-                                            <x-ui.button type="submit" size="sm" variant="danger">Eliminar</x-ui.button>
+                                            <x-ui.button type="submit" size="sm" variant="danger" class="ui-action-button">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6"/>
+                                                    <path d="M14 11v6"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Eliminar</span>
+                                            </x-ui.button>
                                         </form>
                                     </div>
                                 </td>

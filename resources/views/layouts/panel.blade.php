@@ -473,6 +473,7 @@
             #user-menu-dropdown,
             #header-bell-dropdown {
                 width: min(92vw, 20rem);
+                max-height: min(70vh, 30rem);
             }
         }
         #panel-sidebar {
@@ -704,6 +705,12 @@
             justify-content: flex-end;
             gap: 0.5rem;
             flex-wrap: nowrap;
+            overflow: visible;
+        }
+        #user-menu-root,
+        #header-bell-root {
+            position: relative;
+            z-index: 45;
         }
         .header-live-pill {
             display: inline-flex;
@@ -1277,9 +1284,24 @@
                 justify-content: space-between;
                 flex-wrap: wrap;
                 row-gap: 0.45rem;
+                overflow: visible;
             }
             #panel-header-right > * {
                 flex-shrink: 0;
+            }
+            #user-menu-root,
+            #header-bell-root {
+                position: static;
+            }
+            #user-menu-button {
+                min-width: 3.65rem;
+                justify-content: space-between;
+                gap: 0.55rem;
+            }
+            #user-menu-dropdown,
+            #header-bell-dropdown {
+                border-radius: 1.1rem;
+                box-shadow: 0 22px 50px rgb(2 6 23 / 0.42);
             }
             .panel-header-main {
                 font-size: clamp(1.15rem, 0.98rem + 0.5vw, 1.38rem);

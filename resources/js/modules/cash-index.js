@@ -70,6 +70,8 @@ export function initCashIndexModule() {
     const voidModal = document.getElementById('void-movement-modal');
     const voidLabel = document.getElementById('void-movement-label');
     const voidForm = document.getElementById('void-movement-form');
+    const monthlyMovementsModal = document.getElementById('monthly-movements-modal');
+    const openMonthlyMovementsModalButton = document.getElementById('open-monthly-movements-modal');
 
     function updateMovementMode() {
         if (!movementType) {
@@ -332,5 +334,27 @@ export function initCashIndexModule() {
         button.addEventListener('click', () => {
             closeModal(voidModal);
         });
+    });
+
+    openMonthlyMovementsModalButton?.addEventListener('click', () => {
+        openModal(monthlyMovementsModal);
+    });
+
+    document.querySelectorAll('[data-close-monthly-modal]').forEach((button) => {
+        button.addEventListener('click', () => {
+            closeModal(monthlyMovementsModal);
+        });
+    });
+
+    monthlyMovementsModal?.addEventListener('click', (event) => {
+        if (event.target === monthlyMovementsModal) {
+            closeModal(monthlyMovementsModal);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && monthlyMovementsModal && !monthlyMovementsModal.classList.contains('hidden')) {
+            closeModal(monthlyMovementsModal);
+        }
     });
 }

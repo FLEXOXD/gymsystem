@@ -290,49 +290,70 @@
                                         </x-ui.badge>
                                     </td>
                                 @endif
-                                <td class="px-3 py-3">
-                                    <div class="flex min-w-[180px] flex-wrap gap-2">
-                                        <a href="{{ (string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : []))) }}"
-                                           class="ui-button ui-button-secondary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <td class="px-3 py-3 min-w-[16rem]">
+                                    <div class="ui-action-grid">
+                                        <x-ui.button :href="(string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))" variant="secondary" size="sm" class="ui-action-button">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
                                                 <circle cx="12" cy="12" r="3"/>
                                             </svg>
-                                            Ver
-                                        </a>
+                                            <span class="ui-action-button-label">Ver</span>
+                                        </x-ui.button>
 
                                         @if (! empty($client['can_show_progress']))
-                                            <a href="{{ (string) ($client['progress_url'] ?? ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))) }}"
-                                               class="ui-button ui-button-ghost inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold">
-                                                Rendimiento
-                                            </a>
+                                            <x-ui.button :href="(string) ($client['progress_url'] ?? ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : []))))" variant="ghost" size="sm" class="ui-action-button">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M4 19h16"/>
+                                                    <path d="M7 16l3-4 3 2 4-6"/>
+                                                    <circle cx="7" cy="16" r="1"/>
+                                                    <circle cx="10" cy="12" r="1"/>
+                                                    <circle cx="13" cy="14" r="1"/>
+                                                    <circle cx="17" cy="8" r="1"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Rendimiento</span>
+                                            </x-ui.button>
                                         @endif
 
                                         @if (! empty($client['can_manage']))
-                                            <button type="button"
-                                                    class="ui-button ui-button-primary inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold"
-                                                    x-on:click="openEditClient({
-                                                        action: @js((string) ($client['edit_url'] ?? '')),
-                                                        id: {{ (int) $client['id'] }},
-                                                        first_name: @js((string) ($client['first_name'] ?? '')),
-                                                        last_name: @js((string) ($client['last_name'] ?? '')),
-                                                        phone: @js((string) ($client['phone'] ?? '')),
-                                                        full_name: @js((string) ($client['full_name'] ?? ''))
-                                                    })">
-                                                Editar
-                                            </button>
+                                            <x-ui.button type="button"
+                                                         variant="primary"
+                                                         size="sm"
+                                                         class="ui-action-button"
+                                                         x-on:click="openEditClient({
+                                                            action: @js((string) ($client['edit_url'] ?? '')),
+                                                            id: {{ (int) $client['id'] }},
+                                                            first_name: @js((string) ($client['first_name'] ?? '')),
+                                                            last_name: @js((string) ($client['last_name'] ?? '')),
+                                                            phone: @js((string) ($client['phone'] ?? '')),
+                                                            full_name: @js((string) ($client['full_name'] ?? ''))
+                                                         })">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9"/>
+                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Editar</span>
+                                            </x-ui.button>
 
-                                            <button type="button"
-                                                    class="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:border-rose-400 hover:bg-rose-100 dark:border-rose-400/35 dark:bg-rose-500/15 dark:text-rose-100 dark:hover:border-rose-300/60 dark:hover:bg-rose-500/25"
-                                                    x-on:click="openDeleteClient({
+                                            <x-ui.button type="button"
+                                                         variant="danger"
+                                                         size="sm"
+                                                         class="ui-action-button"
+                                                         x-on:click="openDeleteClient({
                                                         action: @js((string) ($client['delete_url'] ?? '')),
                                                         id: {{ (int) $client['id'] }},
                                                         full_name: @js((string) ($client['full_name'] ?? '')),
                                                         owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueño del gimnasio')),
                                                         owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'))
                                                     })">
-                                                Eliminar
-                                            </button>
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6"/>
+                                                    <path d="M14 11v6"/>
+                                                </svg>
+                                                <span class="ui-action-button-label">Eliminar</span>
+                                            </x-ui.button>
                                         @endif
                                     </div>
                                 </td>

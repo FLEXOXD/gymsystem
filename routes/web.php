@@ -129,7 +129,7 @@ Route::prefix('cliente/{gymSlug}')
         });
     });
 
-Route::middleware('guest')->group(function (): void {
+Route::middleware(['guest', 'no.history'])->group(function (): void {
     // Legacy login endpoint used by some deployments that submit to "/".
     Route::post('/', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login')
@@ -149,10 +149,13 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'no.history'])
     ->name('logout');
 
-Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): void {
+Route::get('/logout', [AuthenticatedSessionController::class, 'redirectAfterLogout'])
+    ->middleware(['guest', 'no.history']);
+
+Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group(function (): void {
     Route::get('/subscription/expired', [ThemeController::class, 'subscriptionExpired'])->name('subscription.expired');
     Route::post('/demo/finalizar', [AuthenticatedSessionController::class, 'endDemo'])->name('demo.end');
     Route::post('/legal/modal-acceptance', [LegalAcceptanceController::class, 'storeModal'])
@@ -417,6 +420,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone'])->group(function (): 
                 Route::post('/cash/close', [CashController::class, 'close'])
                     ->middleware(['role:owner,cashier', 'not.branch:manage_cash'])
                     ->name('cash.close');
+                Route::get('/cash/movements/monthly', [CashController::class, 'monthlyMovements'])
+                    ->middleware('role:owner,cashier')
+                    ->name('cash.movements.monthly');
                 Route::get('/cash/sessions', [CashController::class, 'sessions'])
                     ->middleware('role:owner,cashier')
                     ->name('cash.sessions.index');
