@@ -330,7 +330,7 @@
 
                 <div class="remote-scan-modal__panel">
                     <div class="remote-scan-modal__actions">
-                        <button type="button" id="remote-scan-start-session" class="ui-button ui-button-primary px-4 py-2 text-sm font-bold">Generar QR</button>
+                        <button type="button" id="remote-scan-start-session" class="ui-button ui-button-primary px-4 py-2 text-sm font-bold">Renovar QR</button>
                         <button type="button" id="remote-scan-copy-link" class="ui-button ui-button-secondary px-4 py-2 text-sm font-semibold">Copiar link</button>
                         <button type="button" id="remote-scan-open-link" class="ui-button ui-button-ghost px-4 py-2 text-sm font-semibold">Abrir en celular</button>
                     </div>
@@ -466,6 +466,7 @@
 
                 stream.addEventListener('close', function () {
                     setStatus('La sesion de escaneo se cerro o expiro. Abre una nueva.', 'warn');
+                    sessionState = null;
                     stopStream();
                 });
 
@@ -474,7 +475,7 @@
                 };
             }
 
-            async function createSession() {
+            async function createSession(forceNew) {
                 setStatus('Abriendo sesion remota...', 'warn');
 
                 try {
@@ -488,6 +489,7 @@
                         credentials: 'same-origin',
                         body: new URLSearchParams({
                             context: scanContext,
+                            force: forceNew ? '1' : '0',
                         }),
                     });
 
@@ -512,29 +514,21 @@
                 }
             });
 
-            closeButton?.addEventListener('click', async function () {
+            closeButton?.addEventListener('click', function () {
                 setModalOpen(false);
-                stopStream();
-                await closeSession();
-                sessionState = null;
-                resetUi();
             });
 
-            modal.addEventListener('click', async function (event) {
+            modal.addEventListener('click', function (event) {
                 if (event.target !== modal) {
                     return;
                 }
 
                 setModalOpen(false);
-                stopStream();
-                await closeSession();
-                sessionState = null;
-                resetUi();
             });
 
             startButton?.addEventListener('click', function () {
                 resetUi();
-                createSession();
+                createSession(true);
             });
 
             copyButton?.addEventListener('click', async function () {
@@ -564,13 +558,9 @@
                 stopStream();
             });
 
-            document.addEventListener('keydown', async function (event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && modal.classList.contains('is-open')) {
                     setModalOpen(false);
-                    stopStream();
-                    await closeSession();
-                    sessionState = null;
-                    resetUi();
                 }
             });
         })();
