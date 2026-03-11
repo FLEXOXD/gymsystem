@@ -343,6 +343,7 @@
 <script>
     (function () {
         const barcodeInput = document.getElementById('product-barcode-input');
+        const lastCodeStorageKey = 'remote_scan_last_code_products';
 
         if (!barcodeInput) {
             return;
@@ -357,7 +358,22 @@
             barcodeInput.value = code;
             barcodeInput.focus();
             barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            try {
+                window.sessionStorage.setItem(lastCodeStorageKey, code);
+            } catch (error) {
+                // Ignore storage failures.
+            }
         });
+
+        try {
+            const savedCode = window.sessionStorage.getItem(lastCodeStorageKey);
+            if (savedCode && savedCode.trim() !== '' && (barcodeInput.value || '').trim() === '') {
+                barcodeInput.value = savedCode;
+                barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        } catch (error) {
+            // Ignore storage failures.
+        }
     })();
 </script>
 @endpush

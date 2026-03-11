@@ -385,6 +385,7 @@
 
             let sessionState = null;
             let stream = null;
+            let bootstrapped = false;
 
             function setStatus(message, tone) {
                 statusEl.textContent = message;
@@ -475,8 +476,10 @@
                 };
             }
 
-            async function createSession(forceNew) {
-                setStatus('Abriendo sesion remota...', 'warn');
+            async function createSession(forceNew, silent) {
+                if (!silent) {
+                    setStatus('Abriendo sesion remota...', 'warn');
+                }
 
                 try {
                     const response = await fetch(createUrl, {
@@ -495,14 +498,18 @@
 
                     const payload = await response.json().catch(function () { return {}; });
                     if (!response.ok || !payload.ok || !payload.session) {
-                        setStatus(payload.message || 'No pude abrir la sesion remota.', 'bad');
+                        if (!silent) {
+                            setStatus(payload.message || 'No pude abrir la sesion remota.', 'bad');
+                        }
                         return;
                     }
 
                     applySession(payload.session);
                     attachStream(payload.session.stream_url);
                 } catch (error) {
-                    setStatus('Error creando la sesion remota.', 'bad');
+                    if (!silent) {
+                        setStatus('Error creando la sesion remota.', 'bad');
+                    }
                 }
             }
 
@@ -510,7 +517,12 @@
                 setModalOpen(true);
                 if (!sessionState) {
                     resetUi();
-                    createSession();
+                    createSession(false, false);
+                    return;
+                }
+
+                if (!stream && sessionState.stream_url) {
+                    attachStream(sessionState.stream_url);
                 }
             });
 
@@ -528,7 +540,7 @@
 
             startButton?.addEventListener('click', function () {
                 resetUi();
-                createSession(true);
+                createSession(true, false);
             });
 
             copyButton?.addEventListener('click', async function () {
@@ -563,6 +575,17 @@
                     setModalOpen(false);
                 }
             });
+
+            function bootstrapSessionInBackground() {
+                if (bootstrapped) {
+                    return;
+                }
+
+                bootstrapped = true;
+                createSession(false, true);
+            }
+
+            bootstrapSessionInBackground();
         })();
     </script>
     @endpush

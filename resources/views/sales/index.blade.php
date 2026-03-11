@@ -357,6 +357,7 @@
         const previewCode = document.getElementById('sale-preview-code');
         const previewPrice = document.getElementById('sale-preview-price');
         const previewStock = document.getElementById('sale-preview-stock');
+        const lastCodeStorageKey = 'remote_scan_last_code_sales';
 
         if (!scanInput || !select || !quantityInput) {
             return;
@@ -485,7 +486,22 @@
 
             scanInput.value = code;
             resolveScan();
+            try {
+                window.sessionStorage.setItem(lastCodeStorageKey, code);
+            } catch (error) {
+                // Ignore storage failures.
+            }
         });
+
+        try {
+            const savedCode = window.sessionStorage.getItem(lastCodeStorageKey);
+            if (savedCode && savedCode.trim() !== '' && (scanInput.value || '').trim() === '') {
+                scanInput.value = savedCode;
+                resolveScan();
+            }
+        } catch (error) {
+            // Ignore storage failures.
+        }
 
         renderPreview(getSelectedProduct());
     })();

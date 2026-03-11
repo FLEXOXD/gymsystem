@@ -150,6 +150,38 @@
             gap: 10px;
         }
 
+        .scanner-toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%) translateY(16px);
+            min-width: min(92vw, 360px);
+            max-width: 92vw;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(16, 185, 129, 0.46);
+            background: rgba(6, 78, 59, 0.94);
+            color: #d1fae5;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 800;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .16s ease, transform .16s ease;
+            z-index: 40;
+        }
+
+        .scanner-toast.is-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .scanner-toast[data-tone="bad"] {
+            border-color: rgba(251, 113, 133, 0.46);
+            background: rgba(127, 29, 29, 0.94);
+            color: #fecdd3;
+        }
+
         .scanner-last {
             margin: 0;
             padding: 12px 14px;
@@ -280,6 +312,7 @@
             </div>
         </div>
     </main>
+    <div id="remote-scan-toast" class="scanner-toast" data-tone="ok">Escaneo completo</div>
 
     <script>
         (function () {
@@ -292,11 +325,13 @@
             const manualSubmit = document.getElementById('remote-scan-submit');
             const statusEl = document.getElementById('remote-scan-status');
             const lastEl = document.getElementById('remote-scan-last');
+            const toastEl = document.getElementById('remote-scan-toast');
 
             let stream = null;
             let detector = null;
             let frame = null;
             let lockedUntil = 0;
+            let toastTimer = null;
 
             function setStatus(message, tone) {
                 if (!statusEl) {
@@ -313,6 +348,24 @@
                 }
 
                 lastEl.textContent = message;
+            }
+
+            function showToast(message, tone) {
+                if (!toastEl) {
+                    return;
+                }
+
+                if (toastTimer) {
+                    clearTimeout(toastTimer);
+                    toastTimer = null;
+                }
+
+                toastEl.textContent = message;
+                toastEl.setAttribute('data-tone', tone || 'ok');
+                toastEl.classList.add('is-visible');
+                toastTimer = window.setTimeout(function () {
+                    toastEl.classList.remove('is-visible');
+                }, 1400);
             }
 
             async function sendCode(code, source) {
@@ -341,6 +394,7 @@
                         }
 
                         setStatus(payload.message || 'No pude enviar el codigo.', 'bad');
+                        showToast('No enviado', 'bad');
                         return false;
                     }
 
@@ -350,9 +404,11 @@
 
                     setStatus('Leido y enviado.', 'ok');
                     setLast('Ultimo codigo: ' + normalized + ' | ' + new Date().toLocaleTimeString());
+                    showToast('Escaneo completo', 'ok');
                     return true;
                 } catch (error) {
                     setStatus('Error de red enviando el codigo.', 'bad');
+                    showToast('Error de red', 'bad');
                     return false;
                 }
             }
