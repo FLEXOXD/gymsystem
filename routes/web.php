@@ -79,10 +79,10 @@ Route::get('/client-qr/{client}/download', [ClientCardController::class, 'public
     ->middleware('signed')
     ->name('clients.card.public-download');
 Route::get('/scan/{contextGym}/{channel}', [RemoteScanController::class, 'mobile'])
-    ->middleware(['signed:relative', 'throttle:240,1'])
+    ->middleware(['gym.timezone', 'signed:relative', 'throttle:240,1'])
     ->name('remote-scanner.mobile');
 Route::post('/scan/{contextGym}/{channel}/capture', [RemoteScanController::class, 'capture'])
-    ->middleware(['signed:relative', 'throttle:240,1'])
+    ->middleware(['gym.timezone', 'signed:relative', 'throttle:240,1'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('remote-scanner.capture');
 Route::get('/demo', [MarketingController::class, 'demo'])->name('demo');
