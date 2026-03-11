@@ -6,13 +6,18 @@
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
+        $isCashierScoped = (bool) ($isCashierScoped ?? false);
+        $scopedBalance = round((float) ($summary['income_total'] ?? 0) - (float) ($summary['expense_total'] ?? 0), 2);
         $methodLabels = [
             'cash' => 'Efectivo',
             'card' => 'Tarjeta',
             'transfer' => 'Transferencia',
         ];
     @endphp
-    <x-ui.card title="Sesión #{{ $session->id }}" subtitle="Apertura {{ $session->opened_at?->format('Y-m-d H:i') }} por {{ $session->openedBy?->name ?? 'N/D' }}">
+    <x-ui.card title="{{ $isCashierScoped ? 'Tu detalle de caja #'.$session->id : 'Sesión #'.$session->id }}" subtitle="Apertura {{ $session->opened_at?->format('Y-m-d H:i') }} por {{ $session->openedBy?->name ?? 'N/D' }}">
+        @if ($isCashierScoped)
+            <p class="mb-4 ui-alert ui-alert-info">Esta vista solo resume tus movimientos dentro de esta sesión.</p>
+        @endif
         <div class="flex flex-wrap items-center gap-2">
             <x-ui.badge :variant="$session->status === 'open' ? 'success' : 'info'">{{ $session->status }}</x-ui.badge>
             @if ($session->status === 'closed')
@@ -23,21 +28,28 @@
         </div>
 
         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
-                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $session->opening_balance, $appCurrencyCode) }}</p>
-            </article>
+            @if ($isCashierScoped)
+                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($summary['movements_count'] ?? 0) }}</p>
+                </article>
+            @else
+                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $session->opening_balance, $appCurrencyCode) }}</p>
+                </article>
+            @endif
             <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
-                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Ingresos</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">{{ $isCashierScoped ? 'Tus ingresos' : 'Ingresos' }}</p>
                 <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $summary['income_total'], $appCurrencyCode) }}</p>
             </article>
             <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
-                <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Egresos</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">{{ $isCashierScoped ? 'Tus egresos' : 'Egresos' }}</p>
                 <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $summary['expense_total'], $appCurrencyCode) }}</p>
             </article>
             <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperado</p>
-                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) $summary['expected_balance'], $appCurrencyCode) }}</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Tu balance' : 'Esperado' }}</p>
+                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($isCashierScoped ? $scopedBalance : $summary['expected_balance']), $appCurrencyCode) }}</p>
             </article>
         </div>
 
@@ -50,17 +62,19 @@
                 <p><span class="font-semibold text-slate-900 dark:text-slate-100">Mensaje:</span> {{ $session->closeMessage() }}</p>
                 <p><span class="font-semibold text-slate-900 dark:text-slate-100">Motivo de diferencia:</span> {{ $session->difference_reason ?: '-' }}</p>
                 <p><span class="font-semibold text-slate-900 dark:text-slate-100">Notas de cierre:</span> {{ $session->closing_notes ?: '-' }}</p>
-                <p>
+                @unless ($isCashierScoped)
+                    <p>
                     <span class="font-semibold text-slate-900 dark:text-slate-100">Diferencia:</span>
                     <span class="{{ (float) $session->difference === 0.0 ? 'text-slate-800 dark:text-slate-200' : ((float) $session->difference > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300') }} font-bold">
                         {{ $currencyFormatter::format((float) $session->difference, $appCurrencyCode) }}
                     </span>
-                </p>
+                    </p>
+                @endunless
             @endif
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Totales por método">
+    <x-ui.card title="{{ $isCashierScoped ? 'Tus totales por método' : 'Totales por método' }}">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[640px]">
                 <thead>
@@ -89,7 +103,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Movimientos del turno">
+    <x-ui.card title="{{ $isCashierScoped ? 'Tus movimientos del turno' : 'Movimientos del turno' }}">
         <div class="overflow-x-auto">
             <table class="ui-table min-w-[1100px]">
                 <thead>
@@ -99,7 +113,9 @@
                     <th class="px-3 py-3">Tipo</th>
                     <th class="px-3 py-3">Método</th>
                     <th class="px-3 py-3">Monto</th>
+                    <th class="px-3 py-3">Cliente</th>
                     <th class="px-3 py-3">Membresía</th>
+                    <th class="px-3 py-3">Alta cliente</th>
                     <th class="px-3 py-3">Creado por</th>
                     <th class="px-3 py-3">Descripción</th>
                 </tr>
@@ -116,13 +132,15 @@
                         <td class="px-3 py-3 {{ $movement->type === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }} font-semibold">
                             {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode, true) }}
                         </td>
+                        <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
                         <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $movement->membership_id ?: '-' }}</td>
+                        <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                         <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $movement->createdBy?->name ?? '-' }}</td>
                         <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $movement->description ?: '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">Sin movimientos en este turno.</td>
+                        <td colspan="10" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">Sin movimientos en este turno.</td>
                     </tr>
                 @endforelse
                 </tbody>

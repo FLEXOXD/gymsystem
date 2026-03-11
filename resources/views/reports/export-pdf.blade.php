@@ -105,6 +105,7 @@
             <th>Método</th>
             <th>Monto</th>
             <th>Cliente</th>
+            <th>Alta cliente</th>
             <th>Usuario</th>
             <th>Descripción</th>
         </tr>
@@ -118,11 +119,12 @@
                 <td>{{ match ($movement->method) { 'cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', default => $movement->method } }}</td>
                 <td>{{ $currencyFormatter::format((float) $movement->amount, $appCurrencyCode) }}</td>
                 <td>{{ $movement->membership?->client?->full_name ?? '-' }}</td>
+                <td>{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                 <td>{{ $movement->createdBy?->name ?? '-' }}</td>
                 <td>{{ $movement->description ?: '-' }}</td>
             </tr>
         @empty
-            <tr><td colspan="8">Sin movimientos en este rango.</td></tr>
+            <tr><td colspan="9">Sin movimientos en este rango.</td></tr>
         @endforelse
         </tbody>
     </table>

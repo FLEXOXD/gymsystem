@@ -10,9 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class GymStaffController extends Controller
@@ -343,23 +341,20 @@ class GymStaffController extends Controller
         if ((int) ($request->user()?->id ?? 0) === (int) $cashierUser->id) {
             return redirect()
                 ->route('staff.index', $this->staffRouteParams($request))
-                ->withErrors(['staff' => 'No puedes eliminar tu propio usuario desde esta pantalla.']);
+                ->withErrors(['staff' => 'No puedes archivar tu propio usuario desde esta pantalla.']);
         }
 
-        DB::transaction(function () use ($gymId, $cashierUser): void {
-            $systemUser = $this->resolveOrCreateSystemUserForGym($gymId);
-            $this->reassignUserReferences(
-                gymId: $gymId,
-                fromUserId: (int) $cashierUser->id,
-                toUserId: (int) $systemUser->id
-            );
-
-            $cashierUser->delete();
-        });
+        $cashierUser->update([
+            'is_active' => false,
+            'remember_token' => null,
+            'can_open_cash' => false,
+            'can_close_cash' => false,
+            'can_manage_cash_movements' => false,
+        ]);
 
         return redirect()
             ->route('staff.index', $this->staffRouteParams($request))
-            ->with('status', 'Cajero eliminado permanentemente. Sus datos quedaron reasignados al sistema del gimnasio.');
+            ->with('status', 'Cajero archivado. Se conservan sus clientes, cobros e historial.');
     }
 
     private function resolveGymId(Request $request): int
@@ -430,87 +425,4 @@ class GymStaffController extends Controller
         ]);
     }
 
-    private function resolveOrCreateSystemUserForGym(int $gymId): User
-    {
-        $systemEmail = 'sistema.gym'.$gymId.'@local.gymsystem.internal';
-
-        $existing = User::query()
-            ->where('gym_id', $gymId)
-            ->whereRaw('LOWER(email) = ?', [strtolower($systemEmail)])
-            ->first();
-
-        if ($existing) {
-            return $existing;
-        }
-
-        return User::query()->create([
-            'gym_id' => $gymId,
-            'name' => 'Sistema Gimnasio',
-            'email' => $systemEmail,
-            'password' => Str::random(64),
-            'role' => User::ROLE_EMPLOYEE,
-            'is_active' => false,
-            'can_open_cash' => false,
-            'can_close_cash' => false,
-            'can_manage_cash_movements' => false,
-        ]);
-    }
-
-    private function reassignUserReferences(int $gymId, int $fromUserId, int $toUserId): void
-    {
-        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
-            return;
-        }
-
-        if (Schema::hasTable('cash_sessions')) {
-            if (Schema::hasColumns('cash_sessions', ['gym_id', 'opened_by'])) {
-                DB::table('cash_sessions')
-                    ->where('gym_id', $gymId)
-                    ->where('opened_by', $fromUserId)
-                    ->update(['opened_by' => $toUserId]);
-            }
-            if (Schema::hasColumns('cash_sessions', ['gym_id', 'closed_by'])) {
-                DB::table('cash_sessions')
-                    ->where('gym_id', $gymId)
-                    ->where('closed_by', $fromUserId)
-                    ->update(['closed_by' => $toUserId]);
-            }
-        }
-
-        if (Schema::hasTable('cash_movements') && Schema::hasColumns('cash_movements', ['gym_id', 'created_by'])) {
-            DB::table('cash_movements')
-                ->where('gym_id', $gymId)
-                ->where('created_by', $fromUserId)
-                ->update(['created_by' => $toUserId]);
-        }
-
-        if (Schema::hasTable('attendances') && Schema::hasColumns('attendances', ['gym_id', 'created_by'])) {
-            DB::table('attendances')
-                ->where('gym_id', $gymId)
-                ->where('created_by', $fromUserId)
-                ->update(['created_by' => $toUserId]);
-        }
-
-        if (Schema::hasTable('subscription_notifications') && Schema::hasColumns('subscription_notifications', ['gym_id', 'created_by'])) {
-            DB::table('subscription_notifications')
-                ->where('gym_id', $gymId)
-                ->where('created_by', $fromUserId)
-                ->update(['created_by' => $toUserId]);
-        }
-
-        if (Schema::hasTable('contact_suggestions')) {
-            if (Schema::hasColumns('contact_suggestions', ['gym_id', 'user_id'])) {
-                DB::table('contact_suggestions')
-                    ->where('gym_id', $gymId)
-                    ->where('user_id', $fromUserId)
-                    ->update(['user_id' => $toUserId]);
-            }
-            if (Schema::hasColumns('contact_suggestions', ['gym_id', 'reviewed_by'])) {
-                DB::table('contact_suggestions')
-                    ->where('gym_id', $gymId)
-                    ->where('reviewed_by', $fromUserId)
-                    ->update(['reviewed_by' => $toUserId]);
-            }
-        }
-    }
 }

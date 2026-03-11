@@ -115,7 +115,7 @@
             title="Cajeros"
             :subtitle="$isGlobalStaffView
                 ? 'Listado consolidado de cajeros por sede (solo lectura).'
-                : 'Activa/desactiva usuarios, define permisos de caja y elimina permanentemente si hace falta.'">
+                : 'Activa/desactiva usuarios, define permisos de caja y archiva cajeros sin perder su historial.'">
             <div class="overflow-x-auto">
                 <table class="ui-table {{ $isGlobalStaffView ? 'min-w-[980px]' : 'min-w-[1320px]' }}">
                     <thead>
@@ -213,10 +213,10 @@
                                                 </form>
                                             @endif
 
-                                            <form method="POST" action="{{ route('staff.cashiers.destroy', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('Eliminar permanentemente este cajero? Se conservara el historial reasignado al sistema del gimnasio.');">
+                                            <form method="POST" action="{{ route('staff.cashiers.destroy', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('Archivar este cajero? Perdera acceso, pero se conservaran sus clientes, cobros e historial.');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <x-ui.button type="submit" size="sm" variant="danger">Eliminar permanente</x-ui.button>
+                                                <x-ui.button type="submit" size="sm" variant="danger">Archivar</x-ui.button>
                                             </form>
                                         </div>
                                     </td>

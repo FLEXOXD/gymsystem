@@ -21,6 +21,7 @@ use App\Services\CashSessionService;
 use App\Services\ClientProgressOverviewService;
 use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
+use App\Support\ClientAudit;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -100,6 +101,13 @@ class ClientController extends Controller
             ->select([
                 'clients.id',
                 'clients.gym_id',
+                'clients.created_by',
+                'clients.created_by_name_snapshot',
+                'clients.created_by_role_snapshot',
+                'clients.last_managed_by',
+                'clients.last_managed_by_name_snapshot',
+                'clients.last_managed_by_role_snapshot',
+                'clients.last_managed_at',
                 'clients.first_name',
                 'clients.last_name',
                 'clients.document_number',
@@ -311,7 +319,7 @@ class ClientController extends Controller
         try {
             $this->registerClientAction->execute(
                 gymId: $gymId,
-                userId: (int) $request->user()->id,
+                actor: $this->resolveActor($request),
                 data: $data,
                 canManagePromotions: $canManagePromotions,
                 photoPath: $photoPath,
@@ -372,6 +380,7 @@ class ClientController extends Controller
             'first_name' => trim((string) $data['edit_first_name']),
             'last_name' => trim((string) $data['edit_last_name']),
             'phone' => trim((string) $data['edit_phone']),
+            ...ClientAudit::managementAttributesFromUser($this->resolveActor($request)),
         ]);
 
         return back()->with('status', 'Cliente actualizado correctamente.');
@@ -483,6 +492,14 @@ class ClientController extends Controller
             ->select([
                 'id',
                 'gym_id',
+                'created_by',
+                'created_by_name_snapshot',
+                'created_by_role_snapshot',
+                'last_managed_by',
+                'last_managed_by_name_snapshot',
+                'last_managed_by_role_snapshot',
+                'last_managed_at',
+                'created_at',
                 'first_name',
                 'last_name',
                 'document_number',
@@ -495,6 +512,8 @@ class ClientController extends Controller
             ])
             ->with([
                 'gym:id,address_country_code,timezone',
+                'createdByUser:id,name,is_active',
+                'lastManagedByUser:id,name,is_active',
                 'fitnessProfile:id,gym_id,client_id,goal,secondary_goal,experience_level,days_per_week,session_minutes',
                 'credentials' => fn ($query) => $query
                     ->select(['id', 'gym_id', 'client_id', 'type', 'value', 'status', 'created_at'])
@@ -686,6 +705,8 @@ class ClientController extends Controller
             gymTimezone: (string) ($clientModel->gym?->timezone ?? '')
         );
 
+        $clientTimezone = trim((string) ($clientModel->gym?->timezone ?? ''));
+
         return view('clients.show', [
             'client' => $clientModel,
             'plans' => $plans,
@@ -700,6 +721,20 @@ class ClientController extends Controller
             'canManageClientAccounts' => $canManageClientAccounts,
             'canAdjustMemberships' => $canAdjustMemberships,
             'progressOverview' => $progressOverview,
+            'clientCreationAudit' => $this->buildClientAuditSummary(
+                nameSnapshot: (string) ($clientModel->created_by_name_snapshot ?? ''),
+                roleSnapshot: (string) ($clientModel->created_by_role_snapshot ?? ''),
+                linkedUser: $clientModel->createdByUser,
+                timestamp: $clientModel->created_at,
+                timezone: $clientTimezone
+            ),
+            'clientLastManagementAudit' => $this->buildClientAuditSummary(
+                nameSnapshot: (string) ($clientModel->last_managed_by_name_snapshot ?? ''),
+                roleSnapshot: (string) ($clientModel->last_managed_by_role_snapshot ?? ''),
+                linkedUser: $clientModel->lastManagedByUser,
+                timestamp: $clientModel->last_managed_at,
+                timezone: $clientTimezone
+            ),
         ]);
     }
 
@@ -723,6 +758,7 @@ class ClientController extends Controller
 
         $clientModel->update([
             'photo_path' => $newPath,
+            ...ClientAudit::managementAttributesFromUser($this->resolveActor($request)),
         ]);
 
         $this->deletePublicAssetIfLocal($oldPath);
@@ -752,6 +788,7 @@ class ClientController extends Controller
 
         $clientModel->update([
             'app_username' => (string) $request->validated('app_username'),
+            ...ClientAudit::managementAttributesFromUser($this->resolveActor($request)),
         ]);
 
         return redirect()
@@ -786,11 +823,20 @@ class ClientController extends Controller
 
         $clientModel->update([
             'app_password' => Hash::make((string) $request->validated('app_password')),
+            ...ClientAudit::managementAttributesFromUser($this->resolveActor($request)),
         ]);
 
         return redirect()
             ->route('clients.show', $clientModel->id)
             ->with('status', 'Contraseña app del cliente restablecida correctamente.');
+    }
+
+    private function resolveActor(Request $request): User
+    {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403, 'Usuario no autenticado.');
+
+        return $actor;
     }
 
     private function resolveGymId(Request $request): int
@@ -799,6 +845,46 @@ class ClientController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
+    }
+
+    /**
+     * @return array{name:string,role_label:string,display:string,state:?string,state_variant:string,timestamp_label:string}
+     */
+    private function buildClientAuditSummary(
+        string $nameSnapshot,
+        string $roleSnapshot,
+        ?User $linkedUser,
+        mixed $timestamp,
+        string $timezone = ''
+    ): array {
+        $displayName = trim($nameSnapshot) !== '' ? trim($nameSnapshot) : 'Sin registro';
+        $state = ClientAudit::linkedUserState($linkedUser, $roleSnapshot);
+        $resolvedAt = null;
+
+        if ($timestamp instanceof Carbon) {
+            $resolvedAt = $timestamp->copy();
+        } elseif ($timestamp !== null && trim((string) $timestamp) !== '') {
+            $resolvedAt = Carbon::parse((string) $timestamp);
+        }
+
+        if ($resolvedAt && $timezone !== '') {
+            $resolvedAt = $resolvedAt->copy()->timezone($timezone);
+        }
+
+        $stateVariant = match ($state) {
+            'Usuario archivado' => 'warning',
+            'Usuario eliminado' => 'danger',
+            default => 'muted',
+        };
+
+        return [
+            'name' => $displayName,
+            'role_label' => ClientAudit::roleLabel($roleSnapshot),
+            'display' => ClientAudit::actorDisplay($displayName, $roleSnapshot),
+            'state' => $state,
+            'state_variant' => $stateVariant,
+            'timestamp_label' => $resolvedAt?->format('Y-m-d H:i') ?? 'Sin fecha',
+        ];
     }
 
     private function deletePublicAssetIfLocal(?string $path): void
@@ -971,6 +1057,14 @@ class ClientController extends Controller
             'full_name' => (string) $client->full_name,
             'first_name' => (string) ($client->first_name ?? ''),
             'last_name' => (string) ($client->last_name ?? ''),
+            'created_by_display' => ClientAudit::actorDisplay(
+                (string) ($client->created_by_name_snapshot ?? ''),
+                (string) ($client->created_by_role_snapshot ?? '')
+            ),
+            'last_managed_by_display' => ClientAudit::actorDisplay(
+                (string) ($client->last_managed_by_name_snapshot ?? ''),
+                (string) ($client->last_managed_by_role_snapshot ?? '')
+            ),
             'document_number' => (string) $client->document_number,
             'phone' => trim((string) ($client->phone ?? '')),
             'photo_url' => $this->resolvePhotoUrl($client->photo_path),

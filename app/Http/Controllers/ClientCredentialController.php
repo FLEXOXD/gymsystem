@@ -6,10 +6,12 @@ use App\Http\Requests\StoreRfidCredentialRequest;
 use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Support\ActiveGymContext;
+use App\Support\ClientAudit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\User;
 
 class ClientCredentialController extends Controller
 {
@@ -52,6 +54,8 @@ class ClientCredentialController extends Controller
             throw $exception;
         }
 
+        $clientModel->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
+
         return redirect()
             ->route('clients.show', $clientModel->id)
             ->with('status', 'RFID asignado correctamente.');
@@ -84,6 +88,8 @@ class ClientCredentialController extends Controller
             'status' => 'active',
         ]);
 
+        $clientModel->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
+
         return redirect()
             ->route('clients.show', $clientModel->id)
             ->with('status', 'QR generado correctamente.')
@@ -111,6 +117,11 @@ class ClientCredentialController extends Controller
         $credentialModel->update([
             'status' => 'inactive',
         ]);
+
+        Client::query()
+            ->forGym($gymId)
+            ->whereKey((int) $credentialModel->client_id)
+            ->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
 
         return redirect()
             ->route('clients.show', $credentialModel->client_id)
@@ -144,5 +155,13 @@ class ClientCredentialController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
+    }
+
+    private function resolveActor(Request $request): User
+    {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403, 'Usuario no autenticado.');
+
+        return $actor;
     }
 }

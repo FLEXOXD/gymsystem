@@ -260,6 +260,8 @@
                                         <div class="min-w-0">
                                             <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $client['full_name'] }}</p>
                                             <p class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">{{ $client['document_number'] }}</p>
+                                            <p class="truncate text-[11px] text-slate-500 dark:text-slate-400">Alta: {{ $client['created_by_display'] }}</p>
+                                            <p class="truncate text-[11px] text-slate-500 dark:text-slate-400">Ultima gestion: {{ $client['last_managed_by_display'] }}</p>
                                         </div>
                                     </div>
                                 </td>

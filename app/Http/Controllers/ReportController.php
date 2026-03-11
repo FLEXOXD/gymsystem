@@ -94,7 +94,7 @@ class ReportController extends Controller
             ->with([
                 'createdBy:id,name',
                 'membership:id,client_id',
-                'membership.client:id,first_name,last_name',
+                'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
             ])
             ->orderByDesc('occurred_at')
             ->paginate(50)
@@ -254,7 +254,7 @@ class ReportController extends Controller
         fputcsv($handle, []);
 
         fputcsv($handle, ['DETALLE MOVIMIENTOS']);
-        fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Usuario', 'Descripción']);
+        fputcsv($handle, ['ID', 'Fecha', 'Tipo', 'Método', 'Monto', 'Cliente', 'Alta cliente', 'Usuario', 'Descripción']);
         $resolvedGymIds = collect($gymIds)
             ->map(static fn ($id): int => (int) $id)
             ->filter(static fn (int $id): bool => $id > 0)
@@ -280,12 +280,18 @@ class ReportController extends Controller
                 'users.name as user_name',
                 'clients.first_name as client_first_name',
                 'clients.last_name as client_last_name',
+                'clients.created_by_name_snapshot as client_created_by_name_snapshot',
+                'clients.created_by_role_snapshot as client_created_by_role_snapshot',
             ])
             ->orderBy('cash_movements.id');
 
         $movementsQuery->chunkById(1000, function ($rows) use ($handle): void {
             foreach ($rows as $row) {
                 $clientName = trim(((string) ($row->client_first_name ?? '')).' '.((string) ($row->client_last_name ?? '')));
+                $clientCreator = \App\Support\ClientAudit::actorDisplay(
+                    (string) ($row->client_created_by_name_snapshot ?? ''),
+                    (string) ($row->client_created_by_role_snapshot ?? '')
+                );
 
                 fputcsv($handle, [
                     $row->movement_id,
@@ -303,6 +309,7 @@ class ReportController extends Controller
                     },
                     number_format((float) $row->amount, 2, '.', ''),
                     $clientName,
+                    $clientCreator,
                     (string) ($row->user_name ?? ''),
                     (string) ($row->description ?? ''),
                 ]);
@@ -356,7 +363,7 @@ class ReportController extends Controller
             ->with([
                 'createdBy:id,name',
                 'membership:id,client_id',
-                'membership.client:id,first_name,last_name',
+                'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
             ])
             ->orderByDesc('occurred_at')
             ->limit(self::PDF_MAX_DETAIL_ROWS)

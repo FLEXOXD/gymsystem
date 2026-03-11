@@ -6,11 +6,13 @@ use App\Models\Client;
 use App\Models\Membership;
 use App\Models\MembershipAdjustment;
 use App\Models\Plan;
+use App\Models\User;
 use App\Modules\Clients\Services\ClientMembershipDomainService;
 use App\Services\CashSessionService;
 use App\Services\PlanAccessService;
 use App\Services\PromotionService;
 use App\Support\ActiveGymContext;
+use App\Support\ClientAudit;
 use App\Support\PlanDuration;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +45,7 @@ class MembershipController extends Controller
         }
 
         $gymId = $this->resolveGymId($request);
+        $actor = $this->resolveActor($request);
         $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
 
         $data = $request->validate([
@@ -131,6 +134,7 @@ class MembershipController extends Controller
         $membership = null;
         try {
             DB::transaction(function () use (
+                $actor,
                 $gymId,
                 $data,
                 $plan,
@@ -179,7 +183,11 @@ class MembershipController extends Controller
                     $pricing['promotion']->increment('times_used');
                 }
 
-                $this->syncClientStatusForToday($gymId, (int) $data['client_id']);
+                $this->syncClientStatusForToday(
+                    $gymId,
+                    (int) $data['client_id'],
+                    ClientAudit::managementAttributesFromUser($actor)
+                );
             });
         } catch (RuntimeException $exception) {
             return redirect()
@@ -206,6 +214,7 @@ class MembershipController extends Controller
         }
 
         $gymId = $this->resolveGymId($request);
+        $actor = $this->resolveActor($request);
         $adjustmentType = (string) $request->input('adjustment_type', '');
 
         $data = $request->validate([
@@ -311,7 +320,7 @@ class MembershipController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($request, $gymId, $membershipModel, $data, $previousStartsAt, $previousEndsAt, $newStartsAt, $newEndsAt, $newStatus, $daysDelta): void {
+        DB::transaction(function () use ($request, $actor, $gymId, $membershipModel, $data, $previousStartsAt, $previousEndsAt, $newStartsAt, $newEndsAt, $newStatus, $daysDelta): void {
             $previousStatus = (string) $membershipModel->status;
 
             $membershipModel->update([
@@ -337,7 +346,11 @@ class MembershipController extends Controller
                 'days_delta' => $daysDelta,
             ]);
 
-            $this->syncClientStatusForToday($gymId, (int) $membershipModel->client_id);
+            $this->syncClientStatusForToday(
+                $gymId,
+                (int) $membershipModel->client_id,
+                ClientAudit::managementAttributesFromUser($actor)
+            );
         });
 
         return redirect()
@@ -353,7 +366,18 @@ class MembershipController extends Controller
         return (int) $gymId;
     }
 
-    private function syncClientStatusForToday(int $gymId, int $clientId): void
+    private function resolveActor(Request $request): User
+    {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403, 'Usuario no autenticado.');
+
+        return $actor;
+    }
+
+    /**
+     * @param  array<string, mixed>  $extraUpdates
+     */
+    private function syncClientStatusForToday(int $gymId, int $clientId, array $extraUpdates = []): void
     {
         $hasActiveMembershipToday = Membership::query()
             ->forGym($gymId)
@@ -364,9 +388,9 @@ class MembershipController extends Controller
         Client::query()
             ->forGym($gymId)
             ->where('id', $clientId)
-            ->update([
+            ->update(array_merge([
                 'status' => $hasActiveMembershipToday ? 'active' : 'inactive',
-            ]);
+            ], $extraUpdates));
     }
 
     /**

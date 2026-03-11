@@ -44,11 +44,19 @@ class GymPanelController extends Controller
         $gymId = ActiveGymContext::id($request);
         $gymIds = ActiveGymContext::ids($request);
         $isGlobalScope = ActiveGymContext::isGlobal($request);
+        $currentUser = $request->user();
+        $cashierScopeUserId = $currentUser && $currentUser->isCashier()
+            ? (int) $currentUser->id
+            : null;
+        $isCashierScoped = $cashierScopeUserId !== null;
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         $todayDate = now();
         $today = $todayDate->copy()->startOfDay()->toDateString();
         $twoDaysLater = $todayDate->copy()->addDays(2)->toDateString();
+        $cashMovementsBaseQuery = fn () => CashMovement::query()
+            ->forGyms($gymIds)
+            ->createdByUser($cashierScopeUserId);
 
         $latestMembershipSub = Membership::query()
             ->from('memberships as m')
@@ -127,42 +135,36 @@ class GymPanelController extends Controller
                 ->count()
             : 0;
 
-        $incomeToday = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $incomeToday = (float) $cashMovementsBaseQuery()
             ->whereDate('occurred_at', $today)
             ->where('type', 'income')
             ->sum('amount');
 
-        $expenseToday = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $expenseToday = (float) $cashMovementsBaseQuery()
             ->whereDate('occurred_at', $today)
             ->where('type', 'expense')
             ->sum('amount');
 
         $todayBalance = round($incomeToday - $expenseToday, 2);
 
-        $incomeYearToDate = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $incomeYearToDate = (float) $cashMovementsBaseQuery()
             ->betweenOccurredAt($currentYearStart, $currentYearEnd)
             ->where('type', 'income')
             ->sum('amount');
 
-        $expenseYearToDate = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $expenseYearToDate = (float) $cashMovementsBaseQuery()
             ->betweenOccurredAt($currentYearStart, $currentYearEnd)
             ->where('type', 'expense')
             ->sum('amount');
 
         $netYearToDate = round($incomeYearToDate - $expenseYearToDate, 2);
 
-        $incomeCurrentMonth = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $incomeCurrentMonth = (float) $cashMovementsBaseQuery()
             ->betweenOccurredAt($currentMonthStart, $currentMonthEnd)
             ->where('type', 'income')
             ->sum('amount');
 
-        $incomePreviousMonth = (float) CashMovement::query()
-            ->forGyms($gymIds)
+        $incomePreviousMonth = (float) $cashMovementsBaseQuery()
             ->betweenOccurredAt($previousMonthStart, $previousMonthEnd)
             ->where('type', 'income')
             ->sum('amount');
@@ -173,12 +175,11 @@ class GymPanelController extends Controller
             $monthlyIncomePct = round(($monthlyIncomeDiff / $incomePreviousMonth) * 100, 1);
         }
 
-        $incomeLast6Months = collect(range(5, 1))->map(function (int $monthsBack) use ($gymIds, $todayDate) {
+        $incomeLast6Months = collect(range(5, 1))->map(function (int $monthsBack) use ($cashMovementsBaseQuery, $todayDate) {
             $monthDate = $todayDate->copy()->subMonthsNoOverflow($monthsBack);
             $start = $monthDate->copy()->startOfMonth();
             $end = $monthDate->copy()->endOfMonth();
-            $income = (float) CashMovement::query()
-                ->forGyms($gymIds)
+            $income = (float) $cashMovementsBaseQuery()
                 ->betweenOccurredAt($start, $end)
                 ->where('type', 'income')
                 ->sum('amount');
@@ -192,8 +193,7 @@ class GymPanelController extends Controller
             'income' => round($incomeCurrentMonth, 2),
         ]);
 
-        $movementsTodayCount = CashMovement::query()
-            ->forGyms($gymIds)
+        $movementsTodayCount = $cashMovementsBaseQuery()
             ->whereDate('occurred_at', $today)
             ->count();
 
@@ -209,20 +209,34 @@ class GymPanelController extends Controller
         }
 
         $openSessionExpected = null;
+        $openSessionScopedSummary = null;
         if ($openSession) {
-            $sessionIncome = (float) CashMovement::query()
+            $sessionMovementsBaseQuery = fn () => CashMovement::query()
                 ->forGym((int) $openSession->gym_id)
                 ->where('cash_session_id', $openSession->id)
+                ->createdByUser($cashierScopeUserId);
+
+            $sessionIncome = (float) $sessionMovementsBaseQuery()
                 ->where('type', 'income')
                 ->sum('amount');
 
-            $sessionExpense = (float) CashMovement::query()
-                ->forGym((int) $openSession->gym_id)
-                ->where('cash_session_id', $openSession->id)
+            $sessionExpense = (float) $sessionMovementsBaseQuery()
                 ->where('type', 'expense')
                 ->sum('amount');
 
-            $openSessionExpected = round((float) $openSession->opening_balance + $sessionIncome - $sessionExpense, 2);
+            $openSessionScopedSummary = [
+                'income_total' => round($sessionIncome, 2),
+                'expense_total' => round($sessionExpense, 2),
+                'net_total' => round($sessionIncome - $sessionExpense, 2),
+                'movements_count' => (int) $sessionMovementsBaseQuery()->count(),
+            ];
+
+            $openSessionExpected = round(
+                $isCashierScoped
+                    ? (float) $openSessionScopedSummary['net_total']
+                    : (float) $openSession->opening_balance + $sessionIncome - $sessionExpense,
+                2
+            );
         }
 
         $upcomingRenewals = (clone $activeClientsBase)
@@ -305,8 +319,7 @@ class GymPanelController extends Controller
             ->with(['client:id,first_name,last_name', 'gym:id,name'])
             ->get(['id', 'gym_id', 'client_id', 'date', 'time']);
 
-        $recentCashMovements = CashMovement::query()
-            ->forGyms($gymIds)
+        $recentCashMovements = $cashMovementsBaseQuery()
             ->select(['id', 'gym_id', 'type', 'amount', 'method', 'description', 'created_by', 'occurred_at'])
             ->with(['createdBy:id,name', 'gym:id,name'])
             ->orderByDesc('occurred_at')
@@ -335,10 +348,12 @@ class GymPanelController extends Controller
             'movementsTodayCount' => $movementsTodayCount,
             'openSession' => $openSession,
             'openSessionExpected' => $openSessionExpected,
+            'openSessionScopedSummary' => $openSessionScopedSummary,
             'upcomingRenewals' => $upcomingRenewals,
             'expiredRenewalCandidates' => $expiredRenewalCandidates,
             'todayAttendances' => $todayAttendances,
             'recentCashMovements' => $recentCashMovements,
+            'isCashierScoped' => $isCashierScoped,
         ]);
     }
 

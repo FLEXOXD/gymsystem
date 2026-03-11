@@ -103,6 +103,18 @@ class CashMovement extends Model
     }
 
     /**
+     * Scope records created by one cashier/user.
+     */
+    public function scopeCreatedByUser(Builder $query, ?int $userId): Builder
+    {
+        if (($userId ?? 0) <= 0) {
+            return $query;
+        }
+
+        return $query->where('created_by', (int) $userId);
+    }
+
+    /**
      * Scope records between date boundaries.
      */
     public function scopeBetweenOccurredAt(Builder $query, Carbon $from, Carbon $to): Builder

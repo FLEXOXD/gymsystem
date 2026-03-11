@@ -9,6 +9,7 @@ use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
+use App\Support\ClientAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -500,10 +501,32 @@ class LegacyDbcolaImportService
             ];
 
             if (! $client) {
-                $client = Client::query()->create($payload);
+                $client = Client::query()->create(array_merge(
+                    $payload,
+                    ClientAudit::legacyAttributes('Importacion legacy')
+                ));
                 $created++;
             } else {
                 $client->forceFill($payload)->save();
+
+                if (
+                    trim((string) ($client->created_by_name_snapshot ?? '')) === ''
+                    || trim((string) ($client->last_managed_by_name_snapshot ?? '')) === ''
+                    || $client->last_managed_at === null
+                ) {
+                    $client->forceFill(array_merge(
+                        array_filter([
+                            'created_by_name_snapshot' => trim((string) ($client->created_by_name_snapshot ?? '')) === '' ? 'Importacion legacy' : null,
+                            'created_by_role_snapshot' => trim((string) ($client->created_by_role_snapshot ?? '')) === '' ? ClientAudit::ROLE_LEGACY : null,
+                        ], static fn ($value): bool => $value !== null),
+                        array_filter([
+                            'last_managed_by_name_snapshot' => trim((string) ($client->last_managed_by_name_snapshot ?? '')) === '' ? 'Importacion legacy' : null,
+                            'last_managed_by_role_snapshot' => trim((string) ($client->last_managed_by_role_snapshot ?? '')) === '' ? ClientAudit::ROLE_LEGACY : null,
+                            'last_managed_at' => $client->last_managed_at === null ? now() : null,
+                        ], static fn ($value): bool => $value !== null)
+                    ))->save();
+                }
+
                 $updated++;
             }
 

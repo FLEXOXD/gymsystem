@@ -38,6 +38,9 @@ class CashController extends Controller
         $gymIds = ActiveGymContext::ids($request);
         $isGlobalScope = ActiveGymContext::isGlobal($request);
         $cashGuard = $this->resolveCashGuard($request, $gymId);
+        $user = $request->user();
+        $cashierScopeUserId = $this->resolveCashierScopeUserId($request);
+        $isCashierScoped = $cashierScopeUserId !== null;
 
         if ($isGlobalScope) {
             $this->autoCloseExpiredSessionsForGyms($gymIds);
@@ -71,7 +74,6 @@ class CashController extends Controller
         }
 
         $openSession = $this->cashSessionService->getOpenSession($gymId);
-        $user = $request->user();
         $canOpenCash = (bool) ($user?->canOpenCashBox());
         $canCloseCash = (bool) ($user?->canCloseCashBox());
         $canManageMovements = (bool) ($user?->canManageCashMovements());
@@ -85,13 +87,16 @@ class CashController extends Controller
             'expense_count' => 0,
         ];
         $methodTotals = collect();
+        $closeSummary = $summary;
+        $closeMethodTotals = $methodTotals;
         $latestMovements = collect();
-        $recentClosedSessions = CashSession::query()
+        $recentClosedSessionsQuery = CashSession::query()
             ->forGym($gymId)
             ->where('status', 'closed')
             ->select([
                 'id',
                 'gym_id',
+                'opened_by',
                 'closed_by',
                 'closed_at',
                 'closing_balance',
@@ -100,21 +105,39 @@ class CashController extends Controller
                 'difference_reason',
                 'close_source',
             ])
-            ->with(['closedBy:id,name'])
+            ->with(['closedBy:id,name']);
+
+        $this->applyCashierSessionScope($recentClosedSessionsQuery, $cashierScopeUserId);
+
+        $recentClosedSessions = $recentClosedSessionsQuery
             ->orderByDesc('closed_at')
             ->limit(8)
             ->get();
 
         if ($openSession) {
-            $summary = $this->cashSessionReadService->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance);
-            $methodTotals = $this->cashSessionReadService->buildMethodTotals($gymId, $openSession->id);
-            $latestMovements = $this->cashSessionReadService->latestMovements($gymId, $openSession->id);
+            $summary = $this->cashSessionReadService->buildSessionSummary(
+                $gymId,
+                $openSession->id,
+                (float) $openSession->opening_balance,
+                $cashierScopeUserId
+            );
+            $methodTotals = $this->cashSessionReadService->buildMethodTotals($gymId, $openSession->id, $cashierScopeUserId);
+            $latestMovements = $this->cashSessionReadService->latestMovements($gymId, $openSession->id, 10, $cashierScopeUserId);
+
+            $closeSummary = $canCloseCash && $isCashierScoped
+                ? $this->cashSessionReadService->buildSessionSummary($gymId, $openSession->id, (float) $openSession->opening_balance)
+                : $summary;
+            $closeMethodTotals = $canCloseCash && $isCashierScoped
+                ? $this->cashSessionReadService->buildMethodTotals($gymId, $openSession->id)
+                : $methodTotals;
         }
 
         return view('cash.index', [
             'openSession' => $openSession,
             'summary' => $summary,
             'methodTotals' => $methodTotals,
+            'closeSummary' => $closeSummary,
+            'closeMethodTotals' => $closeMethodTotals,
             'latestMovements' => $latestMovements,
             'recentClosedSessions' => $recentClosedSessions,
             'cashWriteBlocked' => (bool) ($cashGuard['blocked'] ?? false),
@@ -122,6 +145,7 @@ class CashController extends Controller
             'canOpenCash' => $canOpenCash,
             'canCloseCash' => $canCloseCash,
             'canManageMovements' => $canManageMovements,
+            'isCashierScoped' => $isCashierScoped,
         ]);
     }
 
@@ -213,9 +237,10 @@ class CashController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $cashierScopeUserId = $this->assertCashSessionHistoryAccess($request);
         $this->autoCloseExpiredSessionsForGyms($gymIds);
 
-        $sessions = CashSession::query()
+        $sessionsQuery = CashSession::query()
             ->forGyms($gymIds)
             ->select([
                 'id',
@@ -234,11 +259,15 @@ class CashController extends Controller
                 'close_source',
             ])
             ->with(['gym:id,name,slug', 'openedBy:id,name', 'closedBy:id,name'])
-            ->orderByDesc('opened_at')
-            ->paginate(20);
+            ->orderByDesc('opened_at');
+
+        $this->applyCashierSessionScope($sessionsQuery, $cashierScopeUserId);
+
+        $sessions = $sessionsQuery->paginate(20);
 
         return view('cash.sessions', [
             'sessions' => $sessions,
+            'isCashierScoped' => $cashierScopeUserId !== null,
         ]);
     }
 
@@ -249,9 +278,10 @@ class CashController extends Controller
     {
         $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $cashierScopeUserId = $this->assertCashSessionHistoryAccess($request);
         $this->autoCloseExpiredSessionsForGyms($gymIds);
 
-        $sessionModel = CashSession::query()
+        $sessionQuery = CashSession::query()
             ->forGyms($gymIds)
             ->select([
                 'id',
@@ -286,22 +316,36 @@ class CashController extends Controller
                         'description',
                         'occurred_at',
                     ])
+                    ->createdByUser($cashierScopeUserId)
                     ->orderByDesc('occurred_at')
                     ->with([
                         'createdBy:id,name',
                         'membership:id,client_id',
-                        'membership.client:id,first_name,last_name',
+                        'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
                     ]),
-            ])
-            ->findOrFail($session);
+            ]);
 
-        $summary = $this->cashSessionReadService->buildSessionSummary((int) $sessionModel->gym_id, $sessionModel->id, (float) $sessionModel->opening_balance);
-        $methodTotals = $this->cashSessionReadService->buildMethodTotals((int) $sessionModel->gym_id, $sessionModel->id);
+        $this->applyCashierSessionScope($sessionQuery, $cashierScopeUserId);
+
+        $sessionModel = $sessionQuery->findOrFail($session);
+
+        $summary = $this->cashSessionReadService->buildSessionSummary(
+            (int) $sessionModel->gym_id,
+            $sessionModel->id,
+            (float) $sessionModel->opening_balance,
+            $cashierScopeUserId
+        );
+        $methodTotals = $this->cashSessionReadService->buildMethodTotals(
+            (int) $sessionModel->gym_id,
+            $sessionModel->id,
+            $cashierScopeUserId
+        );
 
         return view('cash.show', [
             'session' => $sessionModel,
             'summary' => $summary,
             'methodTotals' => $methodTotals,
+            'isCashierScoped' => $cashierScopeUserId !== null,
         ]);
     }
 
@@ -379,5 +423,41 @@ class CashController extends Controller
 
             $this->cashSessionService->autoCloseExpiredSessions($resolvedGymId);
         }
+    }
+
+    private function resolveCashierScopeUserId(Request $request): ?int
+    {
+        $user = $request->user();
+
+        return $user && $user->isCashier()
+            ? (int) $user->id
+            : null;
+    }
+
+    private function assertCashSessionHistoryAccess(Request $request): ?int
+    {
+        $cashierScopeUserId = $this->resolveCashierScopeUserId($request);
+
+        if ($cashierScopeUserId !== null && ! (bool) ($request->user()?->canCloseCashBox())) {
+            abort(403, 'No tienes permiso para revisar el historial completo de caja.');
+        }
+
+        return $cashierScopeUserId;
+    }
+
+    private function applyCashierSessionScope($query, ?int $cashierScopeUserId): void
+    {
+        if (($cashierScopeUserId ?? 0) <= 0) {
+            return;
+        }
+
+        $query->where(function ($sessionQuery) use ($cashierScopeUserId): void {
+            $sessionQuery
+                ->where('opened_by', $cashierScopeUserId)
+                ->orWhere('closed_by', $cashierScopeUserId)
+                ->orWhereHas('movements', function ($movementQuery) use ($cashierScopeUserId): void {
+                    $movementQuery->where('created_by', $cashierScopeUserId);
+                });
+        });
     }
 }

@@ -5,9 +5,11 @@ namespace App\Modules\Clients\Actions;
 use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\User;
 use App\Modules\Clients\Services\ClientMembershipDomainService;
 use App\Services\CashSessionService;
 use App\Services\PromotionService;
+use App\Support\ClientAudit;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -27,12 +29,13 @@ class RegisterClientAction
      */
     public function execute(
         int $gymId,
-        int $userId,
+        User $actor,
         array $data,
         bool $canManagePromotions,
         ?string $photoPath = null,
         bool $canManageClientAccounts = false
     ): Client {
+        $userId = (int) $actor->id;
         $startsMembership = (bool) ($data['start_membership'] ?? false);
         $requestedAppUsername = mb_strtolower(trim((string) ($data['app_username'] ?? '')));
         $requestedAppPassword = trim((string) ($data['app_password'] ?? ''));
@@ -41,9 +44,10 @@ class RegisterClientAction
             && $requestedAppUsername !== ''
             && $requestedAppPassword !== '';
 
-        return DB::transaction(function () use ($gymId, $userId, $data, $canManagePromotions, $photoPath, $startsMembership, $createAppAccount, $requestedAppUsername, $requestedAppPassword): Client {
+        return DB::transaction(function () use ($gymId, $userId, $actor, $data, $canManagePromotions, $photoPath, $startsMembership, $createAppAccount, $requestedAppUsername, $requestedAppPassword): Client {
             $client = Client::query()->create([
                 'gym_id' => $gymId,
+                ...ClientAudit::creationAttributesFromUser($actor),
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'document_number' => $data['document_number'],

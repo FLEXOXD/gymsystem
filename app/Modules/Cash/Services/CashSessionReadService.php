@@ -10,11 +10,9 @@ class CashSessionReadService
     /**
      * @return array<string, float|int>
      */
-    public function buildSessionSummary(int $gymId, int $sessionId, float $openingBalance): array
+    public function buildSessionSummary(int $gymId, int $sessionId, float $openingBalance, ?int $createdByUserId = null): array
     {
-        $totals = CashMovement::query()
-            ->forGym($gymId)
-            ->where('cash_session_id', $sessionId)
+        $totals = $this->baseSessionMovementsQuery($gymId, $sessionId, $createdByUserId)
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense_total")
             ->selectRaw('COUNT(*) as movements_count')
@@ -35,11 +33,9 @@ class CashSessionReadService
         ];
     }
 
-    public function buildMethodTotals(int $gymId, int $sessionId): Collection
+    public function buildMethodTotals(int $gymId, int $sessionId, ?int $createdByUserId = null): Collection
     {
-        return CashMovement::query()
-            ->forGym($gymId)
-            ->where('cash_session_id', $sessionId)
+        return $this->baseSessionMovementsQuery($gymId, $sessionId, $createdByUserId)
             ->selectRaw('method')
             ->selectRaw('COUNT(*) as movements_count')
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as income_total")
@@ -49,11 +45,9 @@ class CashSessionReadService
             ->get();
     }
 
-    public function latestMovements(int $gymId, int $sessionId, int $limit = 10): Collection
+    public function latestMovements(int $gymId, int $sessionId, int $limit = 10, ?int $createdByUserId = null): Collection
     {
-        return CashMovement::query()
-            ->forGym($gymId)
-            ->where('cash_session_id', $sessionId)
+        return $this->baseSessionMovementsQuery($gymId, $sessionId, $createdByUserId)
             ->select([
                 'id',
                 'gym_id',
@@ -69,11 +63,18 @@ class CashSessionReadService
             ->with([
                 'createdBy:id,name',
                 'membership:id,client_id',
-                'membership.client:id,first_name,last_name',
+                'membership.client:id,first_name,last_name,created_by_name_snapshot,created_by_role_snapshot',
             ])
             ->orderByDesc('occurred_at')
             ->limit($limit)
             ->get();
     }
-}
 
+    private function baseSessionMovementsQuery(int $gymId, int $sessionId, ?int $createdByUserId = null)
+    {
+        return CashMovement::query()
+            ->forGym($gymId)
+            ->where('cash_session_id', $sessionId)
+            ->createdByUser($createdByUserId);
+    }
+}

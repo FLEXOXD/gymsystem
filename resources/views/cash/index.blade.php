@@ -38,6 +38,7 @@
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
         $isCurrentCashView = ! $isGlobalScope && array_key_exists('openSession', get_defined_vars());
         $openSession = $openSession ?? null;
+        $isCashierScoped = (bool) ($isCashierScoped ?? false);
         $cashWriteBlocked = (bool) ($cashWriteBlocked ?? false);
         $cashWriteBlockedReason = trim((string) ($cashWriteBlockedReason ?? ''));
         $canOpenCash = (bool) ($canOpenCash ?? $isOwnerUser);
@@ -50,6 +51,11 @@
          data-module="cash-index"
          data-currency-symbol="{{ $currencySymbol }}"
          data-void-route-template="{{ $voidRouteTemplate }}">
+        @if ($isCurrentCashView && $isCashierScoped)
+            <x-ui.card title="Vista privada" subtitle="Solo ves tus cobros, egresos y movimientos personales dentro del turno.">
+                <p class="ui-alert ui-alert-info">Los acumulados del gimnasio quedan ocultos para tu perfil.</p>
+            </x-ui.card>
+        @endif
         @if ($isCurrentCashView)
             @if (! $openSession)
                 @if ($cashWriteBlocked)
@@ -96,7 +102,10 @@
                 @php
                     $activeSummary = $summary ?? ['income_total' => 0, 'expense_total' => 0, 'expected_balance' => 0, 'movements_count' => 0];
                     $activeMethodTotals = $methodTotals ?? collect();
+                    $closingSummary = $closeSummary ?? $activeSummary;
+                    $closingMethodTotals = $closeMethodTotals ?? $activeMethodTotals;
                     $activeMovements = $latestMovements ?? collect();
+                    $scopedNetTotal = round((float) ($activeSummary['income_total'] ?? 0) - (float) ($activeSummary['expense_total'] ?? 0), 2);
 
                     $methodMap = collect(['cash', 'card', 'transfer'])->map(function (string $method) use ($activeMethodTotals) {
                         $row = $activeMethodTotals->firstWhere('method', $method);
@@ -108,39 +117,70 @@
                         ];
                     })->keyBy('method');
 
-                    $expectedCash = (float) $openSession->opening_balance + (float) ($methodMap->get('cash')->income_total ?? 0) - (float) ($methodMap->get('cash')->expense_total ?? 0);
-                    $expectedCard = (float) ($methodMap->get('card')->income_total ?? 0) - (float) ($methodMap->get('card')->expense_total ?? 0);
-                    $expectedTransfer = (float) ($methodMap->get('transfer')->income_total ?? 0) - (float) ($methodMap->get('transfer')->expense_total ?? 0);
+                    $closeMethodMap = collect(['cash', 'card', 'transfer'])->map(function (string $method) use ($closingMethodTotals) {
+                        $row = $closingMethodTotals->firstWhere('method', $method);
+                        return (object) [
+                            'method' => $method,
+                            'movements_count' => (int) ($row->movements_count ?? 0),
+                            'income_total' => (float) ($row->income_total ?? 0),
+                            'expense_total' => (float) ($row->expense_total ?? 0),
+                        ];
+                    })->keyBy('method');
+
+                    $expectedCash = (float) $openSession->opening_balance + (float) ($closeMethodMap->get('cash')->income_total ?? 0) - (float) ($closeMethodMap->get('cash')->expense_total ?? 0);
+                    $expectedCard = (float) ($closeMethodMap->get('card')->income_total ?? 0) - (float) ($closeMethodMap->get('card')->expense_total ?? 0);
+                    $expectedTransfer = (float) ($closeMethodMap->get('transfer')->income_total ?? 0) - (float) ($closeMethodMap->get('transfer')->expense_total ?? 0);
                     $expectedTotal = round($expectedCash + $expectedCard + $expectedTransfer, 2);
                 @endphp
 
-                <x-ui.card title="Turno activo #{{ $openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
-                            <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $currencyCode) }}</p>
-                        </article>
-                        <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
-                            <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Ingresos</p>
-                            <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
-                        </article>
-                        <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
-                            <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Egresos</p>
-                            <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
-                        </article>
-                        <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                            <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperados</p>
-                            <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
-                        </article>
-                        <article class="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
-                            <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">Saldo actual</p>
-                            <p class="mt-1 text-2xl font-black text-violet-800 dark:text-violet-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
-                        </article>
-                        <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos</p>
-                            <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) $activeSummary['movements_count'] }}</p>
-                        </article>
-                    </div>
+                <x-ui.card title="{{ $isCashierScoped ? 'Tu producciÃ³n en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
+                    @if ($isCashierScoped)
+                        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Tus ingresos</p>
+                                <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Tus egresos</p>
+                                <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Tu balance</p>
+                                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($scopedNetTotal, $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
+                                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) $activeSummary['movements_count'] }}</p>
+                            </article>
+                        </div>
+                    @else
+                        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+                            <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Ingresos</p>
+                                <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Egresos</p>
+                                <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperados</p>
+                                <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
+                                <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">Saldo actual</p>
+                                <p class="mt-1 text-2xl font-black text-violet-800 dark:text-violet-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
+                            </article>
+                            <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos</p>
+                                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) $activeSummary['movements_count'] }}</p>
+                            </article>
+                        </div>
+                    @endif
 
                     <div class="mt-4 grid gap-3 md:grid-cols-3">
                         @foreach ($methodMap as $methodTotal)
@@ -235,12 +275,12 @@
                             </div>
                         </x-ui.card>
 
-                        <x-ui.card title="Cerrar turno" subtitle="Conteo por método y control de diferencias.">
+                        <x-ui.card title="{{ $canCloseCash ? 'Cerrar turno' : 'Cierre restringido' }}" subtitle="{{ $canCloseCash ? 'Conteo por método y control de diferencias.' : 'Solo usuarios autorizados pueden ver y ejecutar el cierre completo.' }}">
                             @if (! $canCloseCash)
                                 <p class="ui-alert ui-alert-warning mb-3">
                                     Tu perfil no tiene permiso para cerrar caja. Esta acción la realiza el dueño o un usuario autorizado.
                                 </p>
-                            @endif
+                            @else
 
                             <div id="close-form-alert" class="hidden ui-alert ui-alert-warning"></div>
 
@@ -300,13 +340,14 @@
                                 <p class="ui-alert ui-alert-warning text-xs">Solo Admin puede confirmar cierre con diferencia.</p>
                             @endif
 
-                                <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center" :disabled="!$canCloseCash">Cerrar turno</x-ui.button>
+                                <x-ui.button id="close-submit" type="submit" variant="danger" size="lg" class="w-full justify-center">Cerrar turno</x-ui.button>
                             </form>
+                            @endif
                         </x-ui.card>
                     @endif
                 </section>
 
-                <x-ui.card title="últimos 10 movimientos">
+                <x-ui.card title="{{ $isCashierScoped ? 'Tus últimos 10 movimientos' : 'últimos 10 movimientos' }}">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
@@ -316,6 +357,7 @@
                                 <th>Método</th>
                                 <th>Monto</th>
                                 <th>Cliente</th>
+                                <th>Alta cliente</th>
                                 <th>Usuario</th>
                                 <th>Descripción</th>
                                 <th>Estado</th>
@@ -335,6 +377,7 @@
                                         {{ $movement->type === 'income' ? '+' : '-' }}{{ $currencyFormatter::format((float) $movement->amount, $currencyCode, true) }}
                                     </td>
                                     <td>{{ $movement->membership?->client?->full_name ?? '-' }}</td>
+                                    <td>{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                                     <td>{{ $movement->createdBy?->name ?? '-' }}</td>
                                     <td>{{ $movement->description ?: '-' }}</td>
                                     <td>
@@ -358,7 +401,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center text-sm text-slate-500 dark:text-slate-300">Aún no hay movimientos en este turno.</td>
+                                    <td colspan="10" class="text-center text-sm text-slate-500 dark:text-slate-300">{{ $isCashierScoped ? 'Aún no tienes movimientos en este turno.' : 'Aún no hay movimientos en este turno.' }}</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -367,7 +410,9 @@
 
                     <div class="mt-4 flex flex-wrap gap-2">
                         <x-ui.button :href="route('clients.index')" variant="primary">Cobrar membresía</x-ui.button>
-                        <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
+                        @if (! $isCashierUser || $canCloseCash)
+                            <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">Ver historial de caja</x-ui.button>
+                        @endif
                         @if (! $isCashierUser)
                             <x-ui.button :href="route('reports.income')" variant="ghost">Ver reporte de ingresos</x-ui.button>
                         @endif

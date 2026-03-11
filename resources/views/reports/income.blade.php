@@ -106,7 +106,7 @@
         </div>
 
         <div class="movements-scroll">
-            <table class="ui-table min-w-[1100px] text-slate-800 dark:text-slate-100" data-smart-list-manual>
+            <table class="ui-table min-w-[1260px] text-slate-800 dark:text-slate-100" data-smart-list-manual>
                 <thead>
                 <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs uppercase tracking-wider text-slate-600 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-300">
                     <th class="px-3 py-3">ID</th>
@@ -115,6 +115,7 @@
                     <th class="px-3 py-3">Método</th>
                     <th class="px-3 py-3">Monto</th>
                     <th class="px-3 py-3">Cliente</th>
+                    <th class="px-3 py-3">Alta cliente</th>
                     <th class="px-3 py-3">Usuario</th>
                     <th class="px-3 py-3">Descripción</th>
                 </tr>
@@ -128,6 +129,7 @@
                             (string) ($movement->occurred_at?->format('Y-m-d H:i') ?? ''),
                             (string) ($methodLabels[$movement->method] ?? $movement->method),
                             (string) ($movement->membership?->client?->full_name ?? ''),
+                            (string) (\App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? ''))),
                             (string) ($movement->createdBy?->name ?? ''),
                             (string) ($movement->description ?? ''),
                         ]));
@@ -147,16 +149,17 @@
                             </span>
                         </td>
                         <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
+                        <td class="px-3 py-3">{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
                         <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
                         <td class="px-3 py-3">{{ $movement->description ?: '-' }}</td>
                     </tr>
                 @empty
                     <tr id="movement-empty-range">
-                        <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500">No hay movimientos en este rango.</td>
+                        <td colspan="9" class="px-3 py-6 text-center text-sm text-slate-500">No hay movimientos en este rango.</td>
                     </tr>
                 @endforelse
                 <tr id="movement-empty-filter" class="hidden">
-                    <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
+                    <td colspan="9" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
                 </tr>
                 </tbody>
             </table>

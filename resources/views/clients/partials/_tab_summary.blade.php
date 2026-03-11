@@ -139,6 +139,32 @@
             </div>
         </x-ui.card>
 
+        <x-ui.card title="Trazabilidad" subtitle="Quien dio de alta al cliente y quien lo gestiono por ultima vez.">
+            <div class="space-y-4 text-sm">
+                <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Creado por</p>
+                    <p class="mt-2 font-semibold text-slate-900 dark:text-slate-100">{{ $clientCreationAudit['display'] ?? 'Sin registro' }}</p>
+                    @if (! empty($clientCreationAudit['state']))
+                        <div class="mt-2">
+                            <x-ui.badge :variant="$clientCreationAudit['state_variant'] ?? 'muted'">{{ $clientCreationAudit['state'] }}</x-ui.badge>
+                        </div>
+                    @endif
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha alta: {{ $clientCreationAudit['timestamp_label'] ?? 'Sin fecha' }}</p>
+                </div>
+
+                <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ultima gestion</p>
+                    <p class="mt-2 font-semibold text-slate-900 dark:text-slate-100">{{ $clientLastManagementAudit['display'] ?? 'Sin registro' }}</p>
+                    @if (! empty($clientLastManagementAudit['state']))
+                        <div class="mt-2">
+                            <x-ui.badge :variant="$clientLastManagementAudit['state_variant'] ?? 'muted'">{{ $clientLastManagementAudit['state'] }}</x-ui.badge>
+                        </div>
+                    @endif
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha gestion: {{ $clientLastManagementAudit['timestamp_label'] ?? 'Sin fecha' }}</p>
+                </div>
+            </div>
+        </x-ui.card>
+
         <x-ui.card title="Accesos rápidos" subtitle="Atajos operativos compactos.">
             <div class="space-y-2">
                 <a href="{{ route('reception.index') }}" class="flex items-center justify-between rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-800 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-800">

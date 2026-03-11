@@ -17,12 +17,22 @@
         $monthPreviousLabel = now()->subMonthNoOverflow()->format('M Y');
         $monthlyBarsMax = max(1, (float) collect($incomeLast6Months)->max('income'));
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $isCashierScoped = (bool) ($isCashierScoped ?? false);
+        $panelSessionSummary = $openSessionScopedSummary ?? [
+            'income_total' => 0,
+            'expense_total' => 0,
+            'net_total' => 0,
+            'movements_count' => 0,
+        ];
         $clientShowUrl = static fn (int $clientId): string => route('clients.show', ['client' => $clientId] + ($isGlobalScope ? ['scope' => 'global'] : []));
     @endphp
 
     <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <div class="space-y-4">
     <x-ui.card id="tour-panel-summary" title="Resumen del día" subtitle="Indicadores clave para tomar decisiones rápidas.">
+        @if ($isCashierScoped)
+            <p class="mb-4 ui-alert ui-alert-info">Vista privada: aqui solo ves tus cobros, movimientos y acumulados del mes actual.</p>
+        @endif
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                 <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-slate-500 dark:text-slate-300">Clientes</p>
@@ -65,20 +75,20 @@
     </x-ui.card>
 
     <section class="grid gap-4 xl:grid-cols-3">
-        <x-ui.card title="Comparativo mensual" subtitle="Si las ventas van mejor o peor vs el mes anterior." class="xl:col-span-2">
+        <x-ui.card title="{{ $isCashierScoped ? 'Comparativo mensual personal' : 'Comparativo mensual' }}" subtitle="{{ $isCashierScoped ? 'Compara tus cobros del mes actual contra tu mes anterior.' : 'Si las ventas van mejor o peor vs el mes anterior.' }}" class="xl:col-span-2">
             <div class="grid gap-3 md:grid-cols-3">
                 <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
                     <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $monthCurrentLabel }}</p>
                     <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) $incomeCurrentMonth, $appCurrencyCode) }}</p>
-                    <p class="text-xs text-cyan-700 dark:text-cyan-200">Ingresos del mes</p>
+                    <p class="text-xs text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Tus ingresos del mes' : 'Ingresos del mes' }}</p>
                 </article>
                 <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">{{ $monthPreviousLabel }}</p>
                     <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $incomePreviousMonth, $appCurrencyCode) }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-300">Mes anterior</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-300">{{ $isCashierScoped ? 'Tu mes anterior' : 'Mes anterior' }}</p>
                 </article>
                 <article class="rounded-xl border p-3 {{ $monthlyIncomeDiff >= 0 ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-400/40 dark:bg-emerald-500/15' : 'border-rose-200 bg-rose-50 dark:border-rose-400/40 dark:bg-rose-500/15' }}">
-                    <p class="text-xs font-bold uppercase tracking-wider {{ $monthlyIncomeDiff >= 0 ? 'text-emerald-700 dark:text-emerald-200' : 'text-rose-700 dark:text-rose-200' }}">Variación</p>
+                    <p class="text-xs font-bold uppercase tracking-wider {{ $monthlyIncomeDiff >= 0 ? 'text-emerald-700 dark:text-emerald-200' : 'text-rose-700 dark:text-rose-200' }}">{{ $isCashierScoped ? 'Variación personal' : 'Variación' }}</p>
                     <p class="mt-1 text-2xl font-black {{ $monthlyIncomeDiff >= 0 ? 'text-emerald-800 dark:text-emerald-100' : 'text-rose-800 dark:text-rose-100' }}">
                         {{ $monthlyIncomeDiff >= 0 ? '+' : '' }}{{ $currencyFormatter::format((float) $monthlyIncomeDiff, $appCurrencyCode, true) }}
                     </p>
@@ -108,60 +118,85 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Caja y ventas hoy" class="xl:col-span-1">
+        <x-ui.card title="{{ $isCashierScoped ? 'Tu producción de hoy' : 'Caja y ventas hoy' }}" class="xl:col-span-1">
             <div class="space-y-3">
                 <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
-                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Ingresos hoy</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">{{ $isCashierScoped ? 'Tus ingresos hoy' : 'Ingresos hoy' }}</p>
                     <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $incomeToday, $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
-                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Egresos hoy</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">{{ $isCashierScoped ? 'Tus egresos hoy' : 'Egresos hoy' }}</p>
                     <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $expenseToday, $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Balance hoy</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Tu balance hoy' : 'Balance hoy' }}</p>
                     <p class="mt-1 text-2xl font-black {{ (float) $todayBalance >= 0 ? 'text-cyan-800 dark:text-cyan-100' : 'text-rose-800 dark:text-rose-100' }}">{{ $currencyFormatter::format((float) $todayBalance, $appCurrencyCode) }}</p>
                 </article>
                 <article class="rounded-xl border p-3 {{ (float) $netYearToDate >= 0 ? 'border-violet-200 bg-violet-50 dark:border-violet-400/40 dark:bg-violet-500/15' : 'border-rose-200 bg-rose-50 dark:border-rose-400/40 dark:bg-rose-500/15' }}">
-                    <p class="text-xs font-bold uppercase tracking-wider {{ (float) $netYearToDate >= 0 ? 'text-violet-700 dark:text-violet-200' : 'text-rose-700 dark:text-rose-200' }}">Ganancia del año</p>
+                    <p class="text-xs font-bold uppercase tracking-wider {{ (float) $netYearToDate >= 0 ? 'text-violet-700 dark:text-violet-200' : 'text-rose-700 dark:text-rose-200' }}">{{ $isCashierScoped ? 'Tu acumulado del año' : 'Ganancia del año' }}</p>
                     <p class="mt-1 text-2xl font-black {{ (float) $netYearToDate >= 0 ? 'text-violet-800 dark:text-violet-100' : 'text-rose-800 dark:text-rose-100' }}">{{ $currencyFormatter::format((float) $netYearToDate, $appCurrencyCode) }}</p>
-                    <p class="text-xs {{ (float) $netYearToDate >= 0 ? 'text-violet-700 dark:text-violet-200' : 'text-rose-700 dark:text-rose-200' }}">Ingresos - egresos acumulados del año</p>
+                    <p class="text-xs {{ (float) $netYearToDate >= 0 ? 'text-violet-700 dark:text-violet-200' : 'text-rose-700 dark:text-rose-200' }}">{{ $isCashierScoped ? 'Tus ingresos menos egresos en el año' : 'Ingresos - egresos acumulados del año' }}</p>
                 </article>
             </div>
         </x-ui.card>
     </section>
 
-    <x-ui.card title="Estado de caja actual" subtitle="Control rápido del turno activo.">
+    <x-ui.card title="{{ $isCashierScoped ? 'Tu actividad de caja actual' : 'Estado de caja actual' }}" subtitle="{{ $isCashierScoped ? 'Resumen privado de tus movimientos dentro del turno activo.' : 'Control rápido del turno activo.' }}">
         @if ($isGlobalScope)
             <p class="ui-alert ui-alert-info">Modo global activo: esta vista consolida sedes y no permite abrir o cerrar turnos desde el panel.</p>
             <div class="mt-3">
                 <x-ui.button :href="route('cash.index')" variant="secondary">Ver consolidado de caja</x-ui.button>
             </div>
         @elseif ($openSession)
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
-                    <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-300">Abierto</p>
-                </article>
-                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
-                    <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $appCurrencyCode) }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-300">{{ $openSession->opened_at?->format('Y-m-d H:i') }}</p>
-                </article>
-                <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperado actual</p>
-                    <p class="mt-1 text-xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($openSessionExpected ?? 0), $appCurrencyCode) }}</p>
-                    <p class="text-xs text-cyan-700 dark:text-cyan-200">Caja operando</p>
-                </article>
-                <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Abierta por</p>
-                    <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ $openSession->openedBy?->name ?? '-' }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-300">Usuario responsable</p>
-                </article>
-            </div>
+            @if ($isCashierScoped)
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">Tus registros dentro del turno</p>
+                    </article>
+                    <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Tus ingresos</p>
+                        <p class="mt-1 text-xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['income_total'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-emerald-700 dark:text-emerald-200">Cobros del turno activo</p>
+                    </article>
+                    <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Tus egresos</p>
+                        <p class="mt-1 text-xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['expense_total'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-rose-700 dark:text-rose-200">Salidas registradas por ti</p>
+                    </article>
+                    <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Tu balance</p>
+                        <p class="mt-1 text-xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($panelSessionSummary['net_total'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-cyan-700 dark:text-cyan-200">{{ (int) ($panelSessionSummary['movements_count'] ?? 0) }} movimientos propios</p>
+                    </article>
+                </div>
+            @else
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">Abierto</p>
+                    </article>
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $appCurrencyCode) }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">{{ $openSession->opened_at?->format('Y-m-d H:i') }}</p>
+                    </article>
+                    <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                        <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperado actual</p>
+                        <p class="mt-1 text-xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format((float) ($openSessionExpected ?? 0), $appCurrencyCode) }}</p>
+                        <p class="text-xs text-cyan-700 dark:text-cyan-200">Caja operando</p>
+                    </article>
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Abierta por</p>
+                        <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">{{ $openSession->openedBy?->name ?? '-' }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300">Usuario responsable</p>
+                    </article>
+                </div>
+            @endif
             <div class="mt-3">
-                <x-ui.button :href="route('cash.index')" variant="secondary">Ir a caja por turno</x-ui.button>
+                <x-ui.button :href="route('cash.index')" variant="secondary">{{ $isCashierScoped ? 'Ir a tu caja' : 'Ir a caja por turno' }}</x-ui.button>
             </div>
         @else
             <p class="ui-alert ui-alert-warning">No hay turno de caja abierto ahora mismo.</p>
@@ -186,7 +221,7 @@
                     <button type="button" class="mt-2 ui-button ui-button-ghost px-3 py-1 text-xs" data-open-modal="modal-checkins">Ver detalle</button>
                 </article>
                 <article class="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
-                    <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">Movimientos de hoy</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">{{ $isCashierScoped ? 'Tus movimientos hoy' : 'Movimientos de hoy' }}</p>
                     <p class="mt-1 text-2xl font-black text-violet-800 dark:text-violet-100">{{ $movementsTodayCount }}</p>
                     <button type="button" class="mt-2 ui-button ui-button-ghost px-3 py-1 text-xs" data-open-modal="modal-movements">Ver detalle</button>
                 </article>
@@ -379,7 +414,7 @@
     <div id="modal-movements" class="ui-modal-backdrop hidden panel-modal" role="dialog" aria-modal="true" aria-labelledby="modalMovementsTitle">
         <div class="ui-modal-panel max-w-6xl">
             <div class="mb-3 flex items-center justify-between gap-2">
-                <h3 id="modalMovementsTitle" class="ui-heading text-lg">Últimos movimientos de caja</h3>
+                <h3 id="modalMovementsTitle" class="ui-heading text-lg">{{ $isCashierScoped ? 'Tus últimos movimientos de caja' : 'Últimos movimientos de caja' }}</h3>
                 <button type="button" class="ui-button ui-button-ghost px-3 py-1 text-xs" data-close-modal>Cerrar</button>
             </div>
             <div class="overflow-x-auto">
@@ -418,7 +453,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">No hay movimientos registrados aún.</td>
+                            <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="text-center text-sm text-slate-500 dark:text-slate-300">{{ $isCashierScoped ? 'Aún no tienes movimientos registrados.' : 'No hay movimientos registrados aún.' }}</td>
                         </tr>
                     @endforelse
                     </tbody>

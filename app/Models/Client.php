@@ -20,6 +20,13 @@ class Client extends Model
      */
     protected $fillable = [
         'gym_id',
+        'created_by',
+        'created_by_name_snapshot',
+        'created_by_role_snapshot',
+        'last_managed_by',
+        'last_managed_by_name_snapshot',
+        'last_managed_by_role_snapshot',
+        'last_managed_at',
         'first_name',
         'last_name',
         'document_number',
@@ -39,11 +46,37 @@ class Client extends Model
     ];
 
     /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'last_managed_at' => 'datetime',
+        ];
+    }
+
+    /**
      * Get the gym that owns the client.
      */
     public function gym(): BelongsTo
     {
         return $this->belongsTo(Gym::class);
+    }
+
+    /**
+     * Get the user that originally created the client record.
+     */
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the last user that managed the client record.
+     */
+    public function lastManagedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_managed_by');
     }
 
     /**
