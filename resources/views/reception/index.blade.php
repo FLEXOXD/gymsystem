@@ -72,6 +72,34 @@
         color: color-mix(in srgb, var(--muted) 90%, #fff);
     }
 
+    .reception-collapsible-group {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .reception-toggle-card {
+        transition: grid-column 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+    }
+
+    .reception-toggle-card.reception-panel-collapsed {
+        min-height: 9.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .reception-toggle-card.reception-panel-collapsed header {
+        margin-bottom: 0.65rem;
+    }
+
+    .reception-toggle-card.reception-panel-collapsed .ui-heading {
+        font-size: clamp(1.12rem, 1.2vw, 1.38rem);
+    }
+
+    .reception-panel-toggle-bar {
+        margin-bottom: 0.65rem;
+    }
+
     .reception-history-tools {
         display: grid;
         gap: 0.55rem;
@@ -122,6 +150,26 @@
     @media (min-width: 1280px) {
         .reception-command-grid {
             grid-template-columns: minmax(320px, 1.2fr) minmax(340px, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .reception-collapsible-group {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: start;
+        }
+
+        .reception-collapsible-group > * {
+            grid-column: 1 / -1;
+        }
+
+        .reception-toggle-card.reception-panel-collapsed {
+            grid-column: auto;
+            min-height: 10.5rem;
+        }
+
+        .reception-toggle-card.reception-panel-expanded {
+            grid-column: 1 / -1;
         }
     }
 </style>
@@ -187,9 +235,10 @@
 
     </x-ui.card>
 
+    <div class="reception-collapsible-group">
     @if (!empty($canManageClientAccounts))
         <x-ui.card title="QR dinámico móvil" subtitle="Genera QR temporal para check-in desde la PWA del cliente.">
-            <div class="mb-3 flex justify-end">
+            <div class="reception-panel-toggle-bar flex justify-end">
                 <button id="toggle-mobile-qr-panel"
                         type="button"
                         class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
@@ -234,15 +283,15 @@
             </div>
         </x-ui.card>
     @else
-        <div class="ui-alert ui-alert-warning">
+        <div class="ui-alert ui-alert-warning lg:col-span-3">
             <strong>QR dinamico no habilitado en este plan.</strong>
             Puedes seguir operando con RFID, documento y lector QR local desde esta pantalla.
             El QR movil temporal se habilita en planes Premium y Sucursales.
         </div>
     @endif
 
-    <x-ui.card id="result-panel" class="relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
-        <div class="relative z-10 mb-2 flex justify-end">
+    <x-ui.card id="result-panel" class="reception-toggle-card reception-panel-expanded relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
+        <div class="reception-panel-toggle-bar relative z-10 flex justify-end">
             <button id="toggle-result-panel"
                     type="button"
                     class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
@@ -309,7 +358,7 @@
     </x-ui.card>
 
     <x-ui.card title="Últimos 10 ingresos">
-        <div class="mb-3 flex justify-end">
+        <div class="reception-panel-toggle-bar flex justify-end">
             <button id="toggle-recent-panel"
                     type="button"
                     class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
@@ -400,6 +449,7 @@
         <p id="recent-attendances-empty-filter" class="hidden">No hay registros que coincidan con los filtros actuales.</p>
         </div>
     </x-ui.card>
+    </div>
 
     <div id="reception-mobile-scanner-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receptionMobileScannerTitle">
         <div class="ui-modal-panel max-w-6xl">
@@ -1611,8 +1661,17 @@
             }
         });
 
+        function currentResultPanelStateClass() {
+            if (!panel) return 'reception-panel-expanded';
+            return panel.classList.contains('reception-panel-collapsed')
+                ? 'reception-panel-collapsed'
+                : 'reception-panel-expanded';
+        }
+
         function basePanelClasses() {
-            return 'rounded-2xl border p-5 shadow-sm';
+            return 'reception-toggle-card '
+                + currentResultPanelStateClass()
+                + ' relative overflow-hidden rounded-2xl border p-5 shadow-sm';
         }
 
         function readTopAttendanceId() {
@@ -1723,6 +1782,12 @@
 
         function setupPanelToggle(button, content, storageKey, hideLabel = 'Ocultar', showLabel = 'Mostrar') {
             if (!button || !content) return;
+            const card = button.closest('.reception-toggle-card')
+                || button.closest('section.ui-card')
+                || button.closest('.ui-card');
+            if (card) {
+                card.classList.add('reception-toggle-card');
+            }
 
             let isHidden = false;
             try {
@@ -1735,6 +1800,10 @@
                 content.hidden = hiddenState;
                 button.setAttribute('aria-expanded', hiddenState ? 'false' : 'true');
                 button.textContent = hiddenState ? showLabel : hideLabel;
+                if (card) {
+                    card.classList.toggle('reception-panel-collapsed', hiddenState);
+                    card.classList.toggle('reception-panel-expanded', !hiddenState);
+                }
             };
 
             applyState(isHidden);
