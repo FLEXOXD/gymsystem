@@ -137,7 +137,7 @@
         <x-ui.card title="Ingresos / egresos por metodo">
             <canvas id="methodChart" height="120"></canvas>
         </x-ui.card>
-        <x-ui.card title="Asistencias por dia">
+        <x-ui.card title="Asistencias por día">
             <canvas id="attendanceChart" height="120"></canvas>
         </x-ui.card>
     </section>

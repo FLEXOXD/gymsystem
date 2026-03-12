@@ -126,6 +126,7 @@
                 @else
                     <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2" id="sales-form">
                         @csrf
+                        <input type="hidden" name="sale_items_payload" id="sale-items-payload" value="{{ old('sale_items_payload', '') }}">
 
                         <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
                             <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -149,6 +150,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <div id="sale-scan-list" class="mt-3 hidden rounded-2xl border border-cyan-200 bg-white/80 p-3 dark:border-cyan-400/40 dark:bg-slate-900/70">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <p class="text-xs font-black uppercase tracking-wider ui-muted">Listado rapido de escaneo</p>
+                                    <button type="button" id="sale-scan-list-clear" class="ui-button ui-button-ghost px-3 py-1 text-xs font-semibold">
+                                        Limpiar lista
+                                    </button>
+                                </div>
+                                <div id="sale-scan-list-items" class="mt-2 space-y-2"></div>
+                                <p id="sale-scan-list-summary" class="mt-2 text-xs ui-muted"></p>
+                            </div>
                         </div>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
@@ -169,7 +180,7 @@
                         </label>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
-                            <span>Metodo</span>
+                            <span>Método</span>
                             <select name="payment_method" class="ui-input" required>
                                 <option value="cash" @selected(old('payment_method') === 'cash')>Efectivo</option>
                                 <option value="card" @selected(old('payment_method') === 'card')>Tarjeta</option>
@@ -191,7 +202,7 @@
 
                         <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
                             <span>Notas</span>
-                            <textarea name="notes" rows="3" class="ui-input" placeholder="Ej: bebida, guantes, proteina, promo del dia">{{ old('notes') }}</textarea>
+                            <textarea name="notes" rows="3" class="ui-input" placeholder="Ej: bebida, guantes, proteína, promo del día">{{ old('notes') }}</textarea>
                         </label>
 
                         <div class="flex flex-wrap gap-2 md:col-span-2">
@@ -261,7 +272,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">Aun no hay ventas registradas en este periodo.</td>
+                                    <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">Aún no hay ventas registradas en este periodo.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -269,7 +280,7 @@
                 </div>
             </x-ui.card>
 
-            <x-ui.card title="Stock bajo o critico" subtitle="Productos activos que ya llegaron al minimo.">
+            <x-ui.card title="Stock bajo o crítico" subtitle="Productos activos que ya llegaron al mínimo.">
                 <div class="smart-list-wrap">
                     <table class="ui-table w-full min-w-[660px] text-sm">
                         <thead>
@@ -280,7 +291,7 @@
                                 @endif
                                 <th>Categoria</th>
                                 <th>Stock</th>
-                                <th>Minimo</th>
+                                <th>Mínimo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,9 +316,9 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Ultimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos.">
+        <x-ui.card title="Últimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos.">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p class="text-xs ui-muted">Esta vista muestra solo las ultimas 12 ventas.</p>
+                <p class="text-xs ui-muted">Esta vista muestra solo las últimas 12 ventas.</p>
                 <x-ui.button type="button" id="open-sales-history-modal" variant="ghost" size="sm">Ver todas por fecha</x-ui.button>
             </div>
 
@@ -322,7 +333,7 @@
                             <th>Producto</th>
                             <th>Cliente</th>
                             <th>Usuario</th>
-                            <th>Metodo</th>
+                            <th>Método</th>
                             <th>Cantidad</th>
                             <th>Total</th>
                             <th>Utilidad</th>
@@ -350,7 +361,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">Todavia no hay ventas de productos registradas.</td>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">Todavía no hay ventas de productos registradas.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -365,11 +376,11 @@
                 <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
                     <div>
                         <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Historial completo</p>
-                        <h3 class="mt-2 text-2xl font-black text-slate-100">Ventas por dia, mes y ano</h3>
+                        <h3 class="mt-2 text-2xl font-black text-slate-100">Ventas por día, mes y año</h3>
                         <p class="mt-1 text-sm text-slate-300">
                             Total encontrado: {{ (int) ($salesHistoryTotal ?? 0) }} venta{{ ((int) ($salesHistoryTotal ?? 0)) === 1 ? '' : 's' }}.
                             @if ($salesHistoryTruncated ?? false)
-                                Mostrando las ultimas 300 para mantener la vista rapida.
+                                Mostrando las últimas 300 para mantener la vista rápida.
                             @endif
                         </p>
                     </div>
@@ -428,7 +439,7 @@
                                     <th>Producto</th>
                                     <th>Cliente</th>
                                     <th>Usuario</th>
-                                    <th>Metodo</th>
+                                    <th>Método</th>
                                     <th>Cantidad</th>
                                     <th>Total</th>
                                     <th>Utilidad</th>
@@ -479,6 +490,7 @@
 <script>
     (function () {
         const products = @json($saleProductsPayload);
+        const form = document.getElementById('sales-form');
         const scanInput = document.getElementById('sale-scan-input');
         const searchButton = document.getElementById('sale-scan-search');
         const select = document.getElementById('sale-product-select');
@@ -489,13 +501,25 @@
         const previewCode = document.getElementById('sale-preview-code');
         const previewPrice = document.getElementById('sale-preview-price');
         const previewStock = document.getElementById('sale-preview-stock');
+        const scanList = document.getElementById('sale-scan-list');
+        const scanListItems = document.getElementById('sale-scan-list-items');
+        const scanListSummary = document.getElementById('sale-scan-list-summary');
+        const clearListButton = document.getElementById('sale-scan-list-clear');
+        const saleItemsPayloadInput = document.getElementById('sale-items-payload');
         const lastCodeStorageKey = 'remote_scan_last_code_sales';
+        const scanListStorageKey = 'sales_scan_list_v1';
 
         if (!scanInput || !select || !quantityInput) {
             return;
         }
 
         let autoSearchTimer = null;
+        const scanListMap = new Map();
+        const productsById = new Map();
+
+        products.forEach(function (product) {
+            productsById.set(Number(product.id), product);
+        });
 
         function normalize(value) {
             return (value || '')
@@ -503,6 +527,20 @@
                 .trim()
                 .toUpperCase()
                 .replace(/\s+/g, '');
+        }
+
+        function toNumber(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function setFeedback(text, tone) {
@@ -518,6 +556,90 @@
             } else {
                 feedback.classList.add('border-cyan-300', 'bg-cyan-50', 'text-cyan-800');
             }
+        }
+
+        function serializeScanList() {
+            const payload = [];
+
+            scanListMap.forEach(function (item) {
+                payload.push({
+                    product_id: Number(item.product_id),
+                    quantity: Number(item.quantity),
+                });
+            });
+
+            return payload.length > 0 ? JSON.stringify(payload) : '';
+        }
+
+        function persistScanList() {
+            const serialized = serializeScanList();
+
+            if (saleItemsPayloadInput) {
+                saleItemsPayloadInput.value = serialized;
+            }
+
+            try {
+                if (serialized === '') {
+                    window.sessionStorage.removeItem(scanListStorageKey);
+                } else {
+                    window.sessionStorage.setItem(scanListStorageKey, serialized);
+                }
+            } catch (error) {
+                // Ignore storage failures.
+            }
+        }
+
+        function renderScanList() {
+            if (!scanList || !scanListItems || !scanListSummary) {
+                persistScanList();
+                return;
+            }
+
+            if (scanListMap.size === 0) {
+                scanList.classList.add('hidden');
+                scanListItems.innerHTML = '';
+                scanListSummary.textContent = '';
+                persistScanList();
+                return;
+            }
+
+            let totalProducts = 0;
+            let totalUnits = 0;
+            let totalAmount = 0;
+            const chunks = [];
+
+            scanListMap.forEach(function (item) {
+                const lineTotal = Number(item.quantity) * Number(item.sale_price);
+                totalProducts += 1;
+                totalUnits += Number(item.quantity);
+                totalAmount += lineTotal;
+
+                chunks.push(
+                    '<article class="rounded-xl border border-slate-200 bg-white/80 p-2 dark:border-slate-700 dark:bg-slate-900/80">' +
+                        '<div class="flex items-start justify-between gap-2">' +
+                            '<div class="min-w-0">' +
+                                '<p class="truncate text-sm font-black text-slate-900 dark:text-slate-100">' + escapeHtml(item.name) + '</p>' +
+                                '<p class="text-[11px] ui-muted">SKU ' + escapeHtml(item.sku || '---') + ' | BAR ' + escapeHtml(item.barcode || '---') + '</p>' +
+                            '</div>' +
+                            '<div class="text-right">' +
+                                '<p class="text-sm font-black text-emerald-700 dark:text-emerald-300">$' + Number(item.sale_price).toFixed(2) + '</p>' +
+                                '<p class="text-[11px] ui-muted">Stock: ' + Number(item.stock) + '</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="mt-2 flex items-center gap-2">' +
+                            '<button type="button" class="ui-button ui-button-ghost px-2 py-1 text-xs font-bold" data-scan-action="dec" data-product-id="' + Number(item.product_id) + '">-</button>' +
+                            '<span class="min-w-[36px] text-center text-sm font-black text-slate-900 dark:text-slate-100">' + Number(item.quantity) + '</span>' +
+                            '<button type="button" class="ui-button ui-button-ghost px-2 py-1 text-xs font-bold" data-scan-action="inc" data-product-id="' + Number(item.product_id) + '">+</button>' +
+                            '<button type="button" class="ui-button ui-button-ghost px-2 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300" data-scan-action="remove" data-product-id="' + Number(item.product_id) + '">Quitar</button>' +
+                        '</div>' +
+                    '</article>'
+                );
+            });
+
+            scanList.classList.remove('hidden');
+            scanListItems.innerHTML = chunks.join('');
+            scanListSummary.textContent = totalProducts + ' producto(s) | ' + totalUnits + ' unidad(es) | Total estimado $' + totalAmount.toFixed(2);
+            persistScanList();
         }
 
         function renderPreview(product) {
@@ -551,6 +673,118 @@
             }) || null;
         }
 
+        function addProductToScanList(product, quantityToAdd, options) {
+            if (!product) return false;
+
+            const settings = Object.assign({
+                enforceStock: true,
+            }, options || {});
+
+            const productId = Number(product.id);
+            const key = String(productId);
+            const quantity = Math.max(1, Math.floor(toNumber(quantityToAdd)));
+            const stock = Math.max(0, Math.floor(toNumber(product.stock)));
+            const existing = scanListMap.get(key);
+            const currentQuantity = existing ? Number(existing.quantity) : 0;
+            let nextQuantity = currentQuantity + quantity;
+
+            if (settings.enforceStock && stock <= 0) {
+                setFeedback('El producto "' + product.name + '" no tiene stock disponible.', 'error');
+                return false;
+            }
+
+            if (stock > 0 && nextQuantity > stock) {
+                if (settings.enforceStock) {
+                    setFeedback('Stock insuficiente para "' + product.name + '". Disponible: ' + stock + '.', 'error');
+                    return false;
+                }
+
+                nextQuantity = stock;
+            }
+
+            scanListMap.set(key, {
+                product_id: productId,
+                quantity: nextQuantity,
+                name: product.name || '',
+                sku: product.sku || '',
+                barcode: product.barcode || '',
+                sale_price: toNumber(product.sale_price),
+                stock: stock,
+            });
+
+            renderScanList();
+            return true;
+        }
+
+        function updateScanListItem(productId, mode) {
+            const key = String(Number(productId));
+            const current = scanListMap.get(key);
+            if (!current) return;
+
+            if (mode === 'remove') {
+                scanListMap.delete(key);
+                renderScanList();
+                return;
+            }
+
+            const stock = Math.max(0, Math.floor(toNumber(current.stock)));
+            const delta = mode === 'inc' ? 1 : -1;
+            const nextQuantity = Number(current.quantity) + delta;
+
+            if (nextQuantity <= 0) {
+                scanListMap.delete(key);
+                renderScanList();
+                return;
+            }
+
+            if (mode === 'inc' && stock > 0 && nextQuantity > stock) {
+                setFeedback('No puedes superar el stock de "' + current.name + '".', 'error');
+                return;
+            }
+
+            current.quantity = nextQuantity;
+            scanListMap.set(key, current);
+            renderScanList();
+        }
+
+        function clearScanList() {
+            scanListMap.clear();
+            renderScanList();
+        }
+
+        function restoreScanListFromPayload(serialized) {
+            const raw = (serialized || '').toString().trim();
+            if (raw === '') {
+                return;
+            }
+
+            let parsed = null;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (error) {
+                return;
+            }
+
+            if (!Array.isArray(parsed)) {
+                return;
+            }
+
+            parsed.forEach(function (row) {
+                const productId = Number(row && row.product_id);
+                const quantity = Math.max(1, Math.floor(toNumber(row && row.quantity)));
+                if (!Number.isFinite(productId) || productId <= 0) {
+                    return;
+                }
+
+                const product = productsById.get(productId);
+                if (!product) {
+                    return;
+                }
+
+                addProductToScanList(product, quantity, { enforceStock: false });
+            });
+        }
+
         function applyProduct(product, incrementQuantity) {
             if (!product) return;
 
@@ -579,10 +813,15 @@
                 return;
             }
 
-            applyProduct(product, true);
-            setFeedback('Producto detectado: ' + product.name, 'success');
+            if (!addProductToScanList(product, 1, { enforceStock: true })) {
+                return;
+            }
+
+            applyProduct(product, false);
+            quantityInput.value = '1';
+            setFeedback('Producto agregado a la lista: ' + product.name, 'success');
             scanInput.select();
-            quantityInput.focus();
+            scanInput.focus();
         }
 
         searchButton?.addEventListener('click', resolveScan);
@@ -610,6 +849,26 @@
             renderPreview(getSelectedProduct());
         });
 
+        clearListButton?.addEventListener('click', function () {
+            clearScanList();
+            setFeedback('Lista de escaneo limpia.', 'info');
+        });
+
+        scanListItems?.addEventListener('click', function (event) {
+            const button = event.target.closest('button[data-scan-action]');
+            if (!button) {
+                return;
+            }
+
+            const action = (button.getAttribute('data-scan-action') || '').trim();
+            const productId = Number(button.getAttribute('data-product-id') || 0);
+            if (!Number.isFinite(productId) || productId <= 0) {
+                return;
+            }
+
+            updateScanListItem(productId, action);
+        });
+
         window.addEventListener('remote-scanner:scan', function (event) {
             const code = (event.detail?.code || '').toString().trim();
             if (code === '') {
@@ -625,9 +884,23 @@
             }
         });
 
+        const hiddenPayload = (saleItemsPayloadInput?.value || '').toString().trim();
+        if (hiddenPayload !== '') {
+            restoreScanListFromPayload(hiddenPayload);
+        } else {
+            try {
+                const storedList = window.sessionStorage.getItem(scanListStorageKey);
+                if (storedList && storedList.trim() !== '') {
+                    restoreScanListFromPayload(storedList);
+                }
+            } catch (error) {
+                // Ignore storage failures.
+            }
+        }
+
         try {
             const savedCode = window.sessionStorage.getItem(lastCodeStorageKey);
-            if (savedCode && savedCode.trim() !== '' && (scanInput.value || '').trim() === '') {
+            if (scanListMap.size === 0 && savedCode && savedCode.trim() !== '' && (scanInput.value || '').trim() === '') {
                 scanInput.value = savedCode;
                 resolveScan();
             }
@@ -635,7 +908,26 @@
             // Ignore storage failures.
         }
 
+        form?.addEventListener('submit', function () {
+            const serialized = serializeScanList();
+            if (saleItemsPayloadInput) {
+                saleItemsPayloadInput.value = serialized;
+            }
+
+            if (serialized !== '' && !select.value) {
+                const firstItem = scanListMap.values().next().value;
+                if (firstItem) {
+                    select.value = String(firstItem.product_id);
+                }
+            }
+
+            if (serialized !== '' && (!quantityInput.value || Number(quantityInput.value) < 1)) {
+                quantityInput.value = '1';
+            }
+        });
+
         renderPreview(getSelectedProduct());
+        renderScanList();
     })();
 </script>
 @endpush

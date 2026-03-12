@@ -12,8 +12,10 @@ use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class SalesInventoryController extends Controller
@@ -189,34 +191,77 @@ class SalesInventoryController extends Controller
         $actor = $request->user();
         abort_unless($actor, 403, 'Usuario no autenticado.');
 
-        $data = $request->validate([
-            'product_id' => [
-                'required',
-                'integer',
-                Rule::exists('products', 'id')->where(fn ($query) => $query->where('gym_id', $gymId)->where('status', 'active')),
-            ],
+        $baseData = $request->validate([
             'client_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('clients', 'id')->where(fn ($query) => $query->where('gym_id', $gymId)),
             ],
-            'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
             'payment_method' => ['required', Rule::in(['cash', 'card', 'transfer'])],
             'notes' => ['nullable', 'string', 'max:255'],
+            'sale_items_payload' => ['nullable', 'string', 'max:12000'],
+        ]);
+
+        $batchItems = $this->parseSaleItemsPayload(
+            rawPayload: (string) ($baseData['sale_items_payload'] ?? ''),
+            gymId: $gymId
+        );
+
+        if ($batchItems !== []) {
+            try {
+                DB::transaction(function () use ($batchItems, $actor, $baseData): void {
+                    foreach ($batchItems as $item) {
+                        $this->productInventoryService->registerSale(
+                            product: $item['product'],
+                            actor: $actor,
+                            quantity: (int) $item['quantity'],
+                            paymentMethod: (string) $baseData['payment_method'],
+                            clientId: ! empty($baseData['client_id']) ? (int) $baseData['client_id'] : null,
+                            notes: $baseData['notes'] ?? null,
+                            soldAt: Carbon::now()
+                        );
+                    }
+                });
+            } catch (RuntimeException $exception) {
+                $firstProductId = isset($batchItems[0]['product']) ? (int) $batchItems[0]['product']->id : 0;
+
+                return redirect()
+                    ->route('sales.index', ['contextGym' => $contextGym, 'product_id' => $firstProductId])
+                    ->withErrors(['sales' => $exception->getMessage()])
+                    ->withInput();
+            }
+
+            $lineCount = count($batchItems);
+            $totalUnits = array_reduce($batchItems, static function (int $carry, array $item): int {
+                return $carry + (int) ($item['quantity'] ?? 0);
+            }, 0);
+
+            return redirect()
+                ->route('sales.index', ['contextGym' => $contextGym])
+                ->with('status', 'Venta multiple registrada: '.$lineCount.' producto(s), '.$totalUnits.' unidad(es).');
+        }
+
+        $singleData = $request->validate([
+            'product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(fn ($query) => $query->where('gym_id', $gymId)->where('status', 'active')),
+            ],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
         ]);
 
         $product = Product::query()
             ->forGym($gymId)
-            ->findOrFail((int) $data['product_id']);
+            ->findOrFail((int) $singleData['product_id']);
 
         try {
             $this->productInventoryService->registerSale(
                 product: $product,
                 actor: $actor,
-                quantity: (int) $data['quantity'],
-                paymentMethod: (string) $data['payment_method'],
-                clientId: ! empty($data['client_id']) ? (int) $data['client_id'] : null,
-                notes: $data['notes'] ?? null,
+                quantity: (int) $singleData['quantity'],
+                paymentMethod: (string) $baseData['payment_method'],
+                clientId: ! empty($baseData['client_id']) ? (int) $baseData['client_id'] : null,
+                notes: $baseData['notes'] ?? null,
                 soldAt: Carbon::now()
             );
         } catch (RuntimeException $exception) {
@@ -245,5 +290,84 @@ class SalesInventoryController extends Controller
             && Schema::hasColumn('products', 'barcode')
             && Schema::hasTable('product_sales')
             && Schema::hasTable('product_stock_movements');
+    }
+
+    /**
+     * @return array<int, array{product: Product, quantity: int}>
+     *
+     * @throws ValidationException
+     */
+    private function parseSaleItemsPayload(string $rawPayload, int $gymId): array
+    {
+        $payload = trim($rawPayload);
+        if ($payload === '') {
+            return [];
+        }
+
+        $decoded = json_decode($payload, true);
+        if (! is_array($decoded)) {
+            throw ValidationException::withMessages([
+                'sales' => 'No se pudo leer la lista de productos escaneados.',
+            ]);
+        }
+
+        $aggregated = [];
+        foreach ($decoded as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $productId = (int) ($row['product_id'] ?? 0);
+            $quantity = (int) ($row['quantity'] ?? 0);
+            if ($productId <= 0 || $quantity <= 0) {
+                continue;
+            }
+
+            if (! array_key_exists($productId, $aggregated)) {
+                $aggregated[$productId] = 0;
+            }
+
+            $aggregated[$productId] += $quantity;
+        }
+
+        if ($aggregated === []) {
+            return [];
+        }
+
+        if (count($aggregated) > 120) {
+            throw ValidationException::withMessages([
+                'sales' => 'La lista de venta supera el limite permitido de productos.',
+            ]);
+        }
+
+        $productIds = array_map('intval', array_keys($aggregated));
+        $products = Product::query()
+            ->forGym($gymId)
+            ->where('status', 'active')
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        if ($products->count() !== count($productIds)) {
+            throw ValidationException::withMessages([
+                'sales' => 'Uno o mas productos de la lista ya no estan disponibles para venta.',
+            ]);
+        }
+
+        $result = [];
+        foreach ($aggregated as $productId => $quantity) {
+            /** @var Product|null $product */
+            $product = $products->get((int) $productId);
+            if (! $product) {
+                continue;
+            }
+
+            $result[] = [
+                'product' => $product,
+                'quantity' => (int) $quantity,
+            ];
+        }
+
+        return $result;
     }
 }

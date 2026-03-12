@@ -48,7 +48,7 @@
                 <th>Fecha</th>
                 <th>Turno</th>
                 <th>Tipo</th>
-                <th>Metodo</th>
+                <th>Método</th>
                 <th>Monto</th>
                 <th>Cliente</th>
                 <th>Alta cliente</th>

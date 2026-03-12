@@ -71,7 +71,7 @@
 
         @if ($schemaReady && ! $isGlobalScope)
             <section class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-                <x-ui.card :title="$editingProduct ? 'Editar producto' : 'Registrar producto'" subtitle="Define precio, costo, categoria y stock minimo del producto.">
+                <x-ui.card :title="$editingProduct ? 'Editar producto' : 'Registrar producto'" subtitle="Define precio, costo, categoría y stock mínimo del producto.">
                     <form method="POST" action="{{ $editingProduct ? route('products.update', ['contextGym' => $contextGym, 'product' => $editingProduct->id]) : route('products.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2">
                         @csrf
                         @if ($editingProduct)
@@ -118,7 +118,7 @@
                         @endif
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
-                            <span>Stock minimo</span>
+                            <span>Stock mínimo</span>
                             <input type="number" min="0" name="min_stock" class="ui-input" value="{{ old('min_stock', $editingProduct?->min_stock ?? 0) }}">
                         </label>
 

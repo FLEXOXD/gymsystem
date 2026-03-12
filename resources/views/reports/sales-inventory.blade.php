@@ -208,7 +208,7 @@
                                 <th>Producto</th>
                                 <th>Cliente</th>
                                 <th>Usuario</th>
-                                <th>Metodo</th>
+                                <th>Método</th>
                                 <th>Cantidad</th>
                                 <th>Total</th>
                                 <th>Costo</th>
