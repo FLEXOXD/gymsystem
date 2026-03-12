@@ -169,10 +169,7 @@
     $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
-    $currentPlanKey = ! $isSuperAdmin && $activeGymId > 0
-        ? (string) $planAccessService->currentPlanKeyForGym($activeGymId)
-        : '';
-    $usePremiumPanelVisuals = $currentPlanKey === 'premium';
+    $usePremiumPanelVisuals = ! $isSuperAdmin && $activeGymId > 0;
     $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
     $pushWebEnabled = (bool) config('services.webpush.enabled', false);
     $pwaUpgradeMessage = 'Sube de plan a Profesional, Premium o Sucursales para usar la app instalable (PWA).';
