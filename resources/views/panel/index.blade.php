@@ -6,6 +6,11 @@
 
 @push('styles')
 <style>
+    .panel-main-split {
+        display: grid;
+        gap: 1rem;
+    }
+
     .panel-kpi-grid {
         display: grid;
         gap: 0.75rem;
@@ -13,30 +18,29 @@
     }
 
     .panel-kpi-card {
-        min-height: 7.9rem;
-        border-radius: 0.9rem;
-        padding: 0.85rem;
+        min-height: 7.5rem;
+        border-radius: 0.75rem;
+        padding: 0.75rem;
     }
 
     .panel-kpi-title {
-        min-height: 2rem;
+        min-height: 1.75rem;
     }
 
     .panel-kpi-value {
-        font-size: clamp(1.72rem, 2.4vw, 2.12rem);
+        font-size: 1.5rem;
         line-height: 1;
-        letter-spacing: -0.02em;
+        letter-spacing: 0;
     }
 
     .panel-cta-grid {
-        display: grid;
-        gap: 0.55rem;
-        grid-template-columns: repeat(1, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .panel-cta-grid .ui-button {
-        width: 100%;
-        min-height: 2.6rem;
+        min-height: 2.5rem;
     }
 
     .panel-cash-today-grid {
@@ -49,41 +53,95 @@
         .panel-kpi-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+    }
 
-        .panel-cta-grid {
+    @media (min-width: 1280px) {
+        .panel-kpi-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+    }
+
+    .panel-premium-mode .panel-kpi-card {
+        min-height: 7.9rem;
+        border-radius: 0.9rem;
+        padding: 0.85rem;
+    }
+
+    .panel-premium-mode .panel-kpi-title {
+        min-height: 2rem;
+    }
+
+    .panel-premium-mode .panel-kpi-value {
+        font-size: clamp(1.72rem, 2.4vw, 2.12rem);
+        letter-spacing: -0.02em;
+    }
+
+    .panel-premium-mode .panel-cta-grid {
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .panel-premium-mode .panel-cta-grid .ui-button {
+        width: 100%;
+        min-height: 2.6rem;
+    }
+
+    .panel-premium-mode .panel-cash-today-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    @media (min-width: 640px) {
+        .panel-premium-mode .panel-cta-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .panel-cash-today-grid {
+        .panel-premium-mode .panel-cash-today-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
     @media (min-width: 1280px) {
-        .panel-kpi-grid {
+        .panel-premium-mode .panel-main-split {
+            grid-template-columns: minmax(0, 1fr) 320px;
+        }
+
+        .panel-premium-mode .panel-kpi-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .panel-cta-grid {
+        .panel-premium-mode .panel-cta-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .panel-cash-today-grid {
+        .panel-premium-mode .panel-cash-today-grid {
             grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+
+        .panel-premium-mode .panel-cash-session-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
     @media (min-width: 1536px) {
-        .panel-kpi-grid {
+        .panel-premium-mode .panel-main-split {
+            grid-template-columns: minmax(0, 1fr) 340px;
+        }
+
+        .panel-premium-mode .panel-kpi-grid {
             grid-template-columns: repeat(6, minmax(0, 1fr));
         }
 
-        .panel-cta-grid {
+        .panel-premium-mode .panel-cta-grid {
             grid-template-columns: repeat(5, minmax(0, 1fr));
         }
 
-        .panel-cash-today-grid {
+        .panel-premium-mode .panel-cash-today-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .panel-premium-mode .panel-cash-session-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
         }
     }
 </style>
@@ -119,7 +177,7 @@
         $clientShowUrl = static fn (int $clientId): string => route('clients.show', ['client' => $clientId] + ($isGlobalScope ? ['scope' => 'global'] : []));
     @endphp
 
-    <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <section class="panel-main-split xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <div class="space-y-4">
     <x-ui.card id="tour-panel-summary" title="Resumen del día" subtitle="Indicadores clave para tomar decisiones rápidas.">
         @if ($isCashierScoped)
@@ -254,7 +312,7 @@
             </div>
         @elseif ($openSession)
             @if ($isCashierScoped)
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+                <div class="panel-cash-session-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
                         <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>

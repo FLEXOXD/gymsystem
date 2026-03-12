@@ -169,6 +169,10 @@
     $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
+    $currentPlanKey = ! $isSuperAdmin && $activeGymId > 0
+        ? (string) $planAccessService->currentPlanKeyForGym($activeGymId)
+        : '';
+    $usePremiumPanelVisuals = $currentPlanKey === 'premium';
     $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
     $pushWebEnabled = (bool) config('services.webpush.enabled', false);
     $pwaUpgradeMessage = 'Sube de plan a Profesional, Premium o Sucursales para usar la app instalable (PWA).';
@@ -527,23 +531,23 @@
                 max-height: min(70vh, 30rem);
             }
         }
-        :root {
+        .panel-premium-mode {
             --panel-shell-max-width: 88rem;
         }
-        #panel-header-shell,
-        .panel-view {
+        .panel-premium-mode #panel-header-shell,
+        .panel-premium-mode .panel-view {
             max-width: min(var(--panel-shell-max-width), calc(100vw - 1.25rem));
         }
-        .panel-view {
+        .panel-premium-mode .panel-view {
             padding-top: 1.35rem;
             padding-bottom: 1.8rem;
         }
         @media (max-width: 1023px) {
-            #panel-header-shell,
-            .panel-view {
+            .panel-premium-mode #panel-header-shell,
+            .panel-premium-mode .panel-view {
                 max-width: 100%;
             }
-            .panel-view {
+            .panel-premium-mode .panel-view {
                 padding-top: 1.1rem;
                 padding-bottom: calc(1.35rem + env(safe-area-inset-bottom));
             }
@@ -1428,7 +1432,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="theme-body h-full ui-text">
+<body @class(['theme-body h-full ui-text', 'panel-premium-mode' => $usePremiumPanelVisuals])>
 <div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar relative z-40 hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
         <a id="brand-home-link"
