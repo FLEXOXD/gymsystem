@@ -142,6 +142,16 @@
                     <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">{{ $isCashierScoped ? 'Tu balance hoy' : 'Balance hoy' }}</p>
                     <p class="mt-1 text-2xl font-black {{ (float) $todayBalance >= 0 ? 'text-cyan-800 dark:text-cyan-100' : 'text-rose-800 dark:text-rose-100' }}">{{ $currencyFormatter::format((float) $todayBalance, $appCurrencyCode) }}</p>
                 </article>
+                <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">{{ $isCashierScoped ? 'Tus cobros de membres&iacute;as' : 'Cobros de membres&iacute;as' }}</p>
+                    <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) ($membershipIncomeToday ?? 0), $appCurrencyCode) }}</p>
+                    <p class="text-xs text-emerald-700 dark:text-emerald-200">Mes: {{ $currencyFormatter::format((float) ($membershipIncomeCurrentMonth ?? 0), $appCurrencyCode, true) }}</p>
+                </article>
+                <article class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200">{{ $isCashierScoped ? 'Tus ventas de inventario' : 'Ventas de inventario' }}</p>
+                    <p class="mt-1 text-2xl font-black text-amber-800 dark:text-amber-100">{{ $currencyFormatter::format((float) ($productSalesIncomeToday ?? 0), $appCurrencyCode) }}</p>
+                    <p class="text-xs text-amber-700 dark:text-amber-200">Mes: {{ $currencyFormatter::format((float) ($productSalesIncomeCurrentMonth ?? 0), $appCurrencyCode, true) }}</p>
+                </article>
                 <article class="rounded-xl border p-3 {{ (float) $netYearToDate >= 0 ? 'border-violet-200 bg-violet-50 dark:border-violet-400/40 dark:bg-violet-500/15' : 'border-rose-200 bg-rose-50 dark:border-rose-400/40 dark:bg-rose-500/15' }}">
                     <p class="text-xs font-bold uppercase tracking-wider {{ (float) $netYearToDate >= 0 ? 'text-violet-700 dark:text-violet-200' : 'text-rose-700 dark:text-rose-200' }}">{{ $isCashierScoped ? 'Tu acumulado del año' : 'Ganancia del año' }}</p>
                     <p class="mt-1 text-2xl font-black {{ (float) $netYearToDate >= 0 ? 'text-violet-800 dark:text-violet-100' : 'text-rose-800 dark:text-rose-100' }}">{{ $currencyFormatter::format((float) $netYearToDate, $appCurrencyCode) }}</p>

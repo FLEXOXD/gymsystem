@@ -9,12 +9,14 @@ use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\PresenceSession;
+use App\Models\ProductSale;
 use App\Support\ActiveGymContext;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class GymPanelController extends Controller
 {
@@ -163,6 +165,36 @@ class GymPanelController extends Controller
             ->betweenOccurredAt($currentMonthStart, $currentMonthEnd)
             ->where('type', 'income')
             ->sum('amount');
+
+        $membershipIncomeToday = (float) $cashMovementsBaseQuery()
+            ->whereDate('occurred_at', $today)
+            ->where('type', 'income')
+            ->whereNotNull('membership_id')
+            ->sum('amount');
+
+        $membershipIncomeCurrentMonth = (float) $cashMovementsBaseQuery()
+            ->betweenOccurredAt($currentMonthStart, $currentMonthEnd)
+            ->where('type', 'income')
+            ->whereNotNull('membership_id')
+            ->sum('amount');
+
+        $productSalesIncomeToday = 0.0;
+        $productSalesIncomeCurrentMonth = 0.0;
+        if (Schema::hasTable('product_sales')) {
+            $productSalesBaseQuery = fn () => ProductSale::query()
+                ->forGyms($gymIds)
+                ->when($cashierScopeUserId !== null, static function ($query) use ($cashierScopeUserId): void {
+                    $query->where('sold_by', (int) $cashierScopeUserId);
+                });
+
+            $productSalesIncomeToday = (float) $productSalesBaseQuery()
+                ->whereDate('sold_at', $today)
+                ->sum('total_amount');
+
+            $productSalesIncomeCurrentMonth = (float) $productSalesBaseQuery()
+                ->betweenSoldAt($currentMonthStart, $currentMonthEnd)
+                ->sum('total_amount');
+        }
 
         $incomePreviousMonth = (float) $cashMovementsBaseQuery()
             ->betweenOccurredAt($previousMonthStart, $previousMonthEnd)
@@ -342,6 +374,10 @@ class GymPanelController extends Controller
             'monthlyIncomeDiff' => $monthlyIncomeDiff,
             'monthlyIncomePct' => $monthlyIncomePct,
             'incomeLast6Months' => $incomeLast6Months,
+            'membershipIncomeToday' => $membershipIncomeToday,
+            'membershipIncomeCurrentMonth' => $membershipIncomeCurrentMonth,
+            'productSalesIncomeToday' => $productSalesIncomeToday,
+            'productSalesIncomeCurrentMonth' => $productSalesIncomeCurrentMonth,
             'movementsTodayCount' => $movementsTodayCount,
             'openSession' => $openSession,
             'openSessionExpected' => $openSessionExpected,
