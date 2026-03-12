@@ -100,6 +100,10 @@
         margin-bottom: 0.65rem;
     }
 
+    .reception-collapsible-content[aria-hidden="true"] {
+        pointer-events: none;
+    }
+
     .reception-history-tools {
         display: grid;
         gap: 0.55rem;
@@ -1780,6 +1784,84 @@
             applyRecentAttendanceFilters();
         }
 
+        function setCollapsibleContentState(content, hiddenState, animate = true) {
+            if (!content) return;
+
+            const prefersReducedMotion = typeof window.matchMedia === 'function'
+                && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const shouldAnimate = animate && !prefersReducedMotion;
+            const transitionMs = 240;
+
+            const clearActiveTransition = function () {
+                if (content._collapseTimer) {
+                    clearTimeout(content._collapseTimer);
+                    content._collapseTimer = null;
+                }
+                if (typeof content._collapseOnEnd === 'function') {
+                    content.removeEventListener('transitionend', content._collapseOnEnd);
+                    content._collapseOnEnd = null;
+                }
+            };
+
+            const finish = function (finalHiddenState) {
+                clearActiveTransition();
+                content.hidden = finalHiddenState;
+                content.setAttribute('aria-hidden', finalHiddenState ? 'true' : 'false');
+                if ('inert' in content) {
+                    content.inert = finalHiddenState;
+                }
+                content.style.removeProperty('height');
+                content.style.removeProperty('opacity');
+                content.style.removeProperty('overflow');
+                content.style.removeProperty('transition');
+                content.style.removeProperty('will-change');
+            };
+
+            clearActiveTransition();
+
+            if (!shouldAnimate) {
+                finish(hiddenState);
+                return;
+            }
+
+            content.hidden = false;
+            content.setAttribute('aria-hidden', hiddenState ? 'true' : 'false');
+            if ('inert' in content) {
+                content.inert = hiddenState;
+            }
+            content.style.overflow = 'hidden';
+            content.style.transition = 'height 240ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease';
+            content.style.willChange = 'height, opacity';
+
+            const onEnd = function (event) {
+                if (event.target !== content || event.propertyName !== 'height') return;
+                finish(hiddenState);
+            };
+
+            content._collapseOnEnd = onEnd;
+            content.addEventListener('transitionend', onEnd);
+            content._collapseTimer = window.setTimeout(function () {
+                finish(hiddenState);
+            }, transitionMs + 80);
+
+            if (hiddenState) {
+                const startHeight = content.scrollHeight;
+                content.style.height = startHeight + 'px';
+                content.style.opacity = '1';
+                content.offsetHeight;
+                content.style.height = '0px';
+                content.style.opacity = '0';
+                return;
+            }
+
+            content.style.height = '0px';
+            content.style.opacity = '0';
+            content.offsetHeight;
+            const targetHeight = content.scrollHeight;
+            content.style.height = targetHeight + 'px';
+            content.style.opacity = '1';
+        }
+
         function setupPanelToggle(button, content, storageKey, hideLabel = 'Ocultar', showLabel = 'Mostrar') {
             if (!button || !content) return;
             const card = button.closest('.reception-toggle-card')
@@ -1796,8 +1878,10 @@
                 isHidden = false;
             }
 
-            const applyState = function (hiddenState) {
-                content.hidden = hiddenState;
+            let currentHiddenState = isHidden;
+            const applyState = function (hiddenState, animateState = false) {
+                currentHiddenState = hiddenState;
+                setCollapsibleContentState(content, hiddenState, animateState);
                 button.setAttribute('aria-expanded', hiddenState ? 'false' : 'true');
                 button.textContent = hiddenState ? showLabel : hideLabel;
                 if (card) {
@@ -1806,11 +1890,11 @@
                 }
             };
 
-            applyState(isHidden);
+            applyState(isHidden, false);
 
             button.addEventListener('click', function () {
-                const nextHiddenState = !content.hidden;
-                applyState(nextHiddenState);
+                const nextHiddenState = !currentHiddenState;
+                applyState(nextHiddenState, true);
                 try {
                     localStorage.setItem(storageKey, nextHiddenState ? '1' : '0');
                 } catch (_error) {
