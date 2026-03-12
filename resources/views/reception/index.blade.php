@@ -3,9 +3,133 @@
 @section('title', 'Recepción')
 @section('page-title', 'Modo recepción PRO')
 
+@push('styles')
+<style>
+    .reception-command-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .reception-actions-grid {
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .reception-action-card {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 0.85rem;
+        background: color-mix(in srgb, var(--card) 88%, transparent);
+        padding: 0.65rem;
+    }
+
+    .reception-action-title {
+        margin: 0 0 0.5rem;
+        font-size: 0.66rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--muted) 86%, #fff);
+    }
+
+    .reception-shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        align-items: center;
+    }
+
+    .reception-shortcut-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 9999px;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: color-mix(in srgb, var(--card) 88%, transparent);
+        padding: 0.26rem 0.58rem;
+        font-size: 0.66rem;
+        font-weight: 800;
+        color: color-mix(in srgb, var(--text) 90%, #fff);
+        line-height: 1;
+    }
+
+    .reception-shortcut-chip kbd {
+        border-radius: 0.38rem;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: color-mix(in srgb, var(--card-2) 88%, transparent);
+        padding: 0.14rem 0.32rem;
+        font-size: 0.63rem;
+        font-weight: 900;
+        letter-spacing: 0.03em;
+        line-height: 1;
+    }
+
+    .reception-status-subtext {
+        margin-top: 0.45rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    .reception-history-tools {
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .reception-history-tools .ui-input,
+    .reception-history-tools .ui-select {
+        min-height: 2.45rem;
+    }
+
+    .reception-history-summary {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    #recent-attendances-wrap table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+    }
+
+    #recent-attendances-wrap table tbody tr {
+        transition: opacity 120ms ease;
+    }
+
+    #recent-attendances-empty-filter {
+        margin-top: 0.55rem;
+        border-radius: 0.7rem;
+        border: 1px dashed color-mix(in srgb, var(--border) 78%, transparent);
+        padding: 0.52rem 0.65rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    @media (min-width: 768px) {
+        .reception-actions-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .reception-history-tools {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .reception-command-grid {
+            grid-template-columns: minmax(320px, 1.2fr) minmax(340px, 1fr);
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     <x-ui.card title="Ingreso unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta autoenvío por lector tipo teclado.">
-        <div class="grid gap-4 xl:grid-cols-[minmax(320px,1.2fr)_minmax(340px,1fr)]">
+        <div class="reception-command-grid">
             <div class="space-y-3">
                 <label class="space-y-2 text-sm font-semibold ui-muted">
                     <span>Valor de entrada</span>
@@ -17,26 +141,35 @@
                 <p id="status-chip" class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
                     {{ __('messages.reception.ready_to_scan') }}
                 </p>
+                <p id="status-detail" class="reception-status-subtext">
+                    Atajos: Enter registra ingreso, F3 registra salida y F2 limpia el campo.
+                </p>
             </div>
 
             <div class="space-y-3">
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 w-full">Enviar</x-ui.button>
-                    <x-ui.button id="checkout-btn" type="button" variant="ghost" size="lg" class="h-14 w-full">
-                        Registrar salida
-                    </x-ui.button>
+                <div class="reception-action-card">
+                    <p class="reception-action-title">Registro principal</p>
+                    <div class="reception-actions-grid">
+                        <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 w-full">Enviar</x-ui.button>
+                        <x-ui.button id="checkout-btn" type="button" variant="ghost" size="lg" class="h-14 w-full">
+                            Registrar salida
+                        </x-ui.button>
+                    </div>
                 </div>
 
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <x-ui.button :href="route('reception.display')" target="_blank" rel="noopener" variant="secondary" size="lg" class="h-14 w-full">
-                        Pantalla 2 + QR
-                    </x-ui.button>
-                    <x-ui.button id="reception-open-mobile-scanner" type="button" variant="secondary" size="lg" class="h-14 w-full" aria-haspopup="dialog" aria-controls="reception-mobile-scanner-modal" aria-expanded="false">
-                        Escanear QR desde mi celular
-                    </x-ui.button>
+                <div class="reception-action-card">
+                    <p class="reception-action-title">Soporte y escaneo</p>
+                    <div class="reception-actions-grid">
+                        <x-ui.button :href="route('reception.display')" target="_blank" rel="noopener" variant="secondary" size="lg" class="h-14 w-full">
+                            Pantalla 2 + QR
+                        </x-ui.button>
+                        <x-ui.button id="reception-open-mobile-scanner" type="button" variant="secondary" size="lg" class="h-14 w-full" aria-haspopup="dialog" aria-controls="reception-mobile-scanner-modal" aria-expanded="false">
+                            Escanear QR desde mi celular
+                        </x-ui.button>
+                    </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="reception-shortcuts">
                     <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                         <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
                         Autoescaneo
@@ -45,6 +178,9 @@
                         <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
                         Sonido
                     </label>
+                    <span class="reception-shortcut-chip"><kbd>F2</kbd>Limpiar</span>
+                    <span class="reception-shortcut-chip"><kbd>F3</kbd>Salida</span>
+                    <span class="reception-shortcut-chip"><kbd>Ctrl+K</kbd>Enfocar</span>
                 </div>
             </div>
         </div>
@@ -90,7 +226,9 @@
         </x-ui.card>
     @else
         <div class="ui-alert ui-alert-warning">
-            El QR dinámico para app cliente está disponible solo en planes Premium y Sucursales.
+            <strong>QR dinamico no habilitado en este plan.</strong>
+            Puedes seguir operando con RFID, documento y lector QR local desde esta pantalla.
+            El QR movil temporal se habilita en planes Premium y Sucursales.
         </div>
     @endif
 
@@ -150,17 +288,46 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="últimos 10 ingresos">
+    <x-ui.card title="Últimos 10 ingresos">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs text-slate-500 dark:text-slate-300">
-                Historial detallado disponible para los últimos 2 meses.
-            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-300">Historial detallado disponible para los últimos 2 meses.</p>
             <button id="reception-open-history" type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
                 Ver asistencias (2 meses)
             </button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="reception-history-tools mb-3">
+            <label class="space-y-1 text-xs font-bold uppercase tracking-wide ui-muted">
+                <span>Rango</span>
+                <select id="recent-attendance-range" class="ui-input">
+                    <option value="all">Todo</option>
+                    <option value="today">Solo hoy</option>
+                    <option value="week">Últimos 7 días</option>
+                </select>
+            </label>
+            <label class="space-y-1 text-xs font-bold uppercase tracking-wide ui-muted">
+                <span>Método</span>
+                <select id="recent-attendance-method" class="ui-input">
+                    <option value="all">Todos</option>
+                    <option value="document">Documento</option>
+                    <option value="rfid">RFID</option>
+                    <option value="qr">QR</option>
+                </select>
+            </label>
+            <label class="space-y-1 text-xs font-bold uppercase tracking-wide ui-muted">
+                <span>Buscar cliente</span>
+                <input id="recent-attendance-search" type="text" inputmode="search" autocomplete="off" placeholder="Nombre del cliente" class="ui-input">
+            </label>
+        </div>
+
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p id="recent-attendance-summary" class="reception-history-summary">Mostrando 0 de 0 registros.</p>
+            <button id="recent-attendance-reset" type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs">
+                Limpiar filtros
+            </button>
+        </div>
+
+        <div id="recent-attendances-wrap" class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table class="ui-table min-w-[780px]">
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -181,7 +348,12 @@
                             default => strtoupper((string) $attendanceMethod),
                         };
                     @endphp
-                    <tr data-role="recent-attendance-row" data-attendance-id="{{ (int) $attendance->id }}" class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
+                    <tr data-role="recent-attendance-row"
+                        data-attendance-id="{{ (int) $attendance->id }}"
+                        data-attendance-date="{{ $attendance->date?->toDateString() ?? '' }}"
+                        data-attendance-method="{{ strtolower((string) $attendanceMethod) }}"
+                        data-attendance-client="{{ mb_strtolower((string) ($attendance->client?->full_name ?? '-')) }}"
+                        class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
                         <td class="px-3 py-3 dark:text-slate-200">{{ $attendance->date?->toDateString() ?? '-' }}</td>
                         <td class="px-3 py-3 dark:text-slate-200">{{ $attendance->time ?? '-' }}</td>
                         <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $attendance->client?->full_name ?? '-' }}</td>
@@ -195,6 +367,7 @@
                 </tbody>
             </table>
         </div>
+        <p id="recent-attendances-empty-filter" class="hidden">No hay registros que coincidan con los filtros actuales.</p>
     </x-ui.card>
 
     <div id="reception-mobile-scanner-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receptionMobileScannerTitle">
@@ -361,6 +534,7 @@
         const soundEnabled = document.getElementById('sound-enabled');
         const panel = document.getElementById('result-panel');
         const statusChip = document.getElementById('status-chip');
+        const statusDetail = document.getElementById('status-detail');
         const photo = document.getElementById('result-photo');
         const photoPlaceholder = document.getElementById('result-photo-placeholder');
         const method = document.getElementById('result-method');
@@ -375,6 +549,12 @@
         const motivation = document.getElementById('result-motivation');
         const avatarInitials = document.getElementById('result-avatar-initials');
         const recentAttendancesBody = document.getElementById('recent-attendances-body');
+        const recentAttendanceRange = document.getElementById('recent-attendance-range');
+        const recentAttendanceMethod = document.getElementById('recent-attendance-method');
+        const recentAttendanceSearch = document.getElementById('recent-attendance-search');
+        const recentAttendanceSummary = document.getElementById('recent-attendance-summary');
+        const recentAttendanceReset = document.getElementById('recent-attendance-reset');
+        const recentAttendanceFilterEmpty = document.getElementById('recent-attendances-empty-filter');
         const openMobileScannerBtn = document.getElementById('reception-open-mobile-scanner');
         const mobileScannerModal = document.getElementById('reception-mobile-scanner-modal');
         const mobileScannerVideo = document.getElementById('reception-mobile-scanner-video');
@@ -463,6 +643,11 @@
                 attendanceHistoryModal.classList.add('hidden');
             }
         });
+
+        recentAttendanceRange?.addEventListener('change', applyRecentAttendanceFilters);
+        recentAttendanceMethod?.addEventListener('change', applyRecentAttendanceFilters);
+        recentAttendanceSearch?.addEventListener('input', applyRecentAttendanceFilters);
+        recentAttendanceReset?.addEventListener('click', resetRecentAttendanceFilters);
 
         function setMobileScannerStatus(text, tone = 'info') {
             if (!mobileScannerStatus) return;
@@ -1410,6 +1595,95 @@
             return Number.isFinite(parsed) ? parsed : null;
         }
 
+        function normalizeSearchText(rawValue) {
+            const value = String(rawValue || '')
+                .trim()
+                .toLocaleLowerCase('es-EC');
+
+            if (typeof value.normalize !== 'function') {
+                return value;
+            }
+
+            return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function parseAttendanceDate(dateValue) {
+            const value = String(dateValue || '').trim();
+            const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!parts) return null;
+
+            const year = Number(parts[1]);
+            const month = Number(parts[2]) - 1;
+            const day = Number(parts[3]);
+            const parsed = new Date(year, month, day);
+
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function isAttendanceInRange(dateValue, range) {
+            if (range === 'all') return true;
+
+            const parsedDate = parseAttendanceDate(dateValue);
+            if (!parsedDate) return false;
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (range === 'today') {
+                return parsedDate.getTime() === today.getTime();
+            }
+
+            if (range === 'week') {
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(today.getDate() - 6);
+                return parsedDate >= sevenDaysAgo && parsedDate <= today;
+            }
+
+            return true;
+        }
+
+        function applyRecentAttendanceFilters() {
+            if (!recentAttendancesBody) return;
+
+            const rows = Array.from(recentAttendancesBody.querySelectorAll('tr[data-role="recent-attendance-row"]'));
+            const selectedRange = recentAttendanceRange ? String(recentAttendanceRange.value || 'all') : 'all';
+            const selectedMethod = recentAttendanceMethod ? String(recentAttendanceMethod.value || 'all') : 'all';
+            const query = normalizeSearchText(recentAttendanceSearch ? recentAttendanceSearch.value : '');
+            let visibleRows = 0;
+
+            rows.forEach(function (row) {
+                const rowDate = String(row.getAttribute('data-attendance-date') || '').trim();
+                const rowMethod = String(row.getAttribute('data-attendance-method') || '').trim().toLowerCase();
+                const rowClient = normalizeSearchText(row.getAttribute('data-attendance-client') || '');
+                const rangeOk = isAttendanceInRange(rowDate, selectedRange);
+                const methodOk = selectedMethod === 'all' || selectedMethod === rowMethod;
+                const queryOk = query === ''
+                    || rowClient.includes(query)
+                    || rowDate.includes(query)
+                    || rowMethod.includes(query);
+                const shouldShow = rangeOk && methodOk && queryOk;
+
+                row.classList.toggle('hidden', !shouldShow);
+                if (shouldShow) {
+                    visibleRows += 1;
+                }
+            });
+
+            if (recentAttendanceSummary) {
+                recentAttendanceSummary.textContent = 'Mostrando ' + String(visibleRows) + ' de ' + String(rows.length) + ' registros.';
+            }
+
+            if (recentAttendanceFilterEmpty) {
+                recentAttendanceFilterEmpty.classList.toggle('hidden', !(rows.length > 0 && visibleRows === 0));
+            }
+        }
+
+        function resetRecentAttendanceFilters() {
+            if (recentAttendanceRange) recentAttendanceRange.value = 'all';
+            if (recentAttendanceMethod) recentAttendanceMethod.value = 'all';
+            if (recentAttendanceSearch) recentAttendanceSearch.value = '';
+            applyRecentAttendanceFilters();
+        }
+
         function payloadAttempt(payload) {
             if (!payload) return null;
             if (payload.attendance && payload.attendance.date && payload.attendance.time) {
@@ -1699,6 +1973,37 @@
             return 'Buen trabajo. Check-in registrado y flujo estable.';
         }
 
+        function statusDetailFromPayload(payload) {
+            const reason = payloadReason(payload);
+            const eventType = payload && payload.event_type ? String(payload.event_type) : 'checkin';
+
+            if (payload && payload.ok && eventType === 'checkout') {
+                return 'Salida registrada. El cupo y la presencia se actualizaron en vivo.';
+            }
+
+            if (payload && payload.ok) {
+                return 'Ingreso confirmado. Puedes continuar con el siguiente cliente.';
+            }
+
+            if (reason === 'membership_inactive') {
+                return 'Membresia no vigente. Solicita renovacion antes de permitir ingreso.';
+            }
+
+            if (reason === 'not_found' || reason === 'client_inactive' || reason === 'credential_inactive') {
+                return 'Documento o credencial no valida. Verifica datos en clientes.';
+            }
+
+            if (reason === 'duplicate_attendance') {
+                return 'El cliente ya tenia ingreso hoy. Si corresponde, usa registrar salida.';
+            }
+
+            if (reason === 'not_inside') {
+                return 'No existe un ingreso activo para registrar salida.';
+            }
+
+            return 'Revisa el codigo escaneado y vuelve a intentar.';
+        }
+
         function checkinDisplay(payload) {
             const reason = payloadReason(payload);
             if (reason === 'membership_inactive') {
@@ -1758,12 +2063,15 @@
             }
         }
 
-        function buildRecentAttendanceRow(id, dateValue, timeValue, clientName, methodText) {
+        function buildRecentAttendanceRow(id, dateValue, timeValue, clientName, methodText, methodRaw) {
             const row = document.createElement('tr');
             row.setAttribute('data-role', 'recent-attendance-row');
             if (id !== null) {
                 row.setAttribute('data-attendance-id', String(id));
             }
+            row.setAttribute('data-attendance-date', String(dateValue || '').trim());
+            row.setAttribute('data-attendance-method', String(methodRaw || '').trim().toLowerCase());
+            row.setAttribute('data-attendance-client', normalizeSearchText(clientName));
             row.className = 'border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50';
             row.appendChild(buildAttendanceRowCell(dateValue, 'px-3 py-3 dark:text-slate-200'));
             row.appendChild(buildAttendanceRowCell(timeValue, 'px-3 py-3 dark:text-slate-200'));
@@ -1791,7 +2099,7 @@
 
             removeRecentAttendancesEmptyState();
             recentAttendancesBody.prepend(
-                buildRecentAttendanceRow(attendanceId, dateValue, timeValue, clientName, methodText)
+                buildRecentAttendanceRow(attendanceId, dateValue, timeValue, clientName, methodText, payload.method || '')
             );
 
             const rows = recentAttendancesBody.querySelectorAll('tr[data-role="recent-attendance-row"]');
@@ -1800,6 +2108,8 @@
                     rows[i].remove();
                 }
             }
+
+            applyRecentAttendanceFilters();
         }
 
         function emitSync(payload) {
@@ -2169,6 +2479,10 @@
                 playTone('error');
             }
 
+            if (statusDetail) {
+                statusDetail.textContent = statusDetailFromPayload(payload);
+            }
+
             message.textContent = payload.message;
             const methodText = payload.method ? (methodLabels[payload.method] || String(payload.method).toUpperCase()) : '-';
             method.textContent = 'Método: ' + methodText;
@@ -2211,6 +2525,9 @@
             message.textContent = 'Esperando lectura...';
             statusChip.className = 'mt-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800';
             statusChip.textContent = receptionI18n.ready_to_scan;
+            if (statusDetail) {
+                statusDetail.textContent = 'Atajos: Enter registra ingreso, F3 registra salida y F2 limpia el campo.';
+            }
             name.textContent = '-';
             membership.textContent = '-';
             checkinDate.textContent = '-';
@@ -2261,6 +2578,11 @@
             }
             statusChip.className = 'mt-4 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-800';
             statusChip.textContent = isCheckoutAction ? receptionI18n.processing_checkout : receptionI18n.processing;
+            if (statusDetail) {
+                statusDetail.textContent = isCheckoutAction
+                    ? 'Procesando salida. Mantén el lector apuntando hasta confirmar.'
+                    : 'Procesando ingreso. Espera la respuesta del servidor.';
+            }
 
             let payload;
             try {
@@ -2337,6 +2659,42 @@
             input.value = normalizeInput(input.value);
             scheduleScannerSubmit();
         });
+
+        window.addEventListener('keydown', function (event) {
+            if (event.defaultPrevented) return;
+            if (mobileScannerIsOpen) return;
+            if (attendanceHistoryModal && !attendanceHistoryModal.classList.contains('hidden')) return;
+
+            const target = event.target;
+            const isInputFocused = target === input;
+            const isTypingElsewhere = target instanceof HTMLElement
+                && isEditableElement(target)
+                && !isInputFocused;
+
+            if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 'k') {
+                event.preventDefault();
+                focusInput(true);
+                input.select();
+                return;
+            }
+
+            if (isTypingElsewhere || event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+
+            if (event.key === 'F2') {
+                event.preventDefault();
+                input.value = '';
+                renderIdle();
+                focusInput(true);
+                return;
+            }
+
+            if (event.key === 'F3') {
+                event.preventDefault();
+                submitCheckIn(null, 'checkout');
+            }
+        }, true);
 
         window.addEventListener('keydown', function (event) {
             if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -2424,6 +2782,7 @@
         startMobileQrStatusPolling();
         startSyncPolling();
         generateMobileQr(true);
+        applyRecentAttendanceFilters();
         input.value = '';
         renderIdle();
         focusInput();
