@@ -303,11 +303,13 @@
             const sheet = document.getElementById('mnav-sheet');
             const backdrop = document.getElementById('mnav-sheet-backdrop');
             if (!openButton || !sheet || !backdrop) return;
+            const openButtonBaseActive = openButton.classList.contains('mnav-btn-active');
 
             const setOpen = (open) => {
                 sheet.classList.toggle('hidden', !open);
                 backdrop.classList.toggle('hidden', !open);
                 openButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+                openButton.classList.toggle('mnav-btn-active', open || openButtonBaseActive);
                 document.documentElement.classList.toggle('mnav-body-lock', open);
             };
 
