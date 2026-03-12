@@ -23,6 +23,11 @@
             'to' => $to->toDateString(),
         ] + ($isGlobalScope ? ['scope' => 'global'] : []);
         $membershipsRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $clientEarningsRouteParams = [
+            'contextGym' => $contextGym,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
     @endphp
 
     @if ($isGlobalScope)
@@ -66,7 +71,7 @@
         </form>
     </x-ui.card>
 
-    <section class="grid gap-4 xl:grid-cols-3">
+    <section class="grid gap-4 xl:grid-cols-4">
         <x-ui.card title="Ganancias del gimnasio" subtitle="Resumen financiero principal del negocio.">
             <div class="space-y-3">
                 <p class="text-sm text-slate-600 dark:text-slate-300">Usa esta seccion para revisar ingresos, egresos, balance y exportaciones del rango seleccionado.</p>
@@ -83,6 +88,16 @@
                 <div class="flex flex-wrap gap-2">
                     <x-ui.button :href="route('reports.attendance', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Asistencias</x-ui.button>
                     <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Membresias</x-ui.button>
+                </div>
+            </div>
+        </x-ui.card>
+
+        <x-ui.card title="Ganancias de clientes" subtitle="Facturacion por cliente con desglose y filtros avanzados.">
+            <div class="space-y-3">
+                <p class="text-sm text-slate-600 dark:text-slate-300">Revisa cuantos clientes han sido facturados, cuanto aportan y su ultimo movimiento comercial.</p>
+                <div class="flex flex-wrap gap-2">
+                    <x-ui.button :href="route('reports.client-earnings', $clientEarningsRouteParams)" variant="secondary">Abrir reporte</x-ui.button>
+                    <x-ui.button :href="route('clients.index', $baseRouteParams)" variant="ghost">Ir a clientes</x-ui.button>
                 </div>
             </div>
         </x-ui.card>
@@ -147,6 +162,7 @@
             <x-ui.button id="reports-go-income" :href="route('reports.income', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
             <x-ui.button :href="route('reports.attendance', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Detalle asistencias</x-ui.button>
             <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Estado membresias</x-ui.button>
+            <x-ui.button :href="route('reports.client-earnings', $clientEarningsRouteParams)" variant="ghost">Ganancias de clientes</x-ui.button>
             @if ($canUseSalesInventoryReports)
                 <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Ventas e inventario</x-ui.button>
             @endif

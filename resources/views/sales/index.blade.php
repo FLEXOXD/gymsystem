@@ -75,7 +75,7 @@
                 <x-ui.button :href="route('panel.index', $indexRouteParams)" variant="ghost">Ganancias del gimnasio</x-ui.button>
                 <x-ui.button :href="route('clients.index', $indexRouteParams)" variant="ghost">Panel de clientes</x-ui.button>
                 <x-ui.button :href="route('products.index', $indexRouteParams)" variant="secondary">Gestionar productos</x-ui.button>
-                <x-ui.button type="button" id="open-sales-register-modal" variant="secondary">Registrar venta (modal)</x-ui.button>
+                <x-ui.button type="button" id="open-sales-register-modal" variant="secondary">Registrar venta</x-ui.button>
                 @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
                     <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Reportes del modulo</x-ui.button>
                 @endif
@@ -115,30 +115,7 @@
             </x-ui.card>
         </section>
 
-        <section class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-            <x-ui.card title="Registro de ventas" subtitle="Usa el modal de registro para mantener esta vista limpia y enfocada.">
-                @if (! $schemaReady)
-                    <p class="ui-alert ui-alert-warning">El formulario se activará después de correr las migraciones del módulo.</p>
-                @elseif ($isGlobalScope)
-                    <p class="ui-alert ui-alert-info">Selecciona una sede puntual para registrar ventas. En vista global solo puedes analizar.</p>
-                @elseif ($saleProducts->isEmpty())
-                    <p class="ui-alert ui-alert-warning">No hay productos activos para vender. Crea al menos un producto y carga stock primero.</p>
-                    <div class="mt-3">
-                        <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="secondary">Ir a productos</x-ui.button>
-                    </div>
-                @else
-                    <div class="space-y-3">
-                        <p class="text-sm ui-muted">Pulsa el botón para abrir el formulario completo en modal.</p>
-                        <div class="flex flex-wrap gap-2">
-                            <x-ui.button type="button" id="open-sales-register-modal-inline">Registrar venta ahora</x-ui.button>
-                            @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
-                                <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Reportes del módulo</x-ui.button>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-            </x-ui.card>
-
+        <section class="grid gap-4">
             <div id="sales-register-modal"
                  data-auto-open="{{ $openSalesRegisterModal ? '1' : '0' }}"
                  class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/80 p-4">
@@ -813,6 +790,54 @@
             renderScanList();
         }
 
+        function resetRegisterModalState() {
+            clearScanList();
+            clearFeedback();
+
+            if (scanInput) {
+                scanInput.value = '';
+            }
+
+            if (select) {
+                select.value = '';
+            }
+
+            if (quantityInput) {
+                quantityInput.value = '1';
+            }
+
+            if (saleItemsPayloadInput) {
+                saleItemsPayloadInput.value = '';
+            }
+
+            const methodSelect = form?.querySelector('select[name="payment_method"]');
+            if (methodSelect) {
+                methodSelect.value = 'cash';
+            }
+
+            const clientSelect = form?.querySelector('select[name="client_id"]');
+            if (clientSelect) {
+                clientSelect.value = '';
+            }
+
+            const notesInput = form?.querySelector('textarea[name="notes"]');
+            if (notesInput) {
+                notesInput.value = '';
+            }
+
+            try {
+                window.sessionStorage.removeItem(scanListStorageKey);
+                window.sessionStorage.removeItem(lastCodeStorageKey);
+            } catch (error) {
+                // Ignore storage failures.
+            }
+
+            renderPreview(null);
+            renderScanList();
+        }
+
+        window.gymSalesResetRegisterModal = resetRegisterModalState;
+
         function addSelectedProductToList() {
             const product = getSelectedProduct();
             if (!product) {
@@ -1043,20 +1068,23 @@
 <script>
     (function () {
         const modal = document.getElementById('sales-register-modal');
-        const openButtons = [
-            document.getElementById('open-sales-register-modal'),
-            document.getElementById('open-sales-register-modal-inline'),
-        ].filter(Boolean);
+        const openButton = document.getElementById('open-sales-register-modal');
         const closeButton = document.getElementById('close-sales-register-modal');
 
-        if (!modal || openButtons.length === 0) {
+        if (!modal || !openButton) {
             return;
         }
 
-        function openModal() {
+        function openModal(options) {
+            const settings = Object.assign({ reset: false }, options || {});
+            if (settings.reset && typeof window.gymSalesResetRegisterModal === 'function') {
+                window.gymSalesResetRegisterModal();
+            }
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
+            const scanInput = document.getElementById('sale-scan-input');
+            scanInput?.focus();
         }
 
         function closeModal() {
@@ -1065,8 +1093,8 @@
             document.body.style.overflow = '';
         }
 
-        openButtons.forEach(function (button) {
-            button.addEventListener('click', openModal);
+        openButton.addEventListener('click', function () {
+            openModal({ reset: true });
         });
 
         closeButton?.addEventListener('click', closeModal);

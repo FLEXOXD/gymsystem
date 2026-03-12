@@ -488,9 +488,15 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/reports/memberships', [ReportController::class, 'memberships'])
                     ->middleware(['role:owner', 'plan.feature:reports_base'])
                     ->name('reports.memberships');
+                Route::get('/reports/client-earnings', [ReportController::class, 'clientEarnings'])
+                    ->middleware(['role:owner', 'plan.feature:reports_base'])
+                    ->name('reports.client-earnings');
                 Route::get('/reports/sales-inventory', [ReportController::class, 'salesInventory'])
                     ->middleware(['role:owner', 'plan.feature:sales_inventory_reports'])
                     ->name('reports.sales-inventory');
+                Route::get('/reports/sales-inventory/export/csv', [ReportController::class, 'exportSalesInventoryCsv'])
+                    ->middleware(['role:owner', 'plan.feature:reports_export', 'plan.feature:sales_inventory_reports', 'not.branch:export_reports'])
+                    ->name('reports.sales-inventory.export.csv');
                 Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])
                     ->middleware(['role:owner', 'plan.feature:reports_export', 'not.branch:export_reports'])
                     ->name('reports.export.csv');

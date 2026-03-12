@@ -6,8 +6,14 @@
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
+        $planAccessService = app(\App\Services\PlanAccessService::class);
         $contextGym = (string) request()->route('contextGym');
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $isBranchContext = (bool) request()->attributes->get('gym_context_is_branch', false);
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $canExportReports = ! $isBranchContext
+            && $activeGymId > 0
+            && $planAccessService->canForGym($activeGymId, 'reports_export');
         $chartLabels = collect($salesByDay ?? [])->map(fn ($row) => \Carbon\Carbon::parse((string) $row->date)->format('Y-m-d'))->values();
         $chartRevenue = collect($salesByDay ?? [])->map(fn ($row) => round((float) $row->total_revenue, 2))->values();
         $chartProfit = collect($salesByDay ?? [])->map(fn ($row) => round((float) $row->total_profit, 2))->values();
@@ -17,6 +23,11 @@
             'transfer' => 'Transferencia',
         ];
         $routeParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $exportRouteParams = [
+            'contextGym' => $contextGym,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
     @endphp
 
     <div class="space-y-4">
@@ -42,6 +53,11 @@
                 <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
 
                 <div class="flex flex-wrap gap-2">
+                    @if ($canExportReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory.export.csv'))
+                        <x-ui.button :href="route('reports.sales-inventory.export.csv', $exportRouteParams)"
+                                     data-ui-loading-ignore="1"
+                                     variant="ghost">Exportar CSV</x-ui.button>
+                    @endif
                     <x-ui.button :href="route('reports.index', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Panel reportes</x-ui.button>
                     <x-ui.button :href="route('sales.index', $routeParams)" variant="ghost">Volver al modulo</x-ui.button>
                 </div>

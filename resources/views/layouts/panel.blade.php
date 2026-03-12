@@ -179,7 +179,7 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.client-earnings', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
     $showGlobalBranchOption = ! request()->routeIs('client-portal.*');
