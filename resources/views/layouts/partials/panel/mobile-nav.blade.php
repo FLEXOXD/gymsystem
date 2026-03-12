@@ -311,7 +311,7 @@
                 document.documentElement.classList.toggle('mnav-body-lock', open);
             };
 
-            openButton.addEventListener('click', () => setOpen(!sheet.classList.contains('hidden')));
+            openButton.addEventListener('click', () => setOpen(sheet.classList.contains('hidden')));
             closeButton?.addEventListener('click', () => setOpen(false));
             backdrop.addEventListener('click', () => setOpen(false));
 
