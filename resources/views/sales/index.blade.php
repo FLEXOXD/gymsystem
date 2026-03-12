@@ -157,7 +157,7 @@
                                         Limpiar lista
                                     </button>
                                 </div>
-                                <div id="sale-scan-list-items" class="mt-2 space-y-2"></div>
+                                <div id="sale-scan-list-items" class="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1 md:max-h-72"></div>
                                 <p id="sale-scan-list-summary" class="mt-2 text-xs ui-muted"></p>
                             </div>
                         </div>
@@ -172,6 +172,11 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <button type="button" id="sale-add-selected" class="ui-button ui-button-ghost px-3 py-2 text-sm font-semibold">
+                                    Agregar seleccionado al carrito
+                                </button>
+                            </div>
                         </label>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -494,6 +499,7 @@
         const scanInput = document.getElementById('sale-scan-input');
         const searchButton = document.getElementById('sale-scan-search');
         const select = document.getElementById('sale-product-select');
+        const addSelectedButton = document.getElementById('sale-add-selected');
         const quantityInput = document.getElementById('sale-quantity-input');
         const feedback = document.getElementById('sale-scan-feedback');
         const preview = document.getElementById('sale-selected-preview');
@@ -556,6 +562,13 @@
             } else {
                 feedback.classList.add('border-cyan-300', 'bg-cyan-50', 'text-cyan-800');
             }
+        }
+
+        function clearFeedback() {
+            if (!feedback) return;
+            feedback.textContent = '';
+            feedback.classList.add('hidden');
+            feedback.classList.remove('border-emerald-300', 'bg-emerald-50', 'text-emerald-800', 'border-rose-300', 'bg-rose-50', 'text-rose-800', 'border-cyan-300', 'bg-cyan-50', 'text-cyan-800');
         }
 
         function serializeScanList() {
@@ -752,6 +765,29 @@
             renderScanList();
         }
 
+        function getQuantityFromInput() {
+            const parsed = Math.floor(toNumber(quantityInput.value || 1));
+            return Math.max(1, parsed);
+        }
+
+        function addSelectedProductToList() {
+            const product = getSelectedProduct();
+            if (!product) {
+                setFeedback('Selecciona un producto para agregar al carrito.', 'error');
+                return;
+            }
+
+            const quantityToAdd = getQuantityFromInput();
+            if (!addProductToScanList(product, quantityToAdd, { enforceStock: true })) {
+                return;
+            }
+
+            renderPreview(product);
+            quantityInput.value = '1';
+            setFeedback('Producto agregado al carrito: ' + product.name + ' x' + quantityToAdd + '.', 'success');
+            scanInput.focus();
+        }
+
         function restoreScanListFromPayload(serialized) {
             const raw = (serialized || '').toString().trim();
             if (raw === '') {
@@ -838,6 +874,10 @@
                 clearTimeout(autoSearchTimer);
             }
 
+            if (normalize(scanInput.value).length === 0) {
+                clearFeedback();
+            }
+
             autoSearchTimer = window.setTimeout(function () {
                 if (normalize(scanInput.value).length >= 6) {
                     resolveScan();
@@ -846,11 +886,27 @@
         });
 
         select.addEventListener('change', function () {
-            renderPreview(getSelectedProduct());
+            const selectedProduct = getSelectedProduct();
+            renderPreview(selectedProduct);
+
+            if (!selectedProduct) {
+                clearFeedback();
+                return;
+            }
+
+            if (Number(selectedProduct.stock || 0) <= 0) {
+                setFeedback('El producto "' + selectedProduct.name + '" no tiene stock disponible.', 'error');
+                return;
+            }
+
+            clearFeedback();
         });
+
+        addSelectedButton?.addEventListener('click', addSelectedProductToList);
 
         clearListButton?.addEventListener('click', function () {
             clearScanList();
+            clearFeedback();
             setFeedback('Lista de escaneo limpia.', 'info');
         });
 
