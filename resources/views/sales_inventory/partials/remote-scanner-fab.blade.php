@@ -389,6 +389,9 @@
             let sessionState = null;
             let stream = null;
             let bootstrapped = false;
+            let lastDispatchedEventId = 0;
+            let lastDispatchedCode = '';
+            let lastDispatchedAt = 0;
 
             function setStatus(message, tone) {
                 statusEl.textContent = message;
@@ -461,10 +464,24 @@
 
                 stream.addEventListener('scan', function (event) {
                     const payload = JSON.parse(event.data || '{}');
+                    const eventId = Number(payload.id || 0);
                     const code = (payload.code || '').toString().trim();
                     if (code === '') {
                         return;
                     }
+
+                    const now = Date.now();
+                    if (eventId > 0 && eventId <= lastDispatchedEventId) {
+                        return;
+                    }
+                    if (code === lastDispatchedCode && (now - lastDispatchedAt) < 1200) {
+                        return;
+                    }
+                    if (eventId > 0) {
+                        lastDispatchedEventId = eventId;
+                    }
+                    lastDispatchedCode = code;
+                    lastDispatchedAt = now;
 
                     lastCodeEl.textContent = code;
                     lastTimeEl.textContent = 'Ultima lectura: ' + new Date().toLocaleTimeString();

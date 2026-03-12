@@ -332,6 +332,8 @@
             let frame = null;
             let lockedUntil = 0;
             let toastTimer = null;
+            let lastSentCode = '';
+            let lastSentAt = 0;
 
             function setStatus(message, tone) {
                 if (!statusEl) {
@@ -375,6 +377,12 @@
                     return false;
                 }
 
+                const now = Date.now();
+                const isCameraSource = (source || 'camera') === 'camera';
+                if (isCameraSource && normalized === lastSentCode && (now - lastSentAt) < 2200) {
+                    return false;
+                }
+
                 try {
                     const response = await fetch(captureUrl, {
                         method: 'POST',
@@ -405,6 +413,8 @@
                     setStatus('Leido y enviado.', 'ok');
                     setLast('Ultimo codigo: ' + normalized + ' | ' + new Date().toLocaleTimeString());
                     showToast('Escaneo completo', 'ok');
+                    lastSentCode = normalized;
+                    lastSentAt = Date.now();
                     return true;
                 } catch (error) {
                     setStatus('Error de red enviando el codigo.', 'bad');
@@ -429,7 +439,7 @@
                     if (results.length > 0) {
                         const value = (results[0].rawValue || '').trim();
                         if (value !== '') {
-                            lockedUntil = Date.now() + 1200;
+                            lockedUntil = Date.now() + 1800;
                             await sendCode(value, 'camera');
                         }
                     }

@@ -249,7 +249,7 @@
             </div>
 
             <x-ui.card title="Control rapido de inventario" subtitle="Lectura operativa del mes actual para reponer a tiempo.">
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos del mes</p>
                         <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
@@ -542,6 +542,9 @@
         const lastCodeStorageKey = 'remote_scan_last_code_sales';
         const scanListStorageKey = 'sales_scan_list_v1';
         const clearSalesScanCartOnLoad = Boolean(@json($clearSalesScanCart));
+        let lastRemoteEventId = 0;
+        let lastRemoteCode = '';
+        let lastRemoteAt = 0;
 
         if (!scanInput || !select || !quantityInput) {
             return;
@@ -997,10 +1000,25 @@
         });
 
         window.addEventListener('remote-scanner:scan', function (event) {
+            const payload = event.detail || {};
+            const eventId = Number(payload.id || 0);
             const code = (event.detail?.code || '').toString().trim();
             if (code === '') {
                 return;
             }
+
+            const now = Date.now();
+            if (eventId > 0 && eventId <= lastRemoteEventId) {
+                return;
+            }
+            if (code === lastRemoteCode && (now - lastRemoteAt) < 1200) {
+                return;
+            }
+            if (eventId > 0) {
+                lastRemoteEventId = eventId;
+            }
+            lastRemoteCode = code;
+            lastRemoteAt = now;
 
             scanInput.value = code;
             resolveScan();
