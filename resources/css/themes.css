@@ -10,6 +10,15 @@
         --muted: #94a3b8;
         --card: #111827;
         --border: #1f2937;
+        --sidebar-surface: color-mix(in srgb, var(--sidebar) 88%, #000000);
+        --sidebar-border: color-mix(in srgb, var(--border) 74%, transparent);
+        --sidebar-hover-bg: color-mix(in srgb, var(--sidebar) 78%, #ffffff);
+        --sidebar-icon-bg: color-mix(in srgb, var(--sidebar) 82%, #000000);
+        --sidebar-active-bg: color-mix(in srgb, var(--primary) 26%, var(--sidebar));
+        --sidebar-active-border: color-mix(in srgb, var(--accent) 58%, var(--border));
+        --sidebar-active-text: #ffffff;
+        --sidebar-active-indicator: color-mix(in srgb, var(--accent) 68%, #ffffff);
+        --sidebar-section-text: color-mix(in srgb, var(--sidebar-muted) 90%, #ffffff);
     }
 
     html[data-theme='iron_dark'] {
@@ -128,8 +137,8 @@
     }
 
     .theme-sidebar {
-        background-color: color-mix(in srgb, var(--sidebar) 88%, #000000);
-        border-color: var(--border);
+        background-color: var(--sidebar-surface);
+        border-color: var(--sidebar-border);
         color: var(--sidebar-text);
     }
 
@@ -171,11 +180,15 @@
     }
 
     .theme-nav-link {
-        color: var(--sidebar-text);
+        color: color-mix(in srgb, var(--sidebar-text) 92%, #ffffff);
+        border: 1px solid transparent;
+        background-color: transparent;
     }
 
     .theme-nav-link:hover {
-        background-color: color-mix(in srgb, var(--sidebar) 76%, #ffffff);
+        background-color: var(--sidebar-hover-bg);
+        border-color: color-mix(in srgb, var(--sidebar-muted) 28%, var(--border));
+        color: var(--sidebar-text);
     }
 
     .theme-nav-dot {
@@ -183,9 +196,29 @@
     }
 
     .theme-nav-active {
-        background: linear-gradient(130deg, var(--primary), var(--accent));
-        color: #ffffff;
-        box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 38%, transparent);
+        background-color: var(--sidebar-active-bg);
+        border-color: var(--sidebar-active-border);
+        color: var(--sidebar-active-text);
+        box-shadow:
+            inset 3px 0 0 var(--sidebar-active-indicator),
+            0 10px 24px color-mix(in srgb, var(--sidebar-active-indicator) 20%, transparent);
+    }
+
+    .theme-nav-link .sidebar-icon {
+        background-color: var(--sidebar-icon-bg);
+        border: 1px solid color-mix(in srgb, var(--sidebar-muted) 34%, var(--border));
+        color: color-mix(in srgb, var(--sidebar-text) 90%, #ffffff);
+    }
+
+    .theme-nav-link:hover .sidebar-icon {
+        border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+        background-color: color-mix(in srgb, var(--sidebar-icon-bg) 80%, var(--accent));
+    }
+
+    .theme-nav-active .sidebar-icon {
+        background-color: color-mix(in srgb, var(--sidebar-active-indicator) 22%, #0b1220);
+        border-color: color-mix(in srgb, var(--sidebar-active-indicator) 58%, transparent);
+        color: var(--sidebar-active-text);
     }
 
     .theme-chip {
@@ -208,8 +241,9 @@
     }
 
     .theme-nav-mobile-active {
-        background: linear-gradient(130deg, var(--primary), var(--accent));
-        color: #ffffff;
+        background-color: color-mix(in srgb, var(--primary) 26%, var(--card));
+        border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+        color: var(--text);
     }
 
     .ui-heading {
@@ -395,6 +429,15 @@
             background-color: rgba(255, 255, 255, 0.08);
         }
 
+        .theme-nav-link .sidebar-icon {
+            background-color: rgba(15, 23, 42, 0.3);
+            border: 1px solid var(--border);
+        }
+
+        .theme-nav-link:hover .sidebar-icon {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
         .theme-nav-dot {
             background-color: var(--sidebar-muted);
         }
@@ -402,6 +445,11 @@
         .theme-nav-active,
         .theme-nav-mobile-active {
             background: var(--primary);
+        }
+
+        .theme-nav-active .sidebar-icon {
+            background-color: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.24);
         }
 
         .theme-nav-mobile-link {

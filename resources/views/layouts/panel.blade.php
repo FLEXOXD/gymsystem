@@ -320,6 +320,50 @@
           ]
         : $gymNavItems;
 
+    $sectionLabels = [
+        'operation' => 'Operaci&oacute;n',
+        'commercial' => 'Comercial',
+        'management' => 'Administraci&oacute;n',
+        'communication' => 'Comunicaci&oacute;n',
+        'channels' => 'Canales',
+        'platform' => 'Plataforma',
+    ];
+
+    $resolveNavSection = static function (array $item, bool $isSuperAdminMode): string {
+        $icon = (string) ($item['icon'] ?? '');
+
+        if ($isSuperAdminMode) {
+            return match ($icon) {
+                'panel' => 'operation',
+                'quotations', 'inbox', 'notifications', 'suggestions', 'legal_acceptances' => 'communication',
+                'gym_directory', 'subscriptions_admin', 'branches', 'gym_create', 'plans', 'web' => 'management',
+                default => 'platform',
+            };
+        }
+
+        return match ($icon) {
+            'panel', 'reception', 'clients' => 'operation',
+            'sales_inventory', 'products', 'plans', 'cash' => 'commercial',
+            'staff', 'branches', 'reports' => 'management',
+            'client_portal' => 'channels',
+            default => 'platform',
+        };
+    };
+
+    $navSectionsMap = [];
+    foreach ($navItems as $navItem) {
+        $sectionKey = $resolveNavSection($navItem, $isSuperAdmin);
+        if (! isset($navSectionsMap[$sectionKey])) {
+            $navSectionsMap[$sectionKey] = [
+                'key' => $sectionKey,
+                'label' => $sectionLabels[$sectionKey] ?? 'M&oacute;dulos',
+                'items' => [],
+            ];
+        }
+        $navSectionsMap[$sectionKey]['items'][] = $navItem;
+    }
+    $navSections = array_values($navSectionsMap);
+
     $statusVariant = match ($gymSubscriptionStatus) {
         'active' => 'success',
         'grace' => 'warning',
@@ -547,26 +591,69 @@
         #panel-sidebar.sidebar-collapsed #brand-logo-badge > img.brand-logo-media.brand-logo-media-contain {
             object-fit: contain;
         }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.95rem;
+        }
+        .sidebar-nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.32rem;
+        }
+        .sidebar-section-label {
+            margin: 0;
+            padding-left: 0.65rem;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--sidebar-section-text) !important;
+            opacity: 0.9;
+        }
         .sidebar-nav-item {
             position: relative;
-            overflow: visible;
+            overflow: hidden;
+            min-height: 2.7rem;
+            border-radius: 0.85rem;
+        }
+        .sidebar-nav-item .sidebar-icon {
+            width: 1.95rem;
+            height: 1.95rem;
+            min-width: 1.95rem;
+            min-height: 1.95rem;
+            border-radius: 0.6rem;
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+        .sidebar-nav-item .sidebar-link-badge {
+            line-height: 1;
         }
         #panel-sidebar.sidebar-collapsed nav {
             overflow-x: visible;
         }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav {
+            gap: 0.65rem;
+        }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav-section {
+            gap: 0.25rem;
+        }
+        #panel-sidebar.sidebar-collapsed .sidebar-section-label {
+            display: none;
+        }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item {
             justify-content: center;
             gap: 0;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
         }
-        #panel-sidebar.sidebar-collapsed .sidebar-nav-item .theme-nav-dot,
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-link-badge {
             display: none;
         }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-icon {
-            width: 1.2rem;
-            height: 1.2rem;
+            width: 2.05rem;
+            height: 2.05rem;
+            min-width: 2.05rem;
+            min-height: 2.05rem;
         }
         #sidebar-collapsed-tooltip {
             position: fixed;
@@ -787,23 +874,20 @@
             text-shadow: none;
         }
         .theme-nav-link.nav-link-highlight {
-            border: 1px solid color-mix(in srgb, #22c55e 52%, var(--border));
-            background: linear-gradient(132deg, rgb(16 185 129 / 0.2), rgb(6 78 59 / 0.08));
-            color: color-mix(in srgb, var(--text) 98%, #ffffff);
-            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 10px 22px rgb(16 185 129 / 0.18);
+            border-color: color-mix(in srgb, #22c55e 40%, var(--sidebar-border));
+            background: color-mix(in srgb, #22c55e 16%, var(--sidebar));
+            color: color-mix(in srgb, var(--sidebar-text) 94%, #ecfdf5);
+            box-shadow: none;
         }
         .theme-nav-link.nav-link-highlight:hover {
-            background: linear-gradient(132deg, rgb(16 185 129 / 0.3), rgb(6 78 59 / 0.16));
-            border-color: color-mix(in srgb, #34d399 66%, var(--border));
+            background: color-mix(in srgb, #22c55e 24%, var(--sidebar));
+            border-color: color-mix(in srgb, #34d399 56%, var(--sidebar-border));
         }
         .theme-nav-active.nav-link-highlight {
-            background: linear-gradient(132deg, #16a34a, #06b6d4);
-            color: #ecfdf5;
-            box-shadow: 0 12px 28px rgb(16 185 129 / 0.3);
-        }
-        .theme-nav-dot.theme-nav-dot-highlight {
-            background: #34d399;
-            box-shadow: 0 0 0 5px rgb(16 185 129 / 0.22), 0 0 14px rgb(52 211 153 / 0.6);
+            background: color-mix(in srgb, #22c55e 26%, var(--sidebar));
+            border-color: color-mix(in srgb, #22c55e 62%, var(--sidebar-border));
+            color: var(--sidebar-active-text);
+            box-shadow: inset 3px 0 0 color-mix(in srgb, #34d399 70%, #ffffff);
         }
         .theme-nav-mobile-link.theme-nav-mobile-highlight {
             border: 1px solid color-mix(in srgb, #22c55e 42%, var(--border));
@@ -1359,24 +1443,26 @@
             </div>
         </a>
 
-        <nav class="space-y-1 px-3 py-4">
-            @foreach ($navItems as $item)
-                @php
-                    $activePatterns = explode('|', $item['active']);
-                    $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
-                    $isHighlight = (bool) ($item['highlight'] ?? false);
-                    $navClass = $isActive ? 'theme-nav-active' : 'theme-nav-link';
-                    if ($isHighlight) {
-                        $navClass .= ' nav-link-highlight';
-                    }
-                @endphp
-                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-                   data-tour="nav-{{ $item['icon'] ?? 'item' }}"
-                   data-sidebar-label="{{ $item['label'] }}"
-                   aria-label="{{ $item['label'] }}"
-                   class="sidebar-nav-item flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition {{ $navClass }}">
-                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full {{ $isActive ? 'bg-white' : ($isHighlight ? 'theme-nav-dot-highlight' : '') }}"></span>
-                    <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
+        <nav class="sidebar-nav px-3 py-4">
+            @foreach ($navSections as $section)
+                <section class="sidebar-nav-section" data-sidebar-section="{{ $section['key'] }}">
+                    <p class="sidebar-section-label sidebar-label">{!! $section['label'] !!}</p>
+                    @foreach ($section['items'] as $item)
+                        @php
+                            $activePatterns = explode('|', $item['active']);
+                            $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
+                            $isHighlight = (bool) ($item['highlight'] ?? false);
+                            $navClass = $isActive ? 'theme-nav-active' : 'theme-nav-link';
+                            if ($isHighlight) {
+                                $navClass .= ' nav-link-highlight';
+                            }
+                        @endphp
+                        <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                           data-tour="nav-{{ $item['icon'] ?? 'item' }}"
+                           data-sidebar-label="{{ $item['label'] }}"
+                           aria-label="{{ $item['label'] }}"
+                           class="sidebar-nav-item flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold transition {{ $navClass }}">
+                            <span class="sidebar-icon inline-flex items-center justify-center">
                         @switch($item['icon'] ?? '')
                             @case('panel')
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1520,6 +1606,8 @@
                         </span>
                     @endif
                 </a>
+                    @endforeach
+                </section>
             @endforeach
         </nav>
 
