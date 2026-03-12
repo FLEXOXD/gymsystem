@@ -37,6 +37,12 @@
             transition: transform .18s ease, box-shadow .18s ease;
         }
 
+        @media (max-width: 1023px) {
+            .remote-scan-fab {
+                bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
         .remote-scan-fab::before {
             content: "";
             position: absolute;
@@ -258,7 +264,7 @@
             .remote-scan-fab {
                 width: 68px;
                 height: 68px;
-                bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+                bottom: calc(84px + env(safe-area-inset-bottom, 0px));
             }
 
             .remote-scan-fab__icon {
