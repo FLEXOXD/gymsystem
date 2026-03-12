@@ -4,6 +4,91 @@
 @section('title', 'Ganancias del gimnasio')
 @section('page-title', 'Ganancias del gimnasio')
 
+@push('styles')
+<style>
+    .panel-kpi-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .panel-kpi-card {
+        min-height: 7.9rem;
+        border-radius: 0.9rem;
+        padding: 0.85rem;
+    }
+
+    .panel-kpi-title {
+        min-height: 2rem;
+    }
+
+    .panel-kpi-value {
+        font-size: clamp(1.72rem, 2.4vw, 2.12rem);
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .panel-cta-grid {
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .panel-cta-grid .ui-button {
+        width: 100%;
+        min-height: 2.6rem;
+    }
+
+    .panel-cash-today-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    @media (min-width: 640px) {
+        .panel-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .panel-cta-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .panel-cash-today-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .panel-kpi-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .panel-cta-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .panel-cash-today-grid {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1536px) {
+        .panel-kpi-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .panel-cta-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .panel-cash-today-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -34,46 +119,46 @@
         $clientShowUrl = static fn (int $clientId): string => route('clients.show', ['client' => $clientId] + ($isGlobalScope ? ['scope' => 'global'] : []));
     @endphp
 
-    <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <div class="space-y-4">
     <x-ui.card id="tour-panel-summary" title="Resumen del día" subtitle="Indicadores clave para tomar decisiones rápidas.">
         @if ($isCashierScoped)
             <p class="mb-4 ui-alert ui-alert-info">Vista privada: aqui solo ves tus cobros, movimientos y acumulados del mes actual.</p>
         @endif
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-slate-500 dark:text-slate-300">Clientes</p>
-                <p class="mt-1 text-2xl font-black leading-none text-slate-900 dark:text-slate-100">{{ $totalClients }}</p>
+        <div class="panel-kpi-grid">
+            <article class="panel-kpi-card flex flex-col justify-between border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/75">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-slate-500 dark:text-slate-300">Clientes</p>
+                <p class="panel-kpi-value mt-1 font-black text-slate-900 dark:text-slate-100">{{ $totalClients }}</p>
                 <p class="min-h-[16px] text-xs text-slate-500 dark:text-slate-300">Base registrada</p>
             </article>
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-emerald-700 dark:text-emerald-200">Membresías activas</p>
-                <p class="mt-1 text-2xl font-black leading-none text-emerald-800 dark:text-emerald-100">{{ $activeMemberships }}</p>
+            <article class="panel-kpi-card flex flex-col justify-between border border-emerald-200 bg-emerald-50 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-emerald-700 dark:text-emerald-200">Membresías activas</p>
+                <p class="panel-kpi-value mt-1 font-black text-emerald-800 dark:text-emerald-100">{{ $activeMemberships }}</p>
                 <p class="min-h-[16px] text-xs text-emerald-700 dark:text-emerald-200">Vigentes hoy</p>
             </article>
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-amber-700 dark:text-amber-200">Por vencer</p>
-                <p class="mt-1 text-2xl font-black leading-none text-amber-800 dark:text-amber-100">{{ $expiringSoonMemberships }}</p>
+            <article class="panel-kpi-card flex flex-col justify-between border border-amber-200 bg-amber-50 dark:border-amber-400/40 dark:bg-amber-500/15">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-amber-700 dark:text-amber-200">Por vencer</p>
+                <p class="panel-kpi-value mt-1 font-black text-amber-800 dark:text-amber-100">{{ $expiringSoonMemberships }}</p>
                 <p class="min-h-[16px] text-xs text-amber-700 dark:text-amber-200">Próximas 48 horas</p>
             </article>
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-rose-700 dark:text-rose-200">Vencid@s</p>
-                <p class="mt-1 text-2xl font-black leading-none text-rose-800 dark:text-rose-100">{{ $expiredMemberships }}</p>
+            <article class="panel-kpi-card flex flex-col justify-between border border-rose-200 bg-rose-50 dark:border-rose-400/40 dark:bg-rose-500/15">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-rose-700 dark:text-rose-200">Vencid@s</p>
+                <p class="panel-kpi-value mt-1 font-black text-rose-800 dark:text-rose-100">{{ $expiredMemberships }}</p>
                 <p class="min-h-[16px] text-xs text-rose-700 dark:text-rose-200">Requieren renovación</p>
             </article>
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-cyan-700 dark:text-cyan-200">Check-ins hoy</p>
-                <p class="mt-1 text-2xl font-black leading-none text-cyan-800 dark:text-cyan-100">{{ (int) $checkinsToday }}</p>
+            <article class="panel-kpi-card flex flex-col justify-between border border-cyan-200 bg-cyan-50 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-cyan-700 dark:text-cyan-200">Check-ins hoy</p>
+                <p class="panel-kpi-value mt-1 font-black text-cyan-800 dark:text-cyan-100">{{ (int) $checkinsToday }}</p>
                 <p class="min-h-[16px] text-xs text-cyan-700 dark:text-cyan-200">Se reinicia 12:00 AM</p>
             </article>
-            <article class="flex min-h-[120px] flex-col justify-between rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
-                <p class="min-h-[28px] text-xs font-bold uppercase leading-tight tracking-wider text-violet-700 dark:text-violet-200">Planes activos</p>
-                <p class="mt-1 text-2xl font-black leading-none text-violet-800 dark:text-violet-100">{{ $activePlans }}</p>
+            <article class="panel-kpi-card flex flex-col justify-between border border-violet-200 bg-violet-50 dark:border-violet-400/40 dark:bg-violet-500/15">
+                <p class="panel-kpi-title text-xs font-bold uppercase leading-tight tracking-wider text-violet-700 dark:text-violet-200">Planes activos</p>
+                <p class="panel-kpi-value mt-1 font-black text-violet-800 dark:text-violet-100">{{ $activePlans }}</p>
                 <p class="min-h-[16px] text-xs text-violet-700 dark:text-violet-200">Oferta vigente</p>
             </article>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="panel-cta-grid mt-4">
             <x-ui.button :href="route('reception.index')" variant="primary">Ir a recepción</x-ui.button>
             <x-ui.button id="tour-panel-go-clients" :href="route('clients.index')" variant="secondary">Panel de clientes</x-ui.button>
             @if ($canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index'))
@@ -129,7 +214,7 @@
         </x-ui.card>
 
         <x-ui.card title="{{ $isCashierScoped ? 'Tu producción de hoy' : 'Caja y ventas hoy' }}" class="xl:col-span-1">
-            <div class="space-y-3">
+            <div class="panel-cash-today-grid">
                 <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
                     <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">{{ $isCashierScoped ? 'Tus ingresos hoy' : 'Ingresos hoy' }}</p>
                     <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $incomeToday, $appCurrencyCode) }}</p>
@@ -169,7 +254,7 @@
             </div>
         @elseif ($openSession)
             @if ($isCashierScoped)
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                     <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Turno</p>
                         <p class="mt-1 text-xl font-black text-slate-900 dark:text-slate-100">#{{ $openSession->id }}</p>

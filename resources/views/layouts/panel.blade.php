@@ -527,6 +527,27 @@
                 max-height: min(70vh, 30rem);
             }
         }
+        :root {
+            --panel-shell-max-width: 88rem;
+        }
+        #panel-header-shell,
+        .panel-view {
+            max-width: min(var(--panel-shell-max-width), calc(100vw - 1.25rem));
+        }
+        .panel-view {
+            padding-top: 1.35rem;
+            padding-bottom: 1.8rem;
+        }
+        @media (max-width: 1023px) {
+            #panel-header-shell,
+            .panel-view {
+                max-width: 100%;
+            }
+            .panel-view {
+                padding-top: 1.1rem;
+                padding-bottom: calc(1.35rem + env(safe-area-inset-bottom));
+            }
+        }
         #panel-sidebar {
             position: relative;
             z-index: 40;
