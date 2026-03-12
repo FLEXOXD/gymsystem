@@ -189,7 +189,16 @@
 
     @if (!empty($canManageClientAccounts))
         <x-ui.card title="QR dinámico móvil" subtitle="Genera QR temporal para check-in desde la PWA del cliente.">
-            <div class="space-y-3">
+            <div class="mb-3 flex justify-end">
+                <button id="toggle-mobile-qr-panel"
+                        type="button"
+                        class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
+                        aria-controls="mobile-qr-panel-content"
+                        aria-expanded="true">
+                    Ocultar
+                </button>
+            </div>
+            <div id="mobile-qr-panel-content" class="reception-collapsible-content space-y-3">
                 <div class="flex justify-end">
                     <p id="mobile-qr-countdown" class="inline-flex rounded-full border border-cyan-300 bg-cyan-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100">
                         QR activo
@@ -233,8 +242,18 @@
     @endif
 
     <x-ui.card id="result-panel" class="relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
-        <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-amber-400/10"></div>
-        <div class="relative grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <div class="relative z-10 mb-2 flex justify-end">
+            <button id="toggle-result-panel"
+                    type="button"
+                    class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
+                    aria-controls="result-panel-content"
+                    aria-expanded="true">
+                Ocultar
+            </button>
+        </div>
+        <div id="result-panel-content" class="reception-collapsible-content">
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-amber-400/10"></div>
+            <div class="relative grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
             <div class="w-full max-w-sm md:max-w-none">
                 <div class="relative overflow-hidden rounded-[1.75rem] border border-slate-300/70 bg-slate-900/20 shadow-2xl dark:border-slate-700/80">
                     <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-64 w-full object-cover object-top sm:h-72 md:h-[22rem] xl:h-[26rem]">
@@ -286,9 +305,20 @@
                 </div>
             </div>
         </div>
+        </div>
     </x-ui.card>
 
     <x-ui.card title="Últimos 10 ingresos">
+        <div class="mb-3 flex justify-end">
+            <button id="toggle-recent-panel"
+                    type="button"
+                    class="ui-button ui-button-ghost px-3 py-1.5 text-xs"
+                    aria-controls="recent-panel-content"
+                    aria-expanded="true">
+                Ocultar
+            </button>
+        </div>
+        <div id="recent-panel-content" class="reception-collapsible-content">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p class="text-xs text-slate-500 dark:text-slate-300">Historial detallado disponible para los últimos 2 meses.</p>
             <button id="reception-open-history" type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
@@ -368,6 +398,7 @@
             </table>
         </div>
         <p id="recent-attendances-empty-filter" class="hidden">No hay registros que coincidan con los filtros actuales.</p>
+        </div>
     </x-ui.card>
 
     <div id="reception-mobile-scanner-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receptionMobileScannerTitle">
@@ -555,6 +586,12 @@
         const recentAttendanceSummary = document.getElementById('recent-attendance-summary');
         const recentAttendanceReset = document.getElementById('recent-attendance-reset');
         const recentAttendanceFilterEmpty = document.getElementById('recent-attendances-empty-filter');
+        const toggleMobileQrPanelBtn = document.getElementById('toggle-mobile-qr-panel');
+        const mobileQrPanelContent = document.getElementById('mobile-qr-panel-content');
+        const toggleResultPanelBtn = document.getElementById('toggle-result-panel');
+        const resultPanelContent = document.getElementById('result-panel-content');
+        const toggleRecentPanelBtn = document.getElementById('toggle-recent-panel');
+        const recentPanelContent = document.getElementById('recent-panel-content');
         const openMobileScannerBtn = document.getElementById('reception-open-mobile-scanner');
         const mobileScannerModal = document.getElementById('reception-mobile-scanner-modal');
         const mobileScannerVideo = document.getElementById('reception-mobile-scanner-video');
@@ -1684,6 +1721,35 @@
             applyRecentAttendanceFilters();
         }
 
+        function setupPanelToggle(button, content, storageKey, hideLabel = 'Ocultar', showLabel = 'Mostrar') {
+            if (!button || !content) return;
+
+            let isHidden = false;
+            try {
+                isHidden = localStorage.getItem(storageKey) === '1';
+            } catch (_error) {
+                isHidden = false;
+            }
+
+            const applyState = function (hiddenState) {
+                content.hidden = hiddenState;
+                button.setAttribute('aria-expanded', hiddenState ? 'false' : 'true');
+                button.textContent = hiddenState ? showLabel : hideLabel;
+            };
+
+            applyState(isHidden);
+
+            button.addEventListener('click', function () {
+                const nextHiddenState = !content.hidden;
+                applyState(nextHiddenState);
+                try {
+                    localStorage.setItem(storageKey, nextHiddenState ? '1' : '0');
+                } catch (_error) {
+                    // Ignore storage errors.
+                }
+            });
+        }
+
         function payloadAttempt(payload) {
             if (!payload) return null;
             if (payload.attendance && payload.attendance.date && payload.attendance.time) {
@@ -2274,6 +2340,10 @@
             pollLatestSyncEvent();
             syncPollTimer = window.setInterval(pollLatestSyncEvent, SYNC_POLL_INTERVAL_MS);
         }
+
+        setupPanelToggle(toggleMobileQrPanelBtn, mobileQrPanelContent, 'reception.panel.mobile_qr.hidden');
+        setupPanelToggle(toggleResultPanelBtn, resultPanelContent, 'reception.panel.result.hidden');
+        setupPanelToggle(toggleRecentPanelBtn, recentPanelContent, 'reception.panel.recent.hidden');
 
         function getAudioContext() {
             if (audioContext) return audioContext;
