@@ -127,6 +127,21 @@
             color: color-mix(in srgb, var(--text) 92%, #ecfdf5);
         }
 
+        .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-active,
+        .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-highlight {
+            border-color: color-mix(in srgb, var(--border) 84%, transparent);
+            background: color-mix(in srgb, var(--card) 90%, #020617);
+            color: color-mix(in srgb, var(--text) 90%, #ffffff);
+            box-shadow: none;
+        }
+
+        .mnav-shell.mnav-sheet-open #mnav-more-open.mnav-btn-active {
+            border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+            background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 34%, var(--card)), color-mix(in srgb, var(--accent) 24%, var(--card)));
+            color: #ffffff;
+            box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+        }
+
         .mnav-sheet-backdrop {
             position: fixed;
             inset: 0;
@@ -302,6 +317,7 @@
             const closeButton = document.getElementById('mnav-sheet-close');
             const sheet = document.getElementById('mnav-sheet');
             const backdrop = document.getElementById('mnav-sheet-backdrop');
+            const navRoot = document.getElementById('mnav-root');
             if (!openButton || !sheet || !backdrop) return;
             const openButtonBaseActive = openButton.classList.contains('mnav-btn-active');
 
@@ -310,6 +326,7 @@
                 backdrop.classList.toggle('hidden', !open);
                 openButton.setAttribute('aria-expanded', open ? 'true' : 'false');
                 openButton.classList.toggle('mnav-btn-active', open || openButtonBaseActive);
+                navRoot?.classList.toggle('mnav-sheet-open', open);
                 document.documentElement.classList.toggle('mnav-body-lock', open);
             };
 
