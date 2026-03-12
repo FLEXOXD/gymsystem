@@ -200,6 +200,31 @@ class ThemeController extends Controller
     }
 
     /**
+     * Update only the authenticated user's profile photo.
+     */
+    public function updateOwnProfilePhoto(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if(! $user, 403, __('messages.user_not_authenticated'));
+
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $photoPath = $request->file('profile_photo')?->store('users/profiles', 'public');
+        if (! is_string($photoPath) || trim($photoPath) === '') {
+            return back()->with('error', 'No se pudo guardar la imagen de perfil.');
+        }
+
+        $this->deletePublicAssetIfLocal($user->profile_photo_path);
+        $user->forceFill([
+            'profile_photo_path' => $photoPath,
+        ])->save();
+
+        return back()->with('status', 'Foto de perfil actualizada correctamente.');
+    }
+
+    /**
      * Update gym business details for the authenticated user.
      */
     public function updateGymProfile(UpdateGymProfileRequest $request): RedirectResponse

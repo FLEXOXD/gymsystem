@@ -11,6 +11,7 @@
     $fabSubtitle = $scanContext === 'products'
         ? 'Escanea desde el celular y refleja el codigo en el formulario de producto.'
         : 'Escanea desde el celular y manda el producto directo a la venta en la computadora.';
+    $rotationMessage = 'Este enlace se actualiza el primer día de cada mes. Si el mes termina en 28, 30 o 31, el día 1 se genera uno nuevo.';
 @endphp
 
 @if ($schemaReady && $remoteScannerReady && ! $isGlobalScope)
@@ -324,13 +325,13 @@
                         <p class="text-center text-sm text-slate-500">Generando QR...</p>
                     </div>
                     <div id="remote-scan-status" class="remote-scan-modal__status" data-tone="warn">
-                        Genera el QR y escanea desde el celular. La lectura se reflejara en esta pantalla.
+                        Genera el QR y escanea desde el celular. La lectura se reflejará en esta pantalla.
                     </div>
                 </div>
 
                 <div class="remote-scan-modal__panel">
                     <div class="remote-scan-modal__actions">
-                        <button type="button" id="remote-scan-start-session" class="ui-button ui-button-primary px-4 py-2 text-sm font-bold">Renovar QR</button>
+                        <button type="button" id="remote-scan-start-session" class="ui-button ui-button-primary px-4 py-2 text-sm font-bold">Generar enlace nuevo</button>
                         <button type="button" id="remote-scan-copy-link" class="ui-button ui-button-secondary px-4 py-2 text-sm font-semibold">Copiar link</button>
                         <button type="button" id="remote-scan-open-link" class="ui-button ui-button-ghost px-4 py-2 text-sm font-semibold">Abrir en celular</button>
                     </div>
@@ -347,6 +348,7 @@
                         <article class="is-wide">
                             <span>Enlace movil</span>
                             <input id="remote-scan-mobile-url" class="remote-scan-modal__link" type="text" readonly value="">
+                            <p id="remote-scan-rotation-note" class="remote-scan-modal__last">{{ $rotationMessage }}</p>
                         </article>
                         <article class="is-wide">
                             <span>Ultimo codigo</span>
@@ -373,6 +375,7 @@
             const shortCodeEl = document.getElementById('remote-scan-short-code');
             const expiresEl = document.getElementById('remote-scan-expires');
             const mobileUrlEl = document.getElementById('remote-scan-mobile-url');
+            const rotationNoteEl = document.getElementById('remote-scan-rotation-note');
             const lastCodeEl = document.getElementById('remote-scan-last-code');
             const lastTimeEl = document.getElementById('remote-scan-last-time');
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -429,6 +432,9 @@
                 shortCodeEl.textContent = '-';
                 expiresEl.textContent = '-';
                 mobileUrlEl.value = '';
+                if (rotationNoteEl) {
+                    rotationNoteEl.textContent = @json($rotationMessage);
+                }
                 lastCodeEl.textContent = 'Ninguno aun';
                 lastTimeEl.textContent = 'Esperando lectura desde el celular.';
             }
@@ -439,7 +445,10 @@
                 shortCodeEl.textContent = payload.short_code || '-';
                 expiresEl.textContent = payload.expires_label || '-';
                 mobileUrlEl.value = payload.mobile_url || '';
-                setStatus('Sesion activa. Escanea desde el celular y se reflejara aqui en vivo.', 'ok');
+                if (rotationNoteEl) {
+                    rotationNoteEl.textContent = payload.rotation_note || @json($rotationMessage);
+                }
+                setStatus('Sesión activa del mes. Escanea desde el celular y se reflejará aquí en vivo.', 'ok');
             }
 
             function attachStream(streamUrl) {
@@ -466,7 +475,7 @@
                 });
 
                 stream.addEventListener('close', function () {
-                    setStatus('La sesion de escaneo se cerro o expiro. Abre una nueva.', 'warn');
+                    setStatus('La sesión se cerró o llegó al fin de mes. Genera un enlace nuevo.', 'warn');
                     sessionState = null;
                     stopStream();
                 });

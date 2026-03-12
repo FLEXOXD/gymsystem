@@ -98,12 +98,12 @@
 <body>
     <main class="expired-card">
         <span class="expired-badge">Sesion expirada</span>
-        <h1>Este QR ya no sirve</h1>
-        <p>Vuelve a la computadora, abre otra vez el boton de escaneo y genera un QR nuevo para seguir usando la camara del celular.</p>
+        <h1>Este enlace ya no sirve</h1>
+        <p>Vuelve a la computadora, abre otra vez el botón de escaneo y genera un enlace nuevo para seguir usando la cámara del celular.</p>
 
         <section class="expired-panel">
-            <strong>Que paso</strong>
-            <p>La sesion pudo vencer por tiempo o cerrarse al abrir una nueva. Usa siempre el ultimo QR que veas en la computadora.</p>
+            <strong>Qué pasó</strong>
+            <p>El enlace móvil se renueva el primer día de cada mes o al generar una sesión nueva. Usa siempre el último QR visible en la computadora.</p>
         </section>
 
         <a class="expired-link" href="javascript:history.back()">Volver</a>

@@ -7,6 +7,7 @@ use App\Models\RemoteScanEvent;
 use App\Models\RemoteScanSession;
 use App\Services\RemoteScanService;
 use App\Support\ActiveGymContext;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,17 +43,20 @@ class RemoteScanController extends Controller
 
         $gymId = ActiveGymContext::id($request);
         abort_if($gymId <= 0, 403);
+        $sessionExpiry = $this->monthlySessionExpiry();
 
         $session = $this->remoteScanService->createSession(
             gymId: $gymId,
             actor: $actor,
             context: (string) $data['context'],
-            forceNew: (bool) ($data['force'] ?? false)
+            forceNew: (bool) ($data['force'] ?? false),
+            expiresAt: $sessionExpiry
         );
+        $signedExpiry = $session->expires_at?->copy() ?? $sessionExpiry;
 
         $mobilePath = URL::temporarySignedRoute(
             'remote-scanner.mobile',
-            now()->addMinutes(15),
+            $signedExpiry,
             [
                 'contextGym' => $contextGym,
                 'channel' => $session->channel_token,
@@ -84,6 +88,7 @@ class RemoteScanController extends Controller
                 'context' => (string) $session->context,
                 'expires_at' => $session->expires_at?->toIso8601String(),
                 'expires_label' => $session->expires_at?->format('Y-m-d H:i'),
+                'rotation_note' => 'Este enlace se actualiza el primer día de cada mes.',
                 'stream_url' => $streamUrl,
                 'mobile_url' => $mobileUrl,
                 'close_url' => $closeUrl,
@@ -191,7 +196,7 @@ class RemoteScanController extends Controller
 
         $capturePath = URL::temporarySignedRoute(
             'remote-scanner.capture',
-            now()->addMinutes(15),
+            $session->expires_at?->copy() ?? $this->monthlySessionExpiry(),
             [
                 'contextGym' => $contextGym,
                 'channel' => $session->channel_token,
@@ -271,5 +276,10 @@ class RemoteScanController extends Controller
             ->firstOrFail();
 
         return $session;
+    }
+
+    private function monthlySessionExpiry(): Carbon
+    {
+        return now()->copy()->startOfMonth()->addMonth()->startOfDay();
     }
 }

@@ -5,11 +5,19 @@ namespace App\Services;
 use App\Models\RemoteScanEvent;
 use App\Models\RemoteScanSession;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class RemoteScanService
 {
-    public function createSession(int $gymId, User $actor, string $context, int $ttlMinutes = 15, bool $forceNew = false): RemoteScanSession
+    public function createSession(
+        int $gymId,
+        User $actor,
+        string $context,
+        int $ttlMinutes = 15,
+        bool $forceNew = false,
+        ?Carbon $expiresAt = null
+    ): RemoteScanSession
     {
         if (! $forceNew) {
             $activeSession = RemoteScanSession::query()
@@ -22,6 +30,13 @@ class RemoteScanService
                 ->first();
 
             if ($activeSession instanceof RemoteScanSession) {
+                if ($expiresAt instanceof Carbon && $activeSession->expires_at?->lt($expiresAt)) {
+                    $activeSession->update([
+                        'expires_at' => $expiresAt->copy(),
+                    ]);
+                    $activeSession->refresh();
+                }
+
                 return $activeSession;
             }
         }
@@ -36,13 +51,15 @@ class RemoteScanService
                 'closed_at' => now(),
             ]);
 
+        $resolvedExpiresAt = $expiresAt?->copy() ?? now()->addMinutes(max(1, $ttlMinutes));
+
         return RemoteScanSession::query()->create([
             'gym_id' => $gymId,
             'created_by' => (int) $actor->id,
             'context' => $context,
             'channel_token' => (string) Str::uuid(),
             'status' => 'open',
-            'expires_at' => now()->addMinutes(max(1, $ttlMinutes)),
+            'expires_at' => $resolvedExpiresAt,
         ]);
     }
 

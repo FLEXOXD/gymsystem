@@ -238,7 +238,8 @@ class SalesInventoryController extends Controller
 
             return redirect()
                 ->route('sales.index', ['contextGym' => $contextGym])
-                ->with('status', 'Venta multiple registrada: '.$lineCount.' producto(s), '.$totalUnits.' unidad(es).');
+                ->with('status', 'Venta múltiple registrada: '.$lineCount.' producto(s), '.$totalUnits.' unidad(es).')
+                ->with('clear_sales_scan_cart', 1);
         }
 
         $singleData = $request->validate([
@@ -273,7 +274,8 @@ class SalesInventoryController extends Controller
 
         return redirect()
             ->route('sales.index', ['contextGym' => $contextGym])
-            ->with('status', 'Venta registrada y enviada a caja correctamente.');
+            ->with('status', 'Venta registrada y enviada a caja correctamente.')
+            ->with('clear_sales_scan_cart', 1);
     }
 
     private function resolveGymId(Request $request): int

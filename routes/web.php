@@ -509,8 +509,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/profile/membership-invoices/{subscription}/pdf', [ThemeController::class, 'membershipInvoicePdf'])
                     ->middleware('role:owner')
                     ->name('gym.profile.membership-invoice.pdf');
-                Route::get('/config', [ThemeController::class, 'index'])->middleware('role:owner')->name('gym.settings.index');
-                Route::post('/config/theme', [ThemeController::class, 'update'])->middleware('role:owner')->name('gym.settings.theme.update');
+                Route::get('/config', [ThemeController::class, 'index'])->middleware('role:owner,cashier')->name('gym.settings.index');
+                Route::post('/config/theme', [ThemeController::class, 'update'])->middleware('role:owner,cashier')->name('gym.settings.theme.update');
+                Route::post('/config/profile-photo', [ThemeController::class, 'updateOwnProfilePhoto'])->middleware('role:owner,cashier')->name('gym.settings.profile-photo.update');
                 Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->middleware('role:owner')->name('gym.settings.profile.update');
                 Route::post('/config/gym-profile', [ThemeController::class, 'updateGymProfile'])->middleware('role:owner')->name('gym.settings.gym-profile.update');
                 Route::post('/config/gym-logo', [ThemeController::class, 'updateGymLogo'])->middleware('role:owner')->name('gym.settings.gym-logo.update');
@@ -567,6 +568,7 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
             return app(ThemeController::class)->index($request);
         })->name('settings.index');
         Route::post('/config/theme', [ThemeController::class, 'update'])->name('settings.theme.update');
+        Route::post('/config/profile-photo', [ThemeController::class, 'updateOwnProfilePhoto'])->name('settings.profile-photo.update');
         Route::post('/config/profile', [ThemeController::class, 'updateProfile'])->name('settings.profile.update');
         Route::post('/config/superadmin-timezone', [ThemeController::class, 'updateSuperAdminTimezone'])->name('settings.superadmin-timezone.update');
         Route::post('/config/superadmin-contact', [ThemeController::class, 'updateSuperAdminContact'])->name('settings.superadmin-contact.update');

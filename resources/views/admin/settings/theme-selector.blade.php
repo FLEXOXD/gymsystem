@@ -14,6 +14,7 @@
         $gymProfileUpdateUrl = route('settings.gym-profile.update');
         $gymLogoUpdateUrl = route('settings.gym-logo.update');
         $gymAvatarsUpdateUrl = route('settings.gym-avatars.update');
+        $profilePhotoUpdateUrl = route('settings.profile-photo.update');
         $superAdminTimezoneUpdateUrl = route('settings.superadmin-timezone.update');
         $locationCatalog = is_array($locationCatalog ?? null) ? $locationCatalog : [];
         $gymCurrencyCode = old('currency_code', $gym->currency_code ?? 'USD');
@@ -31,7 +32,11 @@
             'female' => ['label' => 'Avatar mujer', 'field' => 'avatar_female'],
             'neutral' => ['label' => 'Avatar neutral', 'field' => 'avatar_neutral'],
         ];
-        $isSuperAdmin = auth()->user()?->gym_id === null;
+        $viewer = auth()->user();
+        $isSuperAdmin = $viewer?->gym_id === null;
+        $isCashierMode = (bool) ($viewer?->isCashier() ?? false);
+        $viewerInitial = mb_strtoupper(mb_substr(trim((string) ($viewer?->name ?? 'U')) ?: 'U', 0, 1));
+        $viewerPhotoUrl = null;
         if ($gym) {
             if ($isGymContextRoute && trim((string) ($gym->slug ?? '')) !== '') {
                 $contextRouteParams = ['contextGym' => $gym->slug];
@@ -39,6 +44,7 @@
                 $gymProfileUpdateUrl = route('gym.settings.gym-profile.update', $contextRouteParams);
                 $gymLogoUpdateUrl = route('gym.settings.gym-logo.update', $contextRouteParams);
                 $gymAvatarsUpdateUrl = route('gym.settings.gym-avatars.update', $contextRouteParams);
+                $profilePhotoUpdateUrl = route('gym.settings.profile-photo.update', $contextRouteParams);
             }
 
             $resolveMediaUrl = function (?string $path): ?string {
@@ -73,6 +79,7 @@
 
                 return asset('storage/'.$normalized);
             };
+            $viewerPhotoUrl = $resolveMediaUrl((string) ($viewer?->profile_photo_path ?? ''));
 
             $gymInitials = collect(explode(' ', trim($gym->name ?? '')))
                 ->filter()
@@ -203,7 +210,38 @@
             </div>
         </x-card>
 
-        @if ($gym)
+        @if ($gym && $isCashierMode)
+            <section class="ui-card">
+                <h3 class="ui-heading text-base">Foto de perfil</h3>
+                <p class="ui-muted mt-1 text-sm">Como cajero puedes cambiar tu tema y tu foto personal. No tienes acceso a datos del gimnasio.</p>
+
+                <div class="mt-4 flex items-center gap-4">
+                    <div class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-300/70 bg-slate-100 text-xl font-black text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        @if ($viewerPhotoUrl)
+                            <img src="{{ $viewerPhotoUrl }}" alt="Foto de perfil" class="h-full w-full object-cover object-center">
+                        @else
+                            {{ $viewerInitial }}
+                        @endif
+                    </div>
+                    <div class="ui-muted text-xs">
+                        <p>Formatos: JPG, PNG, WEBP.</p>
+                        <p>Peso máximo: 2MB.</p>
+                    </div>
+                </div>
+
+                <form method="POST"
+                      action="{{ $profilePhotoUpdateUrl }}"
+                      enctype="multipart/form-data"
+                      class="mt-4 space-y-3">
+                    @csrf
+                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input" required>
+                    @error('profile_photo')
+                        <p class="text-sm font-semibold text-rose-300">{{ $message }}</p>
+                    @enderror
+                    <button type="submit" class="ui-button ui-button-primary">Actualizar mi foto</button>
+                </form>
+            </section>
+        @elseif ($gym)
             <div class="grid gap-4 lg:grid-cols-2">
                 <section class="ui-card">
                     <h3 class="ui-heading text-base">Editar Logo</h3>

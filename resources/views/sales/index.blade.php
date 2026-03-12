@@ -40,6 +40,8 @@
         $selectedSalesMonth = (int) ($salesHistoryFilters['month'] ?? 0);
         $selectedSalesDay = (int) ($salesHistoryFilters['day'] ?? 0);
         $openSalesHistoryModal = (bool) ($openSalesHistoryModal ?? false);
+        $openSalesRegisterModal = old('open_sales_register_modal') === '1';
+        $clearSalesScanCart = (bool) session('clear_sales_scan_cart', false);
         $saleProductsPayload = $saleProducts->map(function ($product) {
             return [
                 'id' => (int) $product->id,
@@ -73,6 +75,7 @@
                 <x-ui.button :href="route('panel.index', $indexRouteParams)" variant="ghost">Ganancias del gimnasio</x-ui.button>
                 <x-ui.button :href="route('clients.index', $indexRouteParams)" variant="ghost">Panel de clientes</x-ui.button>
                 <x-ui.button :href="route('products.index', $indexRouteParams)" variant="secondary">Gestionar productos</x-ui.button>
+                <x-ui.button type="button" id="open-sales-register-modal" variant="secondary">Registrar venta (modal)</x-ui.button>
                 @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
                     <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Reportes del modulo</x-ui.button>
                 @endif
@@ -113,7 +116,43 @@
         </section>
 
         <section class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-            <x-ui.card title="Registrar venta de producto" subtitle="Cada venta descuenta stock y se envia directo a caja.">
+            <x-ui.card title="Registro de ventas" subtitle="Usa el modal de registro para mantener esta vista limpia y enfocada.">
+                @if (! $schemaReady)
+                    <p class="ui-alert ui-alert-warning">El formulario se activará después de correr las migraciones del módulo.</p>
+                @elseif ($isGlobalScope)
+                    <p class="ui-alert ui-alert-info">Selecciona una sede puntual para registrar ventas. En vista global solo puedes analizar.</p>
+                @elseif ($saleProducts->isEmpty())
+                    <p class="ui-alert ui-alert-warning">No hay productos activos para vender. Crea al menos un producto y carga stock primero.</p>
+                    <div class="mt-3">
+                        <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="secondary">Ir a productos</x-ui.button>
+                    </div>
+                @else
+                    <div class="space-y-3">
+                        <p class="text-sm ui-muted">Pulsa el botón para abrir el formulario completo en modal.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <x-ui.button type="button" id="open-sales-register-modal-inline">Registrar venta ahora</x-ui.button>
+                            @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
+                                <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Reportes del módulo</x-ui.button>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </x-ui.card>
+
+            <div id="sales-register-modal"
+                 data-auto-open="{{ $openSalesRegisterModal ? '1' : '0' }}"
+                 class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/80 p-4">
+                <div class="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
+                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Venta rápida</p>
+                            <h3 class="mt-2 text-2xl font-black text-slate-100">Registrar venta de producto</h3>
+                            <p class="mt-1 text-sm text-slate-300">Cada venta descuenta stock y se envía directo a caja.</p>
+                        </div>
+                        <button type="button" id="close-sales-register-modal" class="ui-button ui-button-ghost px-3 py-2 text-sm font-semibold">Cerrar</button>
+                    </div>
+                    <div class="p-5">
+                        <x-ui.card title="Registrar venta de producto" subtitle="Cada venta descuenta stock y se envia directo a caja.">
                 @if (! $schemaReady)
                     <p class="ui-alert ui-alert-warning">El formulario se activara despues de correr las migraciones del modulo.</p>
                 @elseif ($isGlobalScope)
@@ -126,6 +165,7 @@
                 @else
                     <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2" id="sales-form">
                         @csrf
+                        <input type="hidden" name="open_sales_register_modal" value="1">
                         <input type="hidden" name="sale_items_payload" id="sale-items-payload" value="{{ old('sale_items_payload', '') }}">
 
                         <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
@@ -157,14 +197,14 @@
                                         Limpiar lista
                                     </button>
                                 </div>
-                                <div id="sale-scan-list-items" class="mt-2 h-60 space-y-2 overflow-y-scroll pr-1"></div>
+                                <div id="sale-scan-list-items" class="mt-2 space-y-2 pr-1"></div>
                                 <p id="sale-scan-list-summary" class="mt-2 text-xs ui-muted"></p>
                             </div>
                         </div>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
                             <span>Producto</span>
-                            <select name="product_id" id="sale-product-select" class="ui-input" required>
+                            <select name="product_id" id="sale-product-select" class="ui-input">
                                 <option value="">Selecciona un producto</option>
                                 @foreach ($saleProducts as $product)
                                     <option value="{{ $product->id }}" @selected($selectedProductId === (int) $product->id)>
@@ -216,7 +256,10 @@
                         </div>
                     </form>
                 @endif
-            </x-ui.card>
+                        </x-ui.card>
+                    </div>
+                </div>
+            </div>
 
             <x-ui.card title="Control rapido de inventario" subtitle="Lectura operativa del mes actual para reponer a tiempo.">
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
@@ -511,6 +554,7 @@
         const saleItemsPayloadInput = document.getElementById('sale-items-payload');
         const lastCodeStorageKey = 'remote_scan_last_code_sales';
         const scanListStorageKey = 'sales_scan_list_v1';
+        const clearSalesScanCartOnLoad = Boolean(@json($clearSalesScanCart));
 
         if (!scanInput || !select || !quantityInput) {
             return;
@@ -609,6 +653,8 @@
                 scanList.classList.add('hidden');
                 scanListItems.innerHTML = '';
                 scanListSummary.textContent = '';
+                scanListItems.classList.remove('max-h-60', 'overflow-y-auto');
+                renderPreview(getSelectedProduct());
                 persistScanList();
                 return;
             }
@@ -647,8 +693,13 @@
             });
 
             scanList.classList.remove('hidden');
+            scanListItems.classList.toggle('max-h-60', scanListMap.size > 1);
+            scanListItems.classList.toggle('overflow-y-auto', scanListMap.size > 1);
             scanListItems.innerHTML = chunks.join('');
             scanListSummary.textContent = totalProducts + ' producto(s) | ' + totalUnits + ' unidad(es) | Total estimado $' + totalAmount.toFixed(2);
+            if (preview) {
+                preview.classList.add('hidden');
+            }
             persistScanList();
         }
 
@@ -774,7 +825,6 @@
                 return;
             }
 
-            renderPreview(product);
             quantityInput.value = '1';
             setFeedback('Producto agregado al carrito: ' + product.name + '.', 'success');
             scanInput.focus();
@@ -926,6 +976,21 @@
             }
         });
 
+        if (clearSalesScanCartOnLoad) {
+            try {
+                window.sessionStorage.removeItem(scanListStorageKey);
+                window.sessionStorage.removeItem(lastCodeStorageKey);
+            } catch (error) {
+                // Ignore storage failures.
+            }
+
+            if (saleItemsPayloadInput) {
+                saleItemsPayloadInput.value = '';
+            }
+            scanListMap.clear();
+            clearFeedback();
+        }
+
         const hiddenPayload = (saleItemsPayloadInput?.value || '').toString().trim();
         if (hiddenPayload !== '') {
             restoreScanListFromPayload(hiddenPayload);
@@ -970,6 +1035,57 @@
 
         renderPreview(getSelectedProduct());
         renderScanList();
+    })();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    (function () {
+        const modal = document.getElementById('sales-register-modal');
+        const openButtons = [
+            document.getElementById('open-sales-register-modal'),
+            document.getElementById('open-sales-register-modal-inline'),
+        ].filter(Boolean);
+        const closeButton = document.getElementById('close-sales-register-modal');
+
+        if (!modal || openButtons.length === 0) {
+            return;
+        }
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        openButtons.forEach(function (button) {
+            button.addEventListener('click', openModal);
+        });
+
+        closeButton?.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && modal.classList.contains('flex')) {
+                closeModal();
+            }
+        });
+
+        if (modal.dataset.autoOpen === '1') {
+            openModal();
+        }
     })();
 </script>
 @endpush
