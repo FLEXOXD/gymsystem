@@ -157,7 +157,7 @@
                                         Limpiar lista
                                     </button>
                                 </div>
-                                <div id="sale-scan-list-items" class="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1 md:max-h-72"></div>
+                                <div id="sale-scan-list-items" class="mt-2 h-60 space-y-2 overflow-y-scroll pr-1"></div>
                                 <p id="sale-scan-list-summary" class="mt-2 text-xs ui-muted"></p>
                             </div>
                         </div>
@@ -179,12 +179,9 @@
                             </div>
                         </label>
 
-                        <label class="space-y-1 text-sm font-semibold ui-muted">
-                            <span>Cantidad</span>
-                            <input type="number" min="1" max="999999" name="quantity" id="sale-quantity-input" class="ui-input" required value="{{ old('quantity', 1) }}">
-                        </label>
+                        <input type="hidden" min="1" max="999999" name="quantity" id="sale-quantity-input" value="{{ old('quantity', 1) }}">
 
-                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                        <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
                             <span>Método</span>
                             <select name="payment_method" class="ui-input" required>
                                 <option value="cash" @selected(old('payment_method') === 'cash')>Efectivo</option>
@@ -765,11 +762,6 @@
             renderScanList();
         }
 
-        function getQuantityFromInput() {
-            const parsed = Math.floor(toNumber(quantityInput.value || 1));
-            return Math.max(1, parsed);
-        }
-
         function addSelectedProductToList() {
             const product = getSelectedProduct();
             if (!product) {
@@ -777,14 +769,14 @@
                 return;
             }
 
-            const quantityToAdd = getQuantityFromInput();
+            const quantityToAdd = 1;
             if (!addProductToScanList(product, quantityToAdd, { enforceStock: true })) {
                 return;
             }
 
             renderPreview(product);
             quantityInput.value = '1';
-            setFeedback('Producto agregado al carrito: ' + product.name + ' x' + quantityToAdd + '.', 'success');
+            setFeedback('Producto agregado al carrito: ' + product.name + '.', 'success');
             scanInput.focus();
         }
 
@@ -821,17 +813,11 @@
             });
         }
 
-        function applyProduct(product, incrementQuantity) {
+        function applyProduct(product) {
             if (!product) return;
 
-            const currentProductId = Number(select.value || 0);
             select.value = String(product.id);
-
-            if (incrementQuantity && currentProductId === Number(product.id)) {
-                quantityInput.value = String(Math.max(1, Number(quantityInput.value || 0) + 1));
-            } else if (!quantityInput.value || Number(quantityInput.value) < 1) {
-                quantityInput.value = '1';
-            }
+            quantityInput.value = '1';
 
             renderPreview(product);
         }
@@ -853,7 +839,7 @@
                 return;
             }
 
-            applyProduct(product, false);
+            applyProduct(product);
             quantityInput.value = '1';
             setFeedback('Producto agregado a la lista: ' + product.name, 'success');
             scanInput.select();
