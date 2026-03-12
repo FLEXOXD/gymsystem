@@ -3,6 +3,16 @@
 @section('title', 'Ventas e inventario')
 @section('page-title', 'Ventas e inventario')
 
+@push('styles')
+<style>
+    #sales-register-modal .sales-register-scan-sticky {
+        position: sticky;
+        top: 0.5rem;
+        z-index: 15;
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -145,7 +155,7 @@
                         <input type="hidden" name="open_sales_register_modal" value="1">
                         <input type="hidden" name="sale_items_payload" id="sale-items-payload" value="{{ old('sale_items_payload', '') }}">
 
-                        <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
+                        <div class="sales-register-scan-sticky rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
                             <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                                 <label class="space-y-1 text-sm font-semibold ui-muted">
                                     <span>Escanear codigo</span>
@@ -630,7 +640,7 @@
                 scanList.classList.add('hidden');
                 scanListItems.innerHTML = '';
                 scanListSummary.textContent = '';
-                scanListItems.classList.remove('max-h-60', 'overflow-y-auto');
+                scanListItems.classList.remove('max-h-64', 'overflow-y-auto');
                 renderPreview(getSelectedProduct());
                 persistScanList();
                 return;
@@ -670,8 +680,8 @@
             });
 
             scanList.classList.remove('hidden');
-            scanListItems.classList.toggle('max-h-60', scanListMap.size > 1);
-            scanListItems.classList.toggle('overflow-y-auto', scanListMap.size > 1);
+            scanListItems.classList.toggle('max-h-64', scanListMap.size > 0);
+            scanListItems.classList.toggle('overflow-y-auto', scanListMap.size > 0);
             scanListItems.innerHTML = chunks.join('');
             scanListSummary.textContent = totalProducts + ' producto(s) | ' + totalUnits + ' unidad(es) | Total estimado $' + totalAmount.toFixed(2);
             if (preview) {
