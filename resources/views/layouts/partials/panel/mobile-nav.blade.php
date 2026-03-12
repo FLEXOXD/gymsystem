@@ -51,6 +51,7 @@
             .mobile-nav-bar {
                 padding-top: 0.4rem;
                 padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+                overflow: visible;
             }
 
             .mobile-nav-grid {
@@ -72,7 +73,8 @@
                 padding-inline: 0.3rem;
             }
 
-            .mobile-nav-action > span {
+            .mobile-nav-action > span,
+            .mobile-nav-more-link > span {
                 display: block;
                 width: 100%;
                 max-width: 100%;
@@ -81,13 +83,43 @@
                 text-overflow: ellipsis;
             }
 
+            .mobile-nav-more {
+                position: relative;
+            }
+
+            .mobile-nav-more-toggle {
+                list-style: none;
+                cursor: pointer;
+            }
+
+            .mobile-nav-more-toggle::-webkit-details-marker {
+                display: none;
+            }
+
+            .mobile-nav-more[open] .mobile-nav-more-toggle {
+                border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+                background-color: color-mix(in srgb, var(--primary) 26%, var(--card));
+                color: var(--text);
+            }
+
             .mobile-nav-more-sheet {
-                inset-inline: max(0.55rem, env(safe-area-inset-left));
+                position: fixed;
+                left: max(0.55rem, env(safe-area-inset-left));
+                right: max(0.55rem, env(safe-area-inset-right));
                 bottom: calc(4.95rem + env(safe-area-inset-bottom));
+                z-index: 52;
+                display: none;
                 max-height: min(58vh, 380px);
                 overflow: auto;
                 border-radius: 1rem;
+                border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+                background: color-mix(in srgb, var(--card) 94%, #020617);
                 box-shadow: 0 26px 52px rgba(2, 6, 23, 0.5);
+                padding: 0.6rem;
+            }
+
+            .mobile-nav-more[open] .mobile-nav-more-sheet {
+                display: block;
             }
 
             .mobile-nav-more-head {
@@ -112,8 +144,14 @@
                 justify-content: center;
                 text-transform: none;
                 font-size: 0.72rem;
+                font-weight: 700;
                 line-height: 1.1;
                 padding-inline: 0.55rem;
+            }
+
+            .mobile-nav-more-hint {
+                font-size: 0.67rem;
+                color: color-mix(in srgb, var(--muted) 86%, #ffffff);
             }
         }
 
@@ -129,32 +167,6 @@
         }
     </style>
 @endpush
-
-@if ($mobileHasOverflow)
-    <div id="mobile-nav-overflow-backdrop" class="fixed inset-0 z-[44] hidden bg-slate-900/40 backdrop-blur-[1px] lg:hidden"></div>
-    <section id="mobile-nav-overflow-panel" class="mobile-nav-more-sheet fixed z-[50] hidden border theme-mobile-nav p-2 lg:hidden" role="dialog" aria-modal="true" aria-label="Módulos">
-        <div class="mobile-nav-more-head">
-            <p class="text-[11px] font-black uppercase tracking-[0.14em] theme-nav-link">M&oacute;dulos</p>
-            <button id="mobile-nav-overflow-close" type="button" class="ui-button ui-button-ghost px-2 py-1 text-[11px] font-bold">Cerrar</button>
-        </div>
-        <div class="mobile-nav-more-grid mt-2">
-            @foreach ($mobileOverflowItems as $item)
-                @php
-                    $isActive = $mobileIsItemActive((array) $item);
-                    $isHighlight = (bool) ($item['highlight'] ?? false);
-                    $mobileClass = $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link';
-                    if (! $isActive && $isHighlight) {
-                        $mobileClass .= ' theme-nav-mobile-highlight';
-                    }
-                @endphp
-                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-                   class="mobile-nav-overflow-link mobile-nav-more-link text-center font-semibold {{ $mobileClass }}">
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
-        </div>
-    </section>
-@endif
 
 <nav class="theme-mobile-nav mobile-nav-bar fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur lg:hidden">
     <div class="mx-auto max-w-full px-1 pb-1">
@@ -175,58 +187,34 @@
             @endforeach
 
             @if ($mobileHasOverflow)
-                <button id="mobile-nav-more-button"
-                        type="button"
-                        aria-expanded="false"
-                        aria-controls="mobile-nav-overflow-panel"
-                        class="mobile-nav-action {{ $mobileOverflowActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
-                    <span>M&aacute;s</span>
-                </button>
+                <details class="mobile-nav-more">
+                    <summary class="mobile-nav-action mobile-nav-more-toggle {{ $mobileOverflowActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link' }}">
+                        <span>M&aacute;s</span>
+                    </summary>
+                    <section class="mobile-nav-more-sheet" role="dialog" aria-label="Módulos">
+                        <div class="mobile-nav-more-head">
+                            <p class="text-[11px] font-black uppercase tracking-[0.14em] theme-nav-link">M&oacute;dulos</p>
+                            <span class="mobile-nav-more-hint">Pulsa M&aacute;s para cerrar</span>
+                        </div>
+                        <div class="mobile-nav-more-grid mt-2">
+                            @foreach ($mobileOverflowItems as $item)
+                                @php
+                                    $isActive = $mobileIsItemActive((array) $item);
+                                    $isHighlight = (bool) ($item['highlight'] ?? false);
+                                    $mobileClass = $isActive ? 'theme-nav-mobile-active' : 'theme-nav-mobile-link';
+                                    if (! $isActive && $isHighlight) {
+                                        $mobileClass .= ' theme-nav-mobile-highlight';
+                                    }
+                                @endphp
+                                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                                   class="mobile-nav-more-link {{ $mobileClass }}">
+                                    <span>{{ $item['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </section>
+                </details>
             @endif
         </div>
     </div>
 </nav>
-
-@if ($mobileHasOverflow)
-    <script>
-        (function () {
-            const moreButton = document.getElementById('mobile-nav-more-button');
-            const panel = document.getElementById('mobile-nav-overflow-panel');
-            const backdrop = document.getElementById('mobile-nav-overflow-backdrop');
-            const closeButton = document.getElementById('mobile-nav-overflow-close');
-            if (!moreButton || !panel || !backdrop) {
-                return;
-            }
-
-            const setOpen = (open) => {
-                panel.classList.toggle('hidden', !open);
-                backdrop.classList.toggle('hidden', !open);
-                moreButton.setAttribute('aria-expanded', open ? 'true' : 'false');
-                document.documentElement.classList.toggle('overflow-hidden', open);
-            };
-
-            const isOpen = () => !panel.classList.contains('hidden');
-            const toggle = () => setOpen(!isOpen());
-
-            moreButton.addEventListener('click', toggle);
-            backdrop.addEventListener('click', () => setOpen(false));
-            closeButton?.addEventListener('click', () => setOpen(false));
-
-            panel.querySelectorAll('.mobile-nav-overflow-link').forEach((link) => {
-                link.addEventListener('click', () => setOpen(false));
-            });
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape') {
-                    setOpen(false);
-                }
-            });
-
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 1024) {
-                    setOpen(false);
-                }
-            });
-        })();
-    </script>
-@endif
