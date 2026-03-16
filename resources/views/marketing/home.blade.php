@@ -2399,6 +2399,8 @@
                 width: 150px;
                 height: 46px;
                 transform: scale(2.05);
+                object-position: left center;
+                margin-left: -12px;
             }
             .menu-links,
             .nav-actions { display: none; }
@@ -2476,6 +2478,8 @@
                 width: 146px;
                 height: 44px;
                 transform: scale(2.25);
+                object-position: left center;
+                margin-left: -14px;
             }
             .top-nav { padding: .58rem .64rem; }
             .brand-chip.brand-chip-has-logo {
