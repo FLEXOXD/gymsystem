@@ -134,6 +134,7 @@ class GymPanelController extends Controller
             ? PresenceSession::query()
                 ->forGym($gymId)
                 ->open()
+                ->whereDate('check_in_at', $today)
                 ->count()
             : 0;
 
@@ -399,6 +400,7 @@ class GymPanelController extends Controller
             ? PresenceSession::query()
                 ->forGym($gymId)
                 ->open()
+                ->whereDate('check_in_at', $today)
                 ->count()
             : 0;
 

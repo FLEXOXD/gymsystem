@@ -156,10 +156,12 @@
     $headerLiveClientsVisible = ! $isSuperAdmin && $activeGymId > 0;
     $headerLiveClientsCount = 0;
     $headerLiveClientsUrl = null;
+    $headerLiveDate = now()->toDateString();
     if ($headerLiveClientsVisible) {
         $headerLiveClientsCount = PresenceSession::query()
             ->forGym($activeGymId)
             ->open()
+            ->whereDate('check_in_at', $headerLiveDate)
             ->count();
         if (\Illuminate\Support\Facades\Route::has('panel.live-clients') && $activeGymSlug !== '') {
             $headerLiveClientsUrl = route('panel.live-clients', $gymRouteParams);

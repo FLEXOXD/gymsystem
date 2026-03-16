@@ -204,6 +204,48 @@ it('tracks live present clients with check-in and check-out', function () {
         ->assertJsonPath('reason', 'not_inside');
 });
 
+it('resets live present count after midnight for stale open sessions', function () {
+    $gym = makeGym('presence-midnight-reset');
+    $user = makeGymUser($gym, 'presence-midnight-reset@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Nadia',
+        'last_name' => 'Ramos',
+        'document_number' => 'DOC-PRESENCE-MIDNIGHT',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    PresenceSession::query()->create([
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'check_in_by' => $user->id,
+        'check_in_method' => 'document',
+        'check_in_at' => Carbon::parse('2026-03-15 23:40:00'),
+        'check_out_at' => null,
+    ]);
+
+    try {
+        Carbon::setTestNow(Carbon::parse('2026-03-15 23:59:00'));
+        $this->actingAs($user)
+            ->getJson(route('panel.live-clients', ['contextGym' => $gym->slug]))
+            ->assertOk()
+            ->assertJsonPath('count', 1)
+            ->assertJsonPath('today', '2026-03-15');
+
+        Carbon::setTestNow(Carbon::parse('2026-03-16 00:01:00'));
+        $this->actingAs($user)
+            ->getJson(route('panel.live-clients', ['contextGym' => $gym->slug]))
+            ->assertOk()
+            ->assertJsonPath('count', 0)
+            ->assertJsonPath('today', '2026-03-16');
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
 it('isolates live present count between gyms', function () {
     $gymA = makeGym('presence-a');
     $gymB = makeGym('presence-b');
