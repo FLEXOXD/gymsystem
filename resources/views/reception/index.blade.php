@@ -591,6 +591,7 @@
         const SCAN_SPEED_MS = 35;
         const SCAN_MIN_LENGTH = 6;
         const SCAN_IDLE_SUBMIT_MS = 90;
+        const SUBMIT_DEDUP_WINDOW_MS = 1200;
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const syncGymName = String(@json((string) $syncGymName));
         const syncGymId = Number(@json((int) $syncGymId));
@@ -684,6 +685,8 @@
         let resetTimer = null;
         let scanTimer = null;
         let submitting = false;
+        let lastSubmitSignature = '';
+        let lastSubmitAt = 0;
         let lastKeyTimestamp = 0;
         let burstCount = 0;
         let scannerLikely = false;
@@ -1074,11 +1077,13 @@
 
             setMobileScannerStatus(action === 'checkout' ? 'Procesando salida...' : 'Procesando ingreso...', 'info');
             let payload = await mobileScannerRequest(action, value);
+            const duplicateCanAutoCheckout = payload && payload.can_auto_checkout === true;
 
             if (
                 allowAutoCheckout
                 && action === 'checkin'
                 && payloadReason(payload) === 'duplicate_attendance'
+                && duplicateCanAutoCheckout
             ) {
                 const checkoutPayload = await mobileScannerRequest('checkout', value);
                 if (checkoutPayload.ok || payloadReason(checkoutPayload) !== 'not_inside') {
@@ -1958,6 +1963,9 @@
                 client: payload && Object.prototype.hasOwnProperty.call(payload, 'client') ? payload.client : null,
                 attendance: payload && Object.prototype.hasOwnProperty.call(payload, 'attendance') ? payload.attendance : null,
                 attempt: payload && Object.prototype.hasOwnProperty.call(payload, 'attempt') ? payload.attempt : null,
+                can_auto_checkout: payload && Object.prototype.hasOwnProperty.call(payload, 'can_auto_checkout')
+                    ? payload.can_auto_checkout === true
+                    : null,
                 event_type: payload && payload.event_type ? String(payload.event_type) : 'checkin',
             };
         }
@@ -2777,6 +2785,10 @@
 
         async function submitCheckIn(forcedValue = null, action = 'checkin') {
             if (submitting) return;
+            if (scanTimer) {
+                clearTimeout(scanTimer);
+                scanTimer = null;
+            }
 
             const isCheckoutAction = action === 'checkout';
             const endpoint = isCheckoutAction ? checkOutEndpoint : checkInEndpoint;
@@ -2789,6 +2801,14 @@
                 return;
             }
 
+            const submitSignature = action + '|' + value;
+            const nowMs = Date.now();
+            if (submitSignature === lastSubmitSignature && (nowMs - lastSubmitAt) < SUBMIT_DEDUP_WINDOW_MS) {
+                return;
+            }
+
+            lastSubmitSignature = submitSignature;
+            lastSubmitAt = nowMs;
             input.value = value;
             submitting = true;
             sendBtn.setAttribute('disabled', 'disabled');

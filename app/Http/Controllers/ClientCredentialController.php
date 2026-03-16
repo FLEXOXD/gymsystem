@@ -44,7 +44,9 @@ class ClientCredentialController extends Controller
         } catch (QueryException $exception) {
             if ($this->isDuplicateCredential($exception)) {
                 return redirect()
-                    ->route('clients.show', $clientModel->id)
+                    ->route('clients.show', $this->clientShowRouteParams($request, (int) $clientModel->id, [
+                        'tab' => 'credentials',
+                    ]))
                     ->withErrors([
                         'rfid' => 'Este UID RFID ya existe en este gimnasio.',
                     ])
@@ -57,7 +59,9 @@ class ClientCredentialController extends Controller
         $clientModel->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
 
         return redirect()
-            ->route('clients.show', $clientModel->id)
+            ->route('clients.show', $this->clientShowRouteParams($request, (int) $clientModel->id, [
+                'tab' => 'credentials',
+            ]))
             ->with('status', 'RFID asignado correctamente.');
     }
 
@@ -91,8 +95,10 @@ class ClientCredentialController extends Controller
         $clientModel->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
 
         return redirect()
-            ->route('clients.show', $clientModel->id)
-            ->with('status', 'QR generado correctamente.')
+            ->route('clients.show', $this->clientShowRouteParams($request, (int) $clientModel->id, [
+                'tab' => 'credentials',
+            ]))
+            ->with('status', 'QR creado correctamente.')
             ->with('generated_qr_value', $value);
     }
 
@@ -124,8 +130,33 @@ class ClientCredentialController extends Controller
             ->update(ClientAudit::managementAttributesFromUser($this->resolveActor($request)));
 
         return redirect()
-            ->route('clients.show', $credentialModel->client_id)
+            ->route('clients.show', $this->clientShowRouteParams($request, (int) $credentialModel->client_id, [
+                'tab' => 'credentials',
+            ]))
             ->with('status', 'Credencial desactivada.');
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    private function clientShowRouteParams(Request $request, int $clientId, array $extra = []): array
+    {
+        $params = [
+            'client' => $clientId,
+        ];
+
+        $contextGym = trim((string) $request->route('contextGym', ''));
+        if ($contextGym !== '') {
+            $params['contextGym'] = $contextGym;
+        }
+
+        $pwaMode = strtolower(trim((string) $request->query('pwa_mode', '')));
+        if ($pwaMode === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return array_merge($params, $extra);
     }
 
     private function generateQrValue(int $gymId): string

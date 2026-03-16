@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\CashSession;
 use App\Models\GymBranchLink;
@@ -118,7 +119,76 @@ it('does not allow duplicate attendance on the same day', function () {
 
     $second->assertStatus(422)
         ->assertJsonPath('ok', false)
-        ->assertJsonPath('message', 'Asistencia ya registrada hoy');
+        ->assertJsonPath('message', 'Asistencia ya registrada hoy')
+        ->assertJsonPath('can_auto_checkout', false);
+});
+
+it('allows auto checkout fallback only for non-immediate duplicate scans', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-16 10:00:00'));
+
+    try {
+        $gym = makeGym('checkin-duplicate-stale');
+        $user = makeGymUser($gym, 'checkin-duplicate-stale@example.test');
+
+        $client = Client::query()->create([
+            'gym_id' => $gym->id,
+            'first_name' => 'Erika',
+            'last_name' => 'Campos',
+            'document_number' => 'DOC-002-STALE',
+            'phone' => null,
+            'photo_path' => null,
+            'status' => 'active',
+        ]);
+
+        $plan = Plan::query()->create([
+            'gym_id' => $gym->id,
+            'name' => 'Mensual',
+            'duration_days' => 30,
+            'price' => 30,
+            'status' => 'active',
+        ]);
+
+        Membership::query()->create([
+            'gym_id' => $gym->id,
+            'client_id' => $client->id,
+            'plan_id' => $plan->id,
+            'starts_at' => Carbon::today()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(10)->toDateString(),
+            'status' => 'active',
+        ]);
+
+        $attendance = Attendance::query()->create([
+            'gym_id' => $gym->id,
+            'client_id' => $client->id,
+            'credential_id' => null,
+            'date' => Carbon::today()->toDateString(),
+            'time' => '09:40:00',
+            'created_by' => $user->id,
+        ]);
+
+        PresenceSession::query()->create([
+            'gym_id' => $gym->id,
+            'client_id' => $client->id,
+            'check_in_attendance_id' => $attendance->id,
+            'check_in_by' => $user->id,
+            'check_in_method' => 'document',
+            'check_in_at' => Carbon::parse('2026-03-16 09:40:00'),
+            'check_out_at' => null,
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('reception.check-in', [
+            'contextGym' => $gym->slug,
+        ]), [
+            'value' => 'DOC-002-STALE',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('ok', false)
+            ->assertJsonPath('reason', 'duplicate_attendance')
+            ->assertJsonPath('can_auto_checkout', true);
+    } finally {
+        Carbon::setTestNow();
+    }
 });
 
 it('tracks live present clients with check-in and check-out', function () {
@@ -294,6 +364,78 @@ it('isolates live present count between gyms', function () {
         ->getJson(route('panel.live-clients', ['contextGym' => $gymB->slug]))
         ->assertOk()
         ->assertJsonPath('count', 0);
+});
+
+it('keeps credentials tab after generating qr for a client', function () {
+    $gym = makeGym('client-qr-redirect');
+    $user = makeGymUser($gym, 'client-qr-redirect@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Yessenia',
+        'last_name' => 'Quintana',
+        'document_number' => 'DOC-QR-REDIRECT',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $response = $this->actingAs($user)->post(route('client-credentials.generate-qr', [
+        'contextGym' => $gym->slug,
+        'client' => $client->id,
+    ]));
+
+    $response->assertRedirect(route('clients.show', [
+        'contextGym' => $gym->slug,
+        'client' => $client->id,
+        'tab' => 'credentials',
+    ]));
+    $response->assertSessionHas('status', 'QR creado correctamente.');
+    $response->assertSessionHas('generated_qr_value');
+
+    $this->assertDatabaseHas('client_credentials', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'type' => 'qr',
+        'status' => 'active',
+    ]);
+});
+
+it('keeps credentials tab after assigning rfid for a client', function () {
+    $gym = makeGym('client-rfid-redirect');
+    $user = makeGymUser($gym, 'client-rfid-redirect@example.test');
+
+    $client = Client::query()->create([
+        'gym_id' => $gym->id,
+        'first_name' => 'Diego',
+        'last_name' => 'Vargas',
+        'document_number' => 'DOC-RFID-REDIRECT',
+        'phone' => null,
+        'photo_path' => null,
+        'status' => 'active',
+    ]);
+
+    $response = $this->actingAs($user)->post(route('client-credentials.store-rfid', [
+        'contextGym' => $gym->slug,
+        'client' => $client->id,
+    ]), [
+        'value' => 'RFID-UID-000123',
+    ]);
+
+    $response->assertRedirect(route('clients.show', [
+        'contextGym' => $gym->slug,
+        'client' => $client->id,
+        'tab' => 'credentials',
+    ]));
+    $response->assertSessionHas('status', 'RFID asignado correctamente.');
+
+    $this->assertDatabaseHas('client_credentials', [
+        'gym_id' => $gym->id,
+        'client_id' => $client->id,
+        'type' => 'rfid',
+        'value' => 'RFID-UID-000123',
+        'status' => 'active',
+    ]);
 });
 
 it('does not allow membership sale when cash session is closed', function () {

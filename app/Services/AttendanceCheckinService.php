@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Attendance;
 use App\Models\Membership;
+use App\Models\PresenceSession;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 
 class AttendanceCheckinService
 {
+    private const DUPLICATE_AUTO_CHECKOUT_GRACE_SECONDS = 12;
+
     public function __construct(
         private readonly PresenceSessionService $presenceSessionService
     ) {
@@ -38,6 +41,7 @@ class AttendanceCheckinService
      *     }|null,
      *     attendance: array{id:int,date:string,time:string}|null,
      *     attempt: array{date:string,time:string}|null,
+     *     can_auto_checkout:?bool,
      *     event_type: 'checkin'
      * }
      */
@@ -200,6 +204,11 @@ class AttendanceCheckinService
         } catch (QueryException $exception) {
             if ($this->isDuplicateAttendance($exception)) {
                 $todayAttendance = $this->todayAttendanceForClient($gymId, (int) $candidate->client_id, $today);
+                $canAutoCheckout = $this->canAutoCheckoutAfterDuplicate(
+                    gymId: $gymId,
+                    clientId: (int) $candidate->client_id,
+                    attemptedAt: $attemptAt
+                );
 
                 return $this->buildResponse(
                     ok: false,
@@ -210,7 +219,8 @@ class AttendanceCheckinService
                         'date' => $todayAttendance['date'] ?? $today,
                         'time' => $todayAttendance['time'] ?? ($latestAttendance['time'] ?? $attemptAt->format('H:i:s')),
                     ],
-                    reason: 'duplicate_attendance'
+                    reason: 'duplicate_attendance',
+                    canAutoCheckout: $canAutoCheckout
                 );
             }
 
@@ -265,6 +275,7 @@ class AttendanceCheckinService
      *     }|null,
      *     attendance: array{id:int,date:string,time:string}|null,
      *     attempt: array{date:string,time:string}|null,
+     *     can_auto_checkout:?bool,
      *     event_type: 'checkin'
      * }
      */
@@ -275,7 +286,8 @@ class AttendanceCheckinService
         ?array $client,
         ?array $attendance = null,
         ?array $attempt = null,
-        string $reason = 'validation_error'
+        string $reason = 'validation_error',
+        ?bool $canAutoCheckout = null
     ): array
     {
         return [
@@ -286,6 +298,7 @@ class AttendanceCheckinService
             'client' => $client,
             'attendance' => $attendance,
             'attempt' => $attempt,
+            'can_auto_checkout' => $canAutoCheckout,
             'event_type' => 'checkin',
         ];
     }
@@ -341,6 +354,28 @@ class AttendanceCheckinService
             ->forGym($gymId)
             ->where('client_id', $clientId)
             ->count();
+    }
+
+    private function canAutoCheckoutAfterDuplicate(int $gymId, int $clientId, Carbon $attemptedAt): bool
+    {
+        $openSession = PresenceSession::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->open()
+            ->orderByDesc('check_in_at')
+            ->orderByDesc('id')
+            ->first(['id', 'check_in_at']);
+
+        if (! $openSession || ! $openSession->check_in_at) {
+            return false;
+        }
+
+        $elapsedSeconds = (int) $openSession->check_in_at->diffInSeconds($attemptedAt, false);
+        if ($elapsedSeconds < 0) {
+            return false;
+        }
+
+        return $elapsedSeconds >= self::DUPLICATE_AUTO_CHECKOUT_GRACE_SECONDS;
     }
 
     /**
