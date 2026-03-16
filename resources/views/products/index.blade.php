@@ -3,6 +3,59 @@
 @section('title', 'Productos')
 @section('page-title', 'Productos')
 
+@push('styles')
+<style>
+    .products-ops-nav {
+        display: none;
+    }
+
+    @media (max-width: 1023px) {
+        .products-ops-nav {
+            position: sticky;
+            top: calc(4.7rem + env(safe-area-inset-top));
+            z-index: 14;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.45rem;
+        }
+
+        .products-ops-nav .ui-button {
+            width: 100%;
+            min-height: 2.45rem;
+            padding: 0.55rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .products-ops-grid {
+            gap: 0.75rem;
+        }
+
+        .products-ops-grid > :nth-child(2) {
+            order: -1;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .products-ops-nav {
+            top: calc(4.35rem + env(safe-area-inset-top));
+        }
+
+        .products-stock-submit {
+            position: sticky;
+            bottom: calc(5.8rem + env(safe-area-inset-bottom));
+            z-index: 10;
+            padding-top: 0.25rem;
+            background: linear-gradient(180deg, rgb(2 6 23 / 0), rgb(2 6 23 / 0.76) 42%, rgb(2 6 23 / 0.94));
+        }
+
+        .theme-light .products-stock-submit {
+            background: linear-gradient(180deg, rgb(248 250 252 / 0), rgb(248 250 252 / 0.85) 42%, rgb(248 250 252 / 0.95));
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -77,9 +130,14 @@
         </section>
 
         @if ($schemaReady && ! $isGlobalScope)
-            <section class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+            <div class="products-ops-nav lg:hidden">
+                <x-ui.button :href="'#stock-form'" variant="secondary" size="sm">Mover stock</x-ui.button>
+                <x-ui.button :href="'#product-create-form'" variant="ghost" size="sm">{{ $editingProduct ? 'Editar producto' : 'Registrar producto' }}</x-ui.button>
+            </div>
+
+            <section class="products-ops-grid grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
                 <x-ui.card :title="$editingProduct ? 'Editar producto' : 'Registrar producto'" subtitle="Define precio, costo, categoría y stock mínimo del producto.">
-                    <form method="POST" action="{{ $editingProduct ? route('products.update', ['contextGym' => $contextGym, 'product' => $editingProduct->id]) : route('products.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2">
+                    <form id="product-create-form" method="POST" action="{{ $editingProduct ? route('products.update', ['contextGym' => $contextGym, 'product' => $editingProduct->id]) : route('products.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2">
                         @csrf
                         @if ($editingProduct)
                             @method('PUT')
@@ -162,7 +220,7 @@
                 </x-ui.card>
 
                 <x-ui.card title="Mover stock" subtitle="Registra entradas o ajustes manuales de inventario.">
-                    <form id="stock-form" method="POST" action="{{ route('products.stock', ['contextGym' => $contextGym, 'product' => $stockProductId > 0 ? $stockProductId : (int) old('product_id', 0)]) }}" class="space-y-4">
+                    <form id="stock-form" method="POST" action="{{ route('products.stock', ['contextGym' => $contextGym, 'product' => $stockProductId > 0 ? $stockProductId : (int) old('product_id', 0)]) }}" class="products-stock-form scroll-mt-28 space-y-4">
                         @csrf
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -215,7 +273,9 @@
                             <span class="block text-xs font-normal ui-muted">Obligatoria para ajustes manuales (+/-).</span>
                         </label>
 
-                        <x-ui.button type="submit">Guardar movimiento</x-ui.button>
+                        <div class="products-stock-submit">
+                            <x-ui.button type="submit">Guardar movimiento</x-ui.button>
+                        </div>
                     </form>
                 </x-ui.card>
             </section>

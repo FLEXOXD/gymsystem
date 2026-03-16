@@ -34,13 +34,19 @@
             color: #ecfeff;
             box-shadow: 0 16px 42px rgba(6, 24, 44, 0.32);
             cursor: pointer;
-            transition: transform .18s ease, box-shadow .18s ease;
+            transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
         }
 
         @media (max-width: 1023px) {
             .remote-scan-fab {
-                bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+                bottom: calc(96px + env(safe-area-inset-bottom, 0px));
             }
+        }
+
+        .remote-scan-fab.is-soft-hidden {
+            opacity: 0;
+            transform: translateY(8px) scale(0.92);
+            pointer-events: none;
         }
 
         .remote-scan-fab::before {
@@ -264,7 +270,7 @@
             .remote-scan-fab {
                 width: 68px;
                 height: 68px;
-                bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+                bottom: calc(106px + env(safe-area-inset-bottom, 0px));
             }
 
             .remote-scan-fab__icon {
@@ -602,6 +608,28 @@
                 stopStream();
             });
 
+            const inputSelector = "input:not([type='checkbox']):not([type='radio']):not([type='hidden']), textarea, select";
+            const isCompactViewport = function () {
+                return window.matchMedia('(max-width: 1023px)').matches;
+            };
+            const syncFabSoftState = function () {
+                if (!isCompactViewport()) {
+                    fab.classList.remove('is-soft-hidden');
+                    return;
+                }
+
+                const activeElement = document.activeElement;
+                const typing = activeElement instanceof HTMLElement && activeElement.matches(inputSelector);
+                const modalOpen = modal.classList.contains('is-open');
+                fab.classList.toggle('is-soft-hidden', typing && !modalOpen);
+            };
+
+            document.addEventListener('focusin', syncFabSoftState);
+            document.addEventListener('focusout', function () {
+                window.setTimeout(syncFabSoftState, 40);
+            });
+            window.addEventListener('resize', syncFabSoftState);
+
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && modal.classList.contains('is-open')) {
                     setModalOpen(false);
@@ -618,6 +646,7 @@
             }
 
             bootstrapSessionInBackground();
+            syncFabSoftState();
         })();
     </script>
     @endpush

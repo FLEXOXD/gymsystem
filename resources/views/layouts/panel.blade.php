@@ -1367,6 +1367,24 @@
                 font-size: clamp(1.24rem, 1rem + 0.55vw, 1.5rem);
             }
 
+            #panel-header-right {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 0.42rem;
+            }
+
+            #panel-header-right > * {
+                flex: 0 0 auto;
+            }
+
+            .header-live-pill {
+                min-height: 2.12rem;
+                padding: 0.34rem 0.7rem 0.34rem 0.62rem;
+                font-size: 0.64rem;
+                letter-spacing: 0.11em;
+            }
+
             #user-menu-button {
                 max-width: min(76vw, 15.5rem);
                 min-height: 2.7rem;
@@ -1396,20 +1414,20 @@
             }
             #panel-header-right {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-start;
                 flex-wrap: wrap;
-                row-gap: 0.45rem;
+                gap: 0.42rem;
                 overflow: visible;
             }
             #panel-header-right > * {
-                flex-shrink: 0;
+                flex: 0 0 auto;
             }
             #user-menu-root,
             #header-bell-root {
                 position: static;
             }
             #user-menu-button {
-                min-width: 3.65rem;
+                min-width: 3.5rem;
                 justify-content: space-between;
                 gap: 0.55rem;
             }
@@ -1638,7 +1656,7 @@
     </aside>
     <div id="sidebar-collapsed-tooltip" data-open="0" aria-hidden="true"></div>
 
-    <div class="flex-1 pb-16 lg:pb-0">
+    <div class="flex-1 pb-24 md:pb-20 lg:pb-0">
         <header class="theme-header theme-divider sticky top-0 z-20 border-b backdrop-blur">
             <div id="panel-header-shell" class="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:px-6 lg:px-8">
                 <div id="panel-header-left">
