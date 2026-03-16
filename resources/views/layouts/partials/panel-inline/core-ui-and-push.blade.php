@@ -1188,6 +1188,33 @@
             });
         }
 
+        function prepareMobileTableStack(table) {
+            if (!(table instanceof HTMLTableElement)) return;
+            if (table.dataset.mobileStackReady === '1') return;
+            if (table.getAttribute('data-mobile-stack') === 'off') return;
+
+            const wrapper = table.closest('.smart-list-wrap, .overflow-x-auto') || table.parentElement;
+            if (!wrapper) return;
+
+            wrapper.classList.add('table-mobile-stack');
+
+            const headers = Array.from(table.querySelectorAll('thead th')).map(function (header) {
+                const text = String(header.textContent || '').replace(/\s+/g, ' ').trim();
+                return text === '' ? 'Dato' : text;
+            });
+
+            const rows = getBodyRows(table);
+            rows.forEach(function (row) {
+                const cells = Array.from(row.querySelectorAll('td'));
+                cells.forEach(function (cell, index) {
+                    const headerLabel = headers[index] || 'Dato';
+                    cell.setAttribute('data-label', headerLabel);
+                });
+            });
+
+            table.dataset.mobileStackReady = '1';
+        }
+
         function enhanceSmartList(table, index) {
             if (table.hasAttribute('data-smart-list-manual')) return;
             if (table.dataset.smartListReady === '1') return;
@@ -1252,6 +1279,7 @@
         }
 
         document.querySelectorAll('table.ui-table').forEach(function (table, index) {
+            prepareMobileTableStack(table);
             enhanceSmartList(table, index);
         });
 
