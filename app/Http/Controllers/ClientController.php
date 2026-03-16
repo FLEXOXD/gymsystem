@@ -1175,7 +1175,7 @@ class ClientController extends Controller
             return "Hoy {$timeLabel}";
         }
 
-        $daysAgo = $date->diffInDays($now);
+        $daysAgo = (int) $date->diffInDays($now->copy()->startOfDay());
         if ($daysAgo <= 30) {
             $relative = $daysAgo === 1 ? 'Hace 1 día' : "Hace {$daysAgo} días";
 

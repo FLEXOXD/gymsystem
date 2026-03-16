@@ -8,6 +8,269 @@
         [x-cloak] {
             display: none !important;
         }
+
+        .clients-page-shell {
+            position: relative;
+        }
+
+        @media (min-width: 1280px) {
+            .clients-page-shell {
+                padding-left: 0.35rem;
+                padding-right: 0.5rem;
+            }
+        }
+
+        .clients-kpi-grid {
+            gap: 0.85rem;
+        }
+
+        .clients-kpi-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            border: 1px solid rgb(148 163 184 / 0.28);
+            background: linear-gradient(150deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.88));
+            box-shadow: 0 18px 30px -24px rgb(15 23 42 / 0.38);
+            padding: 1rem;
+        }
+
+        .dark .clients-kpi-card {
+            border-color: rgb(148 163 184 / 0.2);
+            background: linear-gradient(145deg, rgb(15 23 42 / 0.88), rgb(15 23 42 / 0.64));
+            box-shadow: 0 20px 40px -30px rgb(2 8 23 / 0.92);
+        }
+
+        .clients-kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0.8rem;
+            right: 0.8rem;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgb(148 163 184 / 0.36);
+        }
+
+        .clients-kpi-card[data-tone='success']::before {
+            background: linear-gradient(90deg, rgb(16 185 129 / 0.95), rgb(16 185 129 / 0.3));
+        }
+
+        .clients-kpi-card[data-tone='warning']::before {
+            background: linear-gradient(90deg, rgb(245 158 11 / 0.95), rgb(245 158 11 / 0.3));
+        }
+
+        .clients-kpi-card[data-tone='danger']::before {
+            background: linear-gradient(90deg, rgb(244 63 94 / 0.95), rgb(244 63 94 / 0.3));
+        }
+
+        .clients-kpi-label {
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.95);
+        }
+
+        .dark .clients-kpi-label {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .clients-kpi-value {
+            margin-top: 0.4rem;
+            font-size: clamp(2rem, 2.7vw, 2.35rem);
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: rgb(15 23 42 / 0.96);
+        }
+
+        .dark .clients-kpi-value {
+            color: rgb(241 245 249 / 0.97);
+        }
+
+        .clients-kpi-note {
+            margin-top: 0.4rem;
+            font-size: 0.74rem;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .dark .clients-kpi-note {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .clients-main-card {
+            border: 1px solid rgb(148 163 184 / 0.28);
+            background: linear-gradient(155deg, rgb(255 255 255 / 0.95), rgb(248 250 252 / 0.94));
+            box-shadow: 0 24px 46px -38px rgb(15 23 42 / 0.48);
+        }
+
+        .dark .clients-main-card {
+            border-color: rgb(148 163 184 / 0.2);
+            background: linear-gradient(165deg, rgb(2 6 23 / 0.8), rgb(15 23 42 / 0.52));
+            box-shadow: 0 24px 48px -34px rgb(2 8 23 / 0.9);
+        }
+
+        .clients-main-card > header .ui-heading {
+            font-size: clamp(1.3rem, 1.6vw, 1.62rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .clients-main-card > header .ui-muted {
+            margin-top: 0.35rem;
+            font-size: 0.9rem;
+        }
+
+        .clients-table-wrap {
+            border-color: rgb(148 163 184 / 0.34);
+        }
+
+        .dark .clients-table-wrap {
+            border-color: rgb(148 163 184 / 0.18);
+        }
+
+        .clients-table-wrap .ui-table thead tr {
+            background: rgb(248 250 252 / 0.95);
+            border-bottom-color: rgb(226 232 240 / 0.9);
+        }
+
+        .dark .clients-table-wrap .ui-table thead tr {
+            background: rgb(30 41 59 / 0.9);
+            border-bottom-color: rgb(51 65 85 / 0.9);
+        }
+
+        .clients-table-wrap .ui-table th {
+            font-size: 0.69rem;
+            letter-spacing: 0.11em;
+            color: rgb(100 116 139 / 0.95);
+            padding-top: 0.95rem;
+            padding-bottom: 0.95rem;
+        }
+
+        .dark .clients-table-wrap .ui-table th {
+            color: rgb(148 163 184 / 0.96);
+        }
+
+        .clients-table-wrap .ui-table td {
+            padding-top: 0.95rem;
+            padding-bottom: 0.95rem;
+        }
+
+        .clients-table-wrap .ui-table tbody tr {
+            transition: background-color 140ms ease, box-shadow 140ms ease;
+        }
+
+        .clients-table-wrap .ui-table tbody tr:hover {
+            box-shadow: inset 0 0 0 1px rgb(56 189 248 / 0.28);
+        }
+
+        .clients-client-doc {
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: rgb(71 85 105 / 0.95);
+        }
+
+        .dark .clients-client-doc {
+            color: rgb(148 163 184 / 0.96);
+        }
+
+        .clients-client-meta {
+            font-size: 0.7rem;
+            color: rgb(100 116 139 / 0.93);
+        }
+
+        .dark .clients-client-meta {
+            color: rgb(148 163 184 / 0.82);
+        }
+
+        .clients-row-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .clients-row-view {
+            min-width: 6.8rem;
+        }
+
+        .clients-row-menu-toggle {
+            min-height: 2.35rem;
+            min-width: 2.35rem;
+            padding: 0.45rem;
+            border-radius: 0.75rem;
+        }
+
+        .clients-row-menu-icon {
+            width: 1rem;
+            height: 1rem;
+            opacity: 0.82;
+            flex: 0 0 auto;
+        }
+
+        .clients-row-menu {
+            position: absolute;
+            top: calc(100% + 0.4rem);
+            right: 0;
+            z-index: 35;
+            min-width: 12rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgb(148 163 184 / 0.35);
+            background: rgb(255 255 255 / 0.94);
+            box-shadow: 0 18px 36px -22px rgb(2 8 23 / 0.6);
+            backdrop-filter: blur(6px);
+            padding: 0.35rem;
+        }
+
+        .dark .clients-row-menu {
+            border-color: rgb(148 163 184 / 0.24);
+            background: rgb(2 6 23 / 0.92);
+            box-shadow: 0 20px 40px -24px rgb(2 8 23 / 0.92);
+        }
+
+        .clients-row-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            border-radius: 0.68rem;
+            padding: 0.55rem 0.62rem;
+            text-align: left;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: rgb(15 23 42 / 0.96);
+            transition: background-color 120ms ease, color 120ms ease;
+        }
+
+        .dark .clients-row-menu-item {
+            color: rgb(226 232 240 / 0.95);
+        }
+
+        .clients-row-menu-item:hover {
+            background: rgb(14 165 233 / 0.12);
+            color: rgb(12 74 110 / 0.98);
+        }
+
+        .dark .clients-row-menu-item:hover {
+            background: rgb(34 211 238 / 0.13);
+            color: rgb(165 243 252 / 0.98);
+        }
+
+        .clients-row-menu-item.is-danger {
+            color: rgb(190 18 60 / 0.95);
+        }
+
+        .dark .clients-row-menu-item.is-danger {
+            color: rgb(251 113 133 / 0.98);
+        }
+
+        .clients-row-menu-item-icon {
+            width: 0.95rem;
+            height: 0.95rem;
+            opacity: 0.78;
+            flex: 0 0 auto;
+        }
     </style>
 @endpush
 
@@ -143,28 +406,28 @@
              canManageClientAccounts: @js($canManageClientAccounts),
          })"
          x-init="init()"
-         class="space-y-4">
+         class="clients-page-shell space-y-4">
 
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article class="rounded-2xl border border-slate-300/70 bg-slate-100 p-4 shadow-lg dark:border-white/10 dark:bg-slate-900/40">
-                <p class="ui-muted text-xs font-semibold uppercase tracking-widest">Total clientes</p>
-                <p class="mt-2 text-3xl font-black ui-heading">{{ $stats['total'] }}</p>
-                <p class="ui-muted mt-1 text-xs">Base actual del listado</p>
+        <section class="clients-kpi-grid grid sm:grid-cols-2 xl:grid-cols-4">
+            <article class="clients-kpi-card" data-tone="neutral">
+                <p class="clients-kpi-label">Total clientes</p>
+                <p class="clients-kpi-value">{{ $stats['total'] }}</p>
+                <p class="clients-kpi-note">Base actual del listado</p>
             </article>
-            <article class="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-4 shadow-lg dark:border-emerald-300/30 dark:bg-emerald-400/15">
-                <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-200">Activos</p>
-                <p class="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">{{ $stats['active'] }}</p>
-                <p class="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Membresía vigente</p>
+            <article class="clients-kpi-card" data-tone="success">
+                <p class="clients-kpi-label">Activos</p>
+                <p class="clients-kpi-value">{{ $stats['active'] }}</p>
+                <p class="clients-kpi-note">Membresía vigente</p>
             </article>
-            <article class="rounded-2xl border border-amber-400/35 bg-amber-500/10 p-4 shadow-lg dark:border-amber-300/30 dark:bg-amber-400/15">
-                <p class="text-xs font-semibold uppercase tracking-widest text-amber-800 dark:text-amber-200">Por vencer</p>
-                <p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">{{ $stats['expiring'] }}</p>
-                <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">En los próximos 7 días</p>
+            <article class="clients-kpi-card" data-tone="warning">
+                <p class="clients-kpi-label">Por vencer</p>
+                <p class="clients-kpi-value">{{ $stats['expiring'] }}</p>
+                <p class="clients-kpi-note">En los próximos 7 días</p>
             </article>
-            <article class="rounded-2xl border border-rose-400/35 bg-rose-500/10 p-4 shadow-lg dark:border-rose-300/30 dark:bg-rose-400/15">
-                <p class="text-xs font-semibold uppercase tracking-widest text-rose-800 dark:text-rose-200">Vencid@s</p>
-                <p class="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">{{ $stats['expired'] }}</p>
-                <p class="mt-1 text-xs text-rose-800 dark:text-rose-200">Requieren renovación</p>
+            <article class="clients-kpi-card" data-tone="danger">
+                <p class="clients-kpi-label">Vencid@s</p>
+                <p class="clients-kpi-value">{{ $stats['expired'] }}</p>
+                <p class="clients-kpi-note">Requieren renovación</p>
             </article>
         </section>
 
@@ -174,7 +437,7 @@
             </div>
         @endif
 
-        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención.">
+        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención." class="clients-main-card">
             <div class="space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
@@ -214,23 +477,23 @@
                 </div>
             </div>
 
-            <div id="clients-table" class="mt-4 overflow-hidden rounded-2xl border border-slate-300/70 dark:border-white/10">
+            <div id="clients-table" class="clients-table-wrap mt-4 overflow-hidden rounded-2xl border border-slate-300/70 dark:border-white/10">
                 <div class="max-h-[560px] overflow-auto">
                     <table class="ui-table min-w-[1200px]">
                         <thead>
                         <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 text-left text-xs uppercase tracking-wider text-slate-500 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-300">
-                            <th class="px-3 py-3">ID</th>
-                            <th class="px-3 py-3">Cliente</th>
-                            <th class="px-3 py-3">Plan</th>
-                            <th class="px-3 py-3">Vence</th>
-                            <th class="px-3 py-3">Días restantes</th>
-                            <th class="px-3 py-3">Pago</th>
-                            <th class="px-3 py-3">Última asistencia</th>
-                            <th class="px-3 py-3">Estado</th>
+                            <th class="px-3 py-4">ID</th>
+                            <th class="px-3 py-4">Cliente</th>
+                            <th class="px-3 py-4">Plan</th>
+                            <th class="px-3 py-4">Vence</th>
+                            <th class="px-3 py-4">Días restantes</th>
+                            <th class="px-3 py-4">Pago</th>
+                            <th class="px-3 py-4">Última asistencia</th>
+                            <th class="px-3 py-4">Estado</th>
                             @if ($isGlobalScope)
-                                <th class="px-3 py-3">Sede</th>
+                                <th class="px-3 py-4">Sede</th>
                             @endif
-                            <th class="px-3 py-3">Acciones</th>
+                            <th class="px-3 py-4">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -243,10 +506,15 @@
                                     'danger-strong' => 'bg-rose-600/80 text-rose-50 border border-rose-300/60',
                                     default => 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-500/20 dark:text-slate-200 dark:border-slate-400/30',
                                 };
+                                $showUrl = (string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])));
+                                $progressUrl = (string) ($client['progress_url'] ?? $showUrl);
+                                $canShowProgress = ! empty($client['can_show_progress']);
+                                $canManage = ! empty($client['can_manage']);
+                                $hasSecondaryActions = $canShowProgress || $canManage;
                             @endphp
                             <tr class="border-b border-slate-200 text-sm text-slate-800 odd:bg-white even:bg-slate-100 hover:bg-sky-100/70 dark:border-slate-800 dark:text-slate-200 dark:odd:bg-slate-900 dark:even:bg-slate-950/50 dark:hover:bg-cyan-500/10">
-                                <td class="px-3 py-3 font-bold text-slate-800 dark:text-slate-200">#{{ $client['id'] }}</td>
-                                <td class="px-3 py-3">
+                                <td class="px-3 py-4 font-bold text-slate-800 dark:text-slate-200">#{{ $client['id'] }}</td>
+                                <td class="px-3 py-4">
                                     <div class="flex items-center gap-3">
                                         @if ($client['photo_url'])
                                             <img src="{{ $client['photo_url'] }}"
@@ -259,101 +527,122 @@
                                         @endif
                                         <div class="min-w-0">
                                             <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $client['full_name'] }}</p>
-                                            <p class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">{{ $client['document_number'] }}</p>
-                                            <p class="truncate text-[11px] text-slate-500 dark:text-slate-400">Alta: {{ $client['created_by_display'] }}</p>
-                                            <p class="truncate text-[11px] text-slate-500 dark:text-slate-400">Ultima gestion: {{ $client['last_managed_by_display'] }}</p>
+                                            <p class="clients-client-doc truncate">{{ $client['document_number'] }}</p>
+                                            <p class="clients-client-meta truncate">Alta: {{ $client['created_by_display'] }}</p>
+                                            <p class="clients-client-meta truncate">Última gestión: {{ $client['last_managed_by_display'] }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-slate-800 dark:text-slate-100">{{ $client['plan_name'] }}</td>
-                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $client['membership_ends_at_human'] }}</td>
-                                <td class="px-3 py-3">
+                                <td class="px-3 py-4 font-semibold text-slate-800 dark:text-slate-100">{{ $client['plan_name'] }}</td>
+                                <td class="px-3 py-4 text-slate-700 dark:text-slate-200">{{ $client['membership_ends_at_human'] }}</td>
+                                <td class="px-3 py-4">
                                     <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $daysToneClass }}">
                                         {{ $client['days_badge']['label'] }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-3">
+                                <td class="px-3 py-4">
                                     <x-ui.badge :variant="$client['payment_badge']['variant']">
                                         {{ $client['payment_badge']['label'] }}
                                     </x-ui.badge>
                                 </td>
-                                <td class="px-3 py-3 text-slate-700 dark:text-slate-200">{{ $client['last_checkin_label'] }}</td>
-                                <td class="px-3 py-3">
+                                <td class="px-3 py-4 text-slate-700 dark:text-slate-200">{{ $client['last_checkin_label'] }}</td>
+                                <td class="px-3 py-4">
                                     <x-ui.badge :variant="$client['status_badge']['variant']">
                                         {{ $client['status_badge']['label'] }}
                                     </x-ui.badge>
                                 </td>
                                 @if ($isGlobalScope)
-                                    <td class="px-3 py-3">
+                                    <td class="px-3 py-4">
                                         <x-ui.badge variant="info">
                                             {{ $client['gym_name'] ?? '-' }}
                                         </x-ui.badge>
                                     </td>
                                 @endif
-                                <td class="px-3 py-3 min-w-[16rem]">
-                                    <div class="ui-action-grid">
-                                        <x-ui.button :href="(string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])))" variant="secondary" size="sm" class="ui-action-button">
+                                <td class="px-3 py-4 min-w-[11rem]">
+                                    <div x-data="{ open: false }" class="clients-row-actions">
+                                        <x-ui.button :href="$showUrl" variant="secondary" size="sm" class="ui-action-button clients-row-view">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
                                                 <circle cx="12" cy="12" r="3"/>
                                             </svg>
                                             <span class="ui-action-button-label">Ver</span>
                                         </x-ui.button>
-
-                                        @if (! empty($client['can_show_progress']))
-                                            <x-ui.button :href="(string) ($client['progress_url'] ?? ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : []))))" variant="ghost" size="sm" class="ui-action-button">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M4 19h16"/>
-                                                    <path d="M7 16l3-4 3 2 4-6"/>
-                                                    <circle cx="7" cy="16" r="1"/>
-                                                    <circle cx="10" cy="12" r="1"/>
-                                                    <circle cx="13" cy="14" r="1"/>
-                                                    <circle cx="17" cy="8" r="1"/>
+                                        @if ($hasSecondaryActions)
+                                            <button type="button"
+                                                    class="ui-button ui-button-ghost clients-row-menu-toggle"
+                                                    x-on:click="open = !open"
+                                                    x-on:keydown.escape.stop="open = false"
+                                                    x-bind:aria-expanded="open.toString()"
+                                                    aria-haspopup="menu"
+                                                    title="Más acciones">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="clients-row-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="12" cy="5" r="1.8"/>
+                                                    <circle cx="12" cy="12" r="1.8"/>
+                                                    <circle cx="12" cy="19" r="1.8"/>
                                                 </svg>
-                                                <span class="ui-action-button-label">Rendimiento</span>
-                                            </x-ui.button>
-                                        @endif
+                                                <span class="sr-only">Más acciones</span>
+                                            </button>
 
-                                        @if (! empty($client['can_manage']))
-                                            <x-ui.button type="button"
-                                                         variant="primary"
-                                                         size="sm"
-                                                         class="ui-action-button"
-                                                         x-on:click="openEditClient({
-                                                            action: @js((string) ($client['edit_url'] ?? '')),
-                                                            id: {{ (int) $client['id'] }},
-                                                            first_name: @js((string) ($client['first_name'] ?? '')),
-                                                            last_name: @js((string) ($client['last_name'] ?? '')),
-                                                            phone: @js((string) ($client['phone'] ?? '')),
-                                                            full_name: @js((string) ($client['full_name'] ?? ''))
-                                                         })">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M12 20h9"/>
-                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Editar</span>
-                                            </x-ui.button>
+                                            <div x-cloak
+                                                 x-show="open"
+                                                 x-transition.origin.top.right.duration.120ms
+                                                 x-on:click.outside="open = false"
+                                                 class="clients-row-menu"
+                                                 role="menu">
+                                                @if ($canShowProgress)
+                                                    <a href="{{ $progressUrl }}" class="clients-row-menu-item" role="menuitem" x-on:click="open = false">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="clients-row-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M4 19h16"/>
+                                                            <path d="M7 16l3-4 3 2 4-6"/>
+                                                            <circle cx="7" cy="16" r="1"/>
+                                                            <circle cx="10" cy="12" r="1"/>
+                                                            <circle cx="13" cy="14" r="1"/>
+                                                            <circle cx="17" cy="8" r="1"/>
+                                                        </svg>
+                                                        <span>Rendimiento</span>
+                                                    </a>
+                                                @endif
 
-                                            <x-ui.button type="button"
-                                                         variant="danger"
-                                                         size="sm"
-                                                         class="ui-action-button"
-                                                         x-on:click="openDeleteClient({
-                                                        action: @js((string) ($client['delete_url'] ?? '')),
-                                                        id: {{ (int) $client['id'] }},
-                                                        full_name: @js((string) ($client['full_name'] ?? '')),
-                                                        owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueño del gimnasio')),
-                                                        owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'))
-                                                    })">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M3 6h18"/>
-                                                    <path d="M8 6V4h8v2"/>
-                                                    <path d="M19 6l-1 14H6L5 6"/>
-                                                    <path d="M10 11v6"/>
-                                                    <path d="M14 11v6"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Eliminar</span>
-                                            </x-ui.button>
+                                                @if ($canManage)
+                                                    <button type="button"
+                                                            class="clients-row-menu-item"
+                                                            role="menuitem"
+                                                            x-on:click="open = false; openEditClient({
+                                                                action: @js((string) ($client['edit_url'] ?? '')),
+                                                                id: {{ (int) $client['id'] }},
+                                                                first_name: @js((string) ($client['first_name'] ?? '')),
+                                                                last_name: @js((string) ($client['last_name'] ?? '')),
+                                                                phone: @js((string) ($client['phone'] ?? '')),
+                                                                full_name: @js((string) ($client['full_name'] ?? ''))
+                                                            })">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="clients-row-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M12 20h9"/>
+                                                            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                                                        </svg>
+                                                        <span>Editar</span>
+                                                    </button>
+
+                                                    <button type="button"
+                                                            class="clients-row-menu-item is-danger"
+                                                            role="menuitem"
+                                                            x-on:click="open = false; openDeleteClient({
+                                                                action: @js((string) ($client['delete_url'] ?? '')),
+                                                                id: {{ (int) $client['id'] }},
+                                                                full_name: @js((string) ($client['full_name'] ?? '')),
+                                                                owner_scope_label: @js((string) ($client['owner_scope_label'] ?? 'dueño del gimnasio')),
+                                                                owner_modal_hint: @js((string) ($client['owner_modal_hint'] ?? 'Confirma con la contraseña del dueño del gimnasio.'))
+                                                            })">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="clients-row-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M3 6h18"/>
+                                                            <path d="M8 6V4h8v2"/>
+                                                            <path d="M19 6l-1 14H6L5 6"/>
+                                                            <path d="M10 11v6"/>
+                                                            <path d="M14 11v6"/>
+                                                        </svg>
+                                                        <span>Eliminar</span>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         @endif
                                     </div>
                                 </td>
@@ -1694,3 +1983,4 @@
         };
     </script>
 @endpush
+
