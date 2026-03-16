@@ -2396,9 +2396,9 @@
                 min-width: 120px;
             }
             .brand-logo {
-                width: 128px;
-                height: 40px;
-                transform: scale(1.35);
+                width: 150px;
+                height: 46px;
+                transform: scale(2.05);
             }
             .menu-links,
             .nav-actions { display: none; }
@@ -2473,9 +2473,9 @@
                 min-width: 108px;
             }
             .brand-logo {
-                width: 122px;
-                height: 38px;
-                transform: scale(1.34);
+                width: 146px;
+                height: 44px;
+                transform: scale(2.25);
             }
             .top-nav { padding: .58rem .64rem; }
             .brand-chip.brand-chip-has-logo {
