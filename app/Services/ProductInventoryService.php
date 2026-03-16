@@ -13,6 +13,9 @@ use RuntimeException;
 
 class ProductInventoryService
 {
+    private const PURCHASE_MOVEMENT_TYPES = ['entry', 'opening'];
+    private const ADJUSTMENT_MOVEMENT_TYPES = ['adjustment_add', 'adjustment_remove'];
+
     public function __construct(
         private readonly CashSessionService $cashSessionService
     ) {
@@ -31,13 +34,15 @@ class ProductInventoryService
         ?float $unitCost = null,
         ?string $note = null,
         ?int $productSaleId = null,
+        ?string $paymentMethod = null,
+        ?int $cashMovementId = null,
         Carbon|string|null $occurredAt = null
     ): ProductStockMovement {
         if ($quantityChange === 0) {
             throw new RuntimeException('El movimiento de stock debe cambiar al menos 1 unidad.');
         }
 
-        return DB::transaction(function () use ($product, $actor, $quantityChange, $type, $unitCost, $note, $productSaleId, $occurredAt): ProductStockMovement {
+        return DB::transaction(function () use ($product, $actor, $quantityChange, $type, $unitCost, $note, $productSaleId, $paymentMethod, $cashMovementId, $occurredAt): ProductStockMovement {
             /** @var Product|null $lockedProduct */
             $lockedProduct = Product::query()
                 ->lockForUpdate()
@@ -47,6 +52,13 @@ class ProductInventoryService
                 throw new RuntimeException('El producto ya no existe.');
             }
 
+            $resolvedType = trim($type) !== '' ? trim($type) : 'adjustment';
+            $normalizedNote = $this->normalizeNote($note);
+            $isAdjustmentMovement = in_array($resolvedType, self::ADJUSTMENT_MOVEMENT_TYPES, true);
+            if ($isAdjustmentMovement && $normalizedNote === null) {
+                throw new RuntimeException('Debes registrar una nota para justificar ajustes manuales de stock.');
+            }
+
             $stockBefore = (int) $lockedProduct->stock;
             $stockAfter = $stockBefore + $quantityChange;
             if ($stockAfter < 0) {
@@ -54,6 +66,39 @@ class ProductInventoryService
             }
 
             $normalizedUnitCost = $unitCost !== null ? round(max(0, $unitCost), 2) : null;
+            $normalizedOccurredAt = $this->normalizeOccurredAt($occurredAt);
+            $resolvedCashMovementId = ($cashMovementId ?? 0) > 0 ? (int) $cashMovementId : null;
+
+            $isPurchaseMovement = in_array($resolvedType, self::PURCHASE_MOVEMENT_TYPES, true) && $quantityChange > 0;
+            if ($isPurchaseMovement) {
+                if (! $actor || (int) $actor->id <= 0) {
+                    throw new RuntimeException('No se pudo identificar al usuario que registra la entrada de inventario.');
+                }
+
+                if ($normalizedUnitCost === null || $normalizedUnitCost <= 0) {
+                    throw new RuntimeException('Para entradas de inventario debes indicar un costo unitario mayor a 0.');
+                }
+
+                $purchaseTotal = round(abs($quantityChange) * $normalizedUnitCost, 2);
+                $cashMovement = $this->cashSessionService->addMovement(
+                    gymId: (int) $lockedProduct->gym_id,
+                    userId: (int) $actor->id,
+                    type: 'expense',
+                    amount: $purchaseTotal,
+                    method: $this->normalizePaymentMethod($paymentMethod),
+                    membershipId: null,
+                    description: $this->buildStockPurchaseDescription(
+                        productName: (string) $lockedProduct->name,
+                        quantity: abs($quantityChange),
+                        unitCost: $normalizedUnitCost,
+                        note: $normalizedNote
+                    ),
+                    occurredAt: $normalizedOccurredAt
+                );
+
+                $resolvedCashMovementId = (int) $cashMovement->id;
+            }
+
             $updates = [
                 'stock' => $stockAfter,
             ];
@@ -68,14 +113,15 @@ class ProductInventoryService
                 'gym_id' => (int) $lockedProduct->gym_id,
                 'product_id' => (int) $lockedProduct->id,
                 'product_sale_id' => $productSaleId,
+                'cash_movement_id' => $resolvedCashMovementId,
                 'user_id' => $actor?->id,
-                'type' => trim($type) !== '' ? trim($type) : 'adjustment',
+                'type' => $resolvedType,
                 'quantity_change' => $quantityChange,
                 'stock_before' => $stockBefore,
                 'stock_after' => $stockAfter,
                 'unit_cost' => $normalizedUnitCost ?? (float) $lockedProduct->cost_price,
-                'note' => $this->normalizeNote($note),
-                'occurred_at' => $this->normalizeOccurredAt($occurredAt),
+                'note' => $normalizedNote,
+                'occurred_at' => $normalizedOccurredAt,
             ]);
         });
     }
@@ -172,6 +218,7 @@ class ProductInventoryService
                 unitCost: $unitCost,
                 note: $this->normalizeNote($notes),
                 productSaleId: (int) $sale->id,
+                cashMovementId: (int) ($sale->cash_movement_id ?? 0),
                 occurredAt: $normalizedSoldAt
             );
 
@@ -194,6 +241,25 @@ class ProductInventoryService
         }
 
         return implode(' | ', $parts);
+    }
+
+    private function buildStockPurchaseDescription(string $productName, int $quantity, float $unitCost, ?string $note = null): string
+    {
+        $parts = ['Compra inventario: '.$productName.' x'.$quantity];
+        $parts[] = 'Costo unitario: '.number_format($unitCost, 2, '.', '');
+
+        if ($note !== null) {
+            $parts[] = $note;
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    private function normalizePaymentMethod(?string $value): string
+    {
+        $normalized = strtolower(trim((string) $value));
+
+        return in_array($normalized, ['cash', 'card', 'transfer'], true) ? $normalized : 'cash';
     }
 
     private function normalizeNote(?string $note): ?string

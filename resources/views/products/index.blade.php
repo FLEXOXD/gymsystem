@@ -17,6 +17,7 @@
         $productsCollection = method_exists($products, 'getCollection') ? $products->getCollection() : collect($products);
         $stockProductId = (int) ($stockProductId ?? 0);
         $editingProduct = $editingProduct instanceof \App\Models\Product ? $editingProduct : null;
+        $hasOpenCashSession = (bool) ($hasOpenCashSession ?? false);
     @endphp
 
     <div class="space-y-5">
@@ -32,6 +33,12 @@
             @endif
             @if (! $schemaReady)
                 <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para activar el modulo de productos.</div>
+            @endif
+            @if ($schemaReady && ! $isGlobalScope && ! $hasOpenCashSession)
+                <div class="ui-alert ui-alert-warning">
+                    Caja cerrada: las entradas de inventario con costo (compra/stock inicial) requieren caja abierta.
+                    <a class="underline font-semibold" href="{{ route('cash.index', ['contextGym' => $contextGym]) }}">Abrir caja</a>
+                </div>
             @endif
         </div>
 
@@ -114,6 +121,16 @@
                             <label class="space-y-1 text-sm font-semibold ui-muted">
                                 <span>Stock inicial</span>
                                 <input type="number" min="0" name="initial_stock" class="ui-input" value="{{ old('initial_stock', 0) }}">
+                                <span class="block text-xs font-normal ui-muted">Si es mayor a 0 se registra compra de inventario y gasto en caja.</span>
+                            </label>
+
+                            <label class="space-y-1 text-sm font-semibold ui-muted">
+                                <span>Metodo pago stock inicial</span>
+                                <select name="initial_payment_method" class="ui-input">
+                                    <option value="cash" @selected(old('initial_payment_method', 'cash') === 'cash')>Efectivo</option>
+                                    <option value="card" @selected(old('initial_payment_method') === 'card')>Tarjeta</option>
+                                    <option value="transfer" @selected(old('initial_payment_method') === 'transfer')>Transferencia</option>
+                                </select>
                             </label>
                         @endif
 
@@ -179,11 +196,23 @@
                         <label class="space-y-1 text-sm font-semibold ui-muted">
                             <span>Costo unitario opcional</span>
                             <input type="number" step="0.01" min="0" name="unit_cost" class="ui-input" value="{{ old('unit_cost') }}">
+                            <span class="block text-xs font-normal ui-muted">Obligatorio para Entradas. Genera gasto en caja segun cantidad x costo.</span>
+                        </label>
+
+                        <label class="space-y-1 text-sm font-semibold ui-muted">
+                            <span>Metodo de pago</span>
+                            <select name="payment_method" class="ui-input">
+                                <option value="cash" @selected(old('payment_method', 'cash') === 'cash')>Efectivo</option>
+                                <option value="card" @selected(old('payment_method') === 'card')>Tarjeta</option>
+                                <option value="transfer" @selected(old('payment_method') === 'transfer')>Transferencia</option>
+                            </select>
+                            <span class="block text-xs font-normal ui-muted">Se usa para Entradas; en ajustes se conserva para historial.</span>
                         </label>
 
                         <label class="space-y-1 text-sm font-semibold ui-muted">
                             <span>Nota</span>
                             <textarea name="note" rows="3" class="ui-input" placeholder="Ej: reposicion semanal o ajuste por conteo">{{ old('note') }}</textarea>
+                            <span class="block text-xs font-normal ui-muted">Obligatoria para ajustes manuales (+/-).</span>
                         </label>
 
                         <x-ui.button type="submit">Guardar movimiento</x-ui.button>
@@ -296,6 +325,7 @@
                             <th>Cambio</th>
                             <th>Antes</th>
                             <th>Despues</th>
+                            <th>Caja</th>
                             <th>Usuario</th>
                             <th>Nota</th>
                         </tr>
@@ -317,12 +347,19 @@
                                 </td>
                                 <td>{{ (int) $movement->stock_before }}</td>
                                 <td>{{ (int) $movement->stock_after }}</td>
+                                <td>
+                                    @if ($movement->cash_movement_id)
+                                        <span class="font-mono text-xs">#{{ (int) $movement->cash_movement_id }}</span>
+                                    @else
+                                        <span class="ui-muted text-xs">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ $movement->user?->name ?? '-' }}</td>
                                 <td>{{ $movement->note ?: '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 9 : 8 }}" class="py-8 text-center ui-muted">Aun no hay movimientos de stock.</td>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">Aun no hay movimientos de stock.</td>
                             </tr>
                         @endforelse
                     </tbody>

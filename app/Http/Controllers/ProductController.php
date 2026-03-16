@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductStockMovement;
+use App\Services\CashSessionService;
 use App\Services\ProductCodeService;
 use App\Services\ProductInventoryService;
 use App\Support\ActiveGymContext;
@@ -18,7 +19,8 @@ class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductInventoryService $productInventoryService,
-        private readonly ProductCodeService $productCodeService
+        private readonly ProductCodeService $productCodeService,
+        private readonly CashSessionService $cashSessionService
     ) {
     }
 
@@ -37,6 +39,7 @@ class ProductController extends Controller
         $stockProducts = collect();
         $recentMovements = collect();
         $editingProduct = null;
+        $hasOpenCashSession = false;
         $productStats = [
             'total' => 0,
             'active' => 0,
@@ -45,6 +48,10 @@ class ProductController extends Controller
         ];
 
         if ($schemaReady) {
+            if (! $isGlobalScope) {
+                $hasOpenCashSession = $this->cashSessionService->getOpenSession($gymId) !== null;
+            }
+
             $products = Product::query()
                 ->forGyms($gymIds)
                 ->search($search)
@@ -100,6 +107,7 @@ class ProductController extends Controller
             'stockProductId' => $stockProductId,
             'search' => $search,
             'activeGymId' => $gymId,
+            'hasOpenCashSession' => $hasOpenCashSession,
         ]);
     }
 
@@ -139,10 +147,19 @@ class ProductController extends Controller
             'sale_price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'initial_stock' => ['nullable', 'integer', 'min:0', 'max:999999'],
+            'initial_payment_method' => ['nullable', Rule::in(['cash', 'card', 'transfer'])],
             'min_stock' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $initialStock = (int) ($data['initial_stock'] ?? 0);
+        if ($initialStock > 0 && ! $this->cashSessionService->getOpenSession($gymId)) {
+            return redirect()
+                ->route('products.index', ['contextGym' => $contextGym])
+                ->withErrors(['products' => 'Debes abrir caja antes de cargar stock inicial con costo.'])
+                ->withInput();
+        }
 
         $product = Product::query()->create([
             'gym_id' => $gymId,
@@ -165,16 +182,25 @@ class ProductController extends Controller
             barcode: $data['barcode'] ?? null
         );
 
-        $initialStock = (int) ($data['initial_stock'] ?? 0);
         if ($initialStock > 0) {
-            $this->productInventoryService->registerStockMovement(
-                product: $product,
-                actor: $actor,
-                quantityChange: $initialStock,
-                type: 'opening',
-                unitCost: isset($data['cost_price']) ? (float) $data['cost_price'] : null,
-                note: 'Stock inicial del producto'
-            );
+            try {
+                $this->productInventoryService->registerStockMovement(
+                    product: $product,
+                    actor: $actor,
+                    quantityChange: $initialStock,
+                    type: 'opening',
+                    unitCost: isset($data['cost_price']) ? (float) $data['cost_price'] : null,
+                    note: 'Stock inicial del producto',
+                    paymentMethod: (string) ($data['initial_payment_method'] ?? 'cash')
+                );
+            } catch (RuntimeException $exception) {
+                $product->delete();
+
+                return redirect()
+                    ->route('products.index', ['contextGym' => $contextGym])
+                    ->withErrors(['products' => $exception->getMessage()])
+                    ->withInput();
+            }
         }
 
         return redirect()
@@ -280,6 +306,7 @@ class ProductController extends Controller
             'movement_type' => ['required', Rule::in(['entry', 'adjustment_add', 'adjustment_remove'])],
             'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', Rule::in(['cash', 'card', 'transfer'])],
             'note' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -297,7 +324,8 @@ class ProductController extends Controller
                 quantityChange: $quantityChange,
                 type: (string) $data['movement_type'],
                 unitCost: isset($data['unit_cost']) ? (float) $data['unit_cost'] : null,
-                note: $data['note'] ?? null
+                note: $data['note'] ?? null,
+                paymentMethod: $data['payment_method'] ?? null
             );
         } catch (RuntimeException $exception) {
             return redirect()

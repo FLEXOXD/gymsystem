@@ -52,6 +52,7 @@
         $openSalesHistoryModal = (bool) ($openSalesHistoryModal ?? false);
         $openSalesRegisterModal = old('open_sales_register_modal') === '1';
         $clearSalesScanCart = (bool) session('clear_sales_scan_cart', false);
+        $hasOpenCashSession = (bool) ($hasOpenCashSession ?? false);
         $saleProductsPayload = $saleProducts->map(function ($product) {
             return [
                 'id' => (int) $product->id,
@@ -77,6 +78,12 @@
             @endif
             @if (! $schemaReady)
                 <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para activar el modulo de ventas e inventario.</div>
+            @endif
+            @if ($schemaReady && ! $isGlobalScope && ! $hasOpenCashSession)
+                <div class="ui-alert ui-alert-warning">
+                    Caja cerrada: abre caja antes de registrar ventas de productos.
+                    <a class="underline font-semibold" href="{{ route('cash.index', ['contextGym' => $contextGym]) }}">Abrir caja</a>
+                </div>
             @endif
         </div>
 
@@ -144,6 +151,11 @@
                     <p class="ui-alert ui-alert-warning">El formulario se activara despues de correr las migraciones del modulo.</p>
                 @elseif ($isGlobalScope)
                     <p class="ui-alert ui-alert-info">Selecciona una sede puntual para registrar ventas. Desde vista global este modulo queda en modo analitico.</p>
+                @elseif (! $hasOpenCashSession)
+                    <p class="ui-alert ui-alert-warning">Caja cerrada. Debes abrir caja para registrar ventas de productos.</p>
+                    <div class="mt-3">
+                        <x-ui.button :href="route('cash.index', ['contextGym' => $contextGym])" variant="secondary">Ir a caja</x-ui.button>
+                    </div>
                 @elseif ($saleProducts->isEmpty())
                     <p class="ui-alert ui-alert-warning">No hay productos activos para vender. Crea al menos un producto y carga stock primero.</p>
                     <div class="mt-3">

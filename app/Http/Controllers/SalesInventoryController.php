@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\ProductSale;
+use App\Services\CashSessionService;
 use App\Services\ProductInventoryService;
 use App\Services\ReportService;
 use App\Support\ActiveGymContext;
@@ -22,7 +23,8 @@ class SalesInventoryController extends Controller
 {
     public function __construct(
         private readonly ProductInventoryService $productInventoryService,
-        private readonly ReportService $reportService
+        private readonly ReportService $reportService,
+        private readonly CashSessionService $cashSessionService
     ) {
     }
 
@@ -77,8 +79,13 @@ class SalesInventoryController extends Controller
         $salesHistoryYears = collect();
         $salesHistoryTotal = 0;
         $salesHistoryTruncated = false;
+        $hasOpenCashSession = false;
 
         if ($schemaReady) {
+            if (! $isGlobalScope) {
+                $hasOpenCashSession = $this->cashSessionService->getOpenSession($gymId) !== null;
+            }
+
             $todaySummary = $this->reportService->getProductSalesSummary($gymIds, $todayStart, $todayEnd);
             $weekSummary = $this->reportService->getProductSalesSummary($gymIds, $weekStart, $weekEnd);
             $monthSummary = $this->reportService->getProductSalesSummary($gymIds, $monthStart, $monthEnd);
@@ -170,6 +177,7 @@ class SalesInventoryController extends Controller
             'salesHistoryTruncated' => $salesHistoryTruncated,
             'openSalesHistoryModal' => $openSalesHistoryModal,
             'activeGymId' => $gymId,
+            'hasOpenCashSession' => $hasOpenCashSession,
         ]);
     }
 
@@ -188,6 +196,13 @@ class SalesInventoryController extends Controller
         }
 
         $gymId = $this->resolveGymId($request);
+        if (! $this->cashSessionService->getOpenSession($gymId)) {
+            return redirect()
+                ->route('sales.index', ['contextGym' => $contextGym])
+                ->withErrors(['sales' => 'Debes abrir caja antes de registrar ventas de productos.'])
+                ->withInput(['open_sales_register_modal' => '1']);
+        }
+
         $actor = $request->user();
         abort_unless($actor, 403, 'Usuario no autenticado.');
 

@@ -9,10 +9,13 @@ use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\PresenceSession;
+use App\Models\Product;
+use App\Models\ProductStockMovement;
 use App\Models\Promotion;
 use App\Models\Subscription;
 use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
+use App\Services\ProductInventoryService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -436,6 +439,122 @@ it('keeps credentials tab after assigning rfid for a client', function () {
         'value' => 'RFID-UID-000123',
         'status' => 'active',
     ]);
+});
+
+it('requires open cash session for inventory entry purchases', function () {
+    $gym = makeGym('inventory-entry-cash-required');
+    $owner = makeGymUser($gym, 'inventory-entry-cash-required@example.test');
+    $service = app(ProductInventoryService::class);
+
+    $product = Product::query()->create([
+        'gym_id' => $gym->id,
+        'created_by' => $owner->id,
+        'name' => 'Proteina control',
+        'sku' => 'INV-CASH-REQ-001',
+        'barcode' => '750000000001',
+        'category' => 'suplementos',
+        'sale_price' => 30,
+        'cost_price' => 20,
+        'stock' => 0,
+        'min_stock' => 1,
+        'status' => 'active',
+    ]);
+
+    expect(fn () => $service->registerStockMovement(
+        product: $product,
+        actor: $owner,
+        quantityChange: 4,
+        type: 'entry',
+        unitCost: 18.5,
+        note: 'Compra proveedor semanal',
+        paymentMethod: 'cash'
+    ))->toThrow(RuntimeException::class, 'Debe abrir caja para registrar movimientos.');
+});
+
+it('links inventory entry purchases to cash expense and movement trace', function () {
+    $gym = makeGym('inventory-entry-expense-link');
+    $owner = makeGymUser($gym, 'inventory-entry-expense-link@example.test');
+    $service = app(ProductInventoryService::class);
+    $cashService = app(\App\Services\CashSessionService::class);
+
+    $product = Product::query()->create([
+        'gym_id' => $gym->id,
+        'created_by' => $owner->id,
+        'name' => 'Bebida isotonic',
+        'sku' => 'INV-EXP-LINK-001',
+        'barcode' => '750000000002',
+        'category' => 'bebidas',
+        'sale_price' => 3.5,
+        'cost_price' => 1.5,
+        'stock' => 2,
+        'min_stock' => 1,
+        'status' => 'active',
+    ]);
+
+    $openSession = $cashService->openSession(
+        gymId: (int) $gym->id,
+        userId: (int) $owner->id,
+        openingBalance: 50.0
+    );
+
+    $movement = $service->registerStockMovement(
+        product: $product,
+        actor: $owner,
+        quantityChange: 5,
+        type: 'entry',
+        unitCost: 2.2,
+        note: 'Reposicion por proveedor local',
+        paymentMethod: 'transfer'
+    );
+
+    $expense = CashMovement::query()
+        ->forGym($gym->id)
+        ->where('cash_session_id', $openSession->id)
+        ->where('type', 'expense')
+        ->latest('id')
+        ->first();
+
+    expect($expense)->not->toBeNull();
+    expect((float) ($expense?->amount ?? 0))->toBe(11.0);
+    expect((string) ($expense?->method ?? ''))->toBe('transfer');
+    expect((int) ($movement->cash_movement_id ?? 0))->toBe((int) ($expense?->id ?? 0));
+    expect((int) $movement->stock_after)->toBe(7);
+    expect((int) Product::query()->findOrFail($product->id)->stock)->toBe(7);
+
+    $this->assertDatabaseHas('product_stock_movements', [
+        'id' => $movement->id,
+        'cash_movement_id' => (int) $expense->id,
+        'type' => 'entry',
+    ]);
+});
+
+it('requires note for manual stock adjustments', function () {
+    $gym = makeGym('inventory-adjustment-note-required');
+    $owner = makeGymUser($gym, 'inventory-adjustment-note-required@example.test');
+    $service = app(ProductInventoryService::class);
+
+    $product = Product::query()->create([
+        'gym_id' => $gym->id,
+        'created_by' => $owner->id,
+        'name' => 'Guantes box',
+        'sku' => 'INV-ADJ-NOTE-001',
+        'barcode' => '750000000003',
+        'category' => 'accesorios',
+        'sale_price' => 12,
+        'cost_price' => 6,
+        'stock' => 12,
+        'min_stock' => 2,
+        'status' => 'active',
+    ]);
+
+    expect(fn () => $service->registerStockMovement(
+        product: $product,
+        actor: $owner,
+        quantityChange: -2,
+        type: 'adjustment_remove',
+        unitCost: null,
+        note: null
+    ))->toThrow(RuntimeException::class, 'Debes registrar una nota para justificar ajustes manuales de stock.');
 });
 
 it('does not allow membership sale when cash session is closed', function () {

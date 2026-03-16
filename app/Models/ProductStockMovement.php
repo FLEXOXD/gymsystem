@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Models\CashMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ class ProductStockMovement extends Model
         'gym_id',
         'product_id',
         'product_sale_id',
+        'cash_movement_id',
         'user_id',
         'type',
         'quantity_change',
@@ -53,6 +55,11 @@ class ProductStockMovement extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(ProductSale::class, 'product_sale_id');
+    }
+
+    public function cashMovement(): BelongsTo
+    {
+        return $this->belongsTo(CashMovement::class, 'cash_movement_id');
     }
 
     public function user(): BelongsTo
