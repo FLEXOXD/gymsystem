@@ -18,7 +18,7 @@
             --neon-green: #39FF14;
             --electric-cyan: #00D4FF;
             --text-main: #EAF2FF;
-            --text-muted: #8A93A6;
+            --text-muted: #A8B4C9;
             --glass-bg: rgba(10, 14, 24, 0.55);
             --glass-border: rgba(255, 255, 255, 0.14);
             --card-radius: 22px;
@@ -245,8 +245,9 @@
             margin: 6px 0 0;
             max-width: 590px;
             color: var(--text-muted);
-            font-size: clamp(15px, 2.1vw, 22px);
-            line-height: 1.45;
+            font-size: clamp(15px, 1.8vw, 20px);
+            line-height: 1.5;
+            font-weight: 500;
         }
 
         .hero-modules {
@@ -360,9 +361,9 @@
             min-height: 40px;
             padding: 8px 12px;
             border-radius: 11px;
-            border: 1px solid rgba(0, 212, 255, 0.35);
-            background: rgba(7, 16, 30, 0.68);
-            color: #d8ecff;
+            border: 1px solid rgba(138, 147, 166, 0.38);
+            background: rgba(7, 16, 30, 0.42);
+            color: #c6d4ea;
             text-decoration: none;
             font-size: 11px;
             font-weight: 800;
@@ -376,9 +377,9 @@
 
         .auth-home-link:hover {
             transform: translateY(-1px);
-            border-color: rgba(57, 255, 20, 0.55);
-            box-shadow: 0 10px 22px rgba(57, 255, 20, 0.15);
-            color: #effff5;
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 8px 18px rgba(0, 212, 255, 0.14);
+            color: #e5f1ff;
         }
 
         .auth-home-link:focus-visible {
@@ -390,33 +391,35 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 12px;
         }
 
         .auth-logo {
-            width: min(56vw, 250px);
-            max-width: 250px;
-            min-width: 170px;
+            width: min(64vw, 295px);
+            max-width: 295px;
+            min-width: 195px;
             height: auto;
             object-fit: contain;
-            filter: drop-shadow(0 0 16px rgba(57, 255, 20, 0.34));
+            filter: drop-shadow(0 0 14px rgba(57, 255, 20, 0.24));
         }
 
         .auth h1 {
             margin: 0;
-            font-size: clamp(40px, 5.5vw, 58px);
-            line-height: 0.9;
+            font-size: clamp(38px, 5.2vw, 54px);
+            line-height: 0.94;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            font-weight: 900;
+            letter-spacing: 0.022em;
+            font-weight: 880;
             color: var(--neon-green);
-            text-shadow: 0 0 22px rgba(57, 255, 20, 0.38);
+            text-shadow: 0 0 16px rgba(57, 255, 20, 0.28);
         }
 
         .auth p {
             margin: 0;
             color: var(--text-muted);
-            font-size: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.48;
         }
 
         .alert {
@@ -431,9 +434,9 @@
         }
 
         .form {
-            margin-top: 12px;
+            margin-top: 16px;
             display: grid;
-            gap: 14px;
+            gap: 18px;
         }
 
         .field label {
@@ -454,7 +457,7 @@
             width: 100%;
             height: 52px;
             border-radius: 14px;
-            border: 1px solid rgba(138, 147, 166, 0.35);
+            border: 1px solid rgba(138, 147, 166, 0.42);
             background: var(--input-bg);
             color: var(--text-main);
             padding: 0 14px;
@@ -469,8 +472,8 @@
         .input:focus-visible {
             border-color: rgba(57, 255, 20, 0.64);
             box-shadow:
-                0 0 0 3px rgba(57, 255, 20, 0.18),
-                0 0 18px rgba(57, 255, 20, 0.3);
+                0 0 0 2px rgba(57, 255, 20, 0.16),
+                0 0 10px rgba(57, 255, 20, 0.2);
             transform: translateY(-1px);
         }
 
@@ -508,7 +511,9 @@
             align-items: center;
             gap: 8px;
             color: #d8e4fa;
-            font-size: 15px;
+            font-size: 14px;
+            margin-top: 2px;
+            margin-bottom: 2px;
         }
 
         .remember input {
@@ -567,14 +572,17 @@
             .layout {
                 grid-template-columns: 1fr;
                 max-width: 700px;
+                gap: 18px;
             }
 
             .auth {
                 order: 1;
+                padding: 22px;
             }
 
             .hero {
                 order: 2;
+                padding: 22px;
             }
 
             .hero-title {
@@ -585,6 +593,11 @@
         @media (max-width: 680px) {
             .hero-modules {
                 grid-template-columns: 1fr;
+            }
+
+            .hero-subtitle {
+                font-size: 14px;
+                line-height: 1.52;
             }
 
             .auth h1 {
@@ -722,7 +735,7 @@
 
                 <label class="remember">
                     <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
-                    <span>Recordarme</span>
+                    <span>Recu&eacute;rdame</span>
                 </label>
 
                 <button type="submit" class="submit">Entrar</button>
