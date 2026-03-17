@@ -224,33 +224,19 @@
         align-items: end;
     }
 }
-.plans-page .plan-row-menu {
-    position: relative;
+.plans-page .plan-actions-modal-summary {
+    border: 1px solid rgb(148 163 184 / .28);
+    background: rgb(15 23 42 / .45);
+    border-radius: .9rem;
+    padding: .8rem .9rem;
 }
-.plans-page .plan-row-menu > summary {
-    list-style: none;
-}
-.plans-page .plan-row-menu > summary::-webkit-details-marker {
-    display: none;
-}
-.plans-page .plan-row-menu-popover {
-    position: absolute;
-    right: 0;
-    top: calc(100% + .45rem);
-    z-index: 25;
-    min-width: 14rem;
-    padding: .45rem;
-    border-radius: .85rem;
-    border: 1px solid rgb(148 163 184 / .35);
-    background: rgb(2 6 23 / .96);
-    box-shadow: 0 16px 30px rgb(2 6 23 / .45);
+.plans-page .plan-actions-modal-grid {
     display: grid;
-    gap: .35rem;
+    gap: .55rem;
 }
-.theme-light .plans-page .plan-row-menu-popover {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    box-shadow: 0 16px 30px rgb(15 23 42 / .16);
+.plans-page .plan-actions-modal-grid .ui-action-button {
+    justify-content: flex-start;
+    width: 100%;
 }
 .plans-page .plan-promo-empty {
     border: 1px dashed rgb(148 163 184 / .5);
@@ -271,19 +257,6 @@
     .plans-page .plan-create-actions .ui-button,
     .plans-page .plans-filter-grid #plans-clear-filters {
         width: 100%;
-    }
-    .plans-page .plan-row-menu {
-        width: 100%;
-    }
-    .plans-page .plan-row-menu > summary {
-        width: 100%;
-        text-align: center;
-    }
-    .plans-page .plan-row-menu-popover {
-        position: static;
-        margin-top: .45rem;
-        width: 100%;
-        min-width: 0;
     }
 }
 
@@ -557,35 +530,27 @@
                                                     </svg>
                                                     <span class="ui-action-button-label">Editar</span>
                                                 </x-ui.button>
-                                                <details class="plan-row-menu">
-                                                    <summary class="mini-action">Más acciones</summary>
-                                                    <div class="plan-row-menu-popover">
-                                                        <x-ui.button type="button" size="sm" variant="ghost" class="ui-action-button js-duplicate-plan w-full justify-start" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                                <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                                            </svg>
-                                                            <span class="ui-action-button-label">Duplicar</span>
-                                                        </x-ui.button>
-                                                        <x-ui.button type="button" size="sm" :variant="$plan->status === 'active' ? 'muted' : 'success'" class="ui-action-button js-toggle-plan w-full justify-start" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                                <path d="M12 2v10"/>
-                                                                <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
-                                                            </svg>
-                                                            <span class="ui-action-button-label">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
-                                                        </x-ui.button>
-                                                        <x-ui.button type="button" size="sm" variant="danger" class="ui-action-button js-delete-plan w-full justify-start" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                                <path d="M3 6h18"/>
-                                                                <path d="M8 6V4h8v2"/>
-                                                                <path d="M19 6l-1 14H6L5 6"/>
-                                                                <path d="M10 11v6"/>
-                                                                <path d="M14 11v6"/>
-                                                            </svg>
-                                                            <span class="ui-action-button-label">Eliminar</span>
-                                                        </x-ui.button>
-                                                    </div>
-                                                </details>
+                                                <x-ui.button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    class="ui-action-button js-open-plan-actions"
+                                                    data-plan-id="{{ $plan->id }}"
+                                                    data-plan-name-value="{{ $plan->name }}"
+                                                    data-plan-duration-value="{{ $plan->duration_days }}"
+                                                    data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}"
+                                                    data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}"
+                                                    data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}"
+                                                    data-plan-status-value="{{ $plan->status }}"
+                                                    title="Más acciones"
+                                                    aria-label="Más acciones para el plan {{ $plan->name }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="1"/>
+                                                        <circle cx="19" cy="12" r="1"/>
+                                                        <circle cx="5" cy="12" r="1"/>
+                                                    </svg>
+                                                    <span class="ui-action-button-label">Más acciones</span>
+                                                </x-ui.button>
                                             </div>
                                         @endif
                                     </td>
@@ -943,6 +908,49 @@
             </form>
         </div>
     </div>
+
+    <div id="plan-actions-modal" class="modal-shell" aria-hidden="true" aria-labelledby="plan-actions-title">
+        <div class="modal-card">
+            <div class="flex items-center justify-between border-b border-slate-300/25 px-4 py-3">
+                <h3 id="plan-actions-title" class="ui-heading text-base font-black">Más acciones del plan</h3>
+                <button type="button" class="mini-action" data-close-modal="plan-actions-modal" aria-label="Cerrar modal de acciones">Cerrar</button>
+            </div>
+            <div class="space-y-4 px-4 py-4">
+                <div class="plan-actions-modal-summary">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Plan seleccionado</p>
+                    <p id="plan-actions-plan-name" class="mt-1 text-base font-black text-slate-100">Plan</p>
+                    <p id="plan-actions-plan-meta" class="mt-1 text-xs text-slate-300">Duración y precio</p>
+                </div>
+
+                <div class="plan-actions-modal-grid">
+                    <x-ui.button type="button" size="sm" variant="ghost" id="plan-actions-duplicate" class="ui-action-button js-duplicate-plan">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        <span class="ui-action-button-label">Duplicar plan</span>
+                    </x-ui.button>
+                    <x-ui.button type="button" size="sm" variant="secondary" id="plan-actions-toggle" class="ui-action-button js-toggle-plan">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v10"/>
+                            <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                        </svg>
+                        <span id="plan-actions-toggle-label" class="ui-action-button-label">Cambiar estado</span>
+                    </x-ui.button>
+                    <x-ui.button type="button" size="sm" variant="danger" id="plan-actions-delete" class="ui-action-button js-delete-plan">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M8 6V4h8v2"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                        </svg>
+                        <span class="ui-action-button-label">Eliminar plan</span>
+                    </x-ui.button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -988,6 +996,13 @@
     const promoDescription = document.getElementById('promo-description');
     const openPromotionModalButtons = Array.from(document.querySelectorAll('[data-open-promotion-modal]'));
     const createPlanReset = document.getElementById('create-plan-reset');
+    const openPlanActionsButtons = Array.from(document.querySelectorAll('.js-open-plan-actions'));
+    const planActionsName = document.getElementById('plan-actions-plan-name');
+    const planActionsMeta = document.getElementById('plan-actions-plan-meta');
+    const planActionsDuplicateButton = document.getElementById('plan-actions-duplicate');
+    const planActionsToggleButton = document.getElementById('plan-actions-toggle');
+    const planActionsToggleLabel = document.getElementById('plan-actions-toggle-label');
+    const planActionsDeleteButton = document.getElementById('plan-actions-delete');
 
     const setButtonLoading = (button, loading) => {
         if (!button) return;
@@ -1253,22 +1268,53 @@
         });
     });
 
-    const planActionMenus = Array.from(document.querySelectorAll('.plan-row-menu'));
-    document.addEventListener('click', (event) => {
-        const target = event.target;
-        planActionMenus.forEach((menu) => {
-            if (!(target instanceof Node) || !menu.contains(target)) {
-                menu.removeAttribute('open');
+    openPlanActionsButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const planId = String(button.getAttribute('data-plan-id') || '');
+            const planName = String(button.getAttribute('data-plan-name-value') || 'Plan');
+            const planDuration = Number(button.getAttribute('data-plan-duration-value') || 30);
+            const planDurationUnit = normalizeDurationUnit(button.getAttribute('data-plan-duration-unit-value'));
+            const planDurationMonths = Number(button.getAttribute('data-plan-duration-months-value') || 1);
+            const planPrice = Number(button.getAttribute('data-plan-price-value') || 0);
+            const planStatus = String(button.getAttribute('data-plan-status-value') || 'inactive');
+            const humanDuration = durationLabel(planDurationUnit, planDuration, planDurationMonths);
+            const humanStatus = planStatus === 'active' ? 'Activo' : 'Oculto';
+
+            if (planActionsName) planActionsName.textContent = planName;
+            if (planActionsMeta) planActionsMeta.textContent = `${humanDuration} | ${formatMoney(planPrice)} | ${humanStatus}`;
+
+            if (planActionsDuplicateButton) {
+                planActionsDuplicateButton.setAttribute('data-plan-name-value', planName);
+                planActionsDuplicateButton.setAttribute('data-plan-duration-value', String(planDuration));
+                planActionsDuplicateButton.setAttribute('data-plan-duration-unit-value', planDurationUnit);
+                planActionsDuplicateButton.setAttribute('data-plan-duration-months-value', String(planDurationMonths));
+                planActionsDuplicateButton.setAttribute('data-plan-price-value', String(planPrice));
+                planActionsDuplicateButton.setAttribute('data-plan-status-value', planStatus);
             }
+            if (planActionsToggleButton) {
+                planActionsToggleButton.setAttribute('data-plan-id', planId);
+                planActionsToggleButton.setAttribute('data-plan-name-value', planName);
+                planActionsToggleButton.setAttribute('data-current-status', planStatus);
+            }
+            if (planActionsDeleteButton) {
+                planActionsDeleteButton.setAttribute('data-plan-id', planId);
+                planActionsDeleteButton.setAttribute('data-plan-name-value', planName);
+            }
+            if (planActionsToggleLabel) {
+                planActionsToggleLabel.textContent = planStatus === 'active' ? 'Desactivar plan' : 'Activar plan';
+            }
+
+            openModal('plan-actions-modal');
         });
     });
-    document.querySelectorAll('.plan-row-menu .ui-action-button').forEach((button) => {
-        button.addEventListener('click', () => button.closest('.plan-row-menu')?.removeAttribute('open'));
+
+    [planActionsDuplicateButton, planActionsToggleButton, planActionsDeleteButton].forEach((button) => {
+        button?.addEventListener('click', () => closeModal('plan-actions-modal'));
     });
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
-        planActionMenus.forEach((menu) => menu.removeAttribute('open'));
-        ['promotion-create-modal', 'plan-edit-modal', 'plan-delete-modal', 'plan-toggle-modal'].forEach(closeModal);
+        ['promotion-create-modal', 'plan-edit-modal', 'plan-delete-modal', 'plan-toggle-modal', 'plan-actions-modal'].forEach(closeModal);
     });
 
     openPromotionModalButtons.forEach((button) => {
