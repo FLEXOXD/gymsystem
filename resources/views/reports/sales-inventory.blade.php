@@ -93,7 +93,7 @@
             <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para habilitar el reporte de ventas e inventario.</div>
         @endif
 
-        <x-ui.card title="Filtro del modulo" subtitle="Lee rendimiento comercial y rotacion de inventario por periodo.">
+        <x-ui.card title="Filtro del módulo" subtitle="Lee rendimiento comercial y rotación de inventario por período.">
             <form method="GET" action="{{ route('reports.sales-inventory', ['contextGym' => $contextGym]) }}" class="filter-form grid gap-3 md:grid-cols-5">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
@@ -117,7 +117,7 @@
                                      variant="ghost">Exportar CSV</x-ui.button>
                     @endif
                     <x-ui.button :href="route('reports.index', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Panel reportes</x-ui.button>
-                    <x-ui.button :href="route('sales.index', $routeParams)" variant="ghost">Volver al modulo</x-ui.button>
+                    <x-ui.button :href="route('sales.index', $routeParams)" variant="ghost">Volver al módulo</x-ui.button>
                 </div>
             </form>
         </x-ui.card>
@@ -146,7 +146,7 @@
             <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos de stock</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Rotacion del periodo</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Rotación del período</p>
             </x-ui.card>
             <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Unidades que entraron</p>
@@ -172,7 +172,7 @@
                 </div>
             </x-ui.card>
 
-            <x-ui.card title="Atajos del modulo" subtitle="Accesos directos para operacion rapida.">
+            <x-ui.card title="Atajos del módulo" subtitle="Accesos directos para operación rápida.">
                 <div class="space-y-3">
                     <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
                         <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Panel comercial</p>
@@ -198,7 +198,7 @@
         </section>
 
         <section class="grid gap-4 xl:grid-cols-2">
-            <x-ui.card title="Top productos" subtitle="Articulos con mejor salida y mejor ingreso del periodo.">
+            <x-ui.card title="Top productos" subtitle="Artículos con mejor salida y mejor ingreso del período.">
                 <div class="table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[720px] text-sm">
                         <thead>
@@ -246,7 +246,7 @@
                             @endif
                             <th>Categoria</th>
                             <th>Stock</th>
-                            <th>Minimo</th>
+                            <th>Mínimo</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -258,7 +258,7 @@
                                 @endif
                                 <td data-label="Categoria">{{ $product->category ?: '-' }}</td>
                                 <td data-label="Stock" class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
-                                <td data-label="Minimo">{{ (int) $product->min_stock }}</td>
+                                <td data-label="Mínimo">{{ (int) $product->min_stock }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -271,7 +271,7 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Detalle de ventas del periodo">
+        <x-ui.card title="Detalle de ventas del período">
             @if ($recentSales)
                 <div class="table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[1180px] text-sm">
@@ -323,7 +323,7 @@
                     {{ $recentSales->links() }}
                 </div>
             @else
-                <p class="ui-muted">El detalle estara disponible despues de habilitar las tablas del modulo.</p>
+                <p class="ui-muted">El detalle estará disponible después de habilitar las tablas del módulo.</p>
             @endif
         </x-ui.card>
     </div>

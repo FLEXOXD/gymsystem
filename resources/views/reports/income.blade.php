@@ -139,7 +139,7 @@
                                      variant="secondary">Exportar CSV</x-ui.button>
                     @else
                         <p class="self-center text-xs font-semibold text-amber-700 dark:text-amber-300">
-                            {{ $isBranchContext ? 'Sucursal secundaria: exportacion bloqueada (solo lectura).' : 'Exportacion disponible en plan Premium o Sucursales.' }}
+                            {{ $isBranchContext ? 'Sucursal secundaria: exportación bloqueada (solo lectura).' : 'Exportación disponible en plan Premium o Sucursales.' }}
                         </p>
                     @endif
                     <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver al panel</x-ui.button>
@@ -256,7 +256,7 @@
                         </tr>
                     @endforelse
                     <tr id="movement-empty-filter" class="hidden">
-                        <td colspan="{{ ! empty($showGymColumn) ? 10 : 9 }}" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu busqueda.</td>
+                        <td colspan="{{ ! empty($showGymColumn) ? 10 : 9 }}" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">No hay coincidencias para tu búsqueda.</td>
                     </tr>
                     </tbody>
                 </table>

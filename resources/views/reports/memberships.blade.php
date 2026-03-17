@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', 'Reporte de membresias')
-@section('page-title', 'Reporte de membresias')
+@section('title', 'Reporte de membresías')
+@section('page-title', 'Reporte de membresías')
 
 @push('styles')
 <style>
@@ -40,7 +40,7 @@
 
 @section('content')
     <div class="report-memberships space-y-4">
-        <x-ui.card title="Vista operativa de membresias" subtitle="Busca rapido clientes por nombre o documento y revisa su estado.">
+        <x-ui.card title="Vista operativa de membresías" subtitle="Busca rápido clientes por nombre o documento y revisa su estado.">
             <div class="report-toolbar grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Buscar cliente</span>
@@ -66,7 +66,7 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Clientes con membresia activa">
+        <x-ui.card title="Clientes con membresía activa">
             <p class="mb-3 text-sm ui-muted">
                 Mostrando <strong id="active-visible-count">{{ $activeClients->count() }}</strong> de <strong id="active-total-count">{{ $activeClients->count() }}</strong> registros.
             </p>
@@ -99,14 +99,14 @@
                         </tr>
                     @endforelse
                     <tr id="active-empty-filter" class="hidden">
-                        <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500">No hay coincidencias para tu busqueda.</td>
+                        <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500">No hay coincidencias para tu búsqueda.</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Clientes con membresia vencida o no activa">
+        <x-ui.card title="Clientes con membresía vencida o no activa">
             <p class="mb-3 text-sm ui-muted">
                 Mostrando <strong id="expired-visible-count">{{ $expiredClients->count() }}</strong> de <strong id="expired-total-count">{{ $expiredClients->count() }}</strong> registros.
             </p>
@@ -139,7 +139,7 @@
                         </tr>
                     @endforelse
                     <tr id="expired-empty-filter" class="hidden">
-                        <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500">No hay coincidencias para tu busqueda.</td>
+                        <td colspan="5" class="px-3 py-6 text-center text-sm text-slate-500">No hay coincidencias para tu búsqueda.</td>
                     </tr>
                     </tbody>
                 </table>

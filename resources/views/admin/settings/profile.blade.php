@@ -89,6 +89,65 @@
         .profile-edit-toggle {
             cursor: pointer;
         }
+        .profile-accordion-trigger {
+            transition: background-color .18s ease, border-color .18s ease;
+        }
+        .profile-accordion-trigger:hover {
+            background: color-mix(in srgb, var(--card-muted) 72%, transparent);
+        }
+        .profile-accordion-panel {
+            background: color-mix(in srgb, var(--card-muted) 58%, transparent);
+        }
+        #profile-panel-billing .ui-input[readonly] {
+            font-weight: 600;
+            color: var(--text);
+            background: color-mix(in srgb, var(--card-muted) 84%, transparent);
+        }
+        .profile-security-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+        @media (min-width: 1024px) {
+            .profile-security-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        .profile-security-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+        }
+        .profile-security-secondary {
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.85rem;
+            padding: 0.85rem;
+            background: color-mix(in srgb, var(--card-muted) 82%, transparent);
+        }
+        .profile-security-secondary p {
+            margin: 0;
+        }
+        .profile-session-grid .theme-surface-light {
+            min-height: 100%;
+        }
+        .profile-membership-table.table-mobile-stack {
+            overflow: visible;
+        }
+        .profile-membership-table.table-mobile-stack > .ui-table {
+            min-width: 100% !important;
+        }
+        @media (max-width: 768px) {
+            #profile-accordion {
+                gap: 0.6rem;
+            }
+            .profile-accordion-panel {
+                padding: 0.85rem;
+            }
+            .profile-security-secondary {
+                padding: 0.72rem;
+            }
+        }
     </style>
 @endpush
 
@@ -116,6 +175,7 @@
         $profileGender = old('user_gender', (string) ($currentUser?->gender ?? ''));
         $profileBirthDate = old('user_birth_date', $currentUser?->birth_date?->format('Y-m-d'));
         $profileIdentificationType = old('user_identification_type', (string) ($currentUser?->identification_type ?? ''));
+        $profileIdentificationTypeKey = $profileIdentificationType === 'cédula' ? 'cedula' : $profileIdentificationType;
         $profileIdentificationNumber = old('user_identification_number', (string) ($currentUser?->identification_number ?? ''));
         $activeGymContext = request()->attributes->get('active_gym');
         $profileTimezone = $activeGymContext instanceof \App\Models\Gym
@@ -176,7 +236,7 @@
             $supportContactLogoDarkUrl = $legacySupportContactLogoUrl;
         }
         $profileDefaultPanel = 'personal';
-        if ($errors->has('password') || $errors->has('current_password')) {
+        if ($errors->has('password') || $errors->has('current_password') || $errors->has('confirm_current_password')) {
             $profileDefaultPanel = 'security';
         }
         if (
@@ -227,6 +287,7 @@
             'suspended' => __('ui.profile.membership_status_suspended'),
             default => __('ui.profile.membership_status_unknown'),
         };
+        $shouldOpenLogoutModal = old('logout_other_devices') && $errors->has('confirm_current_password');
     @endphp
 
     <div class="space-y-6">
@@ -296,7 +357,7 @@
                                             </div>
                                             <div class="profile-summary-item">
                                                 <span class="profile-summary-label">{{ __('ui.profile.identification_type') }}</span>
-                                                <span id="profile-read-identification-type" class="profile-summary-value">{{ $profileIdentificationType !== '' ? __('ui.profile.identification_options.'.$profileIdentificationType) : __('ui.profile.identification_options.not_set') }}</span>
+                                                <span id="profile-read-identification-type" class="profile-summary-value">{{ $profileIdentificationType !== '' ? __('ui.profile.identification_options.'.$profileIdentificationTypeKey) : __('ui.profile.identification_options.not_set') }}</span>
                                             </div>
                                             <div class="profile-summary-item">
                                                 <span class="profile-summary-label">{{ __('ui.profile.identification_number') }}</span>
@@ -405,7 +466,7 @@
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.identification_type') }}</label>
                                     <select id="profile-identification-type" name="user_identification_type" class="ui-input">
                                         <option value="">{{ __('ui.profile.identification_options.not_set') }}</option>
-                                        <option value="cédula" @selected($profileIdentificationType === 'cédula')>{{ __('ui.profile.identification_options.cédula') }}</option>
+                                        <option value="cédula" @selected($profileIdentificationType === 'cédula')>{{ __('ui.profile.identification_options.cedula') }}</option>
                                         <option value="dni" @selected($profileIdentificationType === 'dni')>{{ __('ui.profile.identification_options.dni') }}</option>
                                         <option value="passport" @selected($profileIdentificationType === 'passport')>{{ __('ui.profile.identification_options.passport') }}</option>
                                     </select>
@@ -655,7 +716,7 @@
                             </div>
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.identification_type') }}</label>
-                                <input id="billing-identification-type" type="text" class="ui-input" value="{{ $profileIdentificationType !== '' ? __('ui.profile.identification_options.'.$profileIdentificationType) : __('ui.profile.identification_options.not_set') }}" readonly>
+                                <input id="billing-identification-type" type="text" class="ui-input" value="{{ $profileIdentificationType !== '' ? __('ui.profile.identification_options.'.$profileIdentificationTypeKey) : __('ui.profile.identification_options.not_set') }}" readonly>
                             </div>
                             <div>
                                 <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.identification_number') }}</label>
@@ -735,7 +796,7 @@
 
                             <div class="mt-4">
                                 <h4 class="ui-heading text-sm">{{ __('ui.profile.membership_invoices') }}</h4>
-                                <div class="mt-2 overflow-x-auto rounded-xl border border-slate-300/70 dark:border-slate-700">
+                                <div class="profile-membership-table table-mobile-stack mt-2 overflow-x-auto rounded-xl border border-slate-300/70 dark:border-slate-700">
                                     <table class="ui-table min-w-[700px]">
                                         <thead>
                                         <tr>
@@ -750,16 +811,16 @@
                                         <tbody>
                                         @forelse ($membershipInvoices as $invoice)
                                             <tr>
-                                                <td>{{ $invoice['period'] }}</td>
-                                                <td>{{ \App\Support\Currency::format((float) ($invoice['amount'] ?? 0), $currentUser?->gym?->currency_code ?? 'USD') }}</td>
-                                                <td>{{ $invoice['payment_method'] !== '' ? $invoice['payment_method'] : '-' }}</td>
-                                                <td>
+                                                <td data-label="{{ __('ui.profile.invoice_period') }}">{{ $invoice['period'] }}</td>
+                                                <td data-label="{{ __('ui.profile.invoice_amount') }}">{{ \App\Support\Currency::format((float) ($invoice['amount'] ?? 0), $currentUser?->gym?->currency_code ?? 'USD') }}</td>
+                                                <td data-label="{{ __('ui.profile.invoice_method') }}">{{ $invoice['payment_method'] !== '' ? $invoice['payment_method'] : '-' }}</td>
+                                                <td data-label="{{ __('ui.profile.invoice_status') }}">
                                                     <x-badge :variant="$invoice['status'] === 'paid' ? 'success' : 'warning'">
                                                         {{ $invoice['status'] === 'paid' ? __('ui.profile.invoice_paid') : __('ui.profile.invoice_pending') }}
                                                     </x-badge>
                                                 </td>
-                                                <td>{{ $invoice['recorded_at']?->format('Y-m-d H:i') ?? '-' }}</td>
-                                                <td>
+                                                <td data-label="{{ __('ui.profile.invoice_date') }}">{{ $invoice['recorded_at']?->format('Y-m-d H:i') ?? '-' }}</td>
+                                                <td data-label="{{ __('ui.profile.invoice_action') }}">
                                                     <x-ui.button :href="route('profile.membership-invoice.pdf', ['subscription' => (int) ($invoice['id'] ?? 0)])" target="_blank" rel="noopener" size="sm" variant="ghost">
                                                         {{ __('ui.profile.invoice_download_pdf') }}
                                                     </x-ui.button>
@@ -802,33 +863,80 @@
 
                         <form method="POST" action="{{ route('settings.profile.password.update') }}" class="mt-4 space-y-3">
                             @csrf
-                            <div>
-                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.current_password') }}</label>
-                                <input type="password" name="current_password" class="ui-input" required>
-                            </div>
-                            <div>
-                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.new_password') }}</label>
-                                <input type="password" name="password" class="ui-input" required>
-                            </div>
-                            <div>
-                                <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.confirm_password') }}</label>
-                                <input type="password" name="password_confirmation" class="ui-input" required>
+                            <div class="profile-security-grid">
+                                <div>
+                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.current_password') }}</label>
+                                    <input id="profile-current-password" type="password" name="current_password" class="ui-input" required>
+                                    @error('current_password')
+                                        @if (! old('logout_other_devices'))
+                                            <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                        @endif
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.new_password') }}</label>
+                                    <input type="password" name="password" class="ui-input" required>
+                                </div>
+                                <div>
+                                    <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.confirm_password') }}</label>
+                                    <input type="password" name="password_confirmation" class="ui-input" required>
+                                </div>
                             </div>
                             @error('password')
                                 <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                             @enderror
-                            <button type="submit" class="ui-button ui-button-primary">{{ __('ui.profile.update_password') }}</button>
+                            <div class="profile-security-actions">
+                                <button type="submit" class="ui-button ui-button-primary">{{ __('ui.profile.update_password') }}</button>
+                            </div>
                         </form>
 
-                        <form method="POST" action="{{ route('settings.profile.logout-others') }}" class="mt-4 space-y-3">
-                            @csrf
-                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.current_password_confirm') }}</label>
-                            <input type="password" name="current_password" class="ui-input" required>
-                            @error('current_password')
-                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
-                            @enderror
-                            <button type="submit" class="ui-button ui-button-danger">{{ __('ui.profile.logout_other_devices') }}</button>
-                        </form>
+                        <div class="profile-security-secondary">
+                            <p class="text-sm font-semibold text-slate-200">{{ __('ui.profile.logout_other_devices') }}</p>
+                            <p class="ui-muted mt-1 text-xs">Cierra el acceso en navegadores o equipos donde dejaste tu cuenta iniciada.</p>
+                            <div class="mt-3">
+                                <button id="profile-open-logout-modal" type="button" class="ui-button ui-button-danger">{{ __('ui.profile.logout_other_devices') }}</button>
+                            </div>
+                        </div>
+
+                        <div id="profile-logout-others-modal"
+                             class="ui-modal-backdrop hidden items-start"
+                             aria-hidden="true"
+                             data-open-on-error="{{ $shouldOpenLogoutModal ? '1' : '0' }}">
+                            <div class="ui-modal-shell w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="profile-logout-modal-title">
+                                <form method="POST" action="{{ route('settings.profile.logout-others') }}" class="flex h-full min-h-0 flex-1 flex-col space-y-0">
+                                    @csrf
+                                    <input type="hidden" name="logout_other_devices" value="1">
+
+                                    <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
+                                        <div>
+                                            <h3 id="profile-logout-modal-title" class="text-lg font-black text-slate-100">{{ __('ui.profile.logout_other_devices') }}</h3>
+                                            <p class="mt-1 text-sm text-slate-400">Confirma tu contraseña actual para cerrar las demás sesiones activas.</p>
+                                        </div>
+                                        <button type="button"
+                                                class="ui-button ui-button-ghost px-2 py-1 text-sm"
+                                                data-close-logout-modal
+                                                aria-label="Cerrar">
+                                            X
+                                        </button>
+                                    </header>
+
+                                    <div class="ui-modal-scroll-body space-y-3 px-5 py-5">
+                                        <div>
+                                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.current_password_confirm') }}</label>
+                                            <input id="profile-logout-password" type="password" name="confirm_current_password" class="ui-input" required>
+                                            @error('confirm_current_password')
+                                                <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <footer class="ui-modal-sticky-footer flex flex-wrap justify-end gap-2 px-5 py-4">
+                                        <button type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold" data-close-logout-modal>Cancelar</button>
+                                        <button type="submit" class="ui-button ui-button-danger">{{ __('ui.profile.logout_other_devices') }}</button>
+                                    </footer>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -848,7 +956,7 @@
                     <div id="profile-panel-session" class="profile-accordion-panel border-t border-[var(--border)] px-4 py-4 {{ $profileDefaultPanel === 'session' ? '' : 'hidden' }}">
                         <p class="ui-muted text-sm">{{ __('ui.profile.session_data_hint') }}</p>
 
-                        <div class="mt-4 space-y-3">
+                        <div class="profile-session-grid mt-4 grid gap-3 md:grid-cols-2">
                             <div class="theme-surface-light rounded-xl border border-slate-300/70 bg-slate-50/80 p-3">
                                 <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ __('ui.profile.role') }}</p>
                                 <p class="mt-1 font-semibold text-slate-900">{{ $userRoleLabel }}</p>
@@ -1211,7 +1319,7 @@
                 };
                 const genderFallback = @js(__('ui.profile.gender_options.not_set'));
                 const identificationLabels = {
-                    cédula: @js(__('ui.profile.identification_options.cédula')),
+                    'cédula': @js(__('ui.profile.identification_options.cedula')),
                     dni: @js(__('ui.profile.identification_options.dni')),
                     passport: @js(__('ui.profile.identification_options.passport')),
                 };
@@ -1365,7 +1473,7 @@
 
             const initBillingMirror = () => {
                 const identificationLabels = {
-                    cédula: @js(__('ui.profile.identification_options.cédula')),
+                    'cédula': @js(__('ui.profile.identification_options.cedula')),
                     dni: @js(__('ui.profile.identification_options.dni')),
                     passport: @js(__('ui.profile.identification_options.passport')),
                 };
@@ -1429,12 +1537,52 @@
                 });
             };
 
+            const initLogoutOtherDevicesModal = () => {
+                const openButton = document.getElementById('profile-open-logout-modal');
+                const modal = document.getElementById('profile-logout-others-modal');
+                if (!openButton || !modal) return;
+
+                const closeButtons = Array.from(modal.querySelectorAll('[data-close-logout-modal]'));
+                const passwordInput = document.getElementById('profile-logout-password');
+
+                const openModal = () => {
+                    modal.classList.remove('hidden');
+                    modal.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('overflow-hidden');
+                    window.setTimeout(() => passwordInput?.focus(), 50);
+                };
+
+                const closeModal = () => {
+                    modal.classList.add('hidden');
+                    modal.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('overflow-hidden');
+                };
+
+                openButton.addEventListener('click', openModal);
+                closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) closeModal();
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                        closeModal();
+                    }
+                });
+
+                if (modal.dataset.openOnError === '1') {
+                    openModal();
+                }
+            };
+
             const bootstrapProfile = async () => {
                 await initCountryAndPhonePicker();
                 initProfilePhoneNumber();
                 initBillingMirror();
                 initProfilePersonalMode();
                 initProfileAccordion();
+                initLogoutOtherDevicesModal();
             };
 
             bootstrapProfile();

@@ -128,7 +128,7 @@
                                      variant="ghost">Exportar CSV</x-ui.button>
                     @else
                         <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                            {{ $isBranchContext ? 'Sucursal secundaria: exportacion bloqueada (solo lectura).' : 'Exportacion disponible en plan Premium o Sucursales.' }}
+                            {{ $isBranchContext ? 'Sucursal secundaria: exportación bloqueada (solo lectura).' : 'Exportación disponible en plan Premium o Sucursales.' }}
                         </p>
                     @endif
                 </div>
@@ -138,7 +138,7 @@
         <section class="report-module-grid grid gap-4 xl:grid-cols-4">
             <x-ui.card class="report-module-card" title="Ganancias del gimnasio" subtitle="Resumen financiero principal del negocio.">
                 <div class="space-y-3">
-                    <p class="text-sm text-slate-600 dark:text-slate-300">Usa esta seccion para revisar ingresos, egresos, balance y exportaciones del rango seleccionado.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">Usa esta sección para revisar ingresos, egresos, balance y exportaciones del rango seleccionado.</p>
                     <div class="flex flex-wrap gap-2">
                         <x-ui.button :href="route('reports.income', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
                         <x-ui.button :href="route('panel.index', $baseRouteParams)" variant="ghost">Volver al panel</x-ui.button>
@@ -146,19 +146,19 @@
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="report-module-card" title="Clientes" subtitle="Lectura de asistencia y estado de membresias.">
+            <x-ui.card class="report-module-card" title="Clientes" subtitle="Lectura de asistencia y estado de membresías.">
                 <div class="space-y-3">
-                    <p class="text-sm text-slate-600 dark:text-slate-300">Centraliza lo relacionado con comportamiento de clientes, renovaciones y vigencia de membresias.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">Centraliza lo relacionado con comportamiento de clientes, renovaciones y vigencia de membresías.</p>
                     <div class="flex flex-wrap gap-2">
                         <x-ui.button :href="route('reports.attendance', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Asistencias</x-ui.button>
-                        <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Membresias</x-ui.button>
+                        <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Membresías</x-ui.button>
                     </div>
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="report-module-card" title="Ganancias de clientes" subtitle="Facturacion por cliente con desglose y filtros avanzados.">
+            <x-ui.card class="report-module-card" title="Ganancias de clientes" subtitle="Facturación por cliente con desglose y filtros avanzados.">
                 <div class="space-y-3">
-                    <p class="text-sm text-slate-600 dark:text-slate-300">Revisa cuantos clientes han sido facturados, cuanto aportan y su ultimo movimiento comercial.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">Revisa cuántos clientes han sido facturados, cuánto aportan y su último movimiento comercial.</p>
                     <div class="flex flex-wrap gap-2">
                         <x-ui.button :href="route('reports.client-earnings', $clientEarningsRouteParams)" variant="secondary">Abrir reporte</x-ui.button>
                         <x-ui.button :href="route('clients.index', $baseRouteParams)" variant="ghost">Ir a clientes</x-ui.button>
@@ -169,10 +169,10 @@
             <x-ui.card class="report-module-card" title="Ventas e inventario" subtitle="Rendimiento comercial de productos y control de stock.">
                 @if ($canUseSalesInventoryReports)
                     <div class="space-y-3">
-                        <p class="text-sm text-slate-600 dark:text-slate-300">Seccion separada para ver ingresos por productos, utilidad, rotacion y alertas de inventario.</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Sección separada para ver ingresos por productos, utilidad, rotación y alertas de inventario.</p>
                         <div class="flex flex-wrap gap-2">
                             <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Abrir reportes</x-ui.button>
-                            <x-ui.button :href="route('sales.index', $baseRouteParams)" variant="ghost">Ir al modulo</x-ui.button>
+                            <x-ui.button :href="route('sales.index', $baseRouteParams)" variant="ghost">Ir al módulo</x-ui.button>
                         </div>
                     </div>
                 @else
@@ -203,7 +203,7 @@
                 <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $attendanceSummary['total_attendances'] }}</p>
             </x-ui.card>
             <x-ui.card class="report-kpi-card">
-                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Membresias activas</p>
+                <p class="ui-muted text-xs font-bold uppercase tracking-wider">Membresías activas</p>
                 <p class="ui-heading mt-2 text-4xl font-black tracking-tight">{{ (int) $membershipSummary['active'] }}</p>
                 <div class="mt-3 flex gap-2">
                     <x-ui.badge variant="success">Activos {{ (int) $membershipSummary['active'] }}</x-ui.badge>
@@ -213,23 +213,23 @@
         </section>
 
         <section class="report-chart-grid grid gap-4 xl:grid-cols-2">
-            <x-ui.card class="report-chart-card" title="Ingresos / egresos por metodo">
+            <x-ui.card class="report-chart-card" title="Ingresos / egresos por método">
                 <div class="report-chart-shell">
                     <canvas id="methodChart"></canvas>
                 </div>
             </x-ui.card>
-            <x-ui.card class="report-chart-card" title="Asistencias por dia">
+            <x-ui.card class="report-chart-card" title="Asistencias por día">
                 <div class="report-chart-shell">
                     <canvas id="attendanceChart"></canvas>
                 </div>
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Navegacion rapida de reportes">
+        <x-ui.card title="Navegación rápida de reportes">
             <div class="flex flex-wrap gap-2">
                 <x-ui.button id="reports-go-income" :href="route('reports.income', ['contextGym' => $contextGym] + request()->query())" variant="secondary">Detalle ingresos</x-ui.button>
                 <x-ui.button :href="route('reports.attendance', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Detalle asistencias</x-ui.button>
-                <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Estado membresias</x-ui.button>
+                <x-ui.button :href="route('reports.memberships', $membershipsRouteParams)" variant="ghost">Estado membresías</x-ui.button>
                 <x-ui.button :href="route('reports.client-earnings', $clientEarningsRouteParams)" variant="ghost">Ganancias de clientes</x-ui.button>
                 @if ($canUseSalesInventoryReports)
                     <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym] + request()->query())" variant="ghost">Ventas e inventario</x-ui.button>

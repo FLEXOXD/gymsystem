@@ -72,7 +72,7 @@
     @endphp
 
     <div class="report-attendance space-y-4">
-        <x-ui.card title="Filtro de asistencias" subtitle="Compara el periodo actual con el rango anterior equivalente.">
+        <x-ui.card title="Filtro de asistencias" subtitle="Compara el período actual con el rango anterior equivalente.">
             <form method="GET" action="{{ route('reports.attendance') }}" class="filter-form grid gap-3 md:grid-cols-4">
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Desde</span>
@@ -93,19 +93,19 @@
 
         <section class="grid gap-4 md:grid-cols-3">
             <x-ui.card class="period-card">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Periodo actual</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Período actual</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $comparison['current_total'] }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $from->toDateString() }} al {{ $to->toDateString() }}</p>
             </x-ui.card>
 
             <x-ui.card class="period-card">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Periodo anterior</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Período anterior</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) $comparison['previous_total'] }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $comparison['previous_from']->toDateString() }} al {{ $comparison['previous_to']->toDateString() }}</p>
             </x-ui.card>
 
             <x-ui.card class="period-card">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Variacion</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Variación</p>
                 <p class="mt-2 text-3xl font-black {{ $diffToneClass }}">
                     {{ $comparison['diff'] > 0 ? '+' : '' }}{{ (int) $comparison['diff'] }}
                 </p>
@@ -113,7 +113,7 @@
                     @if ($comparison['diff_pct'] !== null)
                         {{ $comparison['diff_pct'] > 0 ? '+' : '' }}{{ number_format((float) $comparison['diff_pct'], 1) }}%
                     @elseif ((int) $comparison['previous_total'] === 0 && (int) $comparison['current_total'] > 0)
-                        Sin base de comparacion
+                        Sin base de comparación
                     @else
                         Sin cambios
                     @endif
@@ -127,7 +127,7 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Asistencias por dia">
+        <x-ui.card title="Asistencias por día">
             <div class="attendance-table-wrap table-mobile-stack">
                 <table class="ui-table min-w-[560px]">
                     <thead>
@@ -171,7 +171,7 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Periodo actual',
+                        label: 'Período actual',
                         data: currentSeries,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.15)',
@@ -179,7 +179,7 @@
                         tension: 0.28,
                     },
                     {
-                        label: 'Periodo anterior',
+                        label: 'Período anterior',
                         data: previousSeries,
                         borderColor: '#f59e0b',
                         backgroundColor: 'rgba(245, 158, 11, 0.10)',

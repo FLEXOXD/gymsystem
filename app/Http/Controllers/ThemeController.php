@@ -381,7 +381,7 @@ class ThemeController extends Controller
         $user = $request->user();
         abort_if(! $user, 403, __('messages.user_not_authenticated'));
 
-        Auth::logoutOtherDevices((string) $request->validated('current_password'));
+        Auth::logoutOtherDevices((string) $request->validated('confirm_current_password'));
 
         if (config('session.driver') === 'database') {
             DB::table('sessions')

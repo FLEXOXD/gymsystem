@@ -3,6 +3,165 @@
 @section('title', __('ui.settings'))
 @section('page-title', __('ui.settings'))
 
+@push('styles')
+    <style>
+        #theme-selector .theme-picker-grid {
+            align-items: stretch;
+        }
+
+        #theme-selector .theme-option-card {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 1rem;
+            padding: 0.9rem;
+        }
+
+        #theme-selector .theme-option-card:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        #theme-selector .theme-selection-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 0.55rem;
+        }
+
+        #theme-selector [data-selected-icon] {
+            display: none;
+        }
+
+        #theme-selector .theme-option-card [data-selected-badge] {
+            min-width: 5.5rem;
+            justify-content: center;
+            white-space: nowrap;
+            font-size: 0.62rem;
+            letter-spacing: 0.09em;
+        }
+
+        #theme-selector .theme-preview-shell {
+            margin-top: auto;
+            overflow: hidden;
+            border-radius: 0.85rem;
+            border: 1px solid rgb(148 163 184 / 0.22);
+        }
+
+        #theme-selector .settings-upload-input::file-selector-button {
+            margin-right: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.65rem;
+            padding: 0.38rem 0.72rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--text);
+            background: color-mix(in srgb, var(--card-muted) 82%, transparent);
+            transition: all 0.16s ease;
+        }
+
+        #theme-selector .settings-upload-input:hover::file-selector-button {
+            border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+            background: color-mix(in srgb, var(--card-muted) 62%, transparent);
+        }
+
+        #theme-selector .settings-avatar-grid {
+            align-items: start;
+        }
+
+        #theme-selector .settings-avatar-card {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+            gap: 0.7rem;
+            border-radius: 1rem;
+            padding: 0.75rem;
+        }
+
+        #theme-selector .settings-avatar-caption {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        #theme-selector .settings-avatar-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            border: 1px solid rgb(148 163 184 / 0.42);
+            padding: 0.2rem 0.55rem;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgb(148 163 184);
+            background: rgb(15 23 42 / 0.65);
+        }
+
+        #theme-selector .settings-avatar-chip.is-ready {
+            border-color: rgb(16 185 129 / 0.55);
+            color: rgb(110 231 183);
+            background: rgb(6 78 59 / 0.5);
+        }
+
+        #theme-selector .settings-avatar-preview {
+            overflow: hidden;
+            border-radius: 0.9rem;
+            border: 1px solid rgb(148 163 184 / 0.32);
+            background: rgb(241 245 249 / 0.88);
+            height: clamp(260px, 34vw, 410px);
+        }
+
+        #theme-selector .settings-avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top;
+        }
+
+        #theme-selector .settings-avatar-empty {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            text-align: center;
+            background: linear-gradient(160deg, rgb(226 232 240) 0%, rgb(241 245 249) 100%);
+        }
+
+        #theme-selector .settings-avatar-help {
+            margin-top: 0.35rem;
+            display: grid;
+            gap: 0.2rem;
+        }
+
+        @media (max-width: 1024px) {
+            #theme-selector .theme-option-card [data-selected-badge] {
+                min-width: 5.15rem;
+                padding-inline: 0.48rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #theme-selector .theme-option-card {
+                padding: 0.78rem;
+            }
+
+            #theme-selector .settings-avatar-card {
+                padding: 0.68rem;
+            }
+
+            #theme-selector .settings-avatar-preview {
+                height: clamp(230px, 62vw, 360px);
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         $gymInitials = '';
@@ -162,28 +321,28 @@
          data-csrf="{{ csrf_token() }}">
         <x-card title="Selector de tema"
                 subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantáneo y se guarda en tu cuenta.">
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="theme-picker-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($themes as $themeKey => $theme)
                     <button type="button"
                             data-theme-option="{{ $themeKey }}"
-                            class="theme-option-card group relative w-full rounded-2xl p-4 text-left">
+                            class="theme-option-card group relative w-full text-left">
                         <span data-selected-icon
                               class="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-sm font-black text-slate-900 opacity-0 shadow transition">
                             &#10003;
                         </span>
 
-                        <div class="mb-3 flex items-start justify-between gap-2">
+                        <div class="theme-selection-head mb-3">
                             <div>
                                 <p class="ui-muted text-xs font-bold uppercase tracking-[0.16em]">Tema</p>
                                 <h3 class="ui-heading mt-1 text-sm font-black tracking-wide">{{ $theme['name'] }}</h3>
                             </div>
                             <span data-selected-badge
                                   class="theme-pill-inactive inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">
-                                Seleccionar
+                                Elegir
                             </span>
                         </div>
 
-                        <div class="overflow-hidden rounded-xl border border-white/10">
+                        <div class="theme-preview-shell">
                             <div class="flex h-28">
                                 <div class="w-[28%] space-y-1.5 p-2" style="background-color: {{ $theme['sidebar'] }};">
                                     <div class="h-2 w-9 rounded-full bg-white/40"></div>
@@ -234,7 +393,7 @@
                       enctype="multipart/form-data"
                       class="mt-4 space-y-3">
                     @csrf
-                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input" required>
+                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input settings-upload-input" required>
                     @error('profile_photo')
                         <p class="text-sm font-semibold text-rose-300">{{ $message }}</p>
                     @enderror
@@ -267,7 +426,7 @@
                           enctype="multipart/form-data"
                           class="mt-4 space-y-3">
                         @csrf
-                        <input type="file" name="logo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input">
+                        <input type="file" name="logo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="ui-input settings-upload-input">
                         @error('logo')
                             <p class="text-sm font-semibold text-rose-300">{{ $message }}</p>
                         @enderror
@@ -414,18 +573,27 @@
                       class="mt-4 space-y-4">
                     @csrf
 
-                    <div class="grid gap-4 md:grid-cols-3">
+                    <div class="settings-avatar-grid grid gap-4 md:grid-cols-3">
                         @foreach ($avatarCards as $avatarKey => $avatarMeta)
                             @php
                                 $avatarUrl = $gymAvatarUrls[$avatarKey] ?? null;
                             @endphp
-                            <div class="theme-surface-light rounded-2xl border border-slate-300/70 bg-slate-50/80 p-3">
-                                <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ $avatarMeta['label'] }}</p>
-                                <div class="mt-2 overflow-hidden rounded-xl border border-slate-300/70 bg-slate-100" style="aspect-ratio: 4/5;">
+                            <div class="settings-avatar-card theme-surface-light border border-slate-300/70 bg-slate-50/80">
+                                <div class="settings-avatar-caption">
+                                    <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ $avatarMeta['label'] }}</p>
+                                    <span @class([
+                                        'settings-avatar-chip',
+                                        'is-ready' => $avatarUrl,
+                                    ])>
+                                        {{ $avatarUrl ? 'Cargado' : 'Vacío' }}
+                                    </span>
+                                </div>
+
+                                <div class="settings-avatar-preview">
                                     @if ($avatarUrl)
-                                        <img src="{{ $avatarUrl }}" alt="{{ $avatarMeta['label'] }}" class="h-full w-full object-cover object-top">
+                                        <img src="{{ $avatarUrl }}" alt="{{ $avatarMeta['label'] }}">
                                     @else
-                                        <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+                                        <div class="settings-avatar-empty">
                                             <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-700">Sin avatar</span>
                                             <span class="text-[10px] uppercase tracking-[0.25em] text-slate-500">{{ strtoupper($avatarKey) }}</span>
                                         </div>
@@ -435,7 +603,7 @@
                                 <input type="file"
                                        name="{{ $avatarMeta['field'] }}"
                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                                       class="ui-input mt-3">
+                                       class="ui-input settings-upload-input">
                                 @error($avatarMeta['field'])
                                     <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                                 @enderror
@@ -447,7 +615,7 @@
                         <p class="text-sm font-semibold text-rose-300">{{ $message }}</p>
                     @enderror
 
-                    <div class="ui-muted text-xs">
+                    <div class="settings-avatar-help ui-muted text-xs">
                         <p>Recomendado: 900x1200 px o similar (formato vertical).</p>
                         <p>Peso máximo por archivo: 4MB.</p>
                     </div>
@@ -677,7 +845,7 @@
                 if (filtered.length === 0) {
                     const empty = document.createElement('option');
                     empty.value = '';
-                    empty.textContent = 'Sin coincidencias para tu busqueda';
+                    empty.textContent = 'Sin coincidencias para tu búsqueda';
                     empty.disabled = true;
                     empty.selected = true;
                     timezoneSelect.appendChild(empty);
@@ -831,7 +999,7 @@
 
                     const badge = card.querySelector('[data-selected-badge]');
                     if (badge) {
-                        badge.textContent = isActive ? 'Seleccionado' : 'Seleccionar';
+                        badge.textContent = isActive ? 'Activo' : 'Elegir';
                         badge.classList.toggle('theme-pill-active', isActive);
                         badge.classList.toggle('theme-pill-inactive', !isActive);
                     }

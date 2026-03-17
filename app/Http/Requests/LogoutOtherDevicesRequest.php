@@ -22,15 +22,15 @@ class LogoutOtherDevicesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => ['required', 'current_password'],
+            'confirm_current_password' => ['required', 'current_password'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'current_password.required' => __('validation_custom.logout_other_devices.current_password_required'),
-            'current_password.current_password' => __('validation_custom.logout_other_devices.current_password_invalid'),
+            'confirm_current_password.required' => __('validation_custom.logout_other_devices.current_password_required'),
+            'confirm_current_password.current_password' => __('validation_custom.logout_other_devices.current_password_invalid'),
         ];
     }
 }

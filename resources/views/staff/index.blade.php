@@ -238,7 +238,7 @@
                             @endif
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Creado</th>
-                            <th class="px-3 py-3">último acceso</th>
+                            <th class="px-3 py-3">Último acceso</th>
                             <th class="px-3 py-3">Permisos caja</th>
                             @if (! $isGlobalStaffView)
                                 <th class="px-3 py-3">Acciones</th>
@@ -317,20 +317,20 @@
                                             </x-ui.button>
 
                                             @if ((bool) ($cashier->is_active ?? false))
-                                                <form method="POST" action="{{ route('staff.cashiers.disable', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('Desactivar este cajero y liberar cupo?');">
+                                                <form method="POST" action="{{ route('staff.cashiers.disable', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('¿Desactivar este cajero y liberar cupo?');">
                                                     @csrf
                                                     @method('PATCH')
                                                     <x-ui.button type="submit" size="sm" variant="danger">Desactivar</x-ui.button>
                                                 </form>
                                             @else
-                                                <form method="POST" action="{{ route('staff.cashiers.activate', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('Reactivar este cajero?');">
+                                                <form method="POST" action="{{ route('staff.cashiers.activate', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('¿Reactivar este cajero?');">
                                                     @csrf
                                                     @method('PATCH')
                                                     <x-ui.button type="submit" size="sm" variant="success">Activar</x-ui.button>
                                                 </form>
                                             @endif
 
-                                            <form method="POST" action="{{ route('staff.cashiers.destroy', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('Archivar este cajero? Perdera acceso, pero se conservaran sus clientes, cobros e historial.');">
+                                            <form method="POST" action="{{ route('staff.cashiers.destroy', $contextParams + ['cashier' => $cashier->id]) }}" onsubmit="return confirm('¿Archivar este cajero? Perderá acceso, pero se conservarán sus clientes, cobros e historial.');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <x-ui.button type="submit" size="sm" variant="danger">Archivar</x-ui.button>
@@ -364,7 +364,7 @@
                         <p id="staff-password-label" class="text-sm font-semibold text-slate-300">Cajero seleccionado</p>
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                             Nueva contraseña
-                            <input type="password" name="password" class="ui-input" placeholder="Minimo 8 caracteres" required minlength="8">
+                            <input type="password" name="password" class="ui-input" placeholder="Mínimo 8 caracteres" required minlength="8">
                         </label>
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                             Confirmar contraseña
