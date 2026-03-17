@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260319') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260319') }}">
-    <title>Iniciar sesión</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260320') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260320') }}">
+    <title>Iniciar sesiÃ³n</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
@@ -647,12 +647,12 @@
 
                 <h2 class="hero-title"><span class="cyan">Modo</span> <span class="solid">Operativo</span></h2>
 
-                <p class="hero-subtitle">Gestiona asistencia, membresías, caja y rendimiento del gimnasio desde un centro operativo rápido, seguro y en tiempo real.</p>
+                <p class="hero-subtitle">Gestiona asistencia, membresÃ­as, caja y rendimiento del gimnasio desde un centro operativo rÃ¡pido, seguro y en tiempo real.</p>
 
-                <div class="hero-modules" aria-label="Módulos principales">
+                <div class="hero-modules" aria-label="MÃ³dulos principales">
                     <button class="module-chip" type="button">
-                        <span>Módulo</span>
-                        <strong>01</strong><b>Recepción</b>
+                        <span>MÃ³dulo</span>
+                        <strong>01</strong><b>RecepciÃ³n</b>
                     </button>
                     <button class="module-chip" type="button">
                         <span>Control</span>
@@ -673,14 +673,14 @@
         </section>
 
         <section class="panel auth" aria-label="Panel de ingreso">
-            <a href="{{ route('landing') }}" class="auth-home-link">Ir a página principal</a>
+            <a href="{{ route('landing') }}" class="auth-home-link">Ir a pÃ¡gina principal</a>
             @if ($logoUrl !== '')
                 <div class="auth-logo-wrap">
                     <img src="{{ $logoUrl }}" alt="Logo FlexjoK" class="auth-logo">
                 </div>
             @endif
             <h1>Ingreso</h1>
-            <p>Accede con tu cuenta de recepción.</p>
+            <p>Accede con tu cuenta de recepciÃ³n.</p>
 
             @if ($errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
@@ -701,11 +701,11 @@
                         autocomplete="username"
                         value="{{ old('email') }}"
                         class="input"
-                        placeholder="recepción@gym.com">
+                        placeholder="recepciÃ³n@gym.com">
                 </div>
 
                 <div class="field">
-                    <label for="password">Contraseña</label>
+                    <label for="password">ContraseÃ±a</label>
                     <div class="input-wrap">
                         <input
                             id="password"
@@ -715,12 +715,12 @@
                             required
                             autocomplete="current-password"
                             class="input password"
-                            placeholder="Ingresa tu contraseña">
+                            placeholder="Ingresa tu contraseÃ±a">
                         <button
                             type="button"
                             id="toggle-password-visibility"
                             class="toggle-password"
-                            aria-label="Mostrar contraseña"
+                            aria-label="Mostrar contraseÃ±a"
                             aria-controls="password"
                             aria-pressed="false">
                             <svg id="password-eye-open" class="h-5 w-5 is-hidden" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -771,7 +771,7 @@
             eyeOpen.classList.toggle('is-hidden', !isVisible);
             eyeClosed.classList.toggle('is-hidden', isVisible);
             toggle.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
-            toggle.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            toggle.setAttribute('aria-label', isVisible ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a');
         };
 
         syncPasswordIconState();
@@ -784,3 +784,4 @@
 </script>
 </body>
 </html>
+

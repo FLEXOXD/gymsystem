@@ -4,7 +4,7 @@
 @section('page-title', 'Sugerencias de gimnasios')
 
 @section('content')
-    <x-ui.card title="Sugerencias de gimnasios" subtitle="Bandeja de mejoras enviadas desde Contactarse.">
+    <x-ui.card title="Sugerencias de gimnasios" subtitle="Bandeja de mejoras y solicitudes de reactivacion enviadas por gimnasios.">
         <form method="GET" action="{{ route('superadmin.suggestions.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
                 Estado
@@ -54,6 +54,7 @@
                     @forelse ($suggestions as $suggestion)
                         @php
                             $isPending = $suggestion->status === 'pending';
+                            $isReactivationRequest = mb_strtolower(trim((string) $suggestion->subject)) === 'solicitud de reactivacion de suscripcion';
                             $statusClass = $isPending
                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/45 dark:text-amber-200'
                                 : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
@@ -70,6 +71,9 @@
                                 <p class="text-xs ui-muted">{{ $suggestion->sender?->email ?? '-' }}</p>
                             </td>
                             <td class="px-3 py-3 dark:text-slate-100">
+                                @if ($isReactivationRequest)
+                                    <span class="mb-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/45 dark:text-cyan-200">Reactivacion</span>
+                                @endif
                                 <p class="font-semibold">{{ $suggestion->subject }}</p>
                             </td>
                             <td class="px-3 py-3 dark:text-slate-200">

@@ -167,6 +167,9 @@ Route::get('/logout', [AuthenticatedSessionController::class, 'redirectAfterLogo
 
 Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group(function (): void {
     Route::get('/subscription/expired', [ThemeController::class, 'subscriptionExpired'])->name('subscription.expired');
+    Route::post('/subscription/reactivation-request', [ThemeController::class, 'requestSubscriptionReactivation'])
+        ->middleware('throttle:10,1')
+        ->name('subscription.reactivation.request');
     Route::post('/demo/finalizar', [AuthenticatedSessionController::class, 'endDemo'])->name('demo.end');
     Route::post('/legal/modal-acceptance', [LegalAcceptanceController::class, 'storeModal'])
         ->name('legal.modal-acceptance.store');

@@ -4,6 +4,7 @@ use App\Models\Client;
 use App\Models\Attendance;
 use App\Models\CashMovement;
 use App\Models\CashSession;
+use App\Models\ContactSuggestion;
 use App\Models\GymBranchLink;
 use App\Models\Gym;
 use App\Models\Membership;
@@ -1041,6 +1042,68 @@ it('redirects gym users to subscription expired when subscription is suspended',
     ]));
 
     $response->assertRedirect(route('subscription.expired'));
+});
+
+it('allows suspended gym owners to request subscription reactivation from expired screen', function () {
+    $gym = makeGym('reactivation-request');
+    $user = makeGymUser($gym, 'reactivation-request@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'status' => 'suspended',
+            'starts_at' => Carbon::today()->subMonth()->toDateString(),
+            'ends_at' => Carbon::today()->subDays(4)->toDateString(),
+        ]);
+
+    $response = $this->actingAs($user)
+        ->from(route('subscription.expired'))
+        ->post(route('subscription.reactivation.request'), [
+            'reactivation_message' => 'Ya realice el pago, por favor activar hoy.',
+        ]);
+
+    $response->assertRedirect(route('subscription.expired'));
+    $response->assertSessionHas('status', 'Solicitud enviada al SuperAdmin. Te activaremos cuando se confirme el pago.');
+
+    $request = ContactSuggestion::query()
+        ->where('gym_id', $gym->id)
+        ->where('subject', 'Solicitud de reactivacion de suscripcion')
+        ->latest('id')
+        ->first();
+
+    expect($request)->not->toBeNull();
+    expect((string) $request?->status)->toBe('pending');
+    expect((int) $request?->user_id)->toBe((int) $user->id);
+    expect((string) $request?->message)->toContain('Ya realice el pago');
+});
+
+it('prevents duplicate pending reactivation requests for the same gym', function () {
+    $gym = makeGym('reactivation-duplicate');
+    $user = makeGymUser($gym, 'reactivation-duplicate@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'status' => 'suspended',
+            'starts_at' => Carbon::today()->subMonth()->toDateString(),
+            'ends_at' => Carbon::today()->subDays(4)->toDateString(),
+        ]);
+
+    $this->actingAs($user)->post(route('subscription.reactivation.request'), [
+        'reactivation_message' => 'Primer envio',
+    ])->assertRedirect(route('subscription.expired'));
+
+    $this->actingAs($user)->post(route('subscription.reactivation.request'), [
+        'reactivation_message' => 'Segundo envio',
+    ])->assertRedirect(route('subscription.expired'))
+        ->assertSessionHas('status', 'Ya existe una solicitud pendiente de reactivacion. Te avisaremos al validar el pago.');
+
+    $count = ContactSuggestion::query()
+        ->where('gym_id', $gym->id)
+        ->where('subject', 'Solicitud de reactivacion de suscripcion')
+        ->count();
+
+    expect($count)->toBe(1);
 });
 
 it('enforces separation between superadmin and gym users', function () {

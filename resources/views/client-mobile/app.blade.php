@@ -10,10 +10,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
     <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260319') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260319') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260320') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260320') }}">
     <title>App cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -1782,11 +1782,11 @@
 </div>
 
 <div id="action-guide-modal" class="action-guide-modal hidden" aria-hidden="true">
-    <button type="button" class="action-guide-backdrop" data-action-guide-dismiss aria-label="Cerrar guía"></button>
+    <button type="button" class="action-guide-backdrop" data-action-guide-dismiss aria-label="Cerrar guÃ­a"></button>
     <article class="action-guide-panel" role="dialog" aria-modal="true" aria-labelledby="action-guide-title">
-        <p class="action-guide-eyebrow">Guía rápida</p>
+        <p class="action-guide-eyebrow">GuÃ­a rÃ¡pida</p>
         <h3 id="action-guide-title" class="action-guide-title">Te guiamos paso a paso</h3>
-        <p id="action-guide-text" class="action-guide-text">Sigue esta indicación para completar tu entrenamiento de hoy.</p>
+        <p id="action-guide-text" class="action-guide-text">Sigue esta indicaciÃ³n para completar tu entrenamiento de hoy.</p>
         <div class="action-guide-actions">
             <button id="action-guide-cta" type="button" class="module-action module-action-primary">Entendido</button>
             <button id="action-guide-dismiss" type="button" class="module-action">Cerrar</button>
@@ -1920,8 +1920,8 @@
         }
         $fitnessLevelLabel = $fitnessLevelOptions[(string) ($fitnessProfileModel?->experience_level ?? '')] ?? '-';
         $fitnessSexLabel = $fitnessSexOptions[(string) ($fitnessProfileModel?->sex ?? '')] ?? '-';
-        $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' días/semana' : '-';
-        $fitnessMinutesLabel = $fitnessProfileModel?->session_minutes ? ((int) $fitnessProfileModel->session_minutes).' min/sesión' : '-';
+        $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' dÃ­as/semana' : '-';
+        $fitnessMinutesLabel = $fitnessProfileModel?->session_minutes ? ((int) $fitnessProfileModel->session_minutes).' min/sesiÃ³n' : '-';
         $fitnessLimitationsLabel = collect($fitnessLimitations)
             ->map(static fn ($item) => $fitnessLimitationsOptions[(string) $item] ?? ucfirst((string) $item))
             ->implode(', ');
@@ -1947,9 +1947,9 @@
             || is_numeric($fitnessBodyMetrics['target_kcal'] ?? null);
         $progressPrediction = is_array($progress['prediction'] ?? null) ? $progress['prediction'] : [];
         $predictionRhythmLabel = trim((string) ($progressPrediction['rhythm_label'] ?? 'Sin datos'));
-        $predictionPrimaryLine = trim((string) ($progressPrediction['primary_line'] ?? 'Completa tus datos físicos para activar tu predicción.'));
-        $predictionSecondaryLine = trim((string) ($progressPrediction['secondary_line'] ?? 'Registra asistencias para mejorar la precisión.'));
-        $predictionContextLine = trim((string) ($progressPrediction['context_line'] ?? 'Sin datos de progreso todavía.'));
+        $predictionPrimaryLine = trim((string) ($progressPrediction['primary_line'] ?? 'Completa tus datos fÃ­sicos para activar tu predicciÃ³n.'));
+        $predictionSecondaryLine = trim((string) ($progressPrediction['secondary_line'] ?? 'Registra asistencias para mejorar la precisiÃ³n.'));
+        $predictionContextLine = trim((string) ($progressPrediction['context_line'] ?? 'Sin datos de progreso todavÃ­a.'));
         $predictionConsistencyPct = (int) ($progressPrediction['consistency_percent'] ?? 0);
         $progressBodyState = is_array($progress['body_state'] ?? null) ? $progress['body_state'] : [];
         $bodyStateForce = max(0, min(100, (int) ($progressBodyState['force'] ?? 0)));
@@ -1957,7 +1957,7 @@
         $bodyStateDiscipline = max(0, min(100, (int) ($progressBodyState['discipline'] ?? 0)));
         $bodyStateRecovery = max(0, min(100, (int) ($progressBodyState['recovery'] ?? 0)));
         $bodyStateSummaryLine = trim((string) ($progressBodyState['summary_line'] ?? 'Sin datos para estado corporal.'));
-        $bodyStateContextLine = trim((string) ($progressBodyState['context_line'] ?? 'Registra más entrenamientos para estimar este estado.'));
+        $bodyStateContextLine = trim((string) ($progressBodyState['context_line'] ?? 'Registra mÃ¡s entrenamientos para estimar este estado.'));
         $progressTrainingPlan = is_array($progress['training_plan'] ?? null) ? $progress['training_plan'] : [];
         $trainingTitle = trim((string) ($progressTrainingPlan['title'] ?? 'Entrenamiento de hoy'));
         $trainingObjectiveLine = trim((string) ($progressTrainingPlan['objective_line'] ?? 'Sin objetivo disponible.'));
@@ -1988,8 +1988,8 @@
         $personalMessage = is_array($progress['personal_message'] ?? null) ? $progress['personal_message'] : [];
         $personalMessageTag = trim((string) ($personalMessage['tag'] ?? 'Mensaje personal'));
         $personalMessageLine1 = trim((string) ($personalMessage['line_1'] ?? 'Completa tus datos para activar tu mensaje personal.'));
-        $personalMessageLine2 = trim((string) ($personalMessage['line_2'] ?? 'Tu progreso diario aparecerá aquí.'));
-        $personalMessageContext = trim((string) ($personalMessage['context_line'] ?? 'Mensaje generado según tu actividad reciente.'));
+        $personalMessageLine2 = trim((string) ($personalMessage['line_2'] ?? 'Tu progreso diario aparecerÃ¡ aquÃ­.'));
+        $personalMessageContext = trim((string) ($personalMessage['context_line'] ?? 'Mensaje generado segÃºn tu actividad reciente.'));
         $weeklyGoalSummary = is_array($progress['weekly_goal'] ?? null) ? $progress['weekly_goal'] : [];
         $weeklyGoalTarget = max(0, min(7, (int) ($weeklyGoalSummary['target'] ?? 3)));
         $weeklyGoalConfiguredTarget = max(3, min(7, (int) ($weeklyGoalSummary['configured_target'] ?? $weeklyGoalTarget)));
@@ -2000,12 +2000,12 @@
         $weeklyCommitmentLine = trim((string) ($weeklyGoalSummary['commitment_line'] ?? ''));
         if ($weeklyCommitmentLine === '') {
             $weeklyCommitmentLine = $weeklyGoalVisits >= $weeklyGoalTarget
-                ? 'Has asistido los '.$weeklyGoalTarget.' días que prometiste. Excelente.'
-                : 'Esta semana asististe '.$weeklyGoalVisits.' de los '.$weeklyGoalTarget.' días que prometiste.';
+                ? 'Has asistido los '.$weeklyGoalTarget.' dÃ­as que prometiste. Excelente.'
+                : 'Esta semana asististe '.$weeklyGoalVisits.' de los '.$weeklyGoalTarget.' dÃ­as que prometiste.';
         }
         $weeklyRestLine = trim((string) ($weeklyGoalSummary['rest_line'] ?? ''));
         if ($weeklyRestLine === '') {
-            $weeklyRestLine = 'Días de descanso planificados: '.max(0, 7 - $weeklyGoalTarget).'.';
+            $weeklyRestLine = 'DÃ­as de descanso planificados: '.max(0, 7 - $weeklyGoalTarget).'.';
         }
         $weeklyGoalAlerts = is_array($weeklyGoalSummary['alerts'] ?? null) ? $weeklyGoalSummary['alerts'] : [];
         if ($weeklyGoalAlerts === []) {
@@ -2029,7 +2029,7 @@
             @if ($screen !== 'home')
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home']) }}" class="menu-back menu-back-top" aria-label="Volver al inicio">
                     <span class="menu-back-icon" aria-hidden="true">&larr;</span>
-                    <span>Atrás</span>
+                    <span>AtrÃ¡s</span>
                 </a>
             @endif
             @if ($screen === 'home')
@@ -2060,23 +2060,23 @@
             </button>
             <div id="user-menu-panel" class="user-dropdown hidden" role="menu" aria-hidden="true">
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
+                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos fÃ­sicos</a>
                 <form id="client-mobile-logout-form" method="POST" action="{{ route('client-mobile.logout', ['gymSlug' => $gym->slug]) }}">
                     @csrf
-                    <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesión</button>
+                    <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesiÃ³n</button>
                 </form>
             </div>
         </div>
         <header class="hero-card home-clean home-welcome rounded-3xl p-4">
             <p class="text-xs font-black uppercase tracking-[.18em] text-emerald-100">{{ (string) $gym->name }}</p>
             <h1 class="mt-1 text-xl font-black text-white">Hola, {{ (string) $client->full_name }}</h1>
-            <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opción para continuar.</p>
+            <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opciÃ³n para continuar.</p>
         </header>
 
         @if ($screen === 'home')
             <section id="home-view" class="home-stage">
                 <article class="glass-card home-clean home-intro rounded-3xl p-4">
-                    <h2 class="home-intro-title">¿Qué deseas hacer hoy?</h2>
+                    <h2 class="home-intro-title">Â¿QuÃ© deseas hacer hoy?</h2>
                     <p class="home-intro-text">Registra tu asistencia o revisa tu rendimiento en el gimnasio.</p>
                 </article>
 
@@ -2095,10 +2095,10 @@
                         </div>
                         <button id="client-push-toggle" type="button" class="module-action module-action-secondary">Activar</button>
                     </div>
-                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal está en riesgo o cuando lo completes.</p>
+                    <p class="text-[11px] text-slate-300">Recibe avisos cuando tu objetivo semanal estÃ¡ en riesgo o cuando lo completes.</p>
                 </article>
 
-                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o código">
+                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'checkin']) }}" class="menu-cta menu-checkin home-btn" aria-label="Registrar asistencia con QR o cÃ³digo">
                     <span class="action-badge" aria-hidden="true">
                         <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3.5" y="3.5" width="6" height="6" rx="1"></rect>
@@ -2112,7 +2112,7 @@
                     </span>
                     <span class="action-copy">
                         <span class="action-title">Registrar asistencia</span>
-                        <span class="action-hint">Escanea QR o escribe tu código</span>
+                        <span class="action-hint">Escanea QR o escribe tu cÃ³digo</span>
                     </span>
                     <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                 </a>
@@ -2130,12 +2130,12 @@
                         </span>
                         <span class="action-copy">
                             <span class="action-title">Ver mi rendimiento</span>
-                            <span class="action-hint">Estado de membresía y visitas</span>
+                            <span class="action-hint">Estado de membresÃ­a y visitas</span>
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                 @else
-                    <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos físicos para ver rendimiento">
+                    <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos fÃ­sicos para ver rendimiento">
                         <span class="action-badge" aria-hidden="true">
                             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 10v4"></path>
@@ -2147,7 +2147,7 @@
                         </span>
                         <span class="action-copy">
                             <span class="action-title">Ver mi rendimiento</span>
-                            <span class="action-hint">Primero completa tus datos físicos</span>
+                            <span class="action-hint">Primero completa tus datos fÃ­sicos</span>
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </button>
@@ -2192,7 +2192,7 @@
                     <div class="flex items-center">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Registrar asistencia</h2>
                     </div>
-                    <p class="text-xs text-slate-300">Escanea el QR de recepción o escribe el código manual.</p>
+                    <p class="text-xs text-slate-300">Escanea el QR de recepciÃ³n o escribe el cÃ³digo manual.</p>
 
                     <video id="scan-video" playsinline muted class="hidden"></video>
 
@@ -2202,26 +2202,26 @@
                     </div>
 
                     <label class="block space-y-1 text-sm">
-                        <span class="text-slate-300">Código manual (fallback)</span>
+                        <span class="text-slate-300">CÃ³digo manual (fallback)</span>
                         <input id="manual-token" type="text" class="module-input" placeholder="Pega token o contenido QR">
                     </label>
-                    <button id="send-manual" type="button" class="module-action module-action-secondary">Validar código</button>
+                    <button id="send-manual" type="button" class="module-action module-action-secondary">Validar cÃ³digo</button>
                     <p id="checkin-status" class="status-box">{{ __('messages.client_mobile.ready_to_scan') }}</p>
                 </article>
 
                 <article class="period-summary">
                     <div class="flex items-end justify-between gap-3">
                         <div>
-                            <p class="period-label">Asistencias del período</p>
+                            <p class="period-label">Asistencias del perÃ­odo</p>
                             <p id="period-visits" class="period-count">{{ (int) ($progress['period_visits'] ?? 0) }}</p>
                         </div>
                         <div>
-                            <p class="period-total-label">Total histórico</p>
+                            <p class="period-total-label">Total histÃ³rico</p>
                             <p id="period-total" class="period-total-value">{{ (int) ($progress['total_visits'] ?? 0) }}</p>
                         </div>
                     </div>
                     <p class="period-note">Las asistencias solo duran el tiempo que te suscribiste.</p>
-                    <p id="period-window-label" class="period-window">Período: {{ (string) ($progress['period_window_label'] ?? 'Sin membresía activa') }}</p>
+                    <p id="period-window-label" class="period-window">PerÃ­odo: {{ (string) ($progress['period_window_label'] ?? 'Sin membresÃ­a activa') }}</p>
                 </article>
 
                 <article class="month-log">
@@ -2242,7 +2242,7 @@
                             @endif
                         @endforeach
                     </ul>
-                    <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">Todavía no registras asistencias en este mes.</p>
+                    <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">TodavÃ­a no registras asistencias en este mes.</p>
                 </article>
             </section>
         @endif
@@ -2253,7 +2253,7 @@
                     <div class="flex items-center">
                         <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Mi rendimiento</h2>
                     </div>
-                    <p class="mt-2 text-xs text-slate-300">Estado de tu membresía y progreso en el gimnasio.</p>
+                    <p class="mt-2 text-xs text-slate-300">Estado de tu membresÃ­a y progreso en el gimnasio.</p>
                 </article>
 
                 <article class="live-mobile-card rounded-3xl p-4">
@@ -2268,7 +2268,7 @@
                         <p class="text-4xl font-black leading-none text-white" id="live-clients-count">{{ (int) ($progress['live_clients_count'] ?? 0) }}</p>
                         <p class="pb-1 text-xs font-semibold text-emerald-100/90">en tu gimnasio</p>
                     </div>
-                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automático.</p>
+                    <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automÃ¡tico.</p>
                 </article>
 
                 @if (session('goal_status'))
@@ -2310,7 +2310,7 @@
                         <div class="weekly-progress-meta">
                             <span id="weekly-goal-progress-label">Completado: {{ $weeklyGoalCompletion }}%</span>
                             <span id="weekly-goal-remaining-label">Faltan: {{ $weeklyGoalRemaining }}</span>
-                            <span id="weekly-goal-days-left-label">Días restantes: {{ $weeklyGoalDaysLeft }}</span>
+                            <span id="weekly-goal-days-left-label">DÃ­as restantes: {{ $weeklyGoalDaysLeft }}</span>
                         </div>
 
                         <div id="weekly-alert-list" class="weekly-alert-list">
@@ -2339,7 +2339,7 @@
                                             @php
                                                 $goalOptionValue = (string) $goalOption;
                                             @endphp
-                                            <option value="{{ $goalOptionValue }}" {{ $weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : '' }}>{{ $goalOptionValue }} días por semana</option>
+                                            <option value="{{ $goalOptionValue }}" {{ $weeklyGoalSelectedValue === $goalOptionValue ? 'selected' : '' }}>{{ $goalOptionValue }} dÃ­as por semana</option>
                                         @endforeach
                                     </select>
                                     @error('weekly_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
@@ -2362,16 +2362,16 @@
 
                 <article class="weekly-history-card progress-lock-card section-card {{ $progressUnlocked ? '' : 'is-locked' }}" data-progress-lock-card data-section-card="weekly-history">
                     <div class="section-toolbar">
-                        <p class="weekly-history-title">Histórico días de suscripción</p>
+                        <p class="weekly-history-title">HistÃ³rico dÃ­as de suscripciÃ³n</p>
                         <button type="button" class="section-toggle-btn" data-section-toggle="weekly-history" aria-expanded="true">Ocultar</button>
                     </div>
                     <div class="progress-lock-content" data-section-body>
                         <p id="timeline-month-label" class="weekly-history-month">Mes actual: {{ $timelineMonthLabel }}</p>
-                        <p class="weekly-history-text">Cada celda representa un día. Verde: entrenado, gris claro: descanso o falta, opaco: aún no marcado.</p>
+                        <p class="weekly-history-text">Cada celda representa un dÃ­a. Verde: entrenado, gris claro: descanso o falta, opaco: aÃºn no marcado.</p>
                         <div class="timeline-legend" aria-label="Leyenda de estados">
                             <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-trained" aria-hidden="true"></span>Entrenado</span>
                             <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-neutral" aria-hidden="true"></span>Descanso o falta</span>
-                            <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-pending" aria-hidden="true"></span>Aún no marcado</span>
+                            <span class="timeline-legend-item"><span class="timeline-legend-dot timeline-legend-pending" aria-hidden="true"></span>AÃºn no marcado</span>
                         </div>
                         <div class="timeline-weekdays" aria-hidden="true">
                             @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $weekdayLabel)
@@ -2393,7 +2393,7 @@
                                     $timelineStatusLabel = match ($timelineStatus) {
                                         'trained' => 'entrenado',
                                         'missed' => 'faltaste',
-                                        'pending' => 'aún no marcado',
+                                        'pending' => 'aÃºn no marcado',
                                         default => 'descanso',
                                     };
                                     $timelineDisplayLabel = $timelineIsPlaceholder ? ' ' : $timelineLabel;
@@ -2451,7 +2451,7 @@
                                 <span id="body-state-discipline-value" class="body-state-value">{{ $bodyStateDiscipline }}</span>
                             </div>
                             <div class="body-state-row">
-                                <span class="body-state-label">Recuperación</span>
+                                <span class="body-state-label">RecuperaciÃ³n</span>
                                 <span class="body-state-track" aria-hidden="true">
                                     <span id="body-state-recovery-bar" class="body-state-fill body-state-fill-recovery" style="width: {{ $bodyStateRecovery }}%;"></span>
                                 </span>
@@ -2556,20 +2556,20 @@
                 <article id="profile-edit-panel" class="profile-edit-panel space-y-3 {{ $profileEditOpen ? '' : 'hidden' }}">
                     <div>
                         <p class="profile-edit-title">Editar seguridad y contacto</p>
-                        <p class="profile-edit-help">Para cambiar contraseña, teléfono o foto debes validar tu contraseña actual.</p>
+                        <p class="profile-edit-help">Para cambiar contraseÃ±a, telÃ©fono o foto debes validar tu contraseÃ±a actual.</p>
                     </div>
                     <form method="POST" action="{{ route('client-mobile.profile.update', ['gymSlug' => $gym->slug]) }}" enctype="multipart/form-data" class="space-y-3">
                         @csrf
                         <input type="hidden" name="_profile_form" value="1">
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Contraseña actual</span>
+                            <span class="profile-field-label">ContraseÃ±a actual</span>
                             <input id="profile-current-password" type="password" name="current_password" class="module-input" autocomplete="current-password" required>
                             @error('current_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Teléfono (opcional)</span>
+                            <span class="profile-field-label">TelÃ©fono (opcional)</span>
                             <input type="text" name="phone" value="{{ old('phone', $clientPhone) }}" class="module-input" placeholder="+593..." autocomplete="tel">
                             @error('phone')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
@@ -2588,13 +2588,13 @@
                         </div>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Nueva contraseña (opcional)</span>
+                            <span class="profile-field-label">Nueva contraseÃ±a (opcional)</span>
                             <input type="password" name="new_password" class="module-input" autocomplete="new-password">
                             @error('new_password')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
                         </label>
 
                         <label class="block space-y-1 text-sm">
-                            <span class="profile-field-label">Confirmar nueva contraseña</span>
+                            <span class="profile-field-label">Confirmar nueva contraseÃ±a</span>
                             <input type="password" name="new_password_confirmation" class="module-input" autocomplete="new-password">
                         </label>
 
@@ -2620,11 +2620,11 @@
                             <p class="profile-kpi-value">{{ $clientDocument !== '' ? $clientDocument : '-' }}</p>
                         </div>
                         <div class="profile-kpi">
-                            <p class="profile-kpi-label">Teléfono</p>
+                            <p class="profile-kpi-label">TelÃ©fono</p>
                             <p class="profile-kpi-value">{{ $clientPhone !== '' ? $clientPhone : '-' }}</p>
                         </div>
                         <div class="profile-kpi">
-                            <p class="profile-kpi-label">Membresía</p>
+                            <p class="profile-kpi-label">MembresÃ­a</p>
                             <p class="profile-kpi-value">{{ $membershipStatusLabel }}</p>
                         </div>
                         <div class="profile-kpi">
@@ -2641,7 +2641,7 @@
                         </div>
                     </div>
                     <div class="profile-kpi">
-                        <p class="profile-kpi-label">último ingreso</p>
+                        <p class="profile-kpi-label">Ãºltimo ingreso</p>
                         <p class="profile-kpi-value">{{ $lastAttendanceLabel }}</p>
                     </div>
                 </article>
@@ -2652,10 +2652,10 @@
             <section id="physical-view" class="space-y-4">
                 <article class="glass-card rounded-3xl p-4">
                     <div class="profile-header-row">
-                        <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Datos físicos</h2>
+                        <h2 class="text-sm font-black uppercase tracking-[.16em] text-cyan-100">Datos fÃ­sicos</h2>
                         <button id="open-physical-edit" type="button" class="profile-edit-toggle">{{ $fitnessProfileCompleted ? 'Editar datos' : 'Completar ahora' }}</button>
                     </div>
-                    <p class="mt-2 text-xs text-slate-300">Resumen de tu estado físico y cálculos para seguimiento en el gimnasio.</p>
+                    <p class="mt-2 text-xs text-slate-300">Resumen de tu estado fÃ­sico y cÃ¡lculos para seguimiento en el gimnasio.</p>
                 </article>
 
                 @if (session('fitness_status'))
@@ -2665,7 +2665,7 @@
                 <article id="physical-edit-panel" class="profile-edit-panel space-y-3 {{ $fitnessEditOpen ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <p class="profile-edit-title">Editar datos físicos</p>
+                            <p class="profile-edit-title">Editar datos fÃ­sicos</p>
                             <p class="profile-edit-help">Estos datos se usan para IMC, metabolismo basal y metas de seguimiento.</p>
                         </div>
                         <button id="close-physical-edit" type="button" class="profile-edit-toggle">Cerrar</button>
@@ -2681,7 +2681,7 @@
                         'formIdPrefix' => 'physical-edit',
                         'nextScreen' => 'physical',
                         'isModalForm' => false,
-                        'submitLabel' => 'Guardar datos físicos',
+                        'submitLabel' => 'Guardar datos fÃ­sicos',
                     ])
                 </article>
 
@@ -2690,7 +2690,7 @@
                         <div class="fitness-meta-grid">
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Edad</p>
-                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' años' : '-' }}</p>
+                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' aÃ±os' : '-' }}</p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Sexo</p>
@@ -2721,7 +2721,7 @@
                                 <p class="fitness-meta-value">{{ $fitnessDaysLabel }}</p>
                             </div>
                             <div class="fitness-meta-card">
-                                <p class="fitness-meta-label">Duración sesión</p>
+                                <p class="fitness-meta-label">DuraciÃ³n sesiÃ³n</p>
                                 <p class="fitness-meta-value">{{ $fitnessMinutesLabel }}</p>
                             </div>
                             <div class="fitness-meta-card">
@@ -2737,7 +2737,7 @@
                                     <p class="fitness-meta-value">{{ $fitnessBmiValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Categoría IMC</p>
+                                    <p class="fitness-meta-label">CategorÃ­a IMC</p>
                                     <p class="fitness-meta-value">{{ $fitnessBmiCategory }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
@@ -2745,11 +2745,11 @@
                                     <p class="fitness-meta-value">{{ $fitnessBmrValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Calorías mantenimiento</p>
+                                    <p class="fitness-meta-label">CalorÃ­as mantenimiento</p>
                                     <p class="fitness-meta-value">{{ $fitnessMaintenanceValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
-                                    <p class="fitness-meta-label">Calorías objetivo</p>
+                                    <p class="fitness-meta-label">CalorÃ­as objetivo</p>
                                     <p class="fitness-meta-value">{{ $fitnessTargetCaloriesValue }}</p>
                                 </div>
                                 <div class="fitness-meta-card">
@@ -2758,7 +2758,7 @@
                                 </div>
                             </div>
                         @else
-                            <p class="fitness-profile-note">Completa altura y peso para generar tus cálculos de IMC y metabolismo.</p>
+                            <p class="fitness-profile-note">Completa altura y peso para generar tus cÃ¡lculos de IMC y metabolismo.</p>
                         @endif
 
                         <div class="profile-kpi">
@@ -2768,16 +2768,16 @@
 
                         @if ($fitnessGoalTrackLabel !== '')
                             <div class="profile-kpi">
-                                <p class="profile-kpi-label">Enfoque según objetivo</p>
+                                <p class="profile-kpi-label">Enfoque segÃºn objetivo</p>
                                 <p class="profile-kpi-value">{{ $fitnessGoalTrackLabel }}</p>
                             </div>
                         @endif
 
                         @if ($fitnessUpdatedLabel !== '')
-                            <p class="fitness-profile-note">última actualización: {{ $fitnessUpdatedLabel }}</p>
+                            <p class="fitness-profile-note">Ãºltima actualizaciÃ³n: {{ $fitnessUpdatedLabel }}</p>
                         @endif
                     @else
-                        <p class="text-xs text-slate-300">Aún no completas tus datos físicos iniciales.</p>
+                        <p class="text-xs text-slate-300">AÃºn no completas tus datos fÃ­sicos iniciales.</p>
                     @endif
                 </article>
             </section>
@@ -2800,7 +2800,7 @@
                     <article class="fitness-onboarding-card space-y-3">
                         <div class="flex items-start justify-between gap-2">
                             <div>
-                                <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos físicos</h3>
+                                <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos fÃ­sicos</h3>
                                 <p class="fitness-onboarding-help">Necesitamos estos datos para calcular IMC, metabolismo y habilitar tu pantalla de rendimiento.</p>
                             </div>
                             <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()]) }}" class="fitness-modal-close" aria-label="Volver al panel anterior">Cerrar</a>
@@ -3009,7 +3009,7 @@
         if (directPermissionPromptDone) return;
         directPermissionPromptDone = true;
 
-        // Primero cámara para aprovechar el gesto de usuario y mostrar popup nativo.
+        // Primero cÃ¡mara para aprovechar el gesto de usuario y mostrar popup nativo.
         if (checkinUrl !== '') {
             try {
                 const previewStream = await requestCameraStream();
@@ -3064,7 +3064,7 @@
             || errorName === 'OverconstrainedError'
             || errorName === 'ConstraintNotSatisfiedError'
         ) {
-            // Error técnico de dispositivo/cámara, no bloqueó de permiso.
+            // Error tÃ©cnico de dispositivo/cÃ¡mara, no bloqueÃ³ de permiso.
             cameraPermissionProbeState = 'granted';
         }
     }
@@ -3562,8 +3562,8 @@
         if (actionGuideMode !== '') {
             markActionGuideSeen();
         }
-        actionGuideTitleEl.textContent = String(title || 'Guía rápida');
-        actionGuideTextEl.textContent = String(text || 'Sigue esta indicación para continuar.');
+        actionGuideTitleEl.textContent = String(title || 'GuÃ­a rÃ¡pida');
+        actionGuideTextEl.textContent = String(text || 'Sigue esta indicaciÃ³n para continuar.');
         actionGuideCtaBtn.textContent = String(ctaLabel || 'Entendido');
         actionGuideCtaHandler = typeof ctaHandler === 'function' ? ctaHandler : null;
         setActionGuideOpen(true);
@@ -3683,7 +3683,7 @@
             openActionGuide(
                 mode,
                 'Paso 1: registra asistencia',
-                'Primero válida tu ingreso por QR, RFID o documento en recepción.',
+                'Primero vÃ¡lida tu ingreso por QR, RFID o documento en recepciÃ³n.',
                 'Ir a registrar asistencia',
                 () => navigateToAppScreen('checkin')
             );
@@ -3694,7 +3694,7 @@
             openActionGuide(
                 mode,
                 'Escanea para habilitar entrenamiento',
-                'Registra tu asistencia en esta pantalla. Luego te llevamos al botón para comenzar entrenamiento.',
+                'Registra tu asistencia en esta pantalla. Luego te llevamos al botÃ³n para comenzar entrenamiento.',
                 'Entendido',
                 () => closeActionGuide(true)
             );
@@ -3705,8 +3705,8 @@
             openActionGuide(
                 mode,
                 'Entrenamiento listo',
-                'Tu ingreso ya fue validado. Ahora pulsa el botón para comenzar entrenamiento.',
-                'Ir al botón de entrenamiento',
+                'Tu ingreso ya fue validado. Ahora pulsa el botÃ³n para comenzar entrenamiento.',
+                'Ir al botÃ³n de entrenamiento',
                 () => navigateToAppScreen('progress', { focus_training_start: '1' })
             );
             return;
@@ -3717,7 +3717,7 @@
                 mode,
                 'Pulsa comenzar entrenamiento',
                 'Desliza hacia abajo y pulsa "Comenzar entrenamiento" para activar el progreso de hoy.',
-                'Bajar al botón',
+                'Bajar al botÃ³n',
                 () => {
                     focusTrainingActionButton(false);
                     closeActionGuide(true);
@@ -3729,8 +3729,8 @@
         if (mode === 'finish_redirect') {
             openActionGuide(
                 mode,
-                'Sesión en curso',
-                'Tu entrenamiento está activo. Ve a la sección de entrenamiento para finalizar cuando termines.',
+                'SesiÃ³n en curso',
+                'Tu entrenamiento estÃ¡ activo. Ve a la secciÃ³n de entrenamiento para finalizar cuando termines.',
                 'Ir a finalizar entrenamiento',
                 () => navigateToAppScreen('progress', { focus_training_finish: '1' })
             );
@@ -3741,8 +3741,8 @@
             openActionGuide(
                 mode,
                 'Finaliza tu entrenamiento',
-                'Ya tienes una sesión activa. Baja y pulsa "Finalizar entrenamiento" al terminar.',
-                'Bajar al botón',
+                'Ya tienes una sesiÃ³n activa. Baja y pulsa "Finalizar entrenamiento" al terminar.',
+                'Bajar al botÃ³n',
                 () => {
                     focusTrainingActionButton(true);
                     closeActionGuide(true);
@@ -3886,8 +3886,8 @@
 
         if (!response.ok || (data && data.ok === false)) {
             const fallbackMessage = response.status === 401
-                ? 'Tu sesión expiró. Recarga la app.'
-                : 'No se pudo guardar la configuración push.';
+                ? 'Tu sesiÃ³n expirÃ³. Recarga la app.'
+                : 'No se pudo guardar la configuraciÃ³n push.';
             const message = data && data.message ? String(data.message) : fallbackMessage;
             throw new Error(message);
         }
@@ -3966,14 +3966,14 @@
         }
 
         if (String(pushVapidPublicKey || '').trim() === '') {
-            setClientPushUi('unsupported', 'Falta configurar llave pública VAPID en el servidor.');
+            setClientPushUi('unsupported', 'Falta configurar llave pÃºblica VAPID en el servidor.');
             return;
         }
 
         try {
             urlBase64ToUint8Array(pushVapidPublicKey);
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY inválida.';
+            const message = error instanceof Error ? error.message : 'WEBPUSH_VAPID_PUBLIC_KEY invÃ¡lida.';
             setClientPushUi('unsupported', message);
             return;
         }
@@ -3989,7 +3989,7 @@
         }
 
         if (statusPayload && statusPayload.webpush_ready === false) {
-            setClientPushUi('unsupported', 'El servidor aún no tiene push habilitado.');
+            setClientPushUi('unsupported', 'El servidor aÃºn no tiene push habilitado.');
             return;
         }
 
@@ -4161,9 +4161,9 @@
         const consistencyPct = Number.isFinite(Number(prediction.consistency_percent))
             ? Math.max(0, Math.min(100, Math.round(Number(prediction.consistency_percent))))
             : 0;
-        const primaryLine = String(prediction.primary_line || 'Completa tus datos físicos para activar tu predicción.');
-        const secondaryLine = String(prediction.secondary_line || 'Registra asistencias para mejorar la precisión.');
-        const contextLine = String(prediction.context_line || 'Sin datos de progreso todavía.');
+        const primaryLine = String(prediction.primary_line || 'Completa tus datos fÃ­sicos para activar tu predicciÃ³n.');
+        const secondaryLine = String(prediction.secondary_line || 'Registra asistencias para mejorar la precisiÃ³n.');
+        const contextLine = String(prediction.context_line || 'Sin datos de progreso todavÃ­a.');
 
         if (predictionRhythmEl) {
             predictionRhythmEl.textContent = rhythmLabel + ' | Constancia: ' + String(consistencyPct) + '%';
@@ -4201,7 +4201,7 @@
             : 0;
 
         const summaryLine = String(bodyState.summary_line || 'Sin datos para estado corporal.');
-        const contextLine = String(bodyState.context_line || 'Registra más entrenamientos para estimar este estado.');
+        const contextLine = String(bodyState.context_line || 'Registra mÃ¡s entrenamientos para estimar este estado.');
 
         if (bodyStateSummaryEl) bodyStateSummaryEl.textContent = summaryLine;
         if (bodyStateContextEl) bodyStateContextEl.textContent = contextLine;
@@ -4436,8 +4436,8 @@
         if (periodVisitsEl) periodVisitsEl.textContent = String(payload.period_visits ?? 0);
         if (periodTotalEl) periodTotalEl.textContent = String(payload.total_visits ?? 0);
         if (periodWindowLabelEl) {
-            const windowLabel = String(payload.period_window_label || 'Sin membresía activa');
-            periodWindowLabelEl.textContent = 'Período: ' + windowLabel;
+            const windowLabel = String(payload.period_window_label || 'Sin membresÃ­a activa');
+            periodWindowLabelEl.textContent = 'PerÃ­odo: ' + windowLabel;
         }
 
         renderMonthAttendance(payload);
@@ -4461,7 +4461,7 @@
 
         if (liveWindowEl) {
             const label = String(payload.live_window_label || 'En vivo');
-            liveWindowEl.textContent = 'Conteo de ' + label + '. Actualiza automático.';
+            liveWindowEl.textContent = 'Conteo de ' + label + '. Actualiza automÃ¡tico.';
         }
     }
 
@@ -4486,8 +4486,8 @@
 
         if (!response.ok || (data && data.ok === false)) {
             const fallback = response.status === 401
-                ? 'Tu sesión expiró. Recarga la app.'
-                : 'No se pudo ejecutar la acción de entrenamiento.';
+                ? 'Tu sesiÃ³n expirÃ³. Recarga la app.'
+                : 'No se pudo ejecutar la acciÃ³n de entrenamiento.';
             const message = data && data.message ? String(data.message) : fallback;
             throw new Error(message);
         }
@@ -4511,10 +4511,10 @@
                 await refreshProgress();
             }
 
-            const message = String(payload && payload.message ? payload.message : 'Acción completada.');
+            const message = String(payload && payload.message ? payload.message : 'AcciÃ³n completada.');
             setTrainingFeedback(message, false);
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'No se pudo completar la acción.';
+            const message = error instanceof Error ? error.message : 'No se pudo completar la acciÃ³n.';
             setTrainingFeedback(message, true);
         } finally {
             trainingActionBusy = false;
@@ -4613,15 +4613,15 @@
         const commitmentLine = commitmentLineRaw !== ''
             ? commitmentLineRaw
             : (visits >= target
-                ? ('Has asistido los ' + String(target) + ' días que prometiste. Excelente.')
-                : ('Esta semana asististe ' + String(visits) + ' de los ' + String(target) + ' días que prometiste.'));
+                ? ('Has asistido los ' + String(target) + ' dÃ­as que prometiste. Excelente.')
+                : ('Esta semana asististe ' + String(visits) + ' de los ' + String(target) + ' dÃ­as que prometiste.'));
         const restDays = Number.isFinite(Number(weeklyGoal.rest_days))
             ? Math.max(0, Math.round(Number(weeklyGoal.rest_days)))
             : Math.max(0, 7 - target);
         const restLineRaw = String(weeklyGoal.rest_line || '').trim();
         const restLine = restLineRaw !== ''
             ? restLineRaw
-            : ('Días de descanso planificados: ' + String(restDays) + '.');
+            : ('DÃ­as de descanso planificados: ' + String(restDays) + '.');
 
         if (weeklyGoalSummaryEl) {
             weeklyGoalSummaryEl.textContent = String(visits) + ' de ' + String(target) + ' sesiones esta semana.';
@@ -4636,7 +4636,7 @@
             weeklyGoalRemainingLabelEl.textContent = 'Faltan: ' + String(remaining);
         }
         if (weeklyGoalDaysLeftLabelEl) {
-            weeklyGoalDaysLeftLabelEl.textContent = 'Días restantes: ' + String(daysLeft);
+            weeklyGoalDaysLeftLabelEl.textContent = 'DÃ­as restantes: ' + String(daysLeft);
         }
         if (timelineWeekCommitmentEl) {
             timelineWeekCommitmentEl.textContent = commitmentLine;
@@ -4678,7 +4678,7 @@
                     ? 'entrenado'
                     : (status === 'missed'
                         ? 'faltaste'
-                        : (status === 'pending' ? 'aún no marcado' : 'descanso'));
+                        : (status === 'pending' ? 'aÃºn no marcado' : 'descanso'));
                 const title = ((weekday !== '' ? (weekday + ' ') : '') + date + ' - ' + statusLabel + (isToday ? ' (hoy)' : '')).trim();
 
                 const cellEl = document.createElement('span');
@@ -4858,22 +4858,22 @@
     function resolveCameraErrorMessage(error) {
         const errorName = String(error && error.name ? error.name : '').trim();
         if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
-            return 'No se concedió permiso de cámara. Pulsa Escanear QR y acepta el popup del navegador.';
+            return 'No se concediÃ³ permiso de cÃ¡mara. Pulsa Escanear QR y acepta el popup del navegador.';
         }
         if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
-            return 'No se encontró una cámara disponible en este dispositivo.';
+            return 'No se encontrÃ³ una cÃ¡mara disponible en este dispositivo.';
         }
         if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
-            return 'La cámara está en uso por otra app o pestaña. Cierra la otra app e intenta de nuevo.';
+            return 'La cÃ¡mara estÃ¡ en uso por otra app o pestaÃ±a. Cierra la otra app e intenta de nuevo.';
         }
         if (errorName === 'OverconstrainedError' || errorName === 'ConstraintNotSatisfiedError') {
-            return 'No se pudo usar la cámara trasera. Intenta otra vez y usa la cámara principal.';
+            return 'No se pudo usar la cÃ¡mara trasera. Intenta otra vez y usa la cÃ¡mara principal.';
         }
         if (errorName === 'SecurityError') {
-            return 'El navegador bloqueó la cámara por seguridad.';
+            return 'El navegador bloqueÃ³ la cÃ¡mara por seguridad.';
         }
         if (errorName === 'AbortError') {
-            return 'Se interrumpio la apertura de la cámara. Intenta nuevamente.';
+            return 'Se interrumpio la apertura de la cÃ¡mara. Intenta nuevamente.';
         }
         return mobileI18n.camera_open_failed;
     }
@@ -4953,14 +4953,14 @@
         }
 
         if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-            statusEl.textContent = 'Este navegador no permite abrir la cámara.';
+            statusEl.textContent = 'Este navegador no permite abrir la cÃ¡mara.';
             return;
         }
 
         stopScan();
         startBtn.disabled = true;
         resetScanMarkers();
-        statusEl.textContent = 'Abriendo cámara...';
+        statusEl.textContent = 'Abriendo cÃ¡mara...';
 
         const canUseNativeQr = await supportsNativeQrDetection();
         if (canUseNativeQr) {
@@ -5315,6 +5315,7 @@
 </script>
 </body>
 </html>
+
 
 
 

@@ -10,10 +10,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
     <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260319') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260319') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260320') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260320') }}">
     <title>Acceso cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -162,7 +162,7 @@
 <div class="mobile-guard">
     <div class="max-w-xl rounded-2xl border border-slate-700 bg-slate-900/80 p-6 text-center">
         <h1 class="text-2xl font-black text-white">Interfaz exclusiva para celulares</h1>
-        <p class="mt-3 text-sm text-slate-300">Ingresa desde tu teléfono para usar check-in móvil.</p>
+        <p class="mt-3 text-sm text-slate-300">Ingresa desde tu telÃ©fono para usar check-in mÃ³vil.</p>
     </div>
 </div>
 
@@ -172,7 +172,7 @@
         <header class="hero-panel rounded-3xl p-5 text-center">
             <p class="text-xs font-black uppercase tracking-[.2em] text-emerald-200">{{ (string) $gym->name }}</p>
             <h1 class="mt-2 text-3xl font-black text-white">Bienvenido a tu espacio fitness</h1>
-            <p class="mt-2 text-sm text-cyan-100/90">Inicia sesión para registrar asistencias y seguir tu progreso en el gimnasio.</p>
+            <p class="mt-2 text-sm text-cyan-100/90">Inicia sesiÃ³n para registrar asistencias y seguir tu progreso en el gimnasio.</p>
         </header>
 
         @if ($errors->has('mobile_login'))
@@ -189,7 +189,7 @@
             </label>
 
             <label class="block space-y-1.5 text-sm">
-                <span class="field-label">Contraseña</span>
+                <span class="field-label">ContraseÃ±a</span>
                 <input type="password" name="password" required autocomplete="current-password" class="login-input" placeholder="********">
             </label>
 
@@ -198,10 +198,10 @@
             </button>
 
             <button id="client-pwa-install" type="button" class="login-install hidden">Instalar app</button>
-            <p id="client-pwa-install-note" class="login-install-note hidden">Para instalar: abre el menú del navegador y elige "Instalar app".</p>
+            <p id="client-pwa-install-note" class="login-install-note hidden">Para instalar: abre el menÃº del navegador y elige "Instalar app".</p>
         </form>
 
-        <p class="px-1 text-center text-[11px] text-emerald-100/80">Tu sesión es privada y segura en este dispositivo.</p>
+        <p class="px-1 text-center text-[11px] text-emerald-100/80">Tu sesiÃ³n es privada y segura en este dispositivo.</p>
         </div>
     </section>
 </main>
@@ -300,3 +300,4 @@
 </script>
 </body>
 </html>
+

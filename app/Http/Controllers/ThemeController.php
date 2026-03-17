@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateThemeRequest;
 use App\Http\Requests\UpdateUserProfileRequest;
 use App\Http\Requests\UpdateUserPasswordRequest;
 use App\Http\Requests\LogoutOtherDevicesRequest;
+use App\Models\ContactSuggestion;
 use App\Models\Gym;
 use App\Models\Subscription;
 use App\Models\User;
@@ -32,6 +33,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ThemeController extends Controller
 {
+    private const REACTIVATION_SUGGESTION_SUBJECT = 'Solicitud de reactivacion de suscripcion';
+
     /**
      * Available panel themes and display metadata.
      *
@@ -171,6 +174,15 @@ class ThemeController extends Controller
             ? route('panel.index', ['contextGym' => $gymSlug])
             : route('superadmin.dashboard');
         $whatsappUrl = $this->buildWhatsappUrl((string) ($contactData['whatsapp'] ?? ''));
+        $pendingReactivationRequest = null;
+        if ($viewer?->gym_id !== null) {
+            $pendingReactivationRequest = ContactSuggestion::query()
+                ->where('gym_id', (int) $viewer->gym_id)
+                ->where('status', 'pending')
+                ->where('subject', self::REACTIVATION_SUGGESTION_SUBJECT)
+                ->latest('id')
+                ->first();
+        }
 
         return view('subscription.expired', [
             'contactData' => $contactData,
@@ -178,7 +190,59 @@ class ThemeController extends Controller
             'gymName' => (string) ($viewer?->gym?->name ?? 'Gym'),
             'nowLabel' => now()->format('Y-m-d H:i'),
             'whatsappUrl' => $whatsappUrl,
+            'pendingReactivationRequestAt' => $pendingReactivationRequest?->created_at?->format('Y-m-d H:i'),
         ]);
+    }
+
+    public function requestSubscriptionReactivation(Request $request): RedirectResponse
+    {
+        $viewer = $request->user();
+        abort_if(! $viewer || $viewer->gym_id === null, 403, __('messages.user_without_gym'));
+
+        $data = $request->validate([
+            'reactivation_message' => ['nullable', 'string', 'max:600'],
+        ], [
+            'reactivation_message.max' => 'El mensaje no puede superar 600 caracteres.',
+        ]);
+
+        $gymId = (int) $viewer->gym_id;
+        $pendingRequest = ContactSuggestion::query()
+            ->where('gym_id', $gymId)
+            ->where('status', 'pending')
+            ->where('subject', self::REACTIVATION_SUGGESTION_SUBJECT)
+            ->latest('id')
+            ->first();
+
+        if ($pendingRequest) {
+            return redirect()
+                ->route('subscription.expired')
+                ->with('status', 'Ya existe una solicitud pendiente de reactivacion. Te avisaremos al validar el pago.');
+        }
+
+        $customMessage = trim((string) ($data['reactivation_message'] ?? ''));
+        $supportMessageLines = [
+            'Solicitud enviada desde la pantalla de suscripcion suspendida.',
+            'Gym: '.(string) ($viewer->gym?->name ?? 'Gym '.$gymId),
+            'Usuario: '.(string) ($viewer->name ?? 'Usuario').' <'.(string) ($viewer->email ?? 'sin-correo').'>',
+            'Fecha: '.now()->format('Y-m-d H:i:s'),
+            '',
+            'Mensaje del gimnasio:',
+            $customMessage !== '' ? $customMessage : 'Solicito activacion de la cuenta.',
+        ];
+
+        ContactSuggestion::query()->create([
+            'gym_id' => $gymId,
+            'user_id' => (int) $viewer->id,
+            'subject' => self::REACTIVATION_SUGGESTION_SUBJECT,
+            'message' => implode(PHP_EOL, $supportMessageLines),
+            'status' => 'pending',
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return redirect()
+            ->route('subscription.expired')
+            ->with('status', 'Solicitud enviada al SuperAdmin. Te activaremos cuando se confirme el pago.');
     }
 
     /**

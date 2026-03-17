@@ -3,27 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Suscripción suspendida</title>
+    <title>Suscripcion suspendida</title>
     <style>
+        :root {
+            color-scheme: light;
+            --bg-ink: #0f172a;
+            --bg-deep: #020617;
+            --bg-blue: #0c4a6e;
+            --card-bg: #ffffff;
+            --card-border: #f2c4c4;
+            --text-main: #0f172a;
+            --text-soft: #475569;
+            --danger: #9f1d1d;
+            --danger-soft: #fef2f2;
+            --danger-border: #f59e9e;
+            --success-bg: #ecfdf5;
+            --success-border: #86efac;
+            --success-text: #14532d;
+            --error-bg: #fef2f2;
+            --error-border: #fca5a5;
+            --error-text: #7f1d1d;
+        }
+
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
-            font-family: "Segoe UI", sans-serif;
-            background:
-                radial-gradient(circle at 12% 15%, rgba(34, 197, 94, 0.18) 0%, rgba(34, 197, 94, 0) 36%),
-                radial-gradient(circle at 86% 82%, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0) 32%),
-                linear-gradient(135deg, rgba(3, 3, 3, 0.84) 0%, rgba(10, 15, 26, 0.80) 46%, rgba(16, 24, 38, 0.82) 100%),
-                url("https://videos.openai.com/az/vg-assets/task_01kj1zh6a3eymamxzvp3xkvxa0%2F1771740646_img_0.webp?se=2026-02-24T00%3A00%3A00Z&sp=r&sv=2026-02-06&sr=b&skoid=cfbc986b-d2bc-4088-8b71-4f962129715b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-02-21T12%3A15%3A03Z&ske=2026-02-28T12%3A20%3A03Z&sks=b&skv=2026-02-06&sig=MSZ8VUVSt%2BWybWdJM0rIqVt0raIfhn2nH7tYbdBbQ7Q%3D&ac=oaivgprodscus2");
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            color: #0f172a;
             min-height: 100vh;
             min-height: 100dvh;
-            position: relative;
+            font-family: "Segoe UI", sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(circle at 12% 18%, rgba(34, 197, 94, 0.20), rgba(34, 197, 94, 0) 34%),
+                radial-gradient(circle at 86% 80%, rgba(56, 189, 248, 0.16), rgba(56, 189, 248, 0) 34%),
+                linear-gradient(135deg, var(--bg-deep) 0%, #0b1224 52%, var(--bg-blue) 100%);
             overflow-x: hidden;
+            position: relative;
         }
+
         body::before {
             content: "";
             position: fixed;
@@ -33,118 +50,206 @@
             background:
                 repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0 1px, transparent 1px 64px),
                 repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 64px);
-            opacity: 0.35;
+            opacity: 0.3;
         }
-        body::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-            background:
-                radial-gradient(circle at 80% 22%, transparent 0 70px, rgba(148, 163, 184, 0.18) 70px 78px, transparent 78px 110px),
-                radial-gradient(circle at 80% 22%, transparent 0 26px, rgba(148, 163, 184, 0.18) 26px 34px, transparent 34px 66px),
-                radial-gradient(circle at 22% 78%, transparent 0 56px, rgba(148, 163, 184, 0.14) 56px 64px, transparent 64px 92px);
-            opacity: 0.45;
-        }
+
         .wrap {
             min-height: 100vh;
             min-height: 100dvh;
             display: grid;
             place-items: center;
-            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+            padding:
+                max(18px, env(safe-area-inset-top))
+                max(18px, env(safe-area-inset-right))
+                max(18px, env(safe-area-inset-bottom))
+                max(18px, env(safe-area-inset-left));
             position: relative;
             z-index: 1;
         }
+
         .card {
-            width: min(820px, 100%);
-            background: #ffffff;
-            border: 1px solid #f1c8c8;
-            border-radius: 16px;
+            width: min(920px, 100%);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
             padding: 22px;
-            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
+
         .top {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 14px;
+            gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 14px;
         }
+
         .brand {
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .logo {
             width: min(42vw, 300px);
             max-width: 300px;
-            min-width: 160px;
+            min-width: 150px;
             height: auto;
             object-fit: contain;
             object-position: left center;
             display: block;
         }
+
         .brand-meta p {
             margin: 0;
-            color: #475569;
+            color: var(--text-soft);
             font-size: 13px;
         }
+
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             border-radius: 999px;
-            border: 1px solid #f59e9e;
-            background: #fef2f2;
+            border: 1px solid var(--danger-border);
+            background: var(--danger-soft);
             color: #991b1b;
             padding: 6px 10px;
             font-size: 12px;
             font-weight: 700;
+            white-space: nowrap;
         }
+
         .title {
-            margin: 0 0 8px;
-            color: #9f1d1d;
-            font-size: clamp(30px, 5vw, 48px);
-            line-height: 1;
+            margin: 0 0 6px;
+            color: var(--danger);
+            font-size: clamp(30px, 5vw, 47px);
+            line-height: 1.02;
         }
+
         .msg {
             margin: 0;
             color: #334155;
             font-size: 18px;
         }
+
+        .meta-kpis {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .kpi {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 7px 10px;
+            font-size: 12px;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .alert {
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-top: 14px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            border-color: var(--success-border);
+            color: var(--success-text);
+        }
+
+        .alert-error {
+            background: var(--error-bg);
+            border-color: var(--error-border);
+            color: var(--error-text);
+        }
+
         .grid {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
             margin-top: 16px;
         }
+
         .box {
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 14px;
             background: #f8fafc;
         }
+
         .box h3 {
             margin: 0 0 10px;
             color: #0f172a;
             font-size: 16px;
         }
+
         .line {
             margin: 0 0 8px;
             color: #334155;
             font-size: 14px;
+            line-height: 1.45;
         }
-        .line strong {
+
+        .line strong { color: #0f172a; }
+
+        .steps {
+            margin: 0;
+            padding-left: 18px;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .steps li { margin-bottom: 8px; }
+
+        .request-box { grid-column: 1 / -1; }
+
+        .request-form {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .request-form label {
+            font-size: 13px;
+            font-weight: 700;
             color: #0f172a;
         }
+
+        .request-form textarea {
+            width: 100%;
+            min-height: 90px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            resize: vertical;
+            font: inherit;
+            color: #0f172a;
+            background: #fff;
+        }
+
+        .request-form textarea:focus {
+            outline: 2px solid rgba(14, 165, 233, 0.22);
+            border-color: #0284c7;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin-top: 16px;
         }
+
         .btn {
             border: 0;
             border-radius: 10px;
@@ -157,18 +262,24 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
+
         .btn:hover { filter: brightness(0.95); }
+        .btn:disabled { opacity: 0.62; cursor: not-allowed; filter: none; }
+
         .btn-ghost { background: #475569; }
         .btn-email { background: #0f766e; }
         .btn-wa { background: #15803d; }
         .btn-link { background: #7c3aed; }
+        .btn-request { background: #0ea5e9; width: fit-content; }
 
-        @media (max-width: 820px) {
+        @media (max-width: 860px) {
             .grid { grid-template-columns: 1fr; }
-            .title { font-size: clamp(28px, 10vw, 40px); }
+            .request-box { grid-column: auto; }
+            .title { font-size: clamp(28px, 10vw, 39px); }
             .msg { font-size: 16px; }
-            .logo { max-width: 220px; min-width: 130px; }
+            .logo { max-width: 220px; min-width: 124px; }
         }
     </style>
 </head>
@@ -181,8 +292,10 @@
     $supportLabel = (string) ($contactData['label'] ?? 'Soporte');
     $supportEmail = trim((string) ($contactData['email'] ?? ''));
     $supportPhone = trim((string) ($contactData['phone'] ?? ''));
-    $supportMessage = trim((string) ($contactData['message'] ?? 'Escríbenos para activar tu servicio.'));
+    $supportMessage = trim((string) ($contactData['message'] ?? 'Escribenos para activar tu servicio.'));
     $supportLink = trim((string) ($contactData['link'] ?? ''));
+    $pendingReactivationRequestAt = trim((string) ($pendingReactivationRequestAt ?? ''));
+    $hasPendingReactivation = $pendingReactivationRequestAt !== '';
 @endphp
 <div class="wrap">
     <section class="card">
@@ -194,14 +307,29 @@
                 <div class="brand-meta">
                     <p><strong>{{ $supportLabel }}</strong></p>
                     <p>{{ $gymName ?? 'Gym' }}</p>
-                    <p>Última validación: {{ $nowLabel ?? now()->format('Y-m-d H:i') }}</p>
+                    <p>Ultima validacion: {{ $nowLabel ?? now()->format('Y-m-d H:i') }}</p>
                 </div>
             </div>
             <span class="badge">Pago pendiente</span>
         </div>
 
-        <h1 class="title">Suscripción suspendida</h1>
-        <p class="msg">Tu acceso al panel está temporalmente bloqueado por falta de pago. Regulariza tu suscripción y pulsa "Actualizar" para reingresar.</p>
+        <h1 class="title">Suscripcion suspendida</h1>
+        <p class="msg">Tu acceso al panel esta bloqueado por falta de pago. Regulariza tu suscripcion y pulsa "Actualizar" para reingresar.</p>
+
+        <div class="meta-kpis">
+            <span class="kpi">Estado: suspendida</span>
+            <span class="kpi">Canal rapido: solicitud directa al SuperAdmin</span>
+        </div>
+
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-error">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
         <div class="grid">
             <section class="box">
@@ -211,19 +339,45 @@
                     <p class="line"><strong>Correo:</strong> {{ $supportEmail }}</p>
                 @endif
                 @if ($supportPhone !== '')
-                    <p class="line"><strong>Teléfono:</strong> {{ $supportPhone }}</p>
+                    <p class="line"><strong>Telefono:</strong> {{ $supportPhone }}</p>
                 @endif
             </section>
+
             <section class="box">
-                <h3>Qué hacer ahora</h3>
-                <p class="line">1) Contacta al soporte para confirmar pago.</p>
-                <p class="line">2) Espera la reactivación.</p>
-                <p class="line">3) Pulsa "Actualizar" para volver al panel.</p>
+                <h3>Que hacer ahora</h3>
+                <ol class="steps">
+                    <li>Realiza o confirma tu pago con soporte.</li>
+                    <li>Envia la solicitud de activacion desde aqui.</li>
+                    <li>Espera confirmacion del SuperAdmin.</li>
+                    <li>Pulsa "Actualizar" para volver al panel.</li>
+                </ol>
+            </section>
+
+            <section class="box request-box">
+                <h3>Solicitar activacion al SuperAdmin</h3>
+                <p class="line">Si ya pagaste, envia esta solicitud para que te reactiven mas rapido.</p>
+                @if ($hasPendingReactivation)
+                    <p class="line"><strong>Solicitud pendiente desde:</strong> {{ $pendingReactivationRequestAt }}</p>
+                @endif
+
+                <form method="POST" action="{{ route('subscription.reactivation.request') }}" class="request-form">
+                    @csrf
+                    <label for="reactivation_message">Mensaje adicional (opcional)</label>
+                    <textarea
+                        id="reactivation_message"
+                        name="reactivation_message"
+                        maxlength="600"
+                        placeholder="Ejemplo: Ya realice el pago, por favor activar mi cuenta."
+                    >{{ old('reactivation_message') }}</textarea>
+                    <button class="btn btn-request" type="submit" @disabled($hasPendingReactivation)>
+                        {{ $hasPendingReactivation ? 'Solicitud pendiente' : 'Solicitar activacion' }}
+                    </button>
+                </form>
             </section>
         </div>
 
         <div class="actions">
-            <a class="btn" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
+            <a class="btn" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
             <a class="btn btn-ghost" href="{{ $updateUrl ?? route('login') }}">Actualizar</a>
             @if ($supportEmail !== '')
                 <a class="btn btn-email" href="mailto:{{ $supportEmail }}">Enviar correo</a>
