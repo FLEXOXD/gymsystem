@@ -354,7 +354,9 @@
                                                         <select name="plan_template_id" class="ui-input js-plan-template-select">
                                                             <option value="">Mantener plan actual</option>
                                                             @foreach (($planTemplates ?? collect()) as $template)
-                                                                <option value="{{ $template->id }}" data-plan-key="{{ (string) ($template->plan_key ?? '') }}">
+                                                                <option value="{{ $template->id }}"
+                                                                        data-plan-key="{{ (string) ($template->plan_key ?? '') }}"
+                                                                        data-intro-percent="{{ ($template->discount_price !== null && (float) $template->price > 0 && (float) $template->discount_price < (float) $template->price) ? (int) round((((float) $template->price - (float) $template->discount_price) / (float) $template->price) * 100) : 0 }}">
                                                                     {{ $template->name }} ({{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}) - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode) }}{{ $template->discount_price !== null ? ' | Desc. '.\App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode) : '' }}
                                                                 </option>
                                                             @endforeach
@@ -384,7 +386,7 @@
                                                         </label>
                                                     </div>
 
-                                                    <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                                                    <div class="grid gap-3 md:grid-cols-2 md:items-end">
                                                         <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                                                             Duracion
                                                             <select name="months" class="ui-input js-months-select" required>
@@ -394,13 +396,17 @@
                                                                 <option value="12">12 meses</option>
                                                             </select>
                                                         </label>
-                                                        <label class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                                                            <input type="checkbox"
-                                                                   name="apply_intro_50"
-                                                                   value="1"
-                                                                   class="js-intro-50-checkbox"
+                                                        <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                                            Descuento primer mes (%)
+                                                            <input type="number"
+                                                                   name="intro_discount_percent"
+                                                                   min="0"
+                                                                   max="100"
+                                                                   step="1"
+                                                                   value="0"
+                                                                   class="ui-input js-intro-discount-input"
+                                                                   title="0 sin descuento | 100 primer mes gratis."
                                                                    disabled>
-                                                            50% primer mes
                                                         </label>
                                                     </div>
 
@@ -633,7 +639,7 @@
             const planSelect = form.querySelector('.js-plan-template-select');
             const monthsSelect = form.querySelector('.js-months-select');
             const customPriceInput = form.querySelector('.js-custom-price-input');
-            const introDiscountCheckbox = form.querySelector('.js-intro-50-checkbox');
+            const introDiscountInput = form.querySelector('.js-intro-discount-input');
             if (!planSelect || !monthsSelect) {
                 return;
             }
@@ -660,11 +666,24 @@
                     ? 'Precio personalizado para este cliente con plan sucursales.'
                     : 'Disponible cuando eliges plan sucursales.';
 
-                if (introDiscountCheckbox) {
-                    introDiscountCheckbox.disabled = !canUseCustomPrice;
-                    introDiscountCheckbox.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
-                    if (!canUseCustomPrice) {
-                        introDiscountCheckbox.checked = false;
+                if (introDiscountInput) {
+                    const defaultIntroPercent = Number(selectedOption?.getAttribute('data-intro-percent') || '0');
+                    const clampedDefaultIntroPercent = Number.isFinite(defaultIntroPercent)
+                        ? Math.max(0, Math.min(100, Math.round(defaultIntroPercent)))
+                        : 0;
+
+                    introDiscountInput.disabled = !hasTemplate;
+                    introDiscountInput.required = false;
+                    introDiscountInput.classList.toggle('opacity-60', !hasTemplate);
+                    introDiscountInput.classList.toggle('cursor-not-allowed', !hasTemplate);
+                    introDiscountInput.title = hasTemplate
+                        ? '0 sin descuento | 100 primer mes gratis.'
+                        : 'Disponible cuando eliges una plantilla de plan.';
+
+                    if (!hasTemplate) {
+                        introDiscountInput.value = '0';
+                    } else {
+                        introDiscountInput.value = String(clampedDefaultIntroPercent);
                     }
                 }
 

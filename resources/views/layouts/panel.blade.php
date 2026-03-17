@@ -3,6 +3,7 @@
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
     use App\Models\PresenceSession;
+    use App\Models\SupportChatMessage;
     use App\Models\Subscription;
     use App\Services\LegalAcceptanceEligibilityService;
     use App\Services\PlanAccessService;
@@ -378,6 +379,8 @@
         : '#';
     $headerContactUnread = 0;
     $headerContactItems = collect();
+    $supportChatUnread = 0;
+    $supportChatUnreadCountUrl = null;
     if ($isSuperAdmin && \Illuminate\Support\Facades\Schema::hasTable('landing_contact_messages')) {
         try {
             $headerContactUnread = LandingContactMessage::query()->withinBellWindow()->whereNull('read_at')->count();
@@ -391,6 +394,22 @@
             $headerContactUnread = 0;
             $headerContactItems = collect();
         }
+    }
+    if (
+        $isSuperAdmin
+        && \Illuminate\Support\Facades\Schema::hasTable('support_chat_messages')
+    ) {
+        try {
+            $supportChatUnread = SupportChatMessage::query()
+                ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                ->whereNull('read_by_superadmin_at')
+                ->count();
+        } catch (\Throwable $exception) {
+            $supportChatUnread = 0;
+        }
+    }
+    if ($isSuperAdmin && \Illuminate\Support\Facades\Route::has('superadmin.support-chat.unread-count')) {
+        $supportChatUnreadCountUrl = route('superadmin.support-chat.unread-count');
     }
     $isDemoMode = (bool) ($demo_mode ?? false);
     $demoSessionToken = (string) ($demo_session_token ?? '');
@@ -655,6 +674,11 @@
         .sidebar-nav-item .sidebar-link-badge {
             line-height: 1;
         }
+        .sidebar-chat-badge {
+            border-color: color-mix(in srgb, #f59e0b 52%, var(--sidebar-border));
+            background: color-mix(in srgb, #f59e0b 22%, var(--sidebar));
+            color: color-mix(in srgb, var(--sidebar-text) 96%, #fff3d4);
+        }
         #panel-sidebar.sidebar-collapsed nav {
             overflow-x: visible;
         }
@@ -675,6 +699,18 @@
         }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-link-badge {
             display: none;
+        }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-link-badge.sidebar-chat-badge {
+            display: inline-flex;
+            position: absolute;
+            top: 0.18rem;
+            right: 0.18rem;
+            min-width: 0.88rem;
+            min-height: 0.88rem;
+            border-radius: 9999px;
+            padding: 0;
+            font-size: 0;
+            line-height: 0;
         }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-icon {
             width: 2.05rem;
@@ -1645,6 +1681,13 @@
                         @endswitch
                     </span>
                     <span class="sidebar-label">{{ $item['label'] }}</span>
+                    @if ($isSuperAdmin && (($item['icon'] ?? '') === 'inbox'))
+                        <span data-support-chat-badge
+                              data-count="{{ (int) $supportChatUnread }}"
+                              class="sidebar-link-badge sidebar-chat-badge ml-auto rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] {{ $supportChatUnread > 0 ? '' : 'hidden' }}">
+                            Chat {{ min(99, (int) $supportChatUnread) }}
+                        </span>
+                    @endif
                     @if ($isHighlight)
                         <span class="sidebar-link-badge ml-auto rounded-full border border-emerald-300/45 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100">
                             Link
@@ -1935,6 +1978,19 @@
 
             @yield('content')
         </main>
+
+        @if (! $isSuperAdmin && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('support-chat.gym.state'))
+            <x-support-chat.widget
+                context="gym_panel"
+                :state-url="route('support-chat.gym.state', $gymRouteParams)"
+                :quick-reply-url="route('support-chat.gym.quick-reply', $gymRouteParams)"
+                :message-url="route('support-chat.gym.message', $gymRouteParams)"
+                :csrf-token="csrf_token()"
+                :gym-name="$gymName"
+                :gym-logo-url="$gymLogo"
+                :lead-capture="false"
+                launcher-title="Soporte SuperAdmin" />
+        @endif
     </div>
 </div>
 
@@ -2032,6 +2088,222 @@
         });
     })();
 </script>
+
+@if ($isSuperAdmin && \Illuminate\Support\Facades\Route::has('superadmin.support-chat.heartbeat'))
+    <script>
+        (function () {
+            const heartbeatUrl = @json(route('superadmin.support-chat.heartbeat'));
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrf ? String(csrf.getAttribute('content') || '').trim() : '';
+            if (heartbeatUrl === '' || csrfToken === '') {
+                return;
+            }
+
+            let inFlight = false;
+            const beat = async function () {
+                if (inFlight) {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    await fetch(heartbeatUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ heartbeat: true }),
+                    });
+                } catch (error) {
+                    // Ignore transient network errors.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            beat();
+            const timer = window.setInterval(beat, 25000);
+            window.addEventListener('beforeunload', function () {
+                clearInterval(timer);
+            });
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    beat();
+                }
+            });
+        })();
+    </script>
+@endif
+
+@if ($isSuperAdmin && $supportChatUnreadCountUrl)
+    <script>
+        (function () {
+            const unreadUrl = @json($supportChatUnreadCountUrl);
+            if (typeof unreadUrl !== 'string' || unreadUrl.trim() === '') {
+                return;
+            }
+
+            const badgeSelector = '[data-support-chat-badge]';
+            const pollEveryMs = Math.max(5000, {{ (int) max(5, (int) config('support_chat.polling_interval_seconds', 7)) }} * 1000);
+            let lastUnread = 0;
+            let hasFirstServerSync = false;
+            let inFlight = false;
+            let audioContext = null;
+            let userInteracted = false;
+
+            const parseCount = function (value) {
+                const parsed = Number.parseInt(String(value || '0'), 10);
+                return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+            };
+
+            const currentClientCount = function () {
+                let maxCount = 0;
+                document.querySelectorAll(badgeSelector).forEach(function (badge) {
+                    const badgeCount = parseCount(badge.getAttribute('data-count'));
+                    if (badgeCount > maxCount) {
+                        maxCount = badgeCount;
+                    }
+                });
+
+                return maxCount;
+            };
+
+            const renderBadges = function (count) {
+                const normalized = parseCount(count);
+                document.querySelectorAll(badgeSelector).forEach(function (badge) {
+                    badge.setAttribute('data-count', String(normalized));
+                    badge.classList.toggle('hidden', normalized <= 0);
+                    if (normalized <= 0) {
+                        return;
+                    }
+
+                    const labelCount = normalized > 99 ? '99+' : String(normalized);
+                    if (badge.classList.contains('sidebar-chat-badge')) {
+                        badge.textContent = 'Chat ' + labelCount;
+                        return;
+                    }
+
+                    badge.textContent = labelCount;
+                });
+            };
+
+            const ensureAudioReady = function () {
+                if (audioContext) {
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume().catch(function () {});
+                    }
+                    return;
+                }
+
+                const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextCtor) {
+                    return;
+                }
+
+                audioContext = new AudioContextCtor();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().catch(function () {});
+                }
+            };
+
+            const playNotificationSound = function () {
+                if (!userInteracted) {
+                    return;
+                }
+
+                try {
+                    ensureAudioReady();
+                    if (!audioContext) {
+                        return;
+                    }
+
+                    const now = audioContext.currentTime;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(840, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(620, now + 0.2);
+
+                    gainNode.gain.setValueAtTime(0.0001, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.09, now + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.24);
+                } catch (error) {
+                    // Ignore audio permission or WebAudio runtime failures.
+                }
+            };
+
+            const markInteraction = function () {
+                userInteracted = true;
+                ensureAudioReady();
+            };
+
+            window.addEventListener('pointerdown', markInteraction, { passive: true, once: true });
+            window.addEventListener('keydown', markInteraction, { once: true });
+
+            const pollUnreadCount = async function () {
+                if (inFlight) {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    const response = await fetch(unreadUrl, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    const nextUnread = parseCount(payload && payload.unread);
+                    renderBadges(nextUnread);
+
+                    if (hasFirstServerSync && nextUnread > lastUnread) {
+                        playNotificationSound();
+                    }
+
+                    lastUnread = nextUnread;
+                    hasFirstServerSync = true;
+                } catch (error) {
+                    // Ignore transient request failures.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            lastUnread = currentClientCount();
+            renderBadges(lastUnread);
+            pollUnreadCount();
+
+            const timer = window.setInterval(pollUnreadCount, pollEveryMs);
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    pollUnreadCount();
+                }
+            });
+
+            window.addEventListener('beforeunload', function () {
+                window.clearInterval(timer);
+            });
+        })();
+    </script>
+@endif
 
 @include('layouts.partials.panel-inline-scripts')
 @stack('scripts')

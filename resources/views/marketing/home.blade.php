@@ -3629,6 +3629,19 @@
         </div>
     </div>
 
+    @if ($pageMode === 'home')
+        <x-support-chat.widget
+            context="landing"
+            :state-url="route('support-chat.landing.state')"
+            :quick-reply-url="route('support-chat.landing.quick-reply')"
+            :message-url="route('support-chat.landing.message')"
+            :csrf-token="csrf_token()"
+            :gym-name="$brandName"
+            :gym-logo-url="$brandLogoUrl"
+            :lead-capture="true"
+            launcher-title="Soporte para gimnasios" />
+    @endif
+
     <script>
         (function () {
             const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

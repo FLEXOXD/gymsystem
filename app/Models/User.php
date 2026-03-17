@@ -181,6 +181,16 @@ class User extends Authenticatable
         return $this->hasMany(PushSubscription::class);
     }
 
+    public function initiatedSupportChatConversations(): HasMany
+    {
+        return $this->hasMany(SupportChatConversation::class, 'initiated_by_user_id');
+    }
+
+    public function supportChatMessages(): HasMany
+    {
+        return $this->hasMany(SupportChatMessage::class, 'sender_user_id');
+    }
+
     public function roleKey(): string
     {
         if ($this->gym_id === null) {

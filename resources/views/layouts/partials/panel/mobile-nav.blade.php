@@ -44,6 +44,11 @@
         return $label !== '' ? $label : 'Módulo';
     };
 
+    $mobileIsSupportChatInbox = static function (array $item) use ($isSuperAdmin): bool {
+        return (bool) $isSuperAdmin && (string) ($item['icon'] ?? '') === 'inbox';
+    };
+    $mobileSupportChatUnread = (int) ($supportChatUnread ?? 0);
+
     $mobileOverflowActive = $mobileOverflowItems->contains(static fn ($item): bool => $mobileIsItemActive((array) $item));
 @endphp
 
@@ -90,6 +95,25 @@
             position: relative;
             overflow: hidden;
             transition: border-color 140ms ease, transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+        }
+        .mnav-chat-badge {
+            position: absolute;
+            top: 0.16rem;
+            right: 0.16rem;
+            min-width: 1rem;
+            height: 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(245, 158, 11, 0.66);
+            background: rgba(245, 158, 11, 0.94);
+            color: #1f2937;
+            font-size: 0.58rem;
+            font-weight: 900;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.22rem;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
         }
 
         .mnav-btn > span {
@@ -273,6 +297,13 @@
                 <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                    class="mnav-sheet-link {{ trim($linkClass) }}">
                     <span>{{ $item['label'] }}</span>
+                    @if ($mobileIsSupportChatInbox((array) $item))
+                        <span data-support-chat-badge
+                              data-count="{{ $mobileSupportChatUnread }}"
+                              class="mnav-chat-badge {{ $mobileSupportChatUnread > 0 ? '' : 'hidden' }}">
+                            {{ min(99, $mobileSupportChatUnread) }}
+                        </span>
+                    @endif
                 </a>
             @endforeach
         </div>
@@ -292,6 +323,13 @@
             @endphp
             <a href="{{ route($item['route'], $item['params'] ?? []) }}" class="mnav-btn {{ trim($btnClass) }}">
                 <span>{{ $mobileShortLabel((array) $item) }}</span>
+                @if ($mobileIsSupportChatInbox((array) $item))
+                    <span data-support-chat-badge
+                          data-count="{{ $mobileSupportChatUnread }}"
+                          class="mnav-chat-badge {{ $mobileSupportChatUnread > 0 ? '' : 'hidden' }}">
+                        {{ min(99, $mobileSupportChatUnread) }}
+                    </span>
+                @endif
             </a>
         @endforeach
 

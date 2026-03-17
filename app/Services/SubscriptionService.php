@@ -537,14 +537,11 @@ class SubscriptionService
         $pending = $currentPending;
         $basePrice = $currentBasePrice;
         $discountPercent = $currentDiscountPercent;
-
-        if ($resolvedPlanKey !== 'sucursales') {
-            return [
-                'price' => $resolvedPrice,
-                'sucursales_intro_pending' => false,
-                'sucursales_base_price' => null,
-                'sucursales_intro_discount_percent' => null,
-            ];
+        $hasKnownPlanKey = $resolvedPlanKey !== '';
+        if (! $hasKnownPlanKey) {
+            $pending = false;
+            $basePrice = null;
+            $discountPercent = null;
         }
 
         if (! $isTemplateDrivenUpdate) {

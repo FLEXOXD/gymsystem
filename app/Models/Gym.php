@@ -151,6 +151,11 @@ class Gym extends Model
         return $this->hasMany(ContactSuggestion::class);
     }
 
+    public function supportChatConversations(): HasMany
+    {
+        return $this->hasMany(SupportChatConversation::class);
+    }
+
     /**
      * Get the latest subscription.
      */

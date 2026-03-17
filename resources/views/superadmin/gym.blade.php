@@ -21,7 +21,10 @@
         $planTemplates = $planTemplates ?? collect();
         $defaultPlanTemplateId = old('subscription_plan_template_id', (string) optional($planTemplates->first())->id);
         $defaultSubscriptionCustomPrice = old('subscription_custom_price', '');
-        $defaultSubscriptionApplyIntro50 = in_array((string) old('subscription_apply_intro_50', ''), ['1', 'true', 'on'], true);
+        $defaultSubscriptionIntroDiscountByTemplate = old('subscription_intro_discount_percent', []);
+        if (! is_array($defaultSubscriptionIntroDiscountByTemplate)) {
+            $defaultSubscriptionIntroDiscountByTemplate = [];
+        }
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
     @endphp
@@ -200,6 +203,20 @@
                     <div class="space-y-4">
                         <div class="grid gap-3 md:grid-cols-2">
                             @forelse ($planTemplates as $template)
+                                @php
+                                    $templateId = (int) $template->id;
+                                    $templateBasePrice = (float) $template->price;
+                                    $templateDiscountPercentDefault = 0;
+                                    if ($template->discount_price !== null && $templateBasePrice > 0) {
+                                        $templateDiscountPrice = (float) $template->discount_price;
+                                        if ($templateDiscountPrice >= 0 && $templateDiscountPrice < $templateBasePrice) {
+                                            $templateDiscountPercentDefault = (int) round((($templateBasePrice - $templateDiscountPrice) / $templateBasePrice) * 100);
+                                        }
+                                    }
+                                    $introDiscountValue = $defaultSubscriptionIntroDiscountByTemplate[$templateId]
+                                        ?? $defaultSubscriptionIntroDiscountByTemplate[(string) $templateId]
+                                        ?? $templateDiscountPercentDefault;
+                                @endphp
                                 <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-cyan-500/40 dark:hover:bg-cyan-500/10">
                                     <input type="radio"
                                            name="subscription_plan_template_id"
@@ -207,6 +224,7 @@
                                            class="mt-1"
                                            data-plan-template-radio="1"
                                            data-plan-key="{{ (string) ($template->plan_key ?? '') }}"
+                                           data-plan-price="{{ number_format((float) $template->price, 2, '.', '') }}"
                                            @checked((string) $defaultPlanTemplateId === (string) $template->id)
                                            required>
                                     <span class="block">
@@ -222,6 +240,19 @@
                                                 Desc. {{ \App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode ?? 'USD') }}
                                             </span>
                                         @endif
+                                        <span class="mt-3 block">
+                                            <span class="ui-muted mb-1 block text-[11px] font-bold uppercase tracking-wide">Descuento primer mes (%)</span>
+                                            <input type="number"
+                                                   name="subscription_intro_discount_percent[{{ $templateId }}]"
+                                                   value="{{ $introDiscountValue }}"
+                                                   min="0"
+                                                   max="100"
+                                                   step="1"
+                                                   class="ui-input h-9 text-sm"
+                                                   data-intro-discount-input="1"
+                                                   data-plan-template-id="{{ $templateId }}">
+                                            <span class="ui-muted mt-1 block text-[11px]">0 sin descuento | 100 primer mes gratis.</span>
+                                        </span>
                                     </span>
                                 </label>
                             @empty
@@ -231,10 +262,15 @@
                         @error('subscription_plan_template_id')
                             <p class="text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                         @enderror
+                        @if ($errors->has('subscription_intro_discount_percent') || $errors->has('subscription_intro_discount_percent.*'))
+                            <p class="text-xs font-semibold text-rose-600 dark:text-rose-300">
+                                {{ $errors->first('subscription_intro_discount_percent') ?: $errors->first('subscription_intro_discount_percent.*') }}
+                            </p>
+                        @endif
                         <p id="subscription-plan-feedback" class="sa-filter-note" role="status" aria-live="polite"></p>
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
-                            <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                            <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)] md:items-end">
                                 <div>
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Precio personalizado (solo plan sucursales)</label>
                                     <input id="subscription-custom-price"
@@ -251,19 +287,7 @@
                                         <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                                     @enderror
                                 </div>
-
-                                <label class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-300">
-                                    <input id="subscription-apply-intro-50"
-                                           type="checkbox"
-                                           name="subscription_apply_intro_50"
-                                           value="1"
-                                           @checked($defaultSubscriptionApplyIntro50)>
-                                    Aplicar 50% el primer mes
-                                </label>
                             </div>
-                            @error('subscription_apply_intro_50')
-                                <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
                 </x-ui.card>
@@ -472,18 +496,41 @@
 
         const planTemplateRadios = Array.from(document.querySelectorAll('input[data-plan-template-radio="1"]'));
         const customPriceInput = document.getElementById('subscription-custom-price');
-        const introDiscountCheckbox = document.getElementById('subscription-apply-intro-50');
+        const introDiscountInputs = new Map();
+        document.querySelectorAll('input[data-intro-discount-input="1"]').forEach(function (input) {
+            const templateId = String(input.getAttribute('data-plan-template-id') || '').trim();
+            if (templateId !== '') {
+                introDiscountInputs.set(templateId, input);
+            }
+        });
         const subscriptionPlanFeedback = document.getElementById('subscription-plan-feedback');
+        const formatUsd = function (value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) return '$0.00';
+            return '$' + numeric.toFixed(2);
+        };
         const syncCustomSubscriptionPriceState = function () {
             if (!customPriceInput) return;
             const selectedRadio = planTemplateRadios.find(function (radio) {
                 return radio.checked;
             }) || null;
             const selectedPlanKey = String(selectedRadio?.getAttribute('data-plan-key') || '').toLowerCase();
+            const selectedPlanPrice = Number(selectedRadio?.getAttribute('data-plan-price') || '0');
+            const selectedTemplateId = String(selectedRadio?.value || '').trim();
+            const selectedIntroInput = introDiscountInputs.get(selectedTemplateId) || null;
+            let selectedIntroDiscountPercent = Number(selectedIntroInput?.value || '0');
+            if (!Number.isFinite(selectedIntroDiscountPercent)) {
+                selectedIntroDiscountPercent = 0;
+            }
+            selectedIntroDiscountPercent = Math.max(0, Math.min(100, Math.round(selectedIntroDiscountPercent)));
             const selectedPlanLabel = selectedRadio
                 ? String(selectedRadio.closest('label')?.querySelector('.text-sm.font-black')?.textContent || 'Plan seleccionado').trim()
                 : 'Selecciona un plan base para continuar.';
             const canUseCustomPrice = selectedPlanKey === 'sucursales';
+            const selectedCustomPrice = Number(customPriceInput.value || '0');
+            const effectivePlanPrice = canUseCustomPrice && Number.isFinite(selectedCustomPrice) && selectedCustomPrice > 0
+                ? selectedCustomPrice
+                : selectedPlanPrice;
             customPriceInput.disabled = !canUseCustomPrice;
             customPriceInput.required = false;
             customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
@@ -491,28 +538,24 @@
             customPriceInput.title = canUseCustomPrice
                 ? 'Precio personalizado para este cliente con plan sucursales.'
                 : 'Se habilita solo cuando eliges plan sucursales.';
-            if (introDiscountCheckbox) {
-                introDiscountCheckbox.disabled = !canUseCustomPrice;
-                introDiscountCheckbox.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
-                if (!canUseCustomPrice) {
-                    introDiscountCheckbox.checked = false;
-                }
-            }
             if (!canUseCustomPrice) {
                 customPriceInput.value = '';
             }
 
+            const firstMonthPrice = Math.max(0, effectivePlanPrice * (1 - (selectedIntroDiscountPercent / 100)));
             if (subscriptionPlanFeedback) {
-                subscriptionPlanFeedback.textContent = canUseCustomPrice
-                    ? selectedPlanLabel + ': puedes definir precio personalizado y activar 50% el primer mes.'
-                    : selectedRadio
-                        ? selectedPlanLabel + ': se usara el precio base y el descuento introductorio quedara deshabilitado.'
-                        : selectedPlanLabel;
+                subscriptionPlanFeedback.textContent = selectedRadio
+                    ? selectedPlanLabel + ': primer mes ' + formatUsd(firstMonthPrice) + ' (' + selectedIntroDiscountPercent + '% desc.). Desde mes 2: ' + formatUsd(effectivePlanPrice) + '.'
+                    : selectedPlanLabel;
             }
         };
         planTemplateRadios.forEach(function (radio) {
             radio.addEventListener('change', syncCustomSubscriptionPriceState);
         });
+        introDiscountInputs.forEach(function (input) {
+            input.addEventListener('input', syncCustomSubscriptionPriceState);
+        });
+        customPriceInput?.addEventListener('input', syncCustomSubscriptionPriceState);
         syncCustomSubscriptionPriceState();
         const timezoneSearch = document.getElementById('gym-timezone-search');
         const timezoneSelect = document.getElementById('gym-timezone-select');

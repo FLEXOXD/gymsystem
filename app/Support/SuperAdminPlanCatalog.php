@@ -12,7 +12,7 @@ class SuperAdminPlanCatalog
         return [
             [
                 'plan_key' => 'basico',
-                'name' => 'Plan básico',
+                'name' => 'PLAN CONTROL',
                 'duration_unit' => 'days',
                 'duration_days' => 30,
                 'duration_months' => 1,
@@ -22,7 +22,7 @@ class SuperAdminPlanCatalog
             ],
             [
                 'plan_key' => 'profesional',
-                'name' => 'Plan profesional',
+                'name' => 'PLAN CRECIMIENTO',
                 'duration_unit' => 'days',
                 'duration_days' => 30,
                 'duration_months' => 1,
@@ -32,7 +32,7 @@ class SuperAdminPlanCatalog
             ],
             [
                 'plan_key' => 'premium',
-                'name' => 'Plan premium',
+                'name' => 'PLAN ÉLITE',
                 'duration_unit' => 'days',
                 'duration_days' => 30,
                 'duration_months' => 1,
@@ -42,7 +42,7 @@ class SuperAdminPlanCatalog
             ],
             [
                 'plan_key' => 'sucursales',
-                'name' => 'Plan sucursales',
+                'name' => 'PLAN SUCURSALES',
                 'duration_unit' => 'days',
                 'duration_days' => 30,
                 'duration_months' => 1,

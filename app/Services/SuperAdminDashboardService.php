@@ -25,6 +25,30 @@ class SuperAdminDashboardService
 
         $today = Carbon::today();
         $limitDate = $today->copy()->addDays(7)->toDateString();
+        $currentCycleRevenueQuery = Subscription::query()
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+            ->whereIn('status', ['active', 'grace'])
+            ->where(function ($query): void {
+                $query
+                    ->where('is_branch_managed', false)
+                    ->orWhereNull('is_branch_managed');
+            });
+
+        $currentCycleRevenue = (float) (clone $currentCycleRevenueQuery)->sum('price');
+        $recurringMrr = (float) ((clone $currentCycleRevenueQuery)
+            ->selectRaw('COALESCE(SUM(CASE WHEN sucursales_intro_pending = 1 AND sucursales_base_price IS NOT NULL THEN sucursales_base_price ELSE price END), 0) as total')
+            ->value('total') ?? 0);
+
+        $planCountRows = Subscription::query()
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+            ->where(function ($query): void {
+                $query
+                    ->where('is_branch_managed', false)
+                    ->orWhereNull('is_branch_managed');
+            })
+            ->selectRaw('LOWER(COALESCE(plan_key, "")) as plan_key, COUNT(*) as total')
+            ->groupBy('plan_key')
+            ->pluck('total', 'plan_key');
 
         return [
             'total_gyms' => Gym::query()->withoutDemoSessions()->count(),
@@ -40,15 +64,9 @@ class SuperAdminDashboardService
                 ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
                 ->where('status', 'suspended')
                 ->count(),
-            'mrr_estimated' => (float) Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->whereIn('status', ['active', 'grace'])
-                ->where(function ($query): void {
-                    $query
-                        ->where('is_branch_managed', false)
-                        ->orWhereNull('is_branch_managed');
-                })
-                ->sum('price'),
+            'current_cycle_revenue' => $currentCycleRevenue,
+            'recurring_mrr' => $recurringMrr,
+            'mrr_estimated' => $recurringMrr,
             'vencen_en_7_dias' => Subscription::query()
                 ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
                 ->where('status', '<>', 'suspended')
@@ -58,6 +76,10 @@ class SuperAdminDashboardService
                 ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
                 ->where('status', 'grace')
                 ->count(),
+            'plan_count_basico' => (int) ($planCountRows['basico'] ?? 0),
+            'plan_count_profesional' => (int) ($planCountRows['profesional'] ?? 0),
+            'plan_count_premium' => (int) ($planCountRows['premium'] ?? 0),
+            'plan_count_sucursales' => (int) ($planCountRows['sucursales'] ?? 0),
         ];
     }
 

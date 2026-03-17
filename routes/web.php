@@ -23,6 +23,8 @@ use App\Http\Controllers\SuperAdminSiteContentController;
 use App\Http\Controllers\SuperAdminNotificationsController;
 use App\Http\Controllers\SuperAdminPlanTemplateController;
 use App\Http\Controllers\SuperAdminQuotationController;
+use App\Http\Controllers\SuperAdminSupportChatController;
+use App\Http\Controllers\SupportChatController;
 use App\Http\Controllers\SubscriptionAdminController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\PwaEventController;
@@ -43,6 +45,17 @@ Route::post('/contactanos/mensaje', [MarketingController::class, 'storeContactMe
 Route::post('/cotizacion/solicitar', [MarketingController::class, 'storeQuoteRequest'])
     ->middleware(['throttle:20,1'])
     ->name('landing.quote.store');
+Route::prefix('support-chat')->name('support-chat.landing.')->group(function (): void {
+    Route::get('/state', [SupportChatController::class, 'landingState'])
+        ->middleware(['throttle:120,1'])
+        ->name('state');
+    Route::post('/quick-reply', [SupportChatController::class, 'landingQuickReply'])
+        ->middleware(['throttle:60,1'])
+        ->name('quick-reply');
+    Route::post('/message', [SupportChatController::class, 'landingSendMessage'])
+        ->middleware(['throttle:60,1'])
+        ->name('message');
+});
 Route::get('/politica-de-privacidad', [MarketingController::class, 'privacy'])->name('landing.legal.privacy');
 Route::get('/condiciones-de-servicio', [MarketingController::class, 'serviceTerms'])->name('landing.legal.service');
 Route::get('/terminos-comerciales', [MarketingController::class, 'commercialTerms'])->name('landing.legal.commercial');
@@ -242,6 +255,21 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 ->name('inbox.show');
             Route::post('/inbox/{message}/read', [SuperAdminInboxController::class, 'markRead'])
                 ->name('inbox.read');
+            Route::post('/support-chat/heartbeat', [SuperAdminSupportChatController::class, 'heartbeat'])
+                ->middleware('throttle:120,1')
+                ->name('support-chat.heartbeat');
+            Route::get('/support-chat/unread-count', [SuperAdminSupportChatController::class, 'unreadCountJson'])
+                ->middleware('throttle:120,1')
+                ->name('support-chat.unread-count');
+            Route::post('/support-chat/{conversation}/reply', [SuperAdminSupportChatController::class, 'reply'])
+                ->middleware('throttle:80,1')
+                ->name('support-chat.reply');
+            Route::post('/support-chat/{conversation}/status', [SuperAdminSupportChatController::class, 'updateStatus'])
+                ->middleware('throttle:80,1')
+                ->name('support-chat.status');
+            Route::post('/support-chat/{conversation}/read', [SuperAdminSupportChatController::class, 'markRead'])
+                ->middleware('throttle:80,1')
+                ->name('support-chat.read');
             Route::get('/plans', [SuperAdminPlanTemplateController::class, 'index'])
                 ->name('plan-templates.index');
             Route::post('/plans', [SuperAdminPlanTemplateController::class, 'storePlan'])
@@ -295,6 +323,21 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/panel/live-clients', [GymPanelController::class, 'liveClients'])
                     ->middleware('role:owner,cashier')
                     ->name('panel.live-clients');
+
+                Route::prefix('support-chat')
+                    ->middleware('role:owner,cashier')
+                    ->name('support-chat.gym.')
+                    ->group(function (): void {
+                        Route::get('/state', [SupportChatController::class, 'gymState'])
+                            ->middleware('throttle:120,1')
+                            ->name('state');
+                        Route::post('/quick-reply', [SupportChatController::class, 'gymQuickReply'])
+                            ->middleware('throttle:60,1')
+                            ->name('quick-reply');
+                        Route::post('/message', [SupportChatController::class, 'gymSendMessage'])
+                            ->middleware('throttle:60,1')
+                            ->name('message');
+                    });
 
                 Route::get('/clients', [ClientController::class, 'index'])
                     ->middleware('role:owner,cashier')

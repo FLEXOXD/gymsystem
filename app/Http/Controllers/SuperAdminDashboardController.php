@@ -93,7 +93,19 @@ class SuperAdminDashboardController extends Controller
         $customPrice = array_key_exists('subscription_custom_price', $data) && $data['subscription_custom_price'] !== null
             ? (float) $data['subscription_custom_price']
             : null;
-        $applyIntroDiscount50 = (bool) ($data['subscription_apply_intro_50'] ?? false);
+        $introDiscountByTemplate = is_array($data['subscription_intro_discount_percent'] ?? null)
+            ? (array) $data['subscription_intro_discount_percent']
+            : [];
+        $introDiscountRaw = null;
+        foreach ([(int) $selectedPlanTemplate->id, (string) ((int) $selectedPlanTemplate->id)] as $templateIdKey) {
+            if (! array_key_exists($templateIdKey, $introDiscountByTemplate)) {
+                continue;
+            }
+            $introDiscountRaw = $introDiscountByTemplate[$templateIdKey];
+            break;
+        }
+        $selectedIntroDiscountPercent = is_numeric($introDiscountRaw) ? (int) round((float) $introDiscountRaw) : 0;
+        $selectedIntroDiscountPercent = max(0, min(100, $selectedIntroDiscountPercent));
         $resolvedTemplatePrice = (float) $selectedPlanTemplate->price;
         if ((string) ($selectedPlanTemplate->plan_key ?? '') === 'sucursales' && $customPrice !== null) {
             $resolvedTemplatePrice = $customPrice;
@@ -161,8 +173,8 @@ class SuperAdminDashboardController extends Controller
                 'duration_unit' => (string) ($selectedPlanTemplate->duration_unit ?? 'days'),
                 'duration_days' => (int) $selectedPlanTemplate->duration_days,
                 'duration_months' => $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null,
-                'intro_discount_first_cycle' => (string) ($selectedPlanTemplate->plan_key ?? '') === 'sucursales' && $applyIntroDiscount50,
-                'intro_discount_percent' => 50,
+                'intro_discount_first_cycle' => $selectedIntroDiscountPercent > 0,
+                'intro_discount_percent' => $selectedIntroDiscountPercent,
             ],
             paymentMethod: null
         );

@@ -36,12 +36,14 @@ class SubscriptionAdminController extends Controller
                 'payment_method' => ['required', 'string', 'in:'.implode(',', SubscriptionService::PAYMENT_METHODS)],
                 'plan_template_id' => ['nullable', 'integer', 'exists:superadmin_plan_templates,id'],
                 'custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-                'apply_intro_50' => ['nullable', 'boolean'],
+                'intro_discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
             ], [
-                'custom_price.numeric' => 'El precio personalizado debe ser numerico.',
+                'custom_price.numeric' => 'El precio personalizado debe ser numérico.',
                 'custom_price.min' => 'El precio personalizado no puede ser negativo.',
                 'custom_price.max' => 'El precio personalizado supera el límite permitido.',
-                'apply_intro_50.boolean' => 'El indicador de descuento de introducción no es válido.',
+                'intro_discount_percent.integer' => 'El descuento del primer mes debe ser un número entero.',
+                'intro_discount_percent.min' => 'El descuento del primer mes no puede ser menor a 0%.',
+                'intro_discount_percent.max' => 'El descuento del primer mes no puede superar 100%.',
             ]);
 
             $gymModel = Gym::query()
@@ -55,7 +57,7 @@ class SubscriptionAdminController extends Controller
             $customPrice = array_key_exists('custom_price', $data) && $data['custom_price'] !== null
                 ? (float) $data['custom_price']
                 : null;
-            $applyIntro50 = (bool) ($data['apply_intro_50'] ?? false);
+            $introDiscountPercent = max(0, min(100, (int) ($data['intro_discount_percent'] ?? 0)));
             $selectedPlanName = '';
             $planTemplatePayload = null;
 
@@ -77,8 +79,8 @@ class SubscriptionAdminController extends Controller
                     'duration_unit' => (string) ($planTemplate->duration_unit ?? 'days'),
                     'duration_days' => (int) $planTemplate->duration_days,
                     'duration_months' => $planTemplate->duration_months !== null ? (int) $planTemplate->duration_months : null,
-                    'intro_discount_first_cycle' => (string) ($planTemplate->plan_key ?? '') === 'sucursales' && $applyIntro50,
-                    'intro_discount_percent' => 50,
+                    'intro_discount_first_cycle' => $introDiscountPercent > 0,
+                    'intro_discount_percent' => $introDiscountPercent,
                 ];
             }
 
@@ -132,4 +134,5 @@ class SubscriptionAdminController extends Controller
         throw new InvalidArgumentException('Esta sucursal está gestionada por su sede principal y no se renueva ni suspende de forma directa.');
     }
 }
+
 

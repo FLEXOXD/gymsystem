@@ -17,6 +17,34 @@ class StoreGymRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $introDiscountRaw = $this->input('subscription_intro_discount_percent', []);
+        if (! is_array($introDiscountRaw)) {
+            $introDiscountRaw = [];
+        }
+        $normalizedIntroDiscount = [];
+        foreach ($introDiscountRaw as $templateId => $percent) {
+            if (! is_numeric($templateId)) {
+                continue;
+            }
+            $templateIdInt = (int) $templateId;
+            if ($templateIdInt <= 0) {
+                continue;
+            }
+
+            $rawPercent = trim((string) $percent);
+            if ($rawPercent === '') {
+                $normalizedIntroDiscount[$templateIdInt] = 0;
+                continue;
+            }
+
+            if (is_numeric($rawPercent)) {
+                $normalizedIntroDiscount[$templateIdInt] = (int) round((float) $rawPercent);
+                continue;
+            }
+
+            $normalizedIntroDiscount[$templateIdInt] = $rawPercent;
+        }
+
         $this->merge([
             'gym_name' => $this->normalizeText($this->input('gym_name')),
             'gym_phone' => $this->normalizeText($this->input('gym_phone')),
@@ -37,7 +65,7 @@ class StoreGymRequest extends FormRequest
             'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
             'subscription_plan_template_id' => ($templateId = trim((string) $this->input('subscription_plan_template_id'))) !== '' ? (int) $templateId : null,
             'subscription_custom_price' => ($customPrice = trim((string) $this->input('subscription_custom_price'))) !== '' ? (float) $customPrice : null,
-            'subscription_apply_intro_50' => filter_var($this->input('subscription_apply_intro_50'), FILTER_VALIDATE_BOOLEAN),
+            'subscription_intro_discount_percent' => $normalizedIntroDiscount,
         ]);
     }
 
@@ -98,7 +126,8 @@ class StoreGymRequest extends FormRequest
                 }),
             ],
             'subscription_custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'subscription_apply_intro_50' => ['nullable', 'boolean'],
+            'subscription_intro_discount_percent' => ['nullable', 'array'],
+            'subscription_intro_discount_percent.*' => ['nullable', 'integer', 'min:0', 'max:100'],
         ];
     }
 
@@ -131,10 +160,13 @@ class StoreGymRequest extends FormRequest
             'admin_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
             'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
             'subscription_plan_template_id.exists' => 'El plan base seleccionado no está disponible.',
-            'subscription_custom_price.numeric' => 'El precio personalizado debe ser numerico.',
+            'subscription_custom_price.numeric' => 'El precio personalizado debe ser numérico.',
             'subscription_custom_price.min' => 'El precio personalizado no puede ser negativo.',
             'subscription_custom_price.max' => 'El precio personalizado supera el límite permitido.',
-            'subscription_apply_intro_50.boolean' => 'El indicador de descuento de introducción no es válido.',
+            'subscription_intro_discount_percent.array' => 'El descuento del primer mes debe enviarse por plan.',
+            'subscription_intro_discount_percent.*.integer' => 'El descuento del primer mes debe ser un número entero.',
+            'subscription_intro_discount_percent.*.min' => 'El descuento del primer mes no puede ser menor a 0%.',
+            'subscription_intro_discount_percent.*.max' => 'El descuento del primer mes no puede superar 100%.',
         ];
     }
 
@@ -174,3 +206,4 @@ class StoreGymRequest extends FormRequest
         return $normalized === '' ? null : $normalized;
     }
 }
+
