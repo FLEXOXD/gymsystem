@@ -5,6 +5,70 @@
 
 @push('styles')
     <style>
+        #theme-selector.settings-premium-shell {
+            position: relative;
+            isolation: isolate;
+        }
+
+        #theme-selector.settings-premium-shell::before {
+            content: '';
+            position: absolute;
+            inset: -1rem -0.5rem auto -0.5rem;
+            height: 12rem;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(70% 85% at 20% 10%, color-mix(in srgb, var(--primary) 24%, transparent), transparent 72%),
+                radial-gradient(65% 80% at 82% 8%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 74%);
+            filter: blur(14px);
+            opacity: 0.85;
+        }
+
+        #theme-selector .settings-premium-card,
+        #theme-selector .ui-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--card) 88%, transparent) 0%, color-mix(in srgb, var(--card) 95%, #000000) 100%);
+            box-shadow:
+                0 16px 36px -26px rgb(0 0 0 / 0.72),
+                inset 0 1px 0 rgb(255 255 255 / 0.06);
+            transition: transform 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease;
+        }
+
+        #theme-selector .settings-premium-card::after,
+        #theme-selector .ui-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 2px;
+            pointer-events: none;
+            background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 72%, transparent) 0%, color-mix(in srgb, var(--accent) 72%, transparent) 100%);
+            opacity: 0.48;
+        }
+
+        #theme-selector .settings-premium-card > *,
+        #theme-selector .ui-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        #theme-selector .settings-premium-card:hover,
+        #theme-selector .ui-card:hover {
+            border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+            box-shadow:
+                0 20px 42px -28px rgb(0 0 0 / 0.86),
+                0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.08);
+        }
+
+        #theme-selector .settings-theme-card {
+            border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+        }
+
         #theme-selector .theme-picker-grid {
             align-items: stretch;
         }
@@ -16,10 +80,45 @@
             overflow: hidden;
             border-radius: 1rem;
             padding: 0.9rem;
+            transform-origin: center;
+            isolation: isolate;
         }
 
         #theme-selector .theme-option-card:hover {
             transform: translateY(-2px) scale(1.01);
+        }
+
+        #theme-selector .theme-option-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(155deg, rgb(255 255 255 / 0.08) 0%, transparent 48%),
+                radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 72%);
+            opacity: 0.35;
+            transition: opacity 0.2s ease;
+        }
+
+        #theme-selector .theme-option-card:hover::before {
+            opacity: 0.6;
+        }
+
+        #theme-selector .theme-option-card.is-active::before {
+            opacity: 0.95;
+        }
+
+        #theme-selector .theme-option-card.is-active::after {
+            content: '';
+            position: absolute;
+            inset: -35% auto -35% -52%;
+            width: 46%;
+            z-index: 0;
+            pointer-events: none;
+            background: linear-gradient(120deg, transparent, rgb(255 255 255 / 0.26), transparent);
+            transform: rotate(18deg);
+            animation: themeCardSweep 3.6s ease-in-out infinite;
         }
 
         #theme-selector .theme-selection-head {
@@ -39,6 +138,8 @@
             white-space: nowrap;
             font-size: 0.62rem;
             letter-spacing: 0.09em;
+            border-width: 1px;
+            backdrop-filter: blur(6px);
         }
 
         #theme-selector .theme-preview-shell {
@@ -46,6 +147,7 @@
             overflow: hidden;
             border-radius: 0.85rem;
             border: 1px solid rgb(148 163 184 / 0.22);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
         }
 
         #theme-selector .settings-upload-input::file-selector-button {
@@ -66,6 +168,17 @@
             background: color-mix(in srgb, var(--card-muted) 62%, transparent);
         }
 
+        #theme-selector .settings-upload-input {
+            border-color: color-mix(in srgb, var(--border) 88%, transparent);
+            background: color-mix(in srgb, var(--card-muted) 82%, transparent);
+        }
+
+        #theme-selector .settings-upload-input:focus-visible {
+            outline: none;
+            border-color: color-mix(in srgb, var(--primary) 65%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+        }
+
         #theme-selector .settings-avatar-grid {
             align-items: start;
         }
@@ -77,6 +190,14 @@
             gap: 0.7rem;
             border-radius: 1rem;
             padding: 0.75rem;
+            border-color: color-mix(in srgb, var(--border) 90%, transparent);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #theme-selector .settings-avatar-card:hover {
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+            box-shadow: 0 16px 28px -24px rgb(0 0 0 / 0.72);
         }
 
         #theme-selector .settings-avatar-caption {
@@ -112,6 +233,7 @@
             border: 1px solid rgb(148 163 184 / 0.32);
             background: rgb(241 245 249 / 0.88);
             height: clamp(260px, 34vw, 410px);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
         }
 
         #theme-selector .settings-avatar-preview img {
@@ -133,10 +255,58 @@
             background: linear-gradient(160deg, rgb(226 232 240) 0%, rgb(241 245 249) 100%);
         }
 
+        .theme-dark #theme-selector .settings-avatar-preview {
+            border-color: rgb(71 85 105 / 0.45);
+            background: linear-gradient(150deg, rgb(15 23 42 / 0.98) 0%, rgb(2 6 23 / 0.96) 100%);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+        }
+
+        .theme-dark #theme-selector .settings-avatar-empty {
+            background:
+                radial-gradient(60% 80% at 50% 18%, rgb(30 64 175 / 0.22), transparent 70%),
+                linear-gradient(160deg, rgb(15 23 42 / 0.98) 0%, rgb(3 7 18 / 0.95) 100%);
+        }
+
+        .theme-dark #theme-selector .settings-avatar-empty .text-slate-700 {
+            color: rgb(226 232 240) !important;
+        }
+
+        .theme-dark #theme-selector .settings-avatar-empty .text-slate-500 {
+            color: rgb(148 163 184) !important;
+        }
+
         #theme-selector .settings-avatar-help {
             margin-top: 0.35rem;
             display: grid;
             gap: 0.2rem;
+        }
+
+        #theme-selector .ui-button-primary {
+            border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent);
+            background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 95%, #ffffff) 0%, color-mix(in srgb, var(--accent) 75%, #000000) 100%);
+            box-shadow:
+                0 10px 24px -16px color-mix(in srgb, var(--primary) 72%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.2);
+            transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+        }
+
+        #theme-selector .ui-button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 14px 26px -16px color-mix(in srgb, var(--primary) 78%, transparent),
+                0 0 0 1px color-mix(in srgb, var(--primary) 42%, transparent);
+            filter: saturate(1.05);
+        }
+
+        #theme-selector .ui-button-primary:active {
+            transform: translateY(0);
+        }
+
+        @keyframes themeCardSweep {
+            0%, 18% { transform: translateX(0) rotate(18deg); opacity: 0; }
+            24% { opacity: 0.28; }
+            56% { transform: translateX(265%) rotate(18deg); opacity: 0; }
+            100% { transform: translateX(265%) rotate(18deg); opacity: 0; }
         }
 
         @media (max-width: 1024px) {
@@ -315,11 +485,11 @@
     @endphp
 
     <div id="theme-selector"
-         class="space-y-6"
+         class="settings-premium-shell space-y-6"
          data-current-theme="{{ $currentTheme }}"
          data-update-url="{{ $themeUpdateUrl }}"
          data-csrf="{{ csrf_token() }}">
-        <x-card title="Selector de tema"
+        <x-card class="settings-premium-card settings-theme-card" title="Selector de tema"
                 subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantáneo y se guarda en tu cuenta.">
             <div class="theme-picker-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($themes as $themeKey => $theme)
@@ -370,7 +540,7 @@
         </x-card>
 
         @if ($gym && $isCashierMode)
-            <section class="ui-card">
+            <section class="ui-card settings-premium-card">
                 <h3 class="ui-heading text-base">Foto de perfil</h3>
                 <p class="ui-muted mt-1 text-sm">Como cajero puedes cambiar tu tema y tu foto personal. No tienes acceso a datos del gimnasio.</p>
 
@@ -402,7 +572,7 @@
             </section>
         @elseif ($gym)
             <div class="grid gap-4 lg:grid-cols-2">
-                <section class="ui-card">
+                <section class="ui-card settings-premium-card">
                     <h3 class="ui-heading text-base">Editar Logo</h3>
                     <p class="ui-muted mt-1 text-sm">Sube una imagen cuadrada para una mejor vista en sidebar y credenciales.</p>
 
@@ -434,7 +604,7 @@
                     </form>
                 </section>
 
-                <section class="ui-card">
+                <section class="ui-card settings-premium-card">
                     <h3 class="ui-heading text-base">Datos del Gym</h3>
                     <p class="ui-muted mt-1 text-sm">Actualiza nombre comercial y teléfono. Ubicación definida por SuperAdmin (solo lectura).</p>
 
@@ -560,7 +730,7 @@
                 </section>
             </div>
 
-            <section class="ui-card">
+            <section class="ui-card settings-premium-card">
                 <h3 class="ui-heading text-base">Avatares de recepción (fallback)</h3>
                 <p class="ui-muted mt-1 text-sm">
                     Se usan cuando el cliente no tiene foto propia. Puedes subir PNG/JPG/WEBP en formato vertical.
@@ -625,7 +795,7 @@
             </section>
         @else
             @if ($isSuperAdmin)
-                <section class="ui-card">
+                <section class="ui-card settings-premium-card">
                     <h3 class="ui-heading text-base">Configuración SuperAdmin</h3>
                     <p class="ui-muted mt-1 text-sm">
                         Como SuperAdmin gestionas múltiples gimnasios. El logo, teléfono y dirección se administran por cada gym.
@@ -666,7 +836,7 @@
                     </form>
                 </section>
             @else
-                <section class="ui-card">
+                <section class="ui-card settings-premium-card">
                     <h3 class="ui-heading text-base">Configuración del Gym</h3>
                     <p class="ui-muted mt-1 text-sm">Este usuario no tiene un gym asignado actualmente.</p>
                 </section>
