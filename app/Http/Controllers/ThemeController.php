@@ -201,11 +201,11 @@ class ThemeController extends Controller
 
         $data = $request->validate([
             'reactivation_message' => ['nullable', 'string', 'max:600'],
-            'reactivation_receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'reactivation_receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:700'],
         ], [
             'reactivation_message.max' => 'El mensaje no puede superar 600 caracteres.',
             'reactivation_receipt.mimes' => 'El comprobante debe ser una imagen JPG, PNG o WEBP.',
-            'reactivation_receipt.max' => 'El comprobante no puede superar 4 MB.',
+            'reactivation_receipt.max' => 'El comprobante no puede superar 700 KB.',
         ]);
 
         $gymId = (int) $viewer->gym_id;

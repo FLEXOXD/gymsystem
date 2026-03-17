@@ -266,6 +266,13 @@
             color: #64748b;
         }
 
+        .form-error {
+            margin: 0;
+            font-size: 12px;
+            color: #b91c1c;
+            font-weight: 700;
+        }
+
         .request-cta-row {
             display: flex;
             align-items: center;
@@ -423,7 +430,7 @@
                     <p class="line"><strong>Solicitud pendiente desde:</strong> {{ $pendingReactivationRequestAt }}</p>
                 @endif
 
-                <form method="POST" action="{{ route('subscription.reactivation.request') }}" class="request-form" enctype="multipart/form-data">
+                <form id="reactivation-form" method="POST" action="{{ route('subscription.reactivation.request') }}" class="request-form" enctype="multipart/form-data">
                     @csrf
 
                     <label for="reactivation_message">Mensaje adicional (opcional)</label>
@@ -441,7 +448,8 @@
                         name="reactivation_receipt"
                         accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     >
-                    <p class="form-note">Sube imagen de transferencia o recibo. Máximo 4 MB.</p>
+                    <p class="form-note">Sube imagen de transferencia o recibo. Máximo 700 KB.</p>
+                    <p id="reactivation-receipt-error" class="form-error" style="display:none;"></p>
 
                     <div class="request-cta-row">
                         <button class="btn btn-request" type="submit" @disabled($hasPendingReactivation)>
@@ -471,5 +479,135 @@
         </form>
     </section>
 </div>
+<script>
+    (function () {
+        var form = document.getElementById('reactivation-form');
+        var input = document.getElementById('reactivation_receipt');
+        var errorEl = document.getElementById('reactivation-receipt-error');
+        if (!form || !input || !errorEl) {
+            return;
+        }
+
+        var MAX_BYTES = 700 * 1024;
+        var processing = false;
+
+        function setError(message) {
+            errorEl.textContent = message || '';
+            errorEl.style.display = message ? 'block' : 'none';
+        }
+
+        function replaceInputFile(file) {
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        }
+
+        function loadImage(file) {
+            return new Promise(function (resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var img = new Image();
+                    img.onload = function () { resolve(img); };
+                    img.onerror = function () { reject(new Error('invalid-image')); };
+                    img.src = String(reader.result || '');
+                };
+                reader.onerror = function () { reject(new Error('read-failed')); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function canvasToBlob(canvas, type, quality) {
+            return new Promise(function (resolve) {
+                canvas.toBlob(function (blob) { resolve(blob); }, type, quality);
+            });
+        }
+
+        async function shrinkImage(file) {
+            if (!(file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp')) {
+                return file;
+            }
+            if (file.size <= MAX_BYTES) {
+                return file;
+            }
+
+            var img = await loadImage(file);
+            var width = img.naturalWidth || img.width;
+            var height = img.naturalHeight || img.height;
+            var maxDimension = 1600;
+            var ratio = Math.min(1, maxDimension / Math.max(width, height));
+            var canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(width * ratio));
+            canvas.height = Math.max(1, Math.round(height * ratio));
+            var ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return file;
+            }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            var quality = 0.86;
+            var blob = await canvasToBlob(canvas, 'image/webp', quality);
+            while (blob && blob.size > MAX_BYTES && quality > 0.45) {
+                quality -= 0.08;
+                blob = await canvasToBlob(canvas, 'image/webp', quality);
+            }
+            if (!blob || blob.size > MAX_BYTES) {
+                return null;
+            }
+
+            var safeBase = (file.name || 'comprobante').replace(/\.[^.]+$/, '');
+            return new File([blob], safeBase + '.webp', {
+                type: 'image/webp',
+                lastModified: Date.now()
+            });
+        }
+
+        async function normalizeSelectedFile() {
+            setError('');
+            var file = input.files && input.files[0] ? input.files[0] : null;
+            if (!file) {
+                return true;
+            }
+
+            if (file.size <= MAX_BYTES) {
+                return true;
+            }
+
+            processing = true;
+            try {
+                var compactFile = await shrinkImage(file);
+                if (!compactFile) {
+                    setError('La imagen es muy pesada. Usa una menor a 700 KB.');
+                    return false;
+                }
+                if (compactFile.size > MAX_BYTES) {
+                    setError('La imagen sigue superando 700 KB. Reduce tamaño e intenta otra vez.');
+                    return false;
+                }
+                replaceInputFile(compactFile);
+                return true;
+            } catch (error) {
+                setError('No pudimos procesar la imagen. Intenta con JPG/PNG/WEBP más liviana.');
+                return false;
+            } finally {
+                processing = false;
+            }
+        }
+
+        input.addEventListener('change', function () {
+            void normalizeSelectedFile();
+        });
+
+        form.addEventListener('submit', async function (event) {
+            if (processing) {
+                event.preventDefault();
+                return;
+            }
+            var ok = await normalizeSelectedFile();
+            if (!ok) {
+                event.preventDefault();
+            }
+        });
+    })();
+</script>
 </body>
 </html>
