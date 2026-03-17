@@ -3,6 +3,53 @@
 @section('title', 'Ganancias de clientes')
 @section('page-title', 'Ganancias de clientes')
 
+@push('styles')
+<style>
+    .report-client-earnings .filter-grid {
+        align-items: end;
+    }
+
+    .report-client-earnings .metric-card {
+        min-height: 100%;
+    }
+
+    .report-client-earnings .top-client-wrap {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
+
+    .report-client-earnings .detail-table-wrap {
+        border-radius: 0.85rem;
+        border: 1px solid rgb(203 213 225);
+        overflow: auto;
+    }
+
+    .theme-dark .report-client-earnings .detail-table-wrap {
+        border-color: rgb(51 65 85 / 0.85);
+    }
+
+    .report-client-earnings .detail-table-wrap .ui-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        background: rgb(241 245 249 / 0.95);
+        backdrop-filter: blur(4px);
+    }
+
+    .theme-dark .report-client-earnings .detail-table-wrap .ui-table thead th {
+        background: rgb(30 41 59 / 0.95);
+    }
+
+    @media (max-width: 640px) {
+        .report-client-earnings .top-client-wrap {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -17,11 +64,16 @@
         $sourceFilter = (string) ($filters['source'] ?? 'all');
         $orderFilter = (string) ($filters['order'] ?? 'amount_desc');
         $userFilter = isset($filters['user_id']) ? (int) $filters['user_id'] : null;
+        $resetFilterParams = [
+            'contextGym' => $contextGym,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
     @endphp
 
-    <div class="space-y-4">
+    <div class="report-client-earnings space-y-4">
         <x-ui.card title="Filtro de facturacion por cliente" subtitle="Analiza cuanto se ha facturado por cliente en el rango seleccionado.">
-            <form method="GET" action="{{ route('reports.client-earnings', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+            <form method="GET" action="{{ route('reports.client-earnings', ['contextGym' => $contextGym]) }}" class="filter-grid grid gap-3 md:grid-cols-2 xl:grid-cols-6">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
                 @endif
@@ -79,6 +131,7 @@
 
                 <div class="xl:col-span-5 flex flex-wrap gap-2 items-end">
                     <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
+                    <x-ui.button :href="route('reports.client-earnings', $resetFilterParams)" variant="ghost">Limpiar filtros</x-ui.button>
                     <x-ui.button :href="route('reports.index', $panelParams)" variant="ghost">Panel reportes</x-ui.button>
                     <x-ui.button :href="route('panel.index', $baseRouteParams)" variant="ghost">Volver al panel</x-ui.button>
                 </div>
@@ -86,19 +139,19 @@
         </x-ui.card>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Clientes facturados</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($summary['billed_clients'] ?? 0) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Total facturado</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($summary['total_billed'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Operaciones</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($summary['operations_count'] ?? 0) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Promedio por cliente</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($summary['average_per_client'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
@@ -106,7 +159,7 @@
 
         <x-ui.card title="Cliente con mayor facturacion">
             @if ($topClient)
-                <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                <div class="top-client-wrap">
                     <div>
                         <p class="text-lg font-black">{{ (string) ($topClient->client_name ?? 'Cliente') }}</p>
                         <p class="text-sm ui-muted">Documento: {{ (string) ($topClient->document_number ?? '-') }}</p>
@@ -133,41 +186,41 @@
                 registros (50 por pagina).
             </p>
 
-            <div class="smart-list-wrap">
+            <div class="detail-table-wrap">
                 <table class="ui-table w-full min-w-[1080px] text-sm">
                     <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Documento</th>
-                            @if ($showGymColumn)
-                                <th>Sede</th>
-                            @endif
-                            <th>Total facturado</th>
-                            <th>Membresias</th>
-                            <th>Ventas de productos</th>
-                            <th>Operaciones</th>
-                            <th>Ultima facturacion</th>
-                        </tr>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Documento</th>
+                        @if ($showGymColumn)
+                            <th>Sede</th>
+                        @endif
+                        <th>Total facturado</th>
+                        <th>Membresias</th>
+                        <th>Ventas de productos</th>
+                        <th>Operaciones</th>
+                        <th>Ultima facturacion</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @forelse ($clients as $client)
-                            <tr>
-                                <td class="font-semibold">{{ (string) ($client->client_name ?? '-') }}</td>
-                                <td>{{ (string) ($client->document_number ?? '-') }}</td>
-                                @if ($showGymColumn)
-                                    <td>{{ (string) ($client->gym_name ?? '-') }}</td>
-                                @endif
-                                <td class="font-bold text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($client->total_billed ?? 0), $appCurrencyCode) }}</td>
-                                <td>{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
-                                <td>{{ $currencyFormatter::format((float) ($client->sales_billed ?? 0), $appCurrencyCode) }}</td>
-                                <td>{{ (int) ($client->operations_count ?? 0) }}</td>
-                                <td>{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ $showGymColumn ? 8 : 7 }}" class="py-8 text-center ui-muted">No hay datos para el rango y filtros seleccionados.</td>
-                            </tr>
-                        @endforelse
+                    @forelse ($clients as $client)
+                        <tr>
+                            <td class="font-semibold">{{ (string) ($client->client_name ?? '-') }}</td>
+                            <td>{{ (string) ($client->document_number ?? '-') }}</td>
+                            @if ($showGymColumn)
+                                <td>{{ (string) ($client->gym_name ?? '-') }}</td>
+                            @endif
+                            <td class="font-bold text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($client->total_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td>{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td>{{ $currencyFormatter::format((float) ($client->sales_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td>{{ (int) ($client->operations_count ?? 0) }}</td>
+                            <td>{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $showGymColumn ? 8 : 7 }}" class="py-8 text-center ui-muted">No hay datos para el rango y filtros seleccionados.</td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
             </div>

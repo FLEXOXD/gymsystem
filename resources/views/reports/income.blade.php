@@ -5,14 +5,58 @@
 
 @push('styles')
 <style>
+    .report-income .filter-form {
+        align-items: end;
+    }
+
+    .report-income .movements-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: end;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+    }
+
+    .report-income .movements-toolbar-main {
+        flex: 1 1 520px;
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) auto;
+    }
+
+    .report-income .movements-counter {
+        flex: 1 1 260px;
+        font-size: 0.85rem;
+    }
+
     .report-income .movements-scroll {
-        overflow-x: auto;
-        border-radius: 0.75rem;
+        max-height: min(66vh, 720px);
+        overflow: auto;
+        border-radius: 0.85rem;
         border: 1px solid rgb(203 213 225);
     }
 
     .theme-dark .report-income .movements-scroll {
         border-color: rgb(51 65 85 / 0.85);
+    }
+
+    .report-income .movements-scroll .ui-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: rgb(241 245 249 / 0.95);
+        backdrop-filter: blur(4px);
+    }
+
+    .theme-dark .report-income .movements-scroll .ui-table thead th {
+        background: rgb(30 41 59 / 0.95);
+    }
+
+    @media (max-width: 900px) {
+        .report-income .movements-toolbar-main {
+            grid-template-columns: minmax(0, 1fr);
+        }
     }
 </style>
 @endpush
@@ -40,7 +84,7 @@
 
     <div class="report-income space-y-4">
         <x-ui.card title="Filtro" subtitle="Consulta movimientos por rango de fecha.">
-            <form method="GET" action="{{ route('reports.income') }}" class="grid gap-3 md:grid-cols-4 md:items-end">
+            <form method="GET" action="{{ route('reports.income') }}" class="filter-form grid gap-3 md:grid-cols-5">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
                 @endif
@@ -57,7 +101,7 @@
 
                 <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
 
-                <div class="flex gap-2">
+                <div class="md:col-span-2 flex flex-wrap gap-2">
                     @if ($canExportReports)
                         <x-ui.button id="reports-income-export-pdf"
                                      :href="route('reports.export.pdf', $reportRouteParams)"
@@ -99,24 +143,30 @@
         </section>
 
         <x-ui.card title="Detalle de movimientos">
-            <div class="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
-                <label class="space-y-1 text-sm font-semibold ui-muted">
-                    <span>Buscar movimiento</span>
-                    <input id="movement-search" type="text" class="ui-input" placeholder="ID, cliente, usuario, descripcion..." autocomplete="off">
-                </label>
+            <div class="movements-toolbar">
+                <div class="movements-toolbar-main">
+                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                        <span>Buscar movimiento</span>
+                        <input id="movement-search" type="text" class="ui-input" placeholder="ID, cliente, usuario, descripcion..." autocomplete="off">
+                    </label>
 
-                <label class="space-y-1 text-sm font-semibold ui-muted">
-                    <span>Tipo</span>
-                    <select id="movement-type-filter" class="ui-input">
-                        <option value="all">Todos</option>
-                        <option value="income">Solo ingresos</option>
-                        <option value="expense">Solo egresos</option>
-                    </select>
-                </label>
+                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                        <span>Tipo</span>
+                        <select id="movement-type-filter" class="ui-input">
+                            <option value="all">Todos</option>
+                            <option value="income">Solo ingresos</option>
+                            <option value="expense">Solo egresos</option>
+                        </select>
+                    </label>
 
-                <p class="text-sm text-slate-600 dark:text-slate-300 md:text-right">
+                    <div class="flex">
+                        <x-ui.button id="movement-clear-filters" type="button" variant="ghost">Limpiar filtros</x-ui.button>
+                    </div>
+                </div>
+
+                <p class="movements-counter text-slate-600 dark:text-slate-300">
                     Pagina <strong>{{ $movements->currentPage() }}</strong> de <strong>{{ $movements->lastPage() }}</strong> |
-                    Mostrando <strong id="movement-visible-count">{{ $movements->count() }}</strong> de <strong>{{ $movements->count() }}</strong> en esta pagina
+                    Mostrando <strong id="movement-visible-count">{{ $movements->count() }}</strong> de <strong id="movement-page-count">{{ $movements->count() }}</strong> en esta pagina
                     (total <strong>{{ $movements->total() }}</strong>, {{ $movements->perPage() }} por pagina)
                 </p>
             </div>
@@ -124,7 +174,7 @@
             <div class="movements-scroll">
                 <table class="ui-table min-w-[1260px] text-slate-800 dark:text-slate-100" data-smart-list-manual>
                     <thead>
-                    <tr class="border-b border-slate-200 bg-slate-100/95 text-left text-xs uppercase tracking-wider text-slate-600 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-300">
+                    <tr class="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:text-slate-300">
                         <th class="px-3 py-3">ID</th>
                         <th class="px-3 py-3">Fecha</th>
                         <th class="px-3 py-3">Tipo</th>
@@ -212,7 +262,9 @@
 
         const searchInput = document.getElementById('movement-search');
         const typeFilter = document.getElementById('movement-type-filter');
+        const clearFiltersButton = document.getElementById('movement-clear-filters');
         const visibleCount = document.getElementById('movement-visible-count');
+        const pageCount = document.getElementById('movement-page-count');
         const movementRows = Array.from(document.querySelectorAll('[data-movement-row]'));
         const emptyFilter = document.getElementById('movement-empty-filter');
 
@@ -222,6 +274,12 @@
                 .toLowerCase()
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function resetFilters() {
+            if (searchInput) searchInput.value = '';
+            if (typeFilter) typeFilter.value = 'all';
+            filterMovements();
         }
 
         function filterMovements() {
@@ -244,10 +302,18 @@
 
             if (visibleCount) visibleCount.textContent = String(totalVisible);
             if (emptyFilter) emptyFilter.classList.toggle('hidden', totalVisible > 0);
+            if (clearFiltersButton) {
+                const hasActiveFilter = term.length > 0 || type !== 'all';
+                clearFiltersButton.classList.toggle('opacity-70', !hasActiveFilter);
+            }
+            if (pageCount && movementRows.length) {
+                pageCount.textContent = String(movementRows.length);
+            }
         }
 
         searchInput?.addEventListener('input', filterMovements);
         typeFilter?.addEventListener('change', filterMovements);
+        clearFiltersButton?.addEventListener('click', resetFilters);
         filterMovements();
     })();
 </script>

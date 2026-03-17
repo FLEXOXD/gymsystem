@@ -3,6 +3,49 @@
 @section('title', 'Reporte de ventas e inventario')
 @section('page-title', 'Reporte de ventas e inventario')
 
+@push('styles')
+<style>
+    .report-sales-inventory .filter-form {
+        align-items: end;
+    }
+
+    .report-sales-inventory .metric-card {
+        min-height: 100%;
+    }
+
+    .report-sales-inventory .chart-shell {
+        height: clamp(260px, 46vh, 430px);
+    }
+
+    .report-sales-inventory .chart-shell canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .report-sales-inventory .table-wrap {
+        border-radius: 0.85rem;
+        border: 1px solid rgb(203 213 225);
+        overflow: auto;
+    }
+
+    .theme-dark .report-sales-inventory .table-wrap {
+        border-color: rgb(51 65 85 / 0.85);
+    }
+
+    .report-sales-inventory .table-wrap .ui-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        background: rgb(241 245 249 / 0.95);
+        backdrop-filter: blur(4px);
+    }
+
+    .theme-dark .report-sales-inventory .table-wrap .ui-table thead th {
+        background: rgb(30 41 59 / 0.95);
+    }
+</style>
+@endpush
+
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
@@ -30,13 +73,13 @@
         ] + ($isGlobalScope ? ['scope' => 'global'] : []);
     @endphp
 
-    <div class="space-y-4">
+    <div class="report-sales-inventory space-y-4">
         @if (! $schemaReady)
             <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para habilitar el reporte de ventas e inventario.</div>
         @endif
 
         <x-ui.card title="Filtro del modulo" subtitle="Lee rendimiento comercial y rotacion de inventario por periodo.">
-            <form method="GET" action="{{ route('reports.sales-inventory', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-4 md:items-end">
+            <form method="GET" action="{{ route('reports.sales-inventory', ['contextGym' => $contextGym]) }}" class="filter-form grid gap-3 md:grid-cols-5">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
                 @endif
@@ -52,7 +95,7 @@
 
                 <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
 
-                <div class="flex flex-wrap gap-2">
+                <div class="md:col-span-2 flex flex-wrap gap-2">
                     @if ($canExportReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory.export.csv'))
                         <x-ui.button :href="route('reports.sales-inventory.export.csv', $exportRouteParams)"
                                      data-ui-loading-ignore="1"
@@ -65,42 +108,42 @@
         </x-ui.card>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ventas</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($salesSummary['total_sales'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ (int) ($salesSummary['units_sold'] ?? 0) }} unidades vendidas</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ingreso total</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($salesSummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ticket promedio {{ $currencyFormatter::format((float) ($salesSummary['average_ticket'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Costo total</p>
                 <p class="mt-2 text-3xl font-black text-rose-700 dark:text-rose-300">{{ $currencyFormatter::format((float) ($salesSummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Base para utilidad real</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Utilidad</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($salesSummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ingreso menos costo</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos de stock</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Rotacion del periodo</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Unidades que entraron</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ (int) ($inventorySummary['units_in'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Reposicion y carga inicial</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Unidades que salieron</p>
                 <p class="mt-2 text-3xl font-black text-rose-700 dark:text-rose-300">{{ (int) ($inventorySummary['units_out'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ventas y ajustes negativos</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ajustes manuales</p>
                 <p class="mt-2 text-3xl font-black text-amber-700 dark:text-amber-300">{{ (int) ($inventorySummary['manual_adjustments'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Correcciones de inventario</p>
@@ -109,7 +152,9 @@
 
         <section class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
             <x-ui.card title="Comportamiento diario" subtitle="Ingreso y utilidad generados por ventas de productos.">
-                <canvas id="salesInventoryChart" height="120"></canvas>
+                <div class="chart-shell">
+                    <canvas id="salesInventoryChart"></canvas>
+                </div>
             </x-ui.card>
 
             <x-ui.card title="Atajos del modulo" subtitle="Accesos directos para operacion rapida.">
@@ -139,72 +184,72 @@
 
         <section class="grid gap-4 xl:grid-cols-2">
             <x-ui.card title="Top productos" subtitle="Articulos con mejor salida y mejor ingreso del periodo.">
-                <div class="smart-list-wrap">
+                <div class="table-wrap">
                     <table class="ui-table w-full min-w-[720px] text-sm">
                         <thead>
-                            <tr>
-                                <th>Producto</th>
-                                @if ($showGymColumn)
-                                    <th>Sede</th>
-                                @endif
-                                <th>Categoria</th>
-                                <th>Unidades</th>
-                                <th>Ingreso</th>
-                                <th>Utilidad</th>
-                            </tr>
+                        <tr>
+                            <th>Producto</th>
+                            @if ($showGymColumn)
+                                <th>Sede</th>
+                            @endif
+                            <th>Categoria</th>
+                            <th>Unidades</th>
+                            <th>Ingreso</th>
+                            <th>Utilidad</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @forelse ($topProducts as $product)
-                                <tr>
-                                    <td class="font-semibold">{{ $product->product_name }}</td>
-                                    @if ($showGymColumn)
-                                        <td>{{ $product->gym_name ?? '-' }}</td>
-                                    @endif
-                                    <td>{{ $product->product_category ?: '-' }}</td>
-                                    <td>{{ (int) $product->units_sold }}</td>
-                                    <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
-                                    <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">No hay ventas de productos en este rango.</td>
-                                </tr>
-                            @endforelse
+                        @forelse ($topProducts as $product)
+                            <tr>
+                                <td class="font-semibold">{{ $product->product_name }}</td>
+                                @if ($showGymColumn)
+                                    <td>{{ $product->gym_name ?? '-' }}</td>
+                                @endif
+                                <td>{{ $product->product_category ?: '-' }}</td>
+                                <td>{{ (int) $product->units_sold }}</td>
+                                <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
+                                <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">No hay ventas de productos en este rango.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div>
             </x-ui.card>
 
             <x-ui.card title="Stock bajo" subtitle="Productos activos que necesitan reposicion.">
-                <div class="smart-list-wrap">
+                <div class="table-wrap">
                     <table class="ui-table w-full min-w-[660px] text-sm">
                         <thead>
-                            <tr>
-                                <th>Producto</th>
-                                @if ($showGymColumn)
-                                    <th>Sede</th>
-                                @endif
-                                <th>Categoria</th>
-                                <th>Stock</th>
-                                <th>Minimo</th>
-                            </tr>
+                        <tr>
+                            <th>Producto</th>
+                            @if ($showGymColumn)
+                                <th>Sede</th>
+                            @endif
+                            <th>Categoria</th>
+                            <th>Stock</th>
+                            <th>Minimo</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @forelse ($lowStockProducts as $product)
-                                <tr>
-                                    <td class="font-semibold">{{ $product->name }}</td>
-                                    @if ($showGymColumn)
-                                        <td>{{ $product->gym_name ?? '-' }}</td>
-                                    @endif
-                                    <td>{{ $product->category ?: '-' }}</td>
-                                    <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
-                                    <td>{{ (int) $product->min_stock }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="py-8 text-center ui-muted">No hay alertas de stock bajo.</td>
-                                </tr>
-                            @endforelse
+                        @forelse ($lowStockProducts as $product)
+                            <tr>
+                                <td class="font-semibold">{{ $product->name }}</td>
+                                @if ($showGymColumn)
+                                    <td>{{ $product->gym_name ?? '-' }}</td>
+                                @endif
+                                <td>{{ $product->category ?: '-' }}</td>
+                                <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
+                                <td>{{ (int) $product->min_stock }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="py-8 text-center ui-muted">No hay alertas de stock bajo.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -213,48 +258,48 @@
 
         <x-ui.card title="Detalle de ventas del periodo">
             @if ($recentSales)
-                <div class="smart-list-wrap">
+                <div class="table-wrap">
                     <table class="ui-table w-full min-w-[1180px] text-sm">
                         <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                @if ($showGymColumn)
-                                    <th>Sede</th>
-                                @endif
-                                <th>Producto</th>
-                                <th>Cliente</th>
-                                <th>Usuario</th>
-                                <th>Método</th>
-                                <th>Cantidad</th>
-                                <th>Total</th>
-                                <th>Costo</th>
-                                <th>Utilidad</th>
-                            </tr>
+                        <tr>
+                            <th>Fecha</th>
+                            @if ($showGymColumn)
+                                <th>Sede</th>
+                            @endif
+                            <th>Producto</th>
+                            <th>Cliente</th>
+                            <th>Usuario</th>
+                            <th>Metodo</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Costo</th>
+                            <th>Utilidad</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @forelse ($recentSales as $sale)
-                                <tr>
-                                    <td>{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                                    @if ($showGymColumn)
-                                        <td>{{ $sale->gym?->name ?? '-' }}</td>
-                                    @endif
-                                    <td>
-                                        <div class="font-semibold">{{ $sale->product?->name ?? '-' }}</div>
-                                        <div class="ui-muted text-xs">{{ $sale->product?->category ?: 'Sin categoria' }}</div>
-                                    </td>
-                                    <td>{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
-                                    <td>{{ $sale->soldBy?->name ?? '-' }}</td>
-                                    <td>{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
-                                    <td>{{ (int) $sale->quantity }}</td>
-                                    <td class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
-                                    <td class="text-rose-700 dark:text-rose-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_cost, $appCurrencyCode) }}</td>
-                                    <td class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">No hay ventas dentro del rango seleccionado.</td>
-                                </tr>
-                            @endforelse
+                        @forelse ($recentSales as $sale)
+                            <tr>
+                                <td>{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                @if ($showGymColumn)
+                                    <td>{{ $sale->gym?->name ?? '-' }}</td>
+                                @endif
+                                <td>
+                                    <div class="font-semibold">{{ $sale->product?->name ?? '-' }}</div>
+                                    <div class="ui-muted text-xs">{{ $sale->product?->category ?: 'Sin categoria' }}</div>
+                                </td>
+                                <td>{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
+                                <td>{{ $sale->soldBy?->name ?? '-' }}</td>
+                                <td>{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
+                                <td>{{ (int) $sale->quantity }}</td>
+                                <td class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
+                                <td class="text-rose-700 dark:text-rose-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_cost, $appCurrencyCode) }}</td>
+                                <td class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">No hay ventas dentro del rango seleccionado.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -305,9 +350,19 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
+                    },
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
                     },
                 },
             },
