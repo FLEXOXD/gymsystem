@@ -2660,7 +2660,12 @@
             </div>
             <div class="reveal">
                 <p class="kicker">{{ $content['hero_kicker'] ?? 'Software para gimnasios' }}</p>
-                <h1>{{ $heroTitleText }} <span class="neon">sin problemas</span></h1>
+                <h1>
+                    {{ $heroTitleText }}
+                    @unless ($heroHasClosingPhrase)
+                        <span class="neon">sin problemas</span>
+                    @endunless
+                </h1>
                 <p>{{ $content['hero_subtitle'] ?? 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil.' }}</p>
 
                 <div class="hero-actions">
@@ -3017,7 +3022,7 @@
                     </span>
                     <span>Solicita tu cotización</span>
                 </button>
-                <a href="{{ $contactHref }}" class="btn btn-outline">Ir a contacto</a>
+                <a href="{{ $contactHref }}" class="btn btn-ghost">Ir a contacto</a>
             </div>
         </section>
         @endif
@@ -3776,6 +3781,17 @@
                 }
             }
 
+            const topWrap = document.querySelector('.top-wrap');
+            if (topWrap) {
+                const syncCompactNav = function () {
+                    topWrap.classList.toggle('is-compact', window.scrollY > 18);
+                };
+
+                syncCompactNav();
+                window.addEventListener('scroll', syncCompactNav, { passive: true });
+                window.addEventListener('resize', syncCompactNav);
+            }
+
             const navLinks = Array.from(document.querySelectorAll('.menu-links a, .mobile-nav-links a'));
             if (navLinks.length > 0) {
                 const activeStorageKey = 'landing.nav.active';
@@ -4341,4 +4357,3 @@
     </script>
 </body>
 </html>
-
