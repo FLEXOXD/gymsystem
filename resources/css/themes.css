@@ -129,15 +129,13 @@
 @layer components {
     .theme-body {
         background-color: var(--bg);
-        background-image: linear-gradient(
-            165deg,
-            color-mix(in srgb, var(--bg) 95%, #000000 5%) 0%,
-            color-mix(in srgb, var(--bg) 84%, var(--accent) 16%) 100%
-        );
-        background-repeat: no-repeat;
-        background-size: 100% 100%;
+        background-image: none;
         color: var(--text);
         transition: background-color 220ms ease, color 220ms ease;
+    }
+
+    .theme-dark.theme-body {
+        background-color: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
     }
 
     .theme-sidebar {
