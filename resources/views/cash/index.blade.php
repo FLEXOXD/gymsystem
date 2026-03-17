@@ -1,4 +1,4 @@
-﻿@extends('layouts.panel')
+@extends('layouts.panel')
 
 @section('title', 'Caja profesional')
 @section('page-title', 'Caja por turno')
@@ -182,7 +182,7 @@
         @if ($isCurrentCashView)
             @if (! $openSession)
                 @if ($cashWriteBlocked)
-                    <x-ui.card title="Caja en solo lectura" subtitle="OperaciÃ³n administrada desde sede principal.">
+                    <x-ui.card title="Caja en solo lectura" subtitle="Operación administrada desde sede principal.">
                         <p class="ui-alert ui-alert-warning">
                             {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'No tienes permisos para abrir o cerrar caja en esta sucursal.' }}
                         </p>
@@ -190,11 +190,11 @@
                 @elseif (! $canOpenCash)
                     <x-ui.card title="Apertura restringida" subtitle="Solo usuarios autorizados pueden abrir caja.">
                         <p class="ui-alert ui-alert-warning">
-                            Tu perfil no tiene permiso para abrir caja. Solicita al dueÃ±o del gimnasio que abra el turno o te habilite este permiso.
+                            Tu perfil no tiene permiso para abrir caja. Solicita al dueño del gimnasio que abra el turno o te habilite este permiso.
                         </p>
                     </x-ui.card>
                 @else
-                    <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresÃ­as o registrar movimientos.">
+                    <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresías o registrar movimientos.">
                         <form method="POST" action="{{ route('cash.open') }}" class="space-y-4">
                             @csrf
                             <div class="grid gap-4 md:grid-cols-2">
@@ -257,7 +257,7 @@
                     $expectedTotal = round($expectedCash + $expectedCard + $expectedTransfer, 2);
                 @endphp
 
-                <x-ui.card title="{{ $isCashierScoped ? 'Tu producciÃƒÂ³n en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
+                <x-ui.card title="{{ $isCashierScoped ? 'Tu producción en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
                     @if ($isCashierScoped)
                         <div class="cash-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
@@ -360,7 +360,7 @@
                                     </label>
 
                                     <label class="space-y-1 text-sm font-semibold ui-muted">
-                                        <span>MÃ©todo</span>
+                                        <span>Método</span>
                                         <select id="movement-method" name="method" required class="ui-input" aria-label="Metodo de pago">
                                             <option value="">Seleccione</option>
                                             <option value="cash" @selected(old('method') === 'cash')>Efectivo</option>
@@ -387,8 +387,8 @@
                                     </label>
 
                                     <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2 xl:col-span-4">
-                                        <span id="movement-description-label">DescripciÃ³n (obligatoria)</span>
-                                        <textarea id="movement-description" name="description" rows="2" required class="ui-input" aria-label="DescripciÃ³n" placeholder="Ingresa descripciÃ³n obligatoria.">{{ old('description') }}</textarea>
+                                        <span id="movement-description-label">Descripción (obligatoria)</span>
+                                        <textarea id="movement-description" name="description" rows="2" required class="ui-input" aria-label="Descripción" placeholder="Ingresa descripción obligatoria.">{{ old('description') }}</textarea>
                                     </label>
                                 </div>
 
@@ -448,7 +448,7 @@
                         <x-ui.card title="{{ $canCloseCash ? 'Cerrar turno' : 'Cierre restringido' }}" subtitle="{{ $canCloseCash ? 'Conteo por metodo y control de diferencias.' : 'Solo usuarios autorizados pueden ver y ejecutar el cierre completo.' }}" class="cash-close-card">
                             @if (! $canCloseCash)
                                 <p class="ui-alert ui-alert-warning mb-3">
-                                    Tu perfil no tiene permiso para cerrar caja. Esta acciÃ³n la realiza el dueÃ±o o un usuario autorizado.
+                                    Tu perfil no tiene permiso para cerrar caja. Esta acción la realiza el dueño o un usuario autorizado.
                                 </p>
                             @else
 
@@ -472,7 +472,7 @@
 
                             <div class="grid gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                                 <div class="grid grid-cols-4 gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                                    <span>MÃ©todo</span>
+                                    <span>Método</span>
                                     <span class="text-right">Esperado</span>
                                     <span class="text-right">Contado</span>
                                     <span class="text-right">Diferencia</span>
@@ -500,7 +500,7 @@
 
                             <label id="difference-reason-wrap" class="hidden space-y-1 text-sm font-semibold ui-muted">
                                 <span>Motivo de diferencia (obligatorio si no cuadra)</span>
-                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por quÃ© hay diferencia.">{{ old('difference_reason') }}</textarea>
+                                <textarea id="difference-reason" name="difference_reason" rows="2" class="ui-input" placeholder="Explica por qué hay diferencia.">{{ old('difference_reason') }}</textarea>
                             </label>
 
                             <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -519,19 +519,19 @@
                     @endif
                 </section>
 
-                <x-ui.card title="{{ $isCashierScoped ? 'Tus Ãºltimos 10 movimientos' : 'Ãºltimos 10 movimientos' }}">
+                <x-ui.card title="{{ $isCashierScoped ? 'Tus últimos 10 movimientos' : 'últimos 10 movimientos' }}">
                     <div class="overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
                             <tr>
                                 <th>Fecha</th>
                                 <th>Tipo</th>
-                                <th>MÃ©todo</th>
+                                <th>Método</th>
                                 <th>Monto</th>
                                 <th>Cliente</th>
                                 <th>Alta cliente</th>
                                 <th>Usuario</th>
-                                <th>DescripciÃ³n</th>
+                                <th>Descripción</th>
                                 <th>Estado</th>
                                 <th class="text-right">Acciones</th>
                             </tr>
@@ -561,7 +561,7 @@
                                     </td>
                                     <td class="text-right">
                                         @if ($movementIsVoided)
-                                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-300">Sin acciÃ³n</span>
+                                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-300">Sin acción</span>
                                         @elseif (! $isCashAdmin)
                                             <span class="text-xs font-semibold text-slate-500 dark:text-slate-300">Solo Admin</span>
                                         @elseif (! $routeHasVoidMovement)
@@ -573,7 +573,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center text-sm text-slate-500 dark:text-slate-300">{{ $isCashierScoped ? 'AÃºn no tienes movimientos en este turno.' : 'AÃºn no hay movimientos en este turno.' }}</td>
+                                    <td colspan="10" class="text-center text-sm text-slate-500 dark:text-slate-300">{{ $isCashierScoped ? 'Aún no tienes movimientos en este turno.' : 'Aún no hay movimientos en este turno.' }}</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -632,7 +632,7 @@
                 $historyRows = $sessions ?? collect();
             @endphp
 
-            <x-ui.card title="Historial de caja" subtitle="RevisiÃ³n de cierres, diferencias y responsables.">
+            <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables.">
                 @if ($isGlobalScope)
                     <p class="mb-4 ui-alert ui-alert-info">
                         Modo global activo: historial consolidado de todas tus sedes en solo lectura.
@@ -709,10 +709,10 @@
 @endsection
 
 {{-- 
-TODO backend mÃ­nimo:
+TODO backend mínimo:
 1) Route sugerida: PATCH /cash/movements/{movement}/void -> cash.movements.void
 2) CashMovement: status, void_reason, voided_at, voided_by (solo Admin puede anular).
 3) Cierre con diferencia: validar difference_reason + supervisor_password + permiso admin.
-4) Registrar auditorÃ­a de: movimiento creado, anulado, cierre, cierre con diferencia, aprobaciÃ³n supervisor.
+4) Registrar auditoría de: movimiento creado, anulado, cierre, cierre con diferencia, aprobación supervisor.
 --}}
 

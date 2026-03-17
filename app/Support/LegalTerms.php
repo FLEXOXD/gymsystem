@@ -4,7 +4,10 @@ namespace App\Support;
 
 class LegalTerms
 {
-    public const Versión = '2026-02-26';
+    public const VERSION = '2026-02-26';
+
+    // Compatibilidad temporal con referencias antiguas.
+    public const Versión = self::VERSION;
 
     /**
      * @return array<string, array{label:string,summary:string,points:list<string>}>

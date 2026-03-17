@@ -201,8 +201,11 @@ class ThemeController extends Controller
 
         $data = $request->validate([
             'reactivation_message' => ['nullable', 'string', 'max:600'],
+            'reactivation_receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ], [
             'reactivation_message.max' => 'El mensaje no puede superar 600 caracteres.',
+            'reactivation_receipt.mimes' => 'El comprobante debe ser una imagen JPG, PNG o WEBP.',
+            'reactivation_receipt.max' => 'El comprobante no puede superar 4 MB.',
         ]);
 
         $gymId = (int) $viewer->gym_id;
@@ -220,6 +223,19 @@ class ThemeController extends Controller
         }
 
         $customMessage = trim((string) ($data['reactivation_message'] ?? ''));
+        $receiptFile = $request->file('reactivation_receipt');
+        $receiptPath = null;
+        $receiptUrl = null;
+        if ($receiptFile) {
+            $receiptPath = $receiptFile->store('support/reactivation-receipts', 'public');
+            if (! is_string($receiptPath) || trim($receiptPath) === '') {
+                return redirect()
+                    ->route('subscription.expired')
+                    ->withErrors(['reactivation_receipt' => 'No se pudo guardar el comprobante. Intenta nuevamente.']);
+            }
+            $receiptUrl = Storage::disk('public')->url($receiptPath);
+        }
+
         $supportMessageLines = [
             'Solicitud enviada desde la pantalla de suscripcion suspendida.',
             'Gym: '.(string) ($viewer->gym?->name ?? 'Gym '.$gymId),
@@ -229,6 +245,11 @@ class ThemeController extends Controller
             'Mensaje del gimnasio:',
             $customMessage !== '' ? $customMessage : 'Solicito activacion de la cuenta.',
         ];
+        if ($receiptUrl !== null) {
+            $supportMessageLines[] = '';
+            $supportMessageLines[] = 'Comprobante: '.$receiptUrl;
+            $supportMessageLines[] = 'Ruta interna: '.$receiptPath;
+        }
 
         ContactSuggestion::query()->create([
             'gym_id' => $gymId,

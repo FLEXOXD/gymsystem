@@ -1106,6 +1106,42 @@ it('prevents duplicate pending reactivation requests for the same gym', function
     expect($count)->toBe(1);
 });
 
+it('stores receipt image when requesting subscription reactivation', function () {
+    Storage::fake('public');
+
+    $gym = makeGym('reactivation-receipt');
+    $user = makeGymUser($gym, 'reactivation-receipt@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'status' => 'suspended',
+            'starts_at' => Carbon::today()->subMonth()->toDateString(),
+            'ends_at' => Carbon::today()->subDays(2)->toDateString(),
+        ]);
+
+    $response = $this->actingAs($user)
+        ->post(route('subscription.reactivation.request'), [
+            'reactivation_message' => 'Adjunto comprobante de transferencia.',
+            'reactivation_receipt' => UploadedFile::fake()->image('comprobante.png', 1200, 800),
+        ]);
+
+    $response->assertRedirect(route('subscription.expired'));
+    $response->assertSessionHas('status', 'Solicitud enviada al SuperAdmin. Te activaremos cuando se confirme el pago.');
+
+    $request = ContactSuggestion::query()
+        ->where('gym_id', $gym->id)
+        ->where('subject', 'Solicitud de reactivacion de suscripcion')
+        ->latest('id')
+        ->first();
+
+    expect($request)->not->toBeNull();
+    expect((string) $request?->message)->toContain('Comprobante:');
+
+    $storedReceiptFiles = Storage::disk('public')->allFiles('support/reactivation-receipts');
+    expect(count($storedReceiptFiles))->toBe(1);
+});
+
 it('enforces separation between superadmin and gym users', function () {
     $gym = makeGym('tenant-role');
     $gymUser = makeGymUser($gym, 'tenant-role@example.test');

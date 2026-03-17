@@ -309,7 +309,7 @@
     $navItems = $isSuperAdmin
         ? [
             ['label' => __('ui.nav.panel'), 'route' => 'superadmin.dashboard', 'params' => [], 'active' => 'superadmin.dashboard', 'icon' => 'panel'],
-            ['label' => 'Solicitudes de cotizaciÃ³n', 'route' => 'superadmin.quotations.index', 'params' => [], 'active' => 'superadmin.quotations.*', 'icon' => 'quotations'],
+            ['label' => 'Solicitudes de cotización', 'route' => 'superadmin.quotations.index', 'params' => [], 'active' => 'superadmin.quotations.*', 'icon' => 'quotations'],
             ['label' => 'Listado de gimnasios', 'route' => 'superadmin.gym-list.index', 'params' => [], 'active' => 'superadmin.gym-list.*', 'icon' => 'gym_directory'],
             ['label' => 'Gimnasios y Suscripciones', 'route' => 'superadmin.gyms.index', 'params' => [], 'active' => 'superadmin.gyms.*|superadmin.subscriptions.*', 'icon' => 'subscriptions_admin'],
             ['label' => 'Sucursales globales', 'route' => 'superadmin.branches.index', 'params' => [], 'active' => 'superadmin.branches.*', 'icon' => 'branches'],
@@ -319,7 +319,7 @@
             ['label' => __('ui.nav.notifications'), 'route' => 'superadmin.notifications.index', 'params' => [], 'active' => 'superadmin.notifications.*', 'icon' => 'notifications'],
             ['label' => __('ui.nav.suggestions'), 'route' => 'superadmin.suggestions.index', 'params' => [], 'active' => 'superadmin.suggestions.*', 'icon' => 'suggestions'],
             ['label' => 'Aceptaciones legales', 'route' => 'superadmin.legal-acceptances.index', 'params' => [], 'active' => 'superadmin.legal-acceptances.*', 'icon' => 'legal_acceptances'],
-            ['label' => 'Administrar pÃ¡gina web', 'route' => 'superadmin.web-page.edit', 'params' => [], 'active' => 'superadmin.web-page.*', 'icon' => 'web'],
+            ['label' => 'Administrar página web', 'route' => 'superadmin.web-page.edit', 'params' => [], 'active' => 'superadmin.web-page.*', 'icon' => 'web'],
           ]
         : $gymNavItems;
 
@@ -399,7 +399,7 @@
     $demoServerNowIso = trim((string) ($demo_server_now_iso ?? ''));
     $demoGuideSteps = is_array($demo_guide_steps ?? null) ? array_values($demo_guide_steps) : [];
     $demoExpiresLabel = $demoExpiresAt ? $demoExpiresAt->timezone(config('app.timezone'))->format('d/m/Y H:i') : null;
-    $legalCurrentVersion = LegalTerms::VersiÃ³n;
+    $legalCurrentVersion = LegalTerms::VERSION;
     $acceptedVersion = trim((string) ($user?->legal_accepted_version ?? ''));
     $legalAcceptanceColumnsReady = \Illuminate\Support\Facades\Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version']);
     $canAcceptLegalTerms = app(LegalAcceptanceEligibilityService::class)->canUserAccept($user);
@@ -1665,14 +1665,14 @@
                     <button id="sidebar-toggle" type="button"
                             data-tour="sidebar-toggle"
                             class="panel-menu-trigger hidden ui-button ui-button-ghost px-2.5 py-2 text-xs font-bold lg:inline-flex"
-                            aria-label="Ocultar menÃº"
-                            title="Ocultar menÃº">
+                            aria-label="Ocultar menú"
+                            title="Ocultar menú">
                         <span class="panel-menu-trigger-icon" aria-hidden="true">
                             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                                 <path d="M4 6h16M4 12h10M4 18h16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
                             </svg>
                         </span>
-                        <span class="panel-menu-trigger-label">Ocultar menÃº</span>
+                        <span class="panel-menu-trigger-label">Ocultar menú</span>
                     </button>
                     @php
                         $mobileBrandImage = $isSuperAdmin ? $userPhotoUrl : $gymLogo;
@@ -1782,7 +1782,7 @@
                                         </a>
                                     @empty
                                         <p class="rounded-xl border border-dashed border-slate-300 px-3 py-6 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-300">
-                                            AÃºn no hay mensajes nuevos desde la web.
+                                            Aún no hay mensajes nuevos desde la web.
                                         </p>
                                     @endforelse
                                 </div>
@@ -1869,7 +1869,7 @@
                 <section class="rounded-2xl border border-cyan-200 bg-cyan-50/90 px-4 py-3 text-sm text-cyan-900 shadow-sm dark:border-cyan-500/40 dark:bg-cyan-900/20 dark:text-cyan-100">
                     <p class="font-bold uppercase tracking-wide">Modo Cajero</p>
                     <p class="mt-1 text-xs">
-                        Acceso operativo habilitado para panel, recepciÃ³n, clientes, membresÃ­as y cobros.
+                        Acceso operativo habilitado para panel, recepción, clientes, membresías y cobros.
                     </p>
                 </section>
             @endif

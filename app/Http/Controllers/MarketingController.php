@@ -161,14 +161,14 @@ class MarketingController extends Controller
             'email' => strtolower((string) $request->validated('email')),
             'document_key' => $documentKey,
             'document_label' => (string) $document['label'],
-            'legal_version' => LegalTerms::Versión,
+            'legal_version' => LegalTerms::VERSION,
             'accepted' => true,
             'accepted_at' => now(),
             'ip_address' => $request->ip(),
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        return back()->with('status', 'Aceptación registrada para '.$document['label'].' (versión '.LegalTerms::Versión.').');
+        return back()->with('status', 'Aceptación registrada para '.$document['label'].' (versión '.LegalTerms::VERSION.').');
     }
 
     private function renderLandingPage(Request $request, string $pageMode): View|RedirectResponse
@@ -185,7 +185,7 @@ class MarketingController extends Controller
             'content' => MarketingContent::load(),
             'publicPlanCards' => $this->resolvePublicPlanCards(),
             'pageMode' => $pageMode,
-            'legalVersion' => LegalTerms::Versión,
+            'legalVersion' => LegalTerms::VERSION,
         ]);
     }
 

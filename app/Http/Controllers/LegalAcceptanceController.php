@@ -54,7 +54,7 @@ class LegalAcceptanceController extends Controller
             return back()->with('error', 'Falta actualizar tabla legal_acceptances. Ejecuta: php artisan migrate');
         }
 
-        $versión = LegalTerms::Versión;
+        $versión = LegalTerms::VERSION;
         $acceptedAt = now();
         $permission = (string) ($request->validated('location_permission') ?? 'skipped');
         $latitude = $permission === 'granted' ? $request->validated('latitude') : null;
@@ -147,7 +147,7 @@ class LegalAcceptanceController extends Controller
                     'to' => (string) ($filters['to'] ?? ''),
                     'versión' => (string) ($filters['versión'] ?? ''),
                 ],
-                'currentVersion' => LegalTerms::Versión,
+                'currentVersion' => LegalTerms::VERSION,
                 'dbNotReady' => true,
             ]);
         }
@@ -194,7 +194,7 @@ class LegalAcceptanceController extends Controller
                 'to' => (string) ($filters['to'] ?? ''),
                 'versión' => (string) ($filters['versión'] ?? ''),
             ],
-            'currentVersion' => LegalTerms::Versión,
+            'currentVersion' => LegalTerms::VERSION,
             'dbNotReady' => false,
         ]);
     }

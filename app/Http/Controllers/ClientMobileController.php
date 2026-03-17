@@ -369,7 +369,7 @@ class ClientMobileController extends Controller
         if (! $this->supportsTrainingSessions()) {
             return response()->json([
                 'ok' => false,
-                'message' => 'El modo entrenamiento aÃºn no estÃ¡ habilitado en el servidor.',
+                'message' => 'El modo entrenamiento aún no está habilitado en el servidor.',
             ], 503);
         }
 
@@ -377,7 +377,7 @@ class ClientMobileController extends Controller
         if (! $this->isFitnessProfileCompleted($fitnessProfile)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Completa tus datos fÃ­sicos antes de iniciar entrenamiento.',
+                'message' => 'Completa tus datos físicos antes de iniciar entrenamiento.',
             ], 422);
         }
 
@@ -412,7 +412,7 @@ class ClientMobileController extends Controller
         if ($existingTodaySession && (string) $existingTodaySession->status === ClientTrainingSession::STATUS_COMPLETED) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Tu entrenamiento de hoy ya estÃ¡ completado.',
+                'message' => 'Tu entrenamiento de hoy ya está completado.',
                 'training_status' => $this->resolveTrainingStatusPayload(
                     gymId: (int) $gym->id,
                     clientId: (int) $client->id,
@@ -489,7 +489,7 @@ class ClientMobileController extends Controller
         if (! $this->supportsTrainingSessions()) {
             return response()->json([
                 'ok' => false,
-                'message' => 'El modo entrenamiento aÃºn no estÃ¡ habilitado en el servidor.',
+                'message' => 'El modo entrenamiento aún no está habilitado en el servidor.',
             ], 503);
         }
 
@@ -581,14 +581,14 @@ class ClientMobileController extends Controller
             'new_password' => ['nullable', 'string', 'min:8', 'max:120', 'confirmed'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ], [
-            'current_password.required' => 'Ingresa tu contraseÃ±a actual.',
-            'current_password.max' => 'La contraseÃ±a actual no puede superar 120 caracteres.',
-            'phone.regex' => 'El telÃ©fono solo puede contener nÃºmeros y los sÃ­mbolos + - ( ).',
-            'phone.max' => 'El telÃ©fono no puede superar 25 caracteres.',
-            'new_password.min' => 'La nueva contraseÃ±a debe tener al menos 8 caracteres.',
-            'new_password.max' => 'La nueva contraseÃ±a no puede superar 120 caracteres.',
-            'new_password.confirmed' => 'La confirmaciÃ³n de nueva contraseÃ±a no coincide.',
-            'photo.image' => 'La foto debe ser una imagen vÃ¡lida.',
+            'current_password.required' => 'Ingresa tu contraseña actual.',
+            'current_password.max' => 'La contraseña actual no puede superar 120 caracteres.',
+            'phone.regex' => 'El teléfono solo puede contener números y los símbolos + - ( ).',
+            'phone.max' => 'El teléfono no puede superar 25 caracteres.',
+            'new_password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'new_password.max' => 'La nueva contraseña no puede superar 120 caracteres.',
+            'new_password.confirmed' => 'La confirmación de nueva contraseña no coincide.',
+            'photo.image' => 'La foto debe ser una imagen válida.',
             'photo.mimes' => 'La foto debe ser JPG, JPEG, PNG o WEBP.',
             'photo.max' => 'La foto no puede superar 4 MB.',
         ]);
@@ -602,7 +602,7 @@ class ClientMobileController extends Controller
             || ! Hash::check((string) $data['current_password'], (string) $client->app_password)
         ) {
             return back()
-                ->withErrors(['current_password' => 'La contraseÃ±a actual no es correcta.'])
+                ->withErrors(['current_password' => 'La contraseña actual no es correcta.'])
                 ->withInput($request->except(['current_password', 'new_password', 'new_password_confirmation']));
         }
 
@@ -670,30 +670,30 @@ class ClientMobileController extends Controller
             'next_screen' => ['nullable', 'string', 'in:home,progress,physical'],
         ], [
             'age.required' => 'Ingresa tu edad.',
-            'age.integer' => 'La edad debe ser un nÃºmero entero.',
-            'age.min' => 'Edad mÃ­nima permitida: 12.',
-            'age.max' => 'Edad mÃ¡xima permitida: 90.',
+            'age.integer' => 'La edad debe ser un número entero.',
+            'age.min' => 'Edad mínima permitida: 12.',
+            'age.max' => 'Edad máxima permitida: 90.',
             'sex.required' => 'Selecciona tu sexo.',
-            'sex.in' => 'Selecciona una opciÃ³n vÃ¡lida de sexo.',
+            'sex.in' => 'Selecciona una opción válida de sexo.',
             'height_cm.numeric' => 'La altura debe ser numerica.',
-            'height_cm.min' => 'La altura mÃ­nima es 120 cm.',
-            'height_cm.max' => 'La altura mÃ¡xima es 250 cm.',
+            'height_cm.min' => 'La altura mínima es 120 cm.',
+            'height_cm.max' => 'La altura máxima es 250 cm.',
             'weight_kg.numeric' => 'El peso debe ser numerico.',
-            'weight_kg.min' => 'El peso mÃ­nimo es 30 kg.',
-            'weight_kg.max' => 'El peso mÃ¡ximo es 400 kg.',
+            'weight_kg.min' => 'El peso mínimo es 30 kg.',
+            'weight_kg.max' => 'El peso máximo es 400 kg.',
             'goal.required' => 'Selecciona tu objetivo del gimnasio.',
-            'goal.in' => 'Selecciona un objetivo vÃ¡lido.',
+            'goal.in' => 'Selecciona un objetivo válido.',
             'secondary_goal.in' => 'Selecciona un objetivo secundario valido.',
             'experience_level.required' => 'Selecciona tu nivel.',
-            'experience_level.in' => 'Selecciona un nivel vÃ¡lido.',
-            'days_per_week.required' => 'Selecciona tus dÃ­as por semana.',
-            'days_per_week.in' => 'Selecciona 3, 4, 5, 6 o 7 dÃ­as.',
+            'experience_level.in' => 'Selecciona un nivel válido.',
+            'days_per_week.required' => 'Selecciona tus días por semana.',
+            'days_per_week.in' => 'Selecciona 3, 4, 5, 6 o 7 días.',
             'session_minutes.required' => 'Selecciona el tiempo por entrenamiento.',
             'session_minutes.in' => 'Selecciona 45, 60, 90 o 120 minutos.',
             'limitations.array' => 'Las limitaciones deben enviarse como lista.',
-            'limitations.max' => 'Puedes seleccionar mÃ¡ximo 5 limitaciones.',
-            'limitations.*.in' => 'Hay una limitacion no vÃ¡lida.',
-            'next_screen.in' => 'Pantalla de retorno no vÃ¡lida.',
+            'limitations.max' => 'Puedes seleccionar máximo 5 limitaciones.',
+            'limitations.*.in' => 'Hay una limitacion no válida.',
+            'next_screen.in' => 'Pantalla de retorno no válida.',
         ]);
 
         $limitations = collect($data['limitations'] ?? [])
@@ -767,7 +767,7 @@ class ClientMobileController extends Controller
 
         return redirect()
             ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => $nextScreen])
-            ->with('fitness_status', 'Datos fÃ­sicos guardados correctamente.');
+            ->with('fitness_status', 'Datos físicos guardados correctamente.');
     }
 
     public function updateWeeklyGoal(Request $request, string $gymSlug): RedirectResponse
@@ -785,13 +785,13 @@ class ClientMobileController extends Controller
         ], [
             'weekly_goal.required' => 'Selecciona una meta semanal.',
             'weekly_goal.integer' => 'La meta semanal debe ser numerica.',
-            'weekly_goal.in' => 'Selecciona entre 3 y 7 dÃ­as por semana.',
+            'weekly_goal.in' => 'Selecciona entre 3 y 7 días por semana.',
         ]);
 
         $fitnessProfile = $this->resolveFitnessProfile((int) $gym->id, (int) $sessionClient->id);
         if (! $fitnessProfile) {
             return back()
-                ->withErrors(['weekly_goal_profile' => 'Primero completa tus datos fÃ­sicos para ajustar la meta semanal.'])
+                ->withErrors(['weekly_goal_profile' => 'Primero completa tus datos físicos para ajustar la meta semanal.'])
                 ->withInput([
                     '_weekly_goal_form' => '1',
                     'weekly_goal' => (int) $data['weekly_goal'],
@@ -881,7 +881,7 @@ class ClientMobileController extends Controller
         if ($endpoint === '') {
             return response()->json([
                 'ok' => false,
-                'message' => 'Endpoint de push invÃ¡lido.',
+                'message' => 'Endpoint de push inválido.',
             ], 422);
         }
 
@@ -961,7 +961,7 @@ class ClientMobileController extends Controller
                 ->count(),
             'message' => $revoked > 0
                 ? 'Notificaciones desactivadas para este dispositivo.'
-                : 'No se encontrÃ³ una suscripciÃ³n activa para revocar.',
+                : 'No se encontró una suscripción activa para revocar.',
         ]);
     }
 
@@ -1242,7 +1242,7 @@ class ClientMobileController extends Controller
             ->first(['date', 'time']);
 
         $periodVisits = 0;
-        $periodWindowLabel = 'Sin membresÃ­a activa';
+        $periodWindowLabel = 'Sin membresía activa';
         if (
             $latestMembership?->starts_at
             && $latestMembership?->ends_at
@@ -1881,9 +1881,9 @@ class ClientMobileController extends Controller
                 'ready' => false,
                 'rhythm_label' => 'Sin datos',
                 'consistency_percent' => 0,
-                'primary_line' => 'Completa tus datos fÃ­sicos para activar tu predicciÃ³n.',
-                'secondary_line' => 'Cuando registres asistencias veremos tu proyecciÃ³n de 30 dÃ­as.',
-                'context_line' => 'AÃºn no existe perfil fÃ­sico asociado.',
+                'primary_line' => 'Completa tus datos físicos para activar tu predicción.',
+                'secondary_line' => 'Cuando registres asistencias veremos tu proyección de 30 días.',
+                'context_line' => 'Aún no existe perfil físico asociado.',
             ];
         }
 
@@ -1928,40 +1928,40 @@ class ClientMobileController extends Controller
                 $fatLossKg = 0.7 + ($adherenceRatio * 2.0);
                 $fatLossKg = max(0.5, min(3.6, $fatLossKg));
 
-                $primaryLine = 'PodrÃ­as perder '.number_format($fatLossKg, 1, '.', '').' kg de grasa en 30 dÃ­as.';
-                $secondaryLine = 'TambiÃ©n podrÃ­as mejorar +'.(int) round($strengthGainPct).'% tu fuerza base.';
+                $primaryLine = 'Podrías perder '.number_format($fatLossKg, 1, '.', '').' kg de grasa en 30 días.';
+                $secondaryLine = 'También podrías mejorar +'.(int) round($strengthGainPct).'% tu fuerza base.';
                 break;
             case 'ganar_musculo':
                 $muscleGainKg = 0.25 + ($adherenceRatio * 0.75 * $experienceMultiplier);
                 $muscleGainKg = max(0.2, min(1.4, $muscleGainKg));
 
-                $primaryLine = 'PodrÃ­as ganar '.number_format($muscleGainKg, 1, '.', '').' kg de masa muscular en 30 dÃ­as.';
-                $secondaryLine = 'Tu fuerza podrÃ­a subir +'.(int) round($strengthGainPct).'% en ejercicios principales.';
+                $primaryLine = 'Podrías ganar '.number_format($muscleGainKg, 1, '.', '').' kg de masa muscular en 30 días.';
+                $secondaryLine = 'Tu fuerza podría subir +'.(int) round($strengthGainPct).'% en ejercicios principales.';
                 break;
             case 'mantener_forma':
                 $variationKg = max(0.3, min(0.8, 0.9 - ($adherenceRatio * 0.45)));
 
-                $primaryLine = 'PodrÃ­as mantener tu peso dentro de Â±'.number_format($variationKg, 1, '.', '').' kg en 30 dÃ­as.';
-                $secondaryLine = 'Tu resistencia podrÃ­a mejorar +'.(int) round($resistanceGainPct).'% con este ritmo.';
+                $primaryLine = 'Podrías mantener tu peso dentro de ±'.number_format($variationKg, 1, '.', '').' kg en 30 días.';
+                $secondaryLine = 'Tu resistencia podría mejorar +'.(int) round($resistanceGainPct).'% con este ritmo.';
                 break;
             case 'definir':
                 $fatLossKg = 0.5 + ($adherenceRatio * 1.3);
                 $fatLossKg = max(0.4, min(2.4, $fatLossKg));
 
-                $primaryLine = 'PodrÃ­as bajar '.number_format($fatLossKg, 1, '.', '').' kg de grasa manteniendo masa muscular.';
-                $secondaryLine = 'Se proyecta +'.(int) round($strengthGainPct * 0.8).'% en fuerza y control tÃ©cnico.';
+                $primaryLine = 'Podrías bajar '.number_format($fatLossKg, 1, '.', '').' kg de grasa manteniendo masa muscular.';
+                $secondaryLine = 'Se proyecta +'.(int) round($strengthGainPct * 0.8).'% en fuerza y control técnico.';
                 break;
             case 'aumentar_fuerza':
-                $primaryLine = 'PodrÃ­as aumentar +'.(int) round($strengthGainPct + 1.5).'% tu fuerza en 30 dÃ­as.';
-                $secondaryLine = 'Tu capacidad de trabajo podrÃ­a subir +'.(int) round($resistanceGainPct * 0.7).'%.';
+                $primaryLine = 'Podrías aumentar +'.(int) round($strengthGainPct + 1.5).'% tu fuerza en 30 días.';
+                $secondaryLine = 'Tu capacidad de trabajo podría subir +'.(int) round($resistanceGainPct * 0.7).'%.';
                 break;
             case 'mejorar_resistencia':
-                $primaryLine = 'PodrÃ­as mejorar +'.(int) round($resistanceGainPct + 1.2).'% tu resistencia en 30 dÃ­as.';
-                $secondaryLine = 'Con eso podrÃ­as sostener +'.(int) round($strengthGainPct * 0.6).'% de volumen efectivo.';
+                $primaryLine = 'Podrías mejorar +'.(int) round($resistanceGainPct + 1.2).'% tu resistencia en 30 días.';
+                $secondaryLine = 'Con eso podrías sostener +'.(int) round($strengthGainPct * 0.6).'% de volumen efectivo.';
                 break;
             default:
-                $primaryLine = 'Manteniendo este ritmo, tu condiciÃ³n fÃ­sica puede mejorar en 30 dÃ­as.';
-                $secondaryLine = 'Tu fuerza podrÃ­a subir alrededor de +'.(int) round($strengthGainPct).'%';
+                $primaryLine = 'Manteniendo este ritmo, tu condición física puede mejorar en 30 días.';
+                $secondaryLine = 'Tu fuerza podría subir alrededor de +'.(int) round($strengthGainPct).'%';
                 break;
         }
 
@@ -2087,7 +2087,7 @@ class ClientMobileController extends Controller
                 'streak_days' => 0,
                 'week_visits' => 0,
                 'days_since_last' => null,
-                'summary_line' => 'Completa tus datos fÃ­sicos para activar este estado.',
+                'summary_line' => 'Completa tus datos físicos para activar este estado.',
                 'context_line' => 'Se calcula con racha, descanso e intensidad semanal.',
             ];
         }
@@ -2218,10 +2218,10 @@ class ClientMobileController extends Controller
             return [
                 'ready' => false,
                 'title' => 'Entrenamiento de hoy',
-                'objective_line' => 'Completa tus datos fÃ­sicos para crear tu rutina.',
-                'focus_line' => 'AÃºn no hay enfoque disponible.',
+                'objective_line' => 'Completa tus datos físicos para crear tu rutina.',
+                'focus_line' => 'Aún no hay enfoque disponible.',
                 'rhythm_line' => 'Sin frecuencia configurada.',
-                'adaptation_line' => 'Cuando completes tu perfil activaremos tu rutina automÃ¡tica.',
+                'adaptation_line' => 'Cuando completes tu perfil activaremos tu rutina automática.',
                 'context_line' => 'Plan basado en objetivo, nivel y frecuencia semanal.',
                 'exercises' => [],
             ];
@@ -2277,13 +2277,13 @@ class ClientMobileController extends Controller
                 ]],
             ],
             'perder_grasa' => [
-                ['focus' => 'Circuito metabÃ³lico A', 'exercises' => [
+                ['focus' => 'Circuito metabólico A', 'exercises' => [
                     ['name' => 'Sentadilla goblet', 'prescription' => '4 x 12'],
                     ['name' => 'Remo en polea', 'prescription' => '4 x 12'],
                     ['name' => 'Press inclinado con mancuernas', 'prescription' => '3 x 12'],
-                    ['name' => 'Bicicleta estÃ¡tica', 'prescription' => '12 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '12 min'],
                 ]],
-                ['focus' => 'Circuito metabÃ³lico B', 'exercises' => [
+                ['focus' => 'Circuito metabólico B', 'exercises' => [
                     ['name' => 'Peso muerto rumano', 'prescription' => '4 x 10'],
                     ['name' => 'Desplantes alternos', 'prescription' => '3 x 12'],
                     ['name' => 'Press militar', 'prescription' => '3 x 10'],
@@ -2313,7 +2313,7 @@ class ClientMobileController extends Controller
                     ['name' => 'Peso muerto rumano', 'prescription' => '3 x 10'],
                     ['name' => 'Press inclinado con mancuernas', 'prescription' => '3 x 12'],
                     ['name' => 'Curl martillo', 'prescription' => '3 x 12'],
-                    ['name' => 'Bicicleta estÃ¡tica', 'prescription' => '15 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '15 min'],
                 ]],
             ],
             'definir' => [
@@ -2358,7 +2358,7 @@ class ClientMobileController extends Controller
             ],
             'mejorar_resistencia' => [
                 ['focus' => 'Capacidad aerobica', 'exercises' => [
-                    ['name' => 'Bicicleta estÃ¡tica', 'prescription' => '18 min'],
+                    ['name' => 'Bicicleta estática', 'prescription' => '18 min'],
                     ['name' => 'Remo en polea', 'prescription' => '4 x 15'],
                     ['name' => 'Sentadilla goblet', 'prescription' => '4 x 15'],
                     ['name' => 'Plancha abdominal', 'prescription' => '3 x 45 seg'],
@@ -2474,9 +2474,9 @@ class ClientMobileController extends Controller
 
         $adaptationLine = 'Semana equilibrada. Mantiene este volumen.';
         if ($weekVisits < max(1, $daysPerWeek - 1)) {
-            $adaptationLine = 'Vas por debajo de tu frecuencia. Intenta sumar una sesiÃ³n extra.';
+            $adaptationLine = 'Vas por debajo de tu frecuencia. Intenta sumar una sesión extra.';
         } elseif ($weekVisits > $daysPerWeek) {
-            $adaptationLine = 'Semana intensa. Prioriza descanso y tÃ©cnica limpia.';
+            $adaptationLine = 'Semana intensa. Prioriza descanso y técnica limpia.';
         }
 
         $limitationsLine = $limitations === []
@@ -2512,9 +2512,9 @@ class ClientMobileController extends Controller
             return [
                 'ready' => false,
                 'tag' => 'Mensaje personal',
-                'line_1' => 'Completa tus datos fÃ­sicos para activar tus recomendaciones.',
-                'line_2' => 'Con tu perfil listo veremos metas, rachas y alertas Ãºtiles.',
-                'context_line' => 'Se personaliza segÃºn objetivo, ritmo y recuperaciÃ³n.',
+                'line_1' => 'Completa tus datos físicos para activar tus recomendaciones.',
+                'line_2' => 'Con tu perfil listo veremos metas, rachas y alertas útiles.',
+                'context_line' => 'Se personaliza según objetivo, ritmo y recuperación.',
             ];
         }
 
@@ -2617,7 +2617,7 @@ class ClientMobileController extends Controller
         } elseif ($effectiveWeeklyGoal <= 0) {
             $alerts[] = [
                 'type' => 'info',
-                'text' => 'No hubo dÃ­as evaluables esta semana por inicio de membresÃ­a.',
+                'text' => 'No hubo días evaluables esta semana por inicio de membresía.',
             ];
         } elseif ($weekVisits >= $effectiveWeeklyGoal) {
             $alerts[] = [
@@ -2627,12 +2627,12 @@ class ClientMobileController extends Controller
         } elseif ($remaining === 1) {
             $alerts[] = [
                 'type' => 'warning',
-                'text' => 'Te falta 1 sesiÃ³n para cumplir tu meta semanal.',
+                'text' => 'Te falta 1 sesión para cumplir tu meta semanal.',
             ];
         } else {
             $alerts[] = [
                 'type' => 'info',
-                'text' => 'AÃºn te faltan '.$remaining.' sesiones para completar la semana.',
+                'text' => 'Aún te faltan '.$remaining.' sesiones para completar la semana.',
             ];
         }
 
@@ -2641,7 +2641,7 @@ class ClientMobileController extends Controller
         if ($streakDays >= 2 && $daysSinceLast !== null && $daysSinceLast >= 2) {
             $alerts[] = [
                 'type' => 'danger',
-                'text' => 'Racha en riesgo: llevas '.$daysSinceLast.' dÃ­as sin entrenar.',
+                'text' => 'Racha en riesgo: llevas '.$daysSinceLast.' días sin entrenar.',
             ];
         }
 
@@ -2649,7 +2649,7 @@ class ClientMobileController extends Controller
         if ($recoveryScore < 45) {
             $alerts[] = [
                 'type' => 'warning',
-                'text' => 'RecuperaciÃ³n baja. Prioriza descanso activo y tÃ©cnica.',
+                'text' => 'Recuperación baja. Prioriza descanso activo y técnica.',
             ];
         }
 
@@ -2660,17 +2660,17 @@ class ClientMobileController extends Controller
         $restDaysPlanned = max(0, $evaluableDays - $effectiveWeeklyGoal);
         if (! $isSundayClose) {
             $commitmentLine = 'Resumen semanal disponible el domingo. Avance actual: '.$weekVisits.' de '.$effectiveWeeklyGoal.'.';
-            $restLine = 'DÃ­as evaluables esta semana: '.$evaluableDays.'.';
+            $restLine = 'Días evaluables esta semana: '.$evaluableDays.'.';
         } elseif ($effectiveWeeklyGoal <= 0) {
-            $commitmentLine = 'Esta semana no tuvo dÃ­as evaluables por inicio de suscripciÃ³n.';
-            $restLine = 'DÃ­as evaluables esta semana: '.$evaluableDays.'.';
+            $commitmentLine = 'Esta semana no tuvo días evaluables por inicio de suscripción.';
+            $restLine = 'Días evaluables esta semana: '.$evaluableDays.'.';
         } else {
             $commitmentLine = $weekVisits >= $effectiveWeeklyGoal
-                ? 'Has asistido los '.$effectiveWeeklyGoal.' dÃ­as que prometiste. Excelente.'
-                : 'Esta semana asististe '.$weekVisits.' de los '.$effectiveWeeklyGoal.' dÃ­as que prometiste.';
+                ? 'Has asistido los '.$effectiveWeeklyGoal.' días que prometiste. Excelente.'
+                : 'Esta semana asististe '.$weekVisits.' de los '.$effectiveWeeklyGoal.' días que prometiste.';
             $restLine = $restDaysPlanned > 0
-                ? 'DÃ­as de descanso planificados: '.$restDaysPlanned.'.'
-                : 'Sin dÃ­as de descanso planificados esta semana.';
+                ? 'Días de descanso planificados: '.$restDaysPlanned.'.'
+                : 'Sin días de descanso planificados esta semana.';
         }
 
         return [
@@ -3040,7 +3040,7 @@ class ClientMobileController extends Controller
                 'has_attendance_today' => $hasAttendanceToday,
                 'completed_today' => false,
                 'progress_unlocked' => true,
-                'lock_reason' => 'Tu progreso estÃ¡ disponible porque el entrenamiento diario aÃºn no estÃ¡ habilitado.',
+                'lock_reason' => 'Tu progreso está disponible porque el entrenamiento diario aún no está habilitado.',
                 'planned_minutes' => $plannedMinutes,
                 'remaining_seconds' => 0,
                 'started_at' => null,
@@ -3048,7 +3048,7 @@ class ClientMobileController extends Controller
                 'completed_at' => null,
                 'finish_reason' => null,
                 'status_label' => 'Entrenamiento no disponible.',
-                'hint_line' => 'El servidor aÃºn no habilita esta funciÃ³n.',
+                'hint_line' => 'El servidor aún no habilita esta función.',
             ];
         }
 
@@ -3080,9 +3080,9 @@ class ClientMobileController extends Controller
         $hintLine = '';
 
         if (! $isFitnessProfileCompleted) {
-            $statusLabel = 'Completa tus datos fÃ­sicos para habilitar entrenamiento.';
-            $hintLine = 'Cuando completes tu perfil podrÃ¡s iniciar y finalizar sesiones desde esta pantalla.';
-            $lockReason = 'Primero completa tus datos fÃ­sicos para activar tu plan diario.';
+            $statusLabel = 'Completa tus datos físicos para habilitar entrenamiento.';
+            $hintLine = 'Cuando completes tu perfil podrás iniciar y finalizar sesiones desde esta pantalla.';
+            $lockReason = 'Primero completa tus datos físicos para activar tu plan diario.';
         } elseif ($isActive) {
             $startedAt = $activeSession->started_at instanceof Carbon
                 ? $activeSession->started_at->copy()->setTimezone($nowAtGym->getTimezone())
@@ -3094,23 +3094,23 @@ class ClientMobileController extends Controller
             $scheduledEndAtIso = $scheduledEndAt->toIso8601String();
 
             $statusLabel = 'Entrenamiento activo.';
-            $hintLine = 'Finaliza manualmente o espera el cierre automÃ¡tico al terminar tu tiempo.';
+            $hintLine = 'Finaliza manualmente o espera el cierre automático al terminar tu tiempo.';
             $progressUnlocked = true;
             $lockReason = 'Entrenamiento en curso. Panel desbloqueado.';
         } elseif (! $hasAttendanceToday) {
             $statusLabel = 'Registra asistencia para habilitar entrenamiento.';
-            $hintLine = 'VÃ¡lida tu ingreso por QR, RFID o documento en recepciÃ³n.';
-            $lockReason = 'Registra asistencia e inicia tu sesiÃ³n para desbloquear el panel.';
+            $hintLine = 'Válida tu ingreso por QR, RFID o documento en recepción.';
+            $lockReason = 'Registra asistencia e inicia tu sesión para desbloquear el panel.';
         } elseif ($completedToday) {
             $statusLabel = 'Entrenamiento de hoy completado.';
             $hintLine = $finishReason === 'auto'
-                ? 'Se finalizÃ³ automÃ¡ticamente segÃºn la duraciÃ³n elegida.'
-                : 'Se finalizÃ³ manualmente. Vuelve maÃ±ana para una nueva sesiÃ³n.';
+                ? 'Se finalizó automáticamente según la duración elegida.'
+                : 'Se finalizó manualmente. Vuelve mañana para una nueva sesión.';
             $progressUnlocked = true;
             $lockReason = 'Excelente. Ya completaste tu entrenamiento de hoy.';
         } else {
             $statusLabel = 'Listo para comenzar entrenamiento.';
-            $hintLine = 'Al completar la sesiÃ³n se actualizarÃ¡ tu progreso fÃ­sico.';
+            $hintLine = 'Al completar la sesión se actualizará tu progreso físico.';
             $lockReason = 'Inicia tu entrenamiento de hoy para desbloquear el panel.';
         }
 
@@ -3204,11 +3204,11 @@ class ClientMobileController extends Controller
         ]);
 
         $body = $finishReason === 'auto'
-            ? 'Tu sesiÃ³n se cerrÃ³ por tiempo. Tu progreso de hoy ya se actualizÃ³.'
-            : 'Excelente trabajo. Tu progreso de hoy ya se actualizÃ³.';
+            ? 'Tu sesión se cerró por tiempo. Tu progreso de hoy ya se actualizó.'
+            : 'Excelente trabajo. Tu progreso de hoy ya se actualizó.';
 
         $this->clientPushNotificationService->sendToClient($gymId, $clientId, [
-            'title' => 'SesiÃ³n de hoy completada',
+            'title' => 'Sesión de hoy completada',
             'body' => $body,
             'tag' => 'client-training-completed-'.$clientId.'-'.$normalizedSessionDate,
             'url' => $progressUrl,
@@ -3322,7 +3322,7 @@ class ClientMobileController extends Controller
         }
 
         $this->clientPushNotificationService->sendToClient($gymId, $clientId, [
-            'title' => 'Tu meta semanal estÃ¡ en riesgo',
+            'title' => 'Tu meta semanal está en riesgo',
             'body' => $this->buildWeeklyGoalRiskPushMessage($remaining, $daysLeftWeek),
             'tag' => 'client-weekly-goal-risk-'.$clientId.'-'.$today,
             'url' => $progressUrl,
@@ -3342,14 +3342,14 @@ class ClientMobileController extends Controller
         $daysLeftWeek = max(0, $daysLeftWeek);
 
         if ($daysLeftWeek <= 0) {
-            return 'Hoy cierra la semana y aÃºn faltan '.$remaining.' sesiones. Revisa tu plan.';
+            return 'Hoy cierra la semana y aún faltan '.$remaining.' sesiones. Revisa tu plan.';
         }
 
         if ($daysLeftWeek === 1) {
-            return 'Solo queda 1 dÃ­a y aÃºn faltan '.$remaining.' sesiones para tu meta semanal.';
+            return 'Solo queda 1 día y aún faltan '.$remaining.' sesiones para tu meta semanal.';
         }
 
-        return 'Faltan '.$remaining.' sesiones y '.$daysLeftWeek.' dÃ­as para cerrar tu meta semanal.';
+        return 'Faltan '.$remaining.' sesiones y '.$daysLeftWeek.' días para cerrar tu meta semanal.';
     }
 
     private function resolveTimezone(string $timezone): string

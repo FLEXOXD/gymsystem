@@ -55,6 +55,10 @@
                         @php
                             $isPending = $suggestion->status === 'pending';
                             $isReactivationRequest = mb_strtolower(trim((string) $suggestion->subject)) === 'solicitud de reactivacion de suscripcion';
+                            $receiptUrl = null;
+                            if (preg_match('/Comprobante:\s*(https?:\/\/\S+)/u', (string) $suggestion->message, $matches)) {
+                                $receiptUrl = trim((string) ($matches[1] ?? ''));
+                            }
                             $statusClass = $isPending
                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/45 dark:text-amber-200'
                                 : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
@@ -78,6 +82,11 @@
                             </td>
                             <td class="px-3 py-3 dark:text-slate-200">
                                 <p class="max-w-lg whitespace-pre-wrap break-words text-sm">{{ $suggestion->message }}</p>
+                                @if ($receiptUrl !== '')
+                                    <a href="{{ $receiptUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-800 hover:bg-cyan-200 dark:bg-cyan-900/45 dark:text-cyan-200 dark:hover:bg-cyan-900/65">
+                                        Ver comprobante
+                                    </a>
+                                @endif
                             </td>
                             <td class="px-3 py-3">
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusClass }}">
