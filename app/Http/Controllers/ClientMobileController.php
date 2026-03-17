@@ -67,13 +67,13 @@ class ClientMobileController extends Controller
 
         $name = trim((string) $gym->name);
         if ($name === '') {
-            $name = 'GymSystem';
+            $name = 'FlexGym';
         }
 
         $manifest = [
             'id' => $baseScope.'app',
-            'name' => 'Portal cliente - '.$name,
-            'short_name' => Str::limit($name, 16, ''),
+            'name' => 'FlexGym',
+            'short_name' => 'FlexGym',
             'description' => 'Registro de asistencia y progreso fisico del cliente.',
             'start_url' => $startUrl,
             'scope' => $baseScope,
@@ -84,19 +84,19 @@ class ClientMobileController extends Controller
             'theme_color' => '#16c172',
             'icons' => [
                 [
-                    'src' => asset('pwa/favicon-brand-192.png?v=20260302'),
+                    'src' => asset('pwa/favicon-brand-192.png?v=20260317'),
                     'sizes' => '192x192',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/favicon-brand.png?v=20260302'),
+                    'src' => asset('pwa/favicon-brand.png?v=20260317'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/icon-maskable.png?v=20260302'),
+                    'src' => asset('pwa/icon-maskable.png?v=20260317'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'maskable',

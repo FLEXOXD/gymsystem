@@ -8,11 +8,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GymSystem">
+    <meta name="apple-mobile-web-app-title" content="FlexGym">
     <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260302') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
     <title>Acceso cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

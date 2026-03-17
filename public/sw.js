@@ -1,4 +1,4 @@
-﻿const CACHE_VERSION = "gymsystem-v4";
+﻿const CACHE_VERSION = "gymsystem-v5";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE_PREFIX = `${CACHE_VERSION}-runtime`;
 

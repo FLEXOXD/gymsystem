@@ -1,7 +1,7 @@
 {
   "id": "/app",
-  "name": "GymSystem Operativo",
-  "short_name": "GymSystem",
+  "name": "FlexGym",
+  "short_name": "FlexGym",
   "description": "Operacion diaria para gimnasios: clientes, membresias, caja y reportes.",
   "start_url": "/app?pwa_mode=standalone",
   "scope": "/",
@@ -25,12 +25,6 @@
       "src": "/pwa/favicon-brand.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/pwa/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
