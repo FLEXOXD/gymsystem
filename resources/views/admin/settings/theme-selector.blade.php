@@ -150,6 +150,11 @@
             box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
         }
 
+        #theme-selector .theme-surface-light {
+            background: color-mix(in srgb, var(--surface) 93%, #ffffff 7%) !important;
+            border-color: color-mix(in srgb, var(--border) 84%, transparent) !important;
+        }
+
         #theme-selector .settings-upload-input::file-selector-button {
             margin-right: 0.75rem;
             border: 1px solid var(--border);
@@ -159,18 +164,19 @@
             font-weight: 700;
             line-height: 1.1;
             color: var(--text);
-            background: color-mix(in srgb, var(--card-muted) 82%, transparent);
+            background: color-mix(in srgb, var(--card-muted) 76%, #ffffff 24%);
             transition: all 0.16s ease;
         }
 
         #theme-selector .settings-upload-input:hover::file-selector-button {
             border-color: color-mix(in srgb, var(--primary) 60%, transparent);
-            background: color-mix(in srgb, var(--card-muted) 62%, transparent);
+            background: color-mix(in srgb, var(--card-muted) 52%, #ffffff 48%);
         }
 
         #theme-selector .settings-upload-input {
             border-color: color-mix(in srgb, var(--border) 88%, transparent);
-            background: color-mix(in srgb, var(--card-muted) 82%, transparent);
+            background: color-mix(in srgb, var(--surface) 90%, #ffffff 10%);
+            color: color-mix(in srgb, var(--text) 84%, #000000 16%);
         }
 
         #theme-selector .settings-upload-input:focus-visible {
@@ -190,6 +196,11 @@
             gap: 0.7rem;
             border-radius: 1rem;
             padding: 0.75rem;
+            background: linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--surface) 95%, #ffffff 5%) 0%,
+                color-mix(in srgb, var(--surface) 98%, #0f172a 2%) 100%
+            );
             border-color: color-mix(in srgb, var(--border) 90%, transparent);
             transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -261,6 +272,16 @@
             box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
         }
 
+        .theme-dark #theme-selector .theme-surface-light {
+            background: rgb(15 23 42 / 0.74) !important;
+            border-color: rgb(71 85 105 / 0.42) !important;
+        }
+
+        .theme-dark #theme-selector .settings-avatar-card {
+            background: linear-gradient(165deg, rgb(15 23 42 / 0.88) 0%, rgb(2 6 23 / 0.9) 100%);
+            border-color: rgb(71 85 105 / 0.4);
+        }
+
         .theme-dark #theme-selector .settings-avatar-empty {
             background:
                 radial-gradient(60% 80% at 50% 18%, rgb(30 64 175 / 0.22), transparent 70%),
@@ -273,6 +294,24 @@
 
         .theme-dark #theme-selector .settings-avatar-empty .text-slate-500 {
             color: rgb(148 163 184) !important;
+        }
+
+        .theme-dark #theme-selector .settings-upload-input {
+            background: rgb(15 23 42 / 0.74);
+            border-color: rgb(71 85 105 / 0.5);
+            color: rgb(226 232 240);
+        }
+
+        .theme-dark #theme-selector .settings-upload-input::file-selector-button {
+            border-color: rgb(71 85 105 / 0.8);
+            background: rgb(30 41 59 / 0.9);
+            color: rgb(226 232 240);
+        }
+
+        .theme-dark #theme-selector .settings-upload-input:hover::file-selector-button {
+            border-color: color-mix(in srgb, var(--primary) 55%, rgb(71 85 105));
+            background: color-mix(in srgb, var(--primary) 18%, rgb(30 41 59));
+            color: white;
         }
 
         #theme-selector .settings-avatar-help {
@@ -490,7 +529,7 @@
          data-update-url="{{ $themeUpdateUrl }}"
          data-csrf="{{ csrf_token() }}">
         <x-card class="settings-premium-card settings-theme-card" title="Selector de tema"
-                subtitle="Personaliza IRON WILL con una apariencia premium. El cambio es instantáneo y se guarda en tu cuenta.">
+                subtitle="Personaliza tu gimnasio con una apariencia a tu gusto, el cambio es instantáneo y se guarda en tu cuenta.">
             <div class="theme-picker-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($themes as $themeKey => $theme)
                     <button type="button"
@@ -748,7 +787,7 @@
                             @php
                                 $avatarUrl = $gymAvatarUrls[$avatarKey] ?? null;
                             @endphp
-                            <div class="settings-avatar-card theme-surface-light border border-slate-300/70 bg-slate-50/80">
+                            <div class="settings-avatar-card border">
                                 <div class="settings-avatar-caption">
                                     <p class="ui-muted text-xs font-bold uppercase tracking-wide">{{ $avatarMeta['label'] }}</p>
                                     <span @class([
