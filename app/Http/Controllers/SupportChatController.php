@@ -122,7 +122,7 @@ class SupportChatController extends Controller
             $conversation,
             SupportChatMessage::SENDER_GYM,
             $actor instanceof User ? $actor : null,
-            $actor instanceof User ? trim((string) $actor->name) : 'Equipo gimnasio',
+            $actor instanceof User ? trim((string) $actor->name) : 'Equipo del gimnasio',
             $userMessage,
             'quick_reply'
         );
@@ -153,7 +153,7 @@ class SupportChatController extends Controller
             $conversation,
             SupportChatMessage::SENDER_GYM,
             $actor instanceof User ? $actor : null,
-            $actor instanceof User ? trim((string) $actor->name) : 'Equipo gimnasio',
+            $actor instanceof User ? trim((string) $actor->name) : 'Equipo del gimnasio',
             $message,
             'text'
         );
@@ -267,7 +267,7 @@ class SupportChatController extends Controller
     private function seedWelcomeMessage(SupportChatConversation $conversation, string $context): void
     {
         $profile = $this->botService->assistantProfile($context);
-        $this->appendBotMessage($conversation, (string) ($profile['welcome_message'] ?? 'Hola, te ayudamos en seguida.'), 'event');
+        $this->appendBotMessage($conversation, (string) ($profile['welcome_message'] ?? 'Hola, te ayudamos enseguida.'), 'event');
     }
 
     private function handleBotForFreeMessage(SupportChatConversation $conversation, string $context, string $message): void

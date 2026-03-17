@@ -46,7 +46,7 @@
             \App\Models\SupportChatConversation::STATUS_CLOSED => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200',
         ];
     @endphp
-    <x-ui.card title="Bandeja de contacto web" subtitle="Mensajes del formulario público. Campana: 4 horas. Inbox y borrado: 24 horas.">
+    <x-ui.card title="Bandeja de contacto web" subtitle="Mensajes del formulario público. Campaña: 4 horas. Inbox y borrado: 24 horas.">
         @if ($unreadCount > 0)
             <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
                 <p class="font-bold">Tienes {{ $unreadCount }} mensaje(s) sin revisar.</p>
@@ -73,7 +73,7 @@
                 <select name="status" class="ui-input">
                     <option value="all" @selected($filters['status'] === 'all')>Todos</option>
                     <option value="unread" @selected($filters['status'] === 'unread')>Sin leer</option>
-                    <option value="read" @selected($filters['status'] === 'read')>Leidos</option>
+                    <option value="read" @selected($filters['status'] === 'read')>Leídos</option>
                 </select>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="ui-input" placeholder="Buscar por nombre, correo o texto">
                 <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
@@ -143,11 +143,11 @@
                         @if ($selectedMessage->read_at === null)
                             <form method="POST" action="{{ route('superadmin.inbox.read', $selectedMessage->id) }}">
                                 @csrf
-                                <x-ui.button type="submit" size="sm" variant="secondary">Marcar como leido</x-ui.button>
+                                <x-ui.button type="submit" size="sm" variant="secondary">Marcar como leído</x-ui.button>
                             </form>
                         @else
                             <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                Leido
+                                Leído
                             </span>
                         @endif
                     </div>
@@ -168,7 +168,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Bandeja de chat de soporte" subtitle="Conversaciones del boton flotante (pagina principal y panel de gimnasios)." class="mt-6">
+    <x-ui.card title="Bandeja de chat de soporte" subtitle="Conversaciones del botón flotante (página principal y panel de gimnasios)." class="mt-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide">
                 <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -252,7 +252,7 @@
                         </a>
                     @empty
                         <div class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-300">
-                            Aun no hay conversaciones de soporte.
+                            Aún no hay conversaciones de soporte.
                         </div>
                     @endforelse
                 </div>
@@ -309,7 +309,7 @@
                             </div>
                         @empty
                             <div class="py-10 text-center text-sm text-slate-500 dark:text-slate-300">
-                                Aun no hay mensajes en esta conversacion.
+                                Aún no hay mensajes en esta conversación.
                             </div>
                         @endforelse
                     </div>
@@ -327,7 +327,7 @@
                         <form method="POST" action="{{ route('superadmin.support-chat.status', $selectedSupportConversation->id) }}" class="space-y-2">
                             @csrf
                             <label class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Estado de la conversacion
+                                Estado de la conversación
                                 <select name="status" class="ui-input mt-1">
                                     <option value="bot" @selected($selectedSupportConversation->status === 'bot')>Bot</option>
                                     <option value="waiting_agent" @selected($selectedSupportConversation->status === 'waiting_agent')>Esperando agente</option>
@@ -340,7 +340,7 @@
                     </div>
                 @else
                     <div class="py-14 text-center text-sm text-slate-500 dark:text-slate-300">
-                        Selecciona una conversacion de soporte para ver el detalle.
+                        Selecciona una conversación de soporte para ver el detalle.
                     </div>
                 @endif
             </section>

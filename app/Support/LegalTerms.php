@@ -7,7 +7,9 @@ class LegalTerms
     public const VERSION = '2026-02-26';
 
     // Compatibilidad temporal con referencias antiguas.
+    public const VERSION_COMPAT = self::VERSION;
     public const Versión = self::VERSION;
+    public const VersiÃ³n = self::VERSION;
 
     /**
      * @return array<string, array{label:string,summary:string,points:list<string>}>

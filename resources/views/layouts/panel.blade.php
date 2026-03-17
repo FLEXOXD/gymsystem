@@ -411,6 +411,9 @@
     if ($isSuperAdmin && \Illuminate\Support\Facades\Route::has('superadmin.support-chat.unread-count')) {
         $supportChatUnreadCountUrl = route('superadmin.support-chat.unread-count');
     }
+    $showGymSupportChatWidget = ! $isSuperAdmin
+        && $activeGymSlug !== ''
+        && \Illuminate\Support\Facades\Route::has('support-chat.gym.state');
     $isDemoMode = (bool) ($demo_mode ?? false);
     $demoSessionToken = (string) ($demo_session_token ?? '');
     $demoExpiresAt = $demo_expires_at ?? null;
@@ -563,6 +566,9 @@
             padding-top: 1.35rem;
             padding-bottom: 1.8rem;
         }
+        .panel-view.panel-view-has-support-chat {
+            padding-bottom: max(6.2rem, 1.8rem);
+        }
         @media (max-width: 1023px) {
             .panel-premium-mode #panel-header-shell,
             .panel-premium-mode .panel-view {
@@ -571,6 +577,9 @@
             .panel-premium-mode .panel-view {
                 padding-top: 1.1rem;
                 padding-bottom: calc(1.35rem + env(safe-area-inset-bottom));
+            }
+            .panel-view.panel-view-has-support-chat {
+                padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
             }
         }
         #panel-sidebar {
@@ -1892,7 +1901,7 @@
             </div>
         </header>
 
-        <main class="panel-view mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
+        <main class="panel-view {{ $showGymSupportChatWidget ? 'panel-view-has-support-chat' : '' }} mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
             @if ($isDemoMode)
                 <div id="demo-countdown-source"
                      class="hidden"
@@ -1979,7 +1988,7 @@
             @yield('content')
         </main>
 
-        @if (! $isSuperAdmin && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('support-chat.gym.state'))
+        @if ($showGymSupportChatWidget)
             <x-support-chat.widget
                 context="gym_panel"
                 :state-url="route('support-chat.gym.state', $gymRouteParams)"
@@ -1989,6 +1998,7 @@
                 :gym-name="$gymName"
                 :gym-logo-url="$gymLogo"
                 :lead-capture="false"
+                :compact-launcher="true"
                 launcher-title="Soporte SuperAdmin" />
         @endif
     </div>

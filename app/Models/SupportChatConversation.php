@@ -81,7 +81,7 @@ class SupportChatConversation extends Model
     {
         return match ((string) $this->status) {
             self::STATUS_WAITING_AGENT => 'Esperando representante',
-            self::STATUS_ACTIVE => 'En conversacion',
+            self::STATUS_ACTIVE => 'En conversación',
             self::STATUS_CLOSED => 'Cerrado',
             default => 'Atendido por bot',
         };
@@ -91,12 +91,12 @@ class SupportChatConversation extends Model
     {
         return (string) $this->channel === self::CHANNEL_GYM_PANEL
             ? 'Panel del gimnasio'
-            : 'Pagina principal';
+            : 'Página principal';
     }
 
     public function requesterLabel(): string
     {
-        return (string) $this->requester_type === self::REQUESTER_GYM_USER ? 'Gimnasio logeado' : 'Visitante';
+        return (string) $this->requester_type === self::REQUESTER_GYM_USER ? 'Gimnasio logueado' : 'Visitante';
     }
 
     public function displayName(): string

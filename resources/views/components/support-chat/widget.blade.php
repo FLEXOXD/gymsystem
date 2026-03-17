@@ -8,14 +8,16 @@
     'gymLogoUrl' => '',
     'leadCapture' => false,
     'launcherTitle' => 'Soporte',
+    'compactLauncher' => false,
 ])
 
 @php
     $contextKey = trim((string) $context) !== '' ? trim((string) $context) : 'landing';
+    $isGymPanelContext = $contextKey === 'gym_panel';
     $configContext = (array) config('support_chat.contexts.'.$contextKey, []);
     $assistantName = trim((string) ($configContext['assistant_name'] ?? 'Asistente GymSystem'));
     $assistantSubtitle = trim((string) ($configContext['assistant_subtitle'] ?? 'Soporte'));
-    $welcomeMessage = trim((string) ($configContext['welcome_message'] ?? 'Hola, te ayudamos en seguida.'));
+    $welcomeMessage = trim((string) ($configContext['welcome_message'] ?? 'Hola, te ayudamos enseguida.'));
     $quickReplies = collect((array) ($configContext['quick_replies'] ?? []))
         ->map(static fn (array $item): array => [
             'key' => trim((string) ($item['key'] ?? '')),
@@ -26,10 +28,14 @@
         ->all();
     $pollSeconds = max(3, (int) config('support_chat.polling_interval_seconds', 7));
     $widgetDomId = 'support-chat-'.preg_replace('/[^a-z0-9]+/i', '-', $contextKey).'-'.substr(md5($stateUrl.$messageUrl), 0, 10);
+    $desktopBottomOffsetPx = $isGymPanelContext ? 20 : 16;
+    $mobileBottomOffsetPx = $isGymPanelContext ? 92 : 10;
 @endphp
 
 <div id="{{ $widgetDomId }}"
      class="gs-support-chat-root"
+     data-compact-launcher="{{ $compactLauncher ? '1' : '0' }}"
+     data-context-type="{{ $isGymPanelContext ? 'gym_panel' : 'landing' }}"
      data-context="{{ $contextKey }}"
      data-state-url="{{ $stateUrl }}"
      data-quick-url="{{ $quickReplyUrl }}"
@@ -40,7 +46,8 @@
      data-initial-quick='@json($quickReplies)'
      data-welcome-message="{{ $welcomeMessage }}"
      data-assistant-name="{{ $assistantName }}"
-     data-assistant-subtitle="{{ $assistantSubtitle }}">
+     data-assistant-subtitle="{{ $assistantSubtitle }}"
+     style="--gs-chat-bottom: {{ $desktopBottomOffsetPx }}px; --gs-chat-bottom-mobile: {{ $mobileBottomOffsetPx }}px;">
     <button type="button" class="gs-support-chat-launcher" aria-label="{{ $launcherTitle }}" data-chat-launcher>
         <span class="gs-support-chat-launcher__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -104,9 +111,12 @@
     .gs-support-chat-root {
         position: fixed;
         right: 16px;
-        bottom: 16px;
+        bottom: var(--gs-chat-bottom, 16px);
         z-index: 120;
         font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+    }
+    .gs-support-chat-root[data-context-type="gym_panel"] {
+        z-index: 110;
     }
     .gs-support-chat-launcher {
         border: 0;
@@ -119,6 +129,17 @@
         background: linear-gradient(135deg, #0d6dfd 0%, #12a7ff 100%);
         box-shadow: 0 16px 34px rgba(3, 27, 78, 0.36);
         cursor: pointer;
+    }
+    .gs-support-chat-root[data-compact-launcher="1"] .gs-support-chat-launcher {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        justify-content: center;
+        padding: 0;
+        gap: 0;
+    }
+    .gs-support-chat-root[data-compact-launcher="1"] .gs-support-chat-launcher__label {
+        display: none;
     }
     .gs-support-chat-launcher:hover {
         transform: translateY(-1px);
@@ -351,10 +372,15 @@
         font-weight: 800;
         cursor: pointer;
     }
+    @media (max-width: 1023px) {
+        .gs-support-chat-root[data-context-type="gym_panel"] {
+            bottom: calc(var(--gs-chat-bottom-mobile, 92px) + env(safe-area-inset-bottom));
+        }
+    }
     @media (max-width: 640px) {
         .gs-support-chat-root {
             right: 10px;
-            bottom: 10px;
+            bottom: calc(var(--gs-chat-bottom-mobile, 10px) + env(safe-area-inset-bottom));
         }
         .gs-support-chat-launcher__label {
             display: none;
@@ -508,7 +534,7 @@
 
             const conversation = data.conversation || null;
             if (!conversation) {
-                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opcion o escribe un mensaje.', false);
+                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opción o escribe un mensaje.', false);
                 return;
             }
 
@@ -547,7 +573,7 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('Error de conexion. Reintentando...', true);
+                setHelper('Error de conexión. Reintentando...', true);
             } finally {
                 loading = false;
             }
@@ -572,12 +598,12 @@
             try {
                 const payload = await requestJson(quickUrl, 'POST', Object.assign({ action_key: key }, collectLeadPayload()));
                 if (!payload) {
-                    setHelper('No se pudo enviar la opcion seleccionada.', true);
+                    setHelper('No se pudo enviar la opción seleccionada.', true);
                     return;
                 }
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar la opcion. Intenta otra vez.', true);
+                setHelper('No se pudo enviar la opción. Intenta otra vez.', true);
             } finally {
                 loading = false;
             }
@@ -607,7 +633,7 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar. Verifica conexion.', true);
+                setHelper('No se pudo enviar. Verifica conexión.', true);
             } finally {
                 loading = false;
             }

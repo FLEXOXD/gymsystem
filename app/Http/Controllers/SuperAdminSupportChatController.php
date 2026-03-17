@@ -101,14 +101,14 @@ class SuperAdminSupportChatController extends Controller
 
         $conversation->forceFill($forceFill)->save();
 
-        return back()->with('status', 'Estado de conversacion actualizado.');
+        return back()->with('status', 'Estado de conversación actualizado.');
     }
 
     public function markRead(Request $request, SupportChatConversation $conversation): RedirectResponse
     {
         $this->markConversationAsRead($conversation);
 
-        return back()->with('status', 'Conversacion marcada como leida.');
+        return back()->with('status', 'Conversación marcada como leída.');
     }
 
     public function unreadCount(): int

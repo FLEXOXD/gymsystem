@@ -11,6 +11,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class SuperAdminInboxController extends Controller
 {
@@ -38,7 +41,7 @@ class SuperAdminInboxController extends Controller
             ])->save();
         }
 
-        return back()->with('status', 'Mensaje marcado como leido.');
+        return back()->with('status', 'Mensaje marcado como leído.');
     }
 
     private function renderInbox(Request $request, ?int $selectedId): View
@@ -111,89 +114,111 @@ class SuperAdminInboxController extends Controller
             ));
         }
 
-        $supportQuery = SupportChatConversation::query()
-            ->with([
-                'gym:id,name,logo_path',
-                'initiatedBy:id,name,email',
-                'latestMessage:id,conversation_id,message,created_at,sender_type',
-            ])
-            ->withCount([
-                'messages as unread_for_superadmin_count' => static function (Builder $builder): void {
-                    $builder
-                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                        ->whereNull('read_by_superadmin_at');
-                },
-            ])
-            ->orderByRaw('CASE WHEN unread_for_superadmin_count > 0 THEN 0 ELSE 1 END')
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('id');
-
-        if ($supportStatus === 'unread') {
-            $supportQuery->whereHas('messages', static function (Builder $builder): void {
-                $builder
-                    ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                    ->whereNull('read_by_superadmin_at');
-            });
-        } elseif (in_array($supportStatus, [
-            SupportChatConversation::STATUS_BOT,
-            SupportChatConversation::STATUS_WAITING_AGENT,
-            SupportChatConversation::STATUS_ACTIVE,
-            SupportChatConversation::STATUS_CLOSED,
-        ], true)) {
-            $supportQuery->where('status', $supportStatus);
-        }
-
-        if ($supportQueryText !== '') {
-            $supportQuery->where(function (Builder $builder) use ($supportQueryText): void {
-                $builder
-                    ->where('visitor_name', 'like', '%'.$supportQueryText.'%')
-                    ->orWhere('visitor_email', 'like', '%'.$supportQueryText.'%')
-                    ->orWhere('visitor_gym_name', 'like', '%'.$supportQueryText.'%')
-                    ->orWhere('subject', 'like', '%'.$supportQueryText.'%')
-                    ->orWhereHas('gym', static function (Builder $gymBuilder) use ($supportQueryText): void {
-                        $gymBuilder->where('name', 'like', '%'.$supportQueryText.'%');
-                    })
-                    ->orWhereHas('initiatedBy', static function (Builder $userBuilder) use ($supportQueryText): void {
-                        $userBuilder
-                            ->where('name', 'like', '%'.$supportQueryText.'%')
-                            ->orWhere('email', 'like', '%'.$supportQueryText.'%');
-                    });
-            });
-        }
-
-        $supportConversations = $supportQuery
-            ->paginate(14, ['*'], 'support_page')
-            ->withQueryString();
-
+        $supportConversations = new LengthAwarePaginator(
+            collect(),
+            0,
+            14,
+            max(1, (int) $request->query('support_page', 1)),
+            ['pageName' => 'support_page', 'path' => $request->url()]
+        );
+        $supportConversations->appends($request->query());
         $selectedSupportConversation = null;
-        if ($selectedSupportId > 0) {
-            $selectedSupportConversation = SupportChatConversation::query()
-                ->with(['gym:id,name,logo_path', 'initiatedBy:id,name,email'])
-                ->find($selectedSupportId);
-        }
-        if (! $selectedSupportConversation && $supportConversations->isNotEmpty()) {
-            $selectedSupportConversation = $supportConversations->first();
-        }
-
         $selectedSupportMessages = collect();
-        if ($selectedSupportConversation instanceof SupportChatConversation) {
-            $selectedSupportConversation->load([
-                'messages' => static fn (Builder $builder) => $builder->orderBy('id')->with('senderUser:id,name'),
-            ]);
+        $supportUnreadCount = 0;
+        $supportTotalCount = 0;
 
-            $selectedSupportConversation->messages()
-                ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                ->whereNull('read_by_superadmin_at')
-                ->update(['read_by_superadmin_at' => now()]);
+        $supportSchemaReady = Schema::hasTable('support_chat_conversations')
+            && Schema::hasTable('support_chat_messages');
 
-            $selectedSupportMessages = $selectedSupportConversation->messages;
+        if ($supportSchemaReady) {
+            try {
+                $supportQuery = SupportChatConversation::query()
+                    ->with([
+                        'gym:id,name,logo_path',
+                        'initiatedBy:id,name,email',
+                        'latestMessage:id,conversation_id,message,created_at,sender_type',
+                    ])
+                    ->withCount([
+                        'messages as unread_for_superadmin_count' => static function (Builder $builder): void {
+                            $builder
+                                ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                                ->whereNull('read_by_superadmin_at');
+                        },
+                    ])
+                    ->orderByRaw('CASE WHEN unread_for_superadmin_count > 0 THEN 0 ELSE 1 END')
+                    ->orderByDesc('last_message_at')
+                    ->orderByDesc('id');
+
+                if ($supportStatus === 'unread') {
+                    $supportQuery->whereHas('messages', static function (Builder $builder): void {
+                        $builder
+                            ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                            ->whereNull('read_by_superadmin_at');
+                    });
+                } elseif (in_array($supportStatus, [
+                    SupportChatConversation::STATUS_BOT,
+                    SupportChatConversation::STATUS_WAITING_AGENT,
+                    SupportChatConversation::STATUS_ACTIVE,
+                    SupportChatConversation::STATUS_CLOSED,
+                ], true)) {
+                    $supportQuery->where('status', $supportStatus);
+                }
+
+                if ($supportQueryText !== '') {
+                    $supportQuery->where(function (Builder $builder) use ($supportQueryText): void {
+                        $builder
+                            ->where('visitor_name', 'like', '%'.$supportQueryText.'%')
+                            ->orWhere('visitor_email', 'like', '%'.$supportQueryText.'%')
+                            ->orWhere('visitor_gym_name', 'like', '%'.$supportQueryText.'%')
+                            ->orWhere('subject', 'like', '%'.$supportQueryText.'%')
+                            ->orWhereHas('gym', static function (Builder $gymBuilder) use ($supportQueryText): void {
+                                $gymBuilder->where('name', 'like', '%'.$supportQueryText.'%');
+                            })
+                            ->orWhereHas('initiatedBy', static function (Builder $userBuilder) use ($supportQueryText): void {
+                                $userBuilder
+                                    ->where('name', 'like', '%'.$supportQueryText.'%')
+                                    ->orWhere('email', 'like', '%'.$supportQueryText.'%');
+                            });
+                    });
+                }
+
+                $supportConversations = $supportQuery
+                    ->paginate(14, ['*'], 'support_page')
+                    ->withQueryString();
+
+                if ($selectedSupportId > 0) {
+                    $selectedSupportConversation = SupportChatConversation::query()
+                        ->with(['gym:id,name,logo_path', 'initiatedBy:id,name,email'])
+                        ->find($selectedSupportId);
+                }
+                if (! $selectedSupportConversation && $supportConversations->isNotEmpty()) {
+                    $selectedSupportConversation = $supportConversations->first();
+                }
+
+                if ($selectedSupportConversation instanceof SupportChatConversation) {
+                    $selectedSupportConversation->load([
+                        'messages' => static fn (Builder $builder) => $builder->orderBy('id')->with('senderUser:id,name'),
+                    ]);
+
+                    $selectedSupportConversation->messages()
+                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                        ->whereNull('read_by_superadmin_at')
+                        ->update(['read_by_superadmin_at' => now()]);
+
+                    $selectedSupportMessages = $selectedSupportConversation->messages;
+                }
+
+                $supportUnreadCount = SupportChatMessage::query()
+                    ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                    ->whereNull('read_by_superadmin_at')
+                    ->count();
+                $supportTotalCount = SupportChatConversation::query()->count();
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         }
 
         $activeRepresentative = $this->presenceService->activeRepresentative();
-        $supportUnreadCount = SupportChatMessage::query()
-            ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-            ->whereNull('read_by_superadmin_at')
-            ->count();
 
         return view('superadmin.inbox.index', [
             'messages' => $messages,
@@ -213,7 +238,7 @@ class SuperAdminInboxController extends Controller
                 'q' => $supportQueryText,
             ],
             'supportUnreadCount' => $supportUnreadCount,
-            'supportTotalCount' => SupportChatConversation::query()->count(),
+            'supportTotalCount' => $supportTotalCount,
             'supportRepresentativeOnline' => $activeRepresentative !== null,
             'supportRepresentativeName' => trim((string) ($activeRepresentative['name'] ?? 'SuperAdmin')),
         ]);
