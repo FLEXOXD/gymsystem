@@ -9,11 +9,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
-    <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug]) }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260320') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260320') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260320') }}">
+    <link rel="manifest" href="{{ route('client-mobile.manifest', ['gymSlug' => $gym->slug, 'v' => '20260322']) }}">
+    <link rel="icon" href="{{ asset('favicon.ico?v=20260322') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/fg-favicon-32.png?v=20260322') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/fg-favicon-16.png?v=20260322') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/fg-favicon-32.png?v=20260322') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/fg-favicon-180.png?v=20260322') }}">
     <title>Acceso cliente - {{ (string) $gym->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

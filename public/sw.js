@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gymsystem-v9";
+const CACHE_VERSION = "gymsystem-v10";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE_PREFIX = `${CACHE_VERSION}-runtime`;
 
@@ -8,8 +8,8 @@ const STATIC_ASSETS = [
   "/offline.html",
   "/manifest.webmanifest",
   "/favicon.ico",
-  "/pwa/favicon-brand-192.png",
-  "/pwa/favicon-brand.png",
+  "/pwa/fg-favicon-192.png",
+  "/pwa/fg-favicon-512.png",
   "/pwa/icon.svg",
   "/pwa/icon-maskable.png",
 ];
@@ -198,10 +198,10 @@ function normalizePushPayload(payload) {
       : "Tienes una notificacion nueva.",
     icon: typeof safePayload.icon === "string" && safePayload.icon.trim() !== ""
       ? safePayload.icon
-      : "/pwa/icon-maskable.png",
+      : "/pwa/fg-favicon-192.png",
     badge: typeof safePayload.badge === "string" && safePayload.badge.trim() !== ""
       ? safePayload.badge
-      : "/pwa/icon-maskable.png",
+      : "/pwa/fg-favicon-192.png",
     tag: typeof safePayload.tag === "string" && safePayload.tag.trim() !== ""
       ? safePayload.tag
       : "gymsystem-notification",
