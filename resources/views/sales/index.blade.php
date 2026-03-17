@@ -10,6 +10,40 @@
         top: 0.5rem;
         z-index: 15;
     }
+    @media (max-width: 640px) {
+        #sales-register-modal {
+            padding: 0.55rem;
+        }
+        #sales-register-modal .sales-register-panel {
+            max-height: calc(100dvh - 0.8rem);
+            border-radius: 1rem;
+        }
+        #sales-register-modal .sales-register-head {
+            gap: 0.6rem;
+            padding: 0.9rem;
+        }
+        #sales-register-modal .sales-register-body {
+            padding: 0.85rem;
+        }
+        #sales-register-modal .sales-register-title {
+            font-size: 1.36rem;
+            line-height: 1.12;
+        }
+        #sales-register-modal .sales-register-scan-sticky {
+            position: static;
+            top: auto;
+        }
+        #sales-register-modal .sales-register-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+        }
+        #sales-register-modal .sales-register-actions .ui-button {
+            width: 100%;
+        }
+        #sales-register-modal #sale-scan-search {
+            width: 100%;
+        }
+    }
 </style>
 @endpush
 
@@ -136,17 +170,17 @@
             <div id="sales-register-modal"
                  data-auto-open="{{ $openSalesRegisterModal ? '1' : '0' }}"
                  class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/80 p-4">
-                <div class="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
-                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
+                <div class="sales-register-panel w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
+                    <div class="sales-register-head flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
                         <div>
                             <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Venta rápida</p>
-                            <h3 class="mt-2 text-2xl font-black text-slate-100">Registrar venta de producto</h3>
+                            <h3 class="sales-register-title mt-2 text-2xl font-black text-slate-100">Registrar venta de producto</h3>
                             <p class="mt-1 text-sm text-slate-300">Cada venta descuenta stock y se envía directo a caja.</p>
                         </div>
-                        <button type="button" id="close-sales-register-modal" class="ui-button ui-button-ghost px-3 py-2 text-sm font-semibold">Cerrar</button>
+                        <button type="button" id="close-sales-register-modal" class="ui-button ui-button-ghost px-2.5 py-1.5 text-sm font-semibold sm:px-3 sm:py-2">Cerrar</button>
                     </div>
-                    <div class="p-5">
-                        <x-ui.card title="Registrar venta de producto" subtitle="Cada venta descuenta stock y se envia directo a caja.">
+                    <div class="sales-register-body p-5">
+                        <x-ui.card class="border border-slate-800/80 bg-slate-900/65 shadow-inner">
                 @if (! $schemaReady)
                     <p class="ui-alert ui-alert-warning">El formulario se activara despues de correr las migraciones del modulo.</p>
                 @elseif ($isGlobalScope)
@@ -162,18 +196,18 @@
                         <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="secondary">Ir a productos</x-ui.button>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-4 md:grid-cols-2" id="sales-form">
+                    <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-2 md:gap-4" id="sales-form">
                         @csrf
                         <input type="hidden" name="open_sales_register_modal" value="1">
                         <input type="hidden" name="sale_items_payload" id="sale-items-payload" value="{{ old('sale_items_payload', '') }}">
 
-                        <div class="sales-register-scan-sticky rounded-2xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
+                        <div class="sales-register-scan-sticky rounded-2xl border border-cyan-200 bg-cyan-50 p-3 sm:p-4 dark:border-cyan-400/40 dark:bg-cyan-500/10 md:col-span-2">
                             <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                                 <label class="space-y-1 text-sm font-semibold ui-muted">
                                     <span>Escanear codigo</span>
                                     <input id="sale-scan-input" type="text" class="ui-input" placeholder="Usa lector o el boton flotante para enviar SKU / codigo" autocomplete="off">
                                 </label>
-                                <x-ui.button type="button" id="sale-scan-search" variant="secondary">Buscar codigo</x-ui.button>
+                                <x-ui.button type="button" id="sale-scan-search" variant="secondary" class="w-full lg:w-auto">Buscar codigo</x-ui.button>
                             </div>
                             <p class="mt-2 text-xs ui-muted">Con lector fisico solo enfoca este campo y escanea. Si usas el boton flotante, el codigo llega en vivo desde el celular. Si el producto ya estaba seleccionado, otro escaneo suma una unidad.</p>
                             <div id="sale-scan-feedback" class="mt-3 hidden rounded-xl border px-3 py-2 text-sm font-semibold"></div>
@@ -212,7 +246,7 @@
                                 @endforeach
                             </select>
                             <div class="mt-2 flex flex-wrap gap-2">
-                                <button type="button" id="sale-add-selected" class="ui-button ui-button-ghost px-3 py-2 text-sm font-semibold">
+                                <button type="button" id="sale-add-selected" class="ui-button ui-button-ghost w-full px-3 py-2 text-sm font-semibold sm:w-auto">
                                     Agregar seleccionado al carrito
                                 </button>
                             </div>
@@ -246,11 +280,11 @@
                             <textarea name="notes" rows="3" class="ui-input" placeholder="Ej: bebida, guantes, proteína, promo del día">{{ old('notes') }}</textarea>
                         </label>
 
-                        <div class="flex flex-wrap gap-2 md:col-span-2">
-                            <x-ui.button type="submit">Registrar venta</x-ui.button>
-                            <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="ghost">Abrir productos</x-ui.button>
+                        <div class="sales-register-actions flex flex-wrap gap-2 md:col-span-2">
+                            <x-ui.button type="submit" class="w-full sm:w-auto">Registrar venta</x-ui.button>
+                            <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="ghost" class="w-full sm:w-auto">Abrir productos</x-ui.button>
                             @if ($canViewSalesReports && \Illuminate\Support\Facades\Route::has('reports.sales-inventory'))
-                                <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym])" variant="ghost">Ver reportes</x-ui.button>
+                                <x-ui.button :href="route('reports.sales-inventory', ['contextGym' => $contextGym])" variant="ghost" class="w-full sm:w-auto">Ver reportes</x-ui.button>
                             @endif
                         </div>
                     </form>
@@ -288,75 +322,79 @@
 
         <section class="grid gap-4 xl:grid-cols-2">
             <x-ui.card title="Productos mas vendidos del mes" subtitle="Los articulos que mas estan empujando ingresos.">
-                <div class="smart-list-wrap">
-                    <table class="ui-table w-full min-w-[720px] text-sm">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                @if ($showGymColumn)
-                                    <th>Sede</th>
-                                @endif
-                                <th>Categoria</th>
-                                <th>Unidades</th>
-                                <th>Ingreso</th>
-                                <th>Utilidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($topProducts as $product)
+                @if ($topProducts->isEmpty())
+                    <div class="rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
+                        Aún no hay ventas registradas en este periodo.
+                    </div>
+                @else
+                    <div class="smart-list-wrap">
+                        <table class="ui-table w-full min-w-[720px] text-sm">
+                            <thead>
                                 <tr>
-                                    <td class="font-semibold">{{ $product->product_name }}</td>
+                                    <th>Producto</th>
                                     @if ($showGymColumn)
-                                        <td>{{ $product->gym_name ?? '-' }}</td>
+                                        <th>Sede</th>
                                     @endif
-                                    <td>{{ $product->product_category ?: '-' }}</td>
-                                    <td>{{ (int) $product->units_sold }}</td>
-                                    <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
-                                    <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
+                                    <th>Categoria</th>
+                                    <th>Unidades</th>
+                                    <th>Ingreso</th>
+                                    <th>Utilidad</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">Aún no hay ventas registradas en este periodo.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach ($topProducts as $product)
+                                    <tr>
+                                        <td class="font-semibold">{{ $product->product_name }}</td>
+                                        @if ($showGymColumn)
+                                            <td>{{ $product->gym_name ?? '-' }}</td>
+                                        @endif
+                                        <td>{{ $product->product_category ?: '-' }}</td>
+                                        <td>{{ (int) $product->units_sold }}</td>
+                                        <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
+                                        <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </x-ui.card>
 
             <x-ui.card title="Stock bajo o crítico" subtitle="Productos activos que ya llegaron al mínimo.">
-                <div class="smart-list-wrap">
-                    <table class="ui-table w-full min-w-[660px] text-sm">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                @if ($showGymColumn)
-                                    <th>Sede</th>
-                                @endif
-                                <th>Categoria</th>
-                                <th>Stock</th>
-                                <th>Mínimo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($lowStockProducts as $product)
+                @if ($lowStockProducts->isEmpty())
+                    <div class="rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
+                        No hay productos en alerta de stock.
+                    </div>
+                @else
+                    <div class="smart-list-wrap">
+                        <table class="ui-table w-full min-w-[660px] text-sm">
+                            <thead>
                                 <tr>
-                                    <td class="font-semibold">{{ $product->name }}</td>
+                                    <th>Producto</th>
                                     @if ($showGymColumn)
-                                        <td>{{ $product->gym_name ?? '-' }}</td>
+                                        <th>Sede</th>
                                     @endif
-                                    <td>{{ $product->category ?: '-' }}</td>
-                                    <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
-                                    <td>{{ (int) $product->min_stock }}</td>
+                                    <th>Categoria</th>
+                                    <th>Stock</th>
+                                    <th>Mínimo</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="py-8 text-center ui-muted">No hay productos en alerta de stock.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach ($lowStockProducts as $product)
+                                    <tr>
+                                        <td class="font-semibold">{{ $product->name }}</td>
+                                        @if ($showGymColumn)
+                                            <td>{{ $product->gym_name ?? '-' }}</td>
+                                        @endif
+                                        <td>{{ $product->category ?: '-' }}</td>
+                                        <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
+                                        <td>{{ (int) $product->min_stock }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </x-ui.card>
         </section>
 
