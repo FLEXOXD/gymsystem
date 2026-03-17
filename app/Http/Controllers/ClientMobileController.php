@@ -84,19 +84,43 @@ class ClientMobileController extends Controller
             'theme_color' => '#16c172',
             'icons' => [
                 [
-                    'src' => asset('pwa/favicon-brand-192.png?v=20260318'),
+                    'src' => asset('pwa/favicon-brand-16.png?v=20260319'),
+                    'sizes' => '16x16',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/favicon-brand-32.png?v=20260319'),
+                    'sizes' => '32x32',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/favicon-brand-192.png?v=20260319'),
                     'sizes' => '192x192',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/favicon-brand.png?v=20260318'),
+                    'src' => asset('pwa/favicon-brand-256.png?v=20260319'),
+                    'sizes' => '256x256',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/favicon-brand-384.png?v=20260319'),
+                    'sizes' => '384x384',
+                    'type' => 'image/png',
+                    'purpose' => 'any',
+                ],
+                [
+                    'src' => asset('pwa/favicon-brand.png?v=20260319'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/icon-maskable.png?v=20260318'),
+                    'src' => asset('pwa/icon-maskable.png?v=20260319'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'maskable',

@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260318') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260318') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260318') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260318') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260319') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260319') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand-180.png?v=20260319') }}">
     <title>Iniciar sesión</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
