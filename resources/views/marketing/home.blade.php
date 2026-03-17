@@ -90,7 +90,7 @@
         'commercial' => 'Términos comerciales',
         default => 'Software para gimnasios',
     };
-    $tabIconUrl = asset('pwa/favicon-brand.png?v=20260302');
+    $tabIconUrl = asset('pwa/favicon-brand-32.png?v=20260318');
 @endphp
 @php
     $serviceCards = [

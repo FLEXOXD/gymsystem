@@ -84,19 +84,19 @@ class ClientMobileController extends Controller
             'theme_color' => '#16c172',
             'icons' => [
                 [
-                    'src' => asset('pwa/favicon-brand-192.png?v=20260317'),
+                    'src' => asset('pwa/favicon-brand-192.png?v=20260318'),
                     'sizes' => '192x192',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/favicon-brand.png?v=20260317'),
+                    'src' => asset('pwa/favicon-brand.png?v=20260318'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'any',
                 ],
                 [
-                    'src' => asset('pwa/icon-maskable.png?v=20260317'),
+                    'src' => asset('pwa/icon-maskable.png?v=20260318'),
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'maskable',

@@ -460,10 +460,11 @@
     @if ($canInstallPwa)
         <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     @endif
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-brand-32.png?v=20260318') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/favicon-brand-16.png?v=20260318') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/favicon-brand-32.png?v=20260318') }}">
     @if ($canInstallPwa)
-        <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260317') }}">
+        <link rel="apple-touch-icon" href="{{ asset('pwa/favicon-brand.png?v=20260318') }}">
     @endif
     <title>{{ $pageTitle }} - {{ config('app.name', 'GymSystem') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
