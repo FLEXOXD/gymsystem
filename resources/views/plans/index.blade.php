@@ -182,6 +182,111 @@
     box-shadow: var(--pp-modal-shadow);
     color: var(--pp-modal-text);
 }
+
+.plans-page .plan-builder-grid {
+    align-items: start;
+}
+.plans-page .plan-preview-sticky {
+    position: sticky;
+    top: calc(5.4rem + env(safe-area-inset-top));
+}
+.plans-page .plan-preview-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgb(148 163 184 / .25);
+    background: rgb(15 23 42 / .4);
+    border-radius: .8rem;
+    padding: .55rem .75rem;
+}
+.theme-light .plans-page .plan-preview-row {
+    border-color: rgb(148 163 184 / .4);
+    background: rgb(255 255 255 / .75);
+}
+.plans-page .plan-create-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .55rem;
+}
+.plans-page .plan-create-note {
+    font-size: .72rem;
+    line-height: 1.25;
+    color: rgb(148 163 184);
+}
+.plans-page .plans-filter-grid {
+    display: grid;
+    gap: .75rem;
+}
+@media (min-width: 1280px) {
+    .plans-page .plans-filter-grid {
+        grid-template-columns: minmax(0, 1fr) 16rem auto auto;
+        align-items: end;
+    }
+}
+.plans-page .plan-row-menu {
+    position: relative;
+}
+.plans-page .plan-row-menu > summary {
+    list-style: none;
+}
+.plans-page .plan-row-menu > summary::-webkit-details-marker {
+    display: none;
+}
+.plans-page .plan-row-menu-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + .45rem);
+    z-index: 25;
+    min-width: 14rem;
+    padding: .45rem;
+    border-radius: .85rem;
+    border: 1px solid rgb(148 163 184 / .35);
+    background: rgb(2 6 23 / .96);
+    box-shadow: 0 16px 30px rgb(2 6 23 / .45);
+    display: grid;
+    gap: .35rem;
+}
+.theme-light .plans-page .plan-row-menu-popover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 16px 30px rgb(15 23 42 / .16);
+}
+.plans-page .plan-promo-empty {
+    border: 1px dashed rgb(148 163 184 / .5);
+    border-radius: 1rem;
+    padding: 1.4rem;
+    text-align: center;
+    background: rgb(15 23 42 / .22);
+}
+.theme-light .plans-page .plan-promo-empty {
+    background: rgb(248 250 252 / .85);
+}
+@media (max-width: 1279px) {
+    .plans-page .plan-preview-sticky {
+        position: static;
+    }
+}
+@media (max-width: 640px) {
+    .plans-page .plan-create-actions .ui-button,
+    .plans-page .plans-filter-grid #plans-clear-filters {
+        width: 100%;
+    }
+    .plans-page .plan-row-menu {
+        width: 100%;
+    }
+    .plans-page .plan-row-menu > summary {
+        width: 100%;
+        text-align: center;
+    }
+    .plans-page .plan-row-menu-popover {
+        position: static;
+        margin-top: .45rem;
+        width: 100%;
+        min-width: 0;
+    }
+}
+
 </style>
 @endpush
 
@@ -245,8 +350,8 @@
 
             <form id="create-plan-form" method="POST" action="{{ route('plans.store') }}" class="space-y-4">
                 @csrf
-                <div class="grid gap-4 xl:grid-cols-3">
-                    <div class="space-y-4 xl:col-span-2">
+                <div class="plan-builder-grid grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]">
+                    <div class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <label class="space-y-1 text-sm font-semibold ui-muted">
                                 <span class="text-xs uppercase tracking-wide">Nombre</span>
@@ -332,30 +437,32 @@
                             </div>
                         </div>
 
-                        <div class="pt-1">
+                        <div class="plan-create-actions pt-1">
                             <button id="create-plan-submit" type="submit" class="ui-button ui-button-primary px-5 py-2.5 text-sm font-black">
                                 <span class="js-submit-label">Guardar plan</span>
                                 <span class="js-submit-loading hidden">Guardando...</span>
                             </button>
+                            <button id="create-plan-reset" type="button" class="ui-button ui-button-muted px-4 py-2.5 text-sm font-bold">Limpiar</button>
+                            <p class="plan-create-note">Se guarda al instante y aparecerá en la tabla de planes.</p>
                         </div>
                     </div>
 
-                    <aside class="plan-preview p-4">
-                        <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Vista previa</p>
-                        <div class="mt-3 space-y-3">
+                    <aside class="plan-preview plan-preview-sticky self-start p-4">
+                        <div class="flex items-start justify-between gap-2">
+                            <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Vista previa</p>
+                            <span id="preview-status" class="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-200">{{ $defaultStatus === 'active' ? 'Activo' : 'Oculto' }}</span>
+                        </div>
+                        <div class="mt-3 space-y-2.5">
                             <h3 id="preview-name" class="text-lg font-black text-slate-100">Nombre del plan</h3>
-                            <div class="flex items-center justify-between rounded-xl border border-slate-300/20 bg-slate-900/45 px-3 py-2">
+                            <div class="plan-preview-row">
                                 <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Precio</span>
                                 <span id="preview-price" class="text-base font-black text-emerald-300">{{ \App\Support\Currency::format((float) old('price', 0), $appCurrencyCode) }}</span>
                             </div>
-                            <div class="flex items-center justify-between rounded-xl border border-slate-300/20 bg-slate-900/45 px-3 py-2">
+                            <div class="plan-preview-row">
                                 <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Duración</span>
                                 <span id="preview-duration" class="text-sm font-bold text-slate-100">{{ $defaultDurationLabel }}</span>
                             </div>
-                            <div class="flex items-center justify-between rounded-xl border border-slate-300/20 bg-slate-900/45 px-3 py-2">
-                                <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Estado</span>
-                                <span id="preview-status" class="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-200">{{ $defaultStatus === 'active' ? 'Activo' : 'Oculto' }}</span>
-                            </div>
+                            <p id="preview-validity" class="text-xs text-slate-400">Vigencia: {{ $defaultDurationLabel }}. {{ $defaultStatus === 'active' ? 'Listo para vender.' : 'Se guardará oculto.' }}</p>
                         </div>
                     </aside>
                 </div>
@@ -379,114 +486,123 @@
                         <h2 class="ui-heading text-lg font-black">Planes del gimnasio</h2>
                         <p class="ui-muted text-sm">Administra tus planes sin salir de esta pantalla.</p>
                     </div>
-                <span id="plans-count" class="ui-text inline-flex rounded-full border border-slate-300/35 px-3 py-1 text-xs font-bold">{{ $plans->count() }} planes</span>
-            </div>
+                </div>
 
-            <div class="grid gap-3 md:grid-cols-3">
-                <label class="space-y-1 text-sm font-semibold ui-muted md:col-span-2">
-                    <span class="text-xs uppercase tracking-wide">Buscar plan</span>
-                    <input id="plans-search" type="search" class="ui-input" placeholder="Buscar por nombre o ID" aria-label="Buscar planes">
-                </label>
-                <label class="space-y-1 text-sm font-semibold ui-muted">
-                    <span class="text-xs uppercase tracking-wide">Estado</span>
-                    <select id="plans-status-filter" class="ui-input" aria-label="Filtrar por estado">
-                        <option value="all">Todos</option>
-                        <option value="active">Activos</option>
-                        <option value="inactive">Ocultos</option>
-                    </select>
-                </label>
-            </div>
+                <div class="plans-filter-grid">
+                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                        <span class="text-xs uppercase tracking-wide">Buscar plan</span>
+                        <input id="plans-search" type="search" class="ui-input" placeholder="Buscar por nombre o ID" aria-label="Buscar planes">
+                    </label>
+                    <label class="space-y-1 text-sm font-semibold ui-muted">
+                        <span class="text-xs uppercase tracking-wide">Estado</span>
+                        <select id="plans-status-filter" class="ui-input" aria-label="Filtrar por estado">
+                            <option value="all">Todos</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Ocultos</option>
+                        </select>
+                    </label>
+                    <div class="pt-1 xl:pt-0">
+                        <span id="plans-count" class="ui-text inline-flex rounded-full border border-slate-300/35 px-3 py-1 text-xs font-bold">{{ $plans->count() }} planes</span>
+                    </div>
+                    <button id="plans-clear-filters" type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold">Limpiar filtros</button>
+                </div>
 
-            <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
-                <table class="plans-table ui-table min-w-[980px] text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
-                            <th class="px-4 py-3">ID</th>
-                            <th class="px-4 py-3">Nombre</th>
-                            @if ($isGlobalScope)
-                                <th class="px-4 py-3">Sede</th>
-                            @endif
-                            <th class="px-4 py-3">Duración</th>
-                            <th class="px-4 py-3">Precio</th>
-                            <th class="px-4 py-3">Estado</th>
-                            <th class="px-4 py-3 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="plans-table-body">
-                        @forelse ($plans as $plan)
-                            <tr
-                                data-plan-id="{{ $plan->id }}"
-                                data-plan-name="{{ mb_strtolower($plan->name) }}"
-                                data-plan-status="{{ $plan->status }}"
-                                data-plan-duration="{{ $plan->duration_days }}"
-                                data-plan-duration-unit="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}"
-                                data-plan-duration-months="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}"
-                                data-plan-price="{{ number_format((float) $plan->price, 2, '.', '') }}"
-                                class="border-b border-slate-200/30 align-middle">
-                                <td class="ui-text px-4 py-3 font-black">{{ $plan->id }}</td>
-                                <td class="ui-text px-4 py-3 font-semibold">{{ $plan->name }}</td>
+                <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
+                    <table class="plans-table ui-table min-w-[980px] text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">Nombre</th>
                                 @if ($isGlobalScope)
-                                    <td class="px-4 py-3">
-                                        <x-ui.badge variant="info">{{ $plan->gym?->name ?? '-' }}</x-ui.badge>
-                                    </td>
+                                    <th class="px-4 py-3">Sede</th>
                                 @endif
-                                <td class="ui-text px-4 py-3">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</td>
-                                <td class="ui-text px-4 py-3">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }}</td>
-                                <td class="px-4 py-3">
-                                    <x-ui.badge :variant="$plan->status === 'active' ? 'success' : 'muted'">{{ $plan->status === 'active' ? 'Activo' : 'Oculto' }}</x-ui.badge>
-                                </td>
-                                <td class="px-4 py-3 min-w-[16rem]">
-                                    @if ($isReadOnlyScope)
-                                        <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
-                                    @else
-                                        <div class="ui-action-grid ui-action-grid-end">
-                                            <x-ui.button type="button" size="sm" variant="secondary" class="ui-action-button js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M12 20h9"/>
-                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Editar</span>
-                                            </x-ui.button>
-                                            <x-ui.button type="button" size="sm" variant="ghost" class="ui-action-button js-duplicate-plan" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Duplicar</span>
-                                            </x-ui.button>
-                                            <x-ui.button type="button" size="sm" :variant="$plan->status === 'active' ? 'muted' : 'success'" class="ui-action-button js-toggle-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M12 2v10"/>
-                                                    <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
-                                            </x-ui.button>
-                                            <x-ui.button type="button" size="sm" variant="danger" class="ui-action-button js-delete-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M3 6h18"/>
-                                                    <path d="M8 6V4h8v2"/>
-                                                    <path d="M19 6l-1 14H6L5 6"/>
-                                                    <path d="M10 11v6"/>
-                                                    <path d="M14 11v6"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Eliminar</span>
-                                            </x-ui.button>
-                                        </div>
+                                <th class="px-4 py-3">Duración</th>
+                                <th class="px-4 py-3">Precio</th>
+                                <th class="px-4 py-3">Estado</th>
+                                <th class="px-4 py-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plans-table-body">
+                            @forelse ($plans as $plan)
+                                <tr
+                                    data-plan-id="{{ $plan->id }}"
+                                    data-plan-name="{{ mb_strtolower($plan->name) }}"
+                                    data-plan-status="{{ $plan->status }}"
+                                    data-plan-duration="{{ $plan->duration_days }}"
+                                    data-plan-duration-unit="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}"
+                                    data-plan-duration-months="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}"
+                                    data-plan-price="{{ number_format((float) $plan->price, 2, '.', '') }}"
+                                    class="border-b border-slate-200/30 align-middle">
+                                    <td class="ui-text px-4 py-3 font-black">{{ $plan->id }}</td>
+                                    <td class="ui-text px-4 py-3 font-semibold">{{ $plan->name }}</td>
+                                    @if ($isGlobalScope)
+                                        <td class="px-4 py-3">
+                                            <x-ui.badge variant="info">{{ $plan->gym?->name ?? '-' }}</x-ui.badge>
+                                        </td>
                                     @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    <td class="ui-text px-4 py-3">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</td>
+                                    <td class="ui-text px-4 py-3">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode) }}</td>
+                                    <td class="px-4 py-3">
+                                        <x-ui.badge :variant="$plan->status === 'active' ? 'success' : 'muted'">{{ $plan->status === 'active' ? 'Activo' : 'Oculto' }}</x-ui.badge>
+                                    </td>
+                                    <td class="px-4 py-3 min-w-[16rem]">
+                                        @if ($isReadOnlyScope)
+                                            <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
+                                        @else
+                                            <div class="flex items-center justify-end gap-2">
+                                                <x-ui.button type="button" size="sm" variant="secondary" class="ui-action-button js-edit-plan" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Editar" aria-label="Editar plan {{ $plan->name }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M12 20h9"/>
+                                                        <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                                                    </svg>
+                                                    <span class="ui-action-button-label">Editar</span>
+                                                </x-ui.button>
+                                                <details class="plan-row-menu">
+                                                    <summary class="mini-action">Más acciones</summary>
+                                                    <div class="plan-row-menu-popover">
+                                                        <x-ui.button type="button" size="sm" variant="ghost" class="ui-action-button js-duplicate-plan w-full justify-start" data-plan-name-value="{{ $plan->name }}" data-plan-duration-value="{{ $plan->duration_days }}" data-plan-duration-unit-value="{{ \App\Support\PlanDuration::normalizeUnit((string) ($plan->duration_unit ?? 'days')) }}" data-plan-duration-months-value="{{ $plan->duration_months !== null ? (int) $plan->duration_months : '' }}" data-plan-price-value="{{ number_format((float) $plan->price, 2, '.', '') }}" data-plan-status-value="{{ $plan->status }}" title="Duplicar" aria-label="Duplicar plan {{ $plan->name }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                            </svg>
+                                                            <span class="ui-action-button-label">Duplicar</span>
+                                                        </x-ui.button>
+                                                        <x-ui.button type="button" size="sm" :variant="$plan->status === 'active' ? 'muted' : 'success'" class="ui-action-button js-toggle-plan w-full justify-start" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" data-current-status="{{ $plan->status }}" title="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}" aria-label="{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }} plan {{ $plan->name }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path d="M12 2v10"/>
+                                                                <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                                                            </svg>
+                                                            <span class="ui-action-button-label">{{ $plan->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
+                                                        </x-ui.button>
+                                                        <x-ui.button type="button" size="sm" variant="danger" class="ui-action-button js-delete-plan w-full justify-start" data-plan-id="{{ $plan->id }}" data-plan-name-value="{{ $plan->name }}" title="Eliminar" aria-label="Eliminar plan {{ $plan->name }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path d="M3 6h18"/>
+                                                                <path d="M8 6V4h8v2"/>
+                                                                <path d="M19 6l-1 14H6L5 6"/>
+                                                                <path d="M10 11v6"/>
+                                                                <path d="M14 11v6"/>
+                                                            </svg>
+                                                            <span class="ui-action-button-label">Eliminar</span>
+                                                        </x-ui.button>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
     </x-ui.card>
 
     @if ($canViewPromotions)
+    @php $promotionRows = ($promotions ?? collect()); @endphp
     <x-ui.card>
         <div class="space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -496,109 +612,115 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if (! $isReadOnlyScope && $canManagePromotions)
-                        <button type="button" id="open-promotion-modal-btn" class="ui-button ui-button-primary px-3 py-1.5 text-xs font-black">
+                        <button type="button" id="open-promotion-modal-btn" data-open-promotion-modal class="ui-button ui-button-primary px-3 py-1.5 text-xs font-black">
                             + Nueva promoción
                         </button>
                     @else
                         <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
                     @endif
-                    <span class="ui-text inline-flex rounded-full border border-slate-300/35 px-3 py-1 text-xs font-bold">{{ ($promotions ?? collect())->count() }} promociones</span>
+                    <span class="ui-text inline-flex rounded-full border border-slate-300/35 px-3 py-1 text-xs font-bold">{{ $promotionRows->count() }} promociones</span>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
-                <table class="plans-table ui-table min-w-[1020px] text-sm">
-                    <thead>
-                    <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
-                        <th class="px-4 py-3">Promo</th>
-                        @if ($isGlobalScope)
-                            <th class="px-4 py-3">Sede</th>
-                        @endif
-                        <th class="px-4 py-3">Tipo</th>
-                        <th class="px-4 py-3">Valor</th>
-                        <th class="px-4 py-3">Vigencia</th>
-                        <th class="px-4 py-3">Plan</th>
-                        <th class="px-4 py-3">Usos</th>
-                        <th class="px-4 py-3">Estado</th>
-                        <th class="px-4 py-3 text-right">Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @forelse (($promotions ?? collect()) as $promotion)
-                        <tr class="border-b border-slate-200/30 align-middle">
-                            <td class="ui-text px-4 py-3 font-semibold">{{ $promotion->name }}</td>
+            @if ($promotionRows->isEmpty())
+                <div class="plan-promo-empty">
+                    <p class="text-sm font-bold ui-text">No hay promociones creadas todavía.</p>
+                    <p class="ui-muted mt-1 text-xs">Crea una promoción para activar campañas como 2x1, descuento por temporada o días extra.</p>
+                    @if (! $isReadOnlyScope && $canManagePromotions)
+                        <button type="button" data-open-promotion-modal class="ui-button ui-button-primary mt-3 px-4 py-2 text-sm font-black">+ Nueva promoción</button>
+                    @endif
+                </div>
+            @else
+                <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
+                    <table class="plans-table ui-table min-w-[1020px] text-sm">
+                        <thead>
+                        <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
+                            <th class="px-4 py-3">Promo</th>
                             @if ($isGlobalScope)
-                                <td class="px-4 py-3">
-                                    <x-ui.badge variant="info">{{ $promotion->gym?->name ?? '-' }}</x-ui.badge>
-                                </td>
+                                <th class="px-4 py-3">Sede</th>
                             @endif
-                            <td class="ui-text px-4 py-3">{{ $promotionTypeLabels[$promotion->type] ?? $promotion->type }}</td>
-                            <td class="ui-text px-4 py-3">
-                                @if ($promotion->type === 'percentage')
-                                    -{{ (float) $promotion->value }}%
-                                @elseif ($promotion->type === 'fixed')
-                                    -{{ \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode) }}
-                                @elseif ($promotion->type === 'final_price')
-                                    {{ \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode) }}
-                                @elseif ($promotion->type === 'bonus_days')
-                                    +{{ (int) $promotion->value }} días
-                                @elseif (in_array($promotion->type, ['two_for_one', 'bring_friend'], true))
-                                    {{ (float) ($promotion->value ?? 50) }}% desc.
-                                @else
-                                    {{ (float) $promotion->value }}
-                                @endif
-                            </td>
-                            <td class="ui-text px-4 py-3">
-                                {{ $promotion->starts_at?->toDateString() ?? 'Sin inicio' }} - {{ $promotion->ends_at?->toDateString() ?? 'Sin fin' }}
-                            </td>
-                            <td class="ui-text px-4 py-3">{{ $promotion->plan?->name ?? 'Todos' }}</td>
-                            <td class="ui-text px-4 py-3">{{ $promotion->times_used }}{{ $promotion->max_uses ? ' / '.$promotion->max_uses : '' }}</td>
-                            <td class="px-4 py-3">
-                                <x-ui.badge :variant="$promotion->status === 'active' ? 'success' : 'muted'">{{ $promotion->status === 'active' ? 'Activo' : 'Inactivo' }}</x-ui.badge>
-                            </td>
-                            <td class="px-4 py-3 min-w-[16rem]">
-                                @if ($isReadOnlyScope)
-                                    <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
-                                @else
-                                    <div class="ui-action-grid ui-action-grid-end">
-                                        <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}" class="w-full">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="{{ $promotion->status === 'active' ? 'inactive' : 'active' }}">
-                                            <x-ui.button type="submit" size="sm" :variant="$promotion->status === 'active' ? 'muted' : 'success'" class="ui-action-button">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M12 2v10"/>
-                                                    <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">{{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
-                                            </x-ui.button>
-                                        </form>
-                                        <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}" class="w-full">
-                                            @csrf
-                                            @method('DELETE')
-                                            <x-ui.button type="submit" size="sm" variant="danger" class="ui-action-button">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M3 6h18"/>
-                                                    <path d="M8 6V4h8v2"/>
-                                                    <path d="M19 6l-1 14H6L5 6"/>
-                                                    <path d="M10 11v6"/>
-                                                    <path d="M14 11v6"/>
-                                                </svg>
-                                                <span class="ui-action-button-label">Eliminar</span>
-                                            </x-ui.button>
-                                        </form>
-                                    </div>
-                                @endif
-                            </td>
+                            <th class="px-4 py-3">Tipo</th>
+                            <th class="px-4 py-3">Valor</th>
+                            <th class="px-4 py-3">Vigencia</th>
+                            <th class="px-4 py-3">Plan</th>
+                            <th class="px-4 py-3">Usos</th>
+                            <th class="px-4 py-3">Estado</th>
+                            <th class="px-4 py-3 text-right">Acciones</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ $isGlobalScope ? 9 : 8 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay promociones creadas.</td>
-                        </tr>
-                    @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                        @foreach ($promotionRows as $promotion)
+                            <tr class="border-b border-slate-200/30 align-middle">
+                                <td class="ui-text px-4 py-3 font-semibold">{{ $promotion->name }}</td>
+                                @if ($isGlobalScope)
+                                    <td class="px-4 py-3">
+                                        <x-ui.badge variant="info">{{ $promotion->gym?->name ?? '-' }}</x-ui.badge>
+                                    </td>
+                                @endif
+                                <td class="ui-text px-4 py-3">{{ $promotionTypeLabels[$promotion->type] ?? $promotion->type }}</td>
+                                <td class="ui-text px-4 py-3">
+                                    @if ($promotion->type === 'percentage')
+                                        -{{ (float) $promotion->value }}%
+                                    @elseif ($promotion->type === 'fixed')
+                                        -{{ \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode) }}
+                                    @elseif ($promotion->type === 'final_price')
+                                        {{ \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode) }}
+                                    @elseif ($promotion->type === 'bonus_days')
+                                        +{{ (int) $promotion->value }} días
+                                    @elseif (in_array($promotion->type, ['two_for_one', 'bring_friend'], true))
+                                        {{ (float) ($promotion->value ?? 50) }}% desc.
+                                    @else
+                                        {{ (float) $promotion->value }}
+                                    @endif
+                                </td>
+                                <td class="ui-text px-4 py-3">
+                                    {{ $promotion->starts_at?->toDateString() ?? 'Sin inicio' }} - {{ $promotion->ends_at?->toDateString() ?? 'Sin fin' }}
+                                </td>
+                                <td class="ui-text px-4 py-3">{{ $promotion->plan?->name ?? 'Todos' }}</td>
+                                <td class="ui-text px-4 py-3">{{ $promotion->times_used }}{{ $promotion->max_uses ? ' / '.$promotion->max_uses : '' }}</td>
+                                <td class="px-4 py-3">
+                                    <x-ui.badge :variant="$promotion->status === 'active' ? 'success' : 'muted'">{{ $promotion->status === 'active' ? 'Activo' : 'Inactivo' }}</x-ui.badge>
+                                </td>
+                                <td class="px-4 py-3 min-w-[16rem]">
+                                    @if ($isReadOnlyScope)
+                                        <span class="text-xs font-semibold ui-muted">{{ $readOnlyActionLabel }}</span>
+                                    @else
+                                        <div class="ui-action-grid ui-action-grid-end">
+                                            <form method="POST" action="{{ route('plans.promotions.toggle', $promotion->id) }}" class="w-full">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="{{ $promotion->status === 'active' ? 'inactive' : 'active' }}">
+                                                <x-ui.button type="submit" size="sm" :variant="$promotion->status === 'active' ? 'muted' : 'success'" class="ui-action-button">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M12 2v10"/>
+                                                        <path d="M18.36 6.64a9 9 0 1 1-12.72 0"/>
+                                                    </svg>
+                                                    <span class="ui-action-button-label">{{ $promotion->status === 'active' ? 'Desactivar' : 'Activar' }}</span>
+                                                </x-ui.button>
+                                            </form>
+                                            <form method="POST" action="{{ route('plans.promotions.destroy', $promotion->id) }}" class="w-full">
+                                                @csrf
+                                                @method('DELETE')
+                                                <x-ui.button type="submit" size="sm" variant="danger" class="ui-action-button">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="ui-action-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M3 6h18"/>
+                                                        <path d="M8 6V4h8v2"/>
+                                                        <path d="M19 6l-1 14H6L5 6"/>
+                                                        <path d="M10 11v6"/>
+                                                        <path d="M14 11v6"/>
+                                                    </svg>
+                                                    <span class="ui-action-button-label">Eliminar</span>
+                                                </x-ui.button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </x-ui.card>
 
@@ -849,11 +971,13 @@
     const previewDuration = document.getElementById('preview-duration');
     const previewPrice = document.getElementById('preview-price');
     const previewStatus = document.getElementById('preview-status');
+    const previewValidity = document.getElementById('preview-validity');
     const durationChips = Array.from(document.querySelectorAll('.js-duration-chip'));
     const plansSearchInput = document.getElementById('plans-search');
     const plansStatusFilter = document.getElementById('plans-status-filter');
     const plansTableBody = document.getElementById('plans-table-body');
     const plansCount = document.getElementById('plans-count');
+    const plansClearFilters = document.getElementById('plans-clear-filters');
     const alertContainer = document.getElementById('plans-alert-container');
     const promoType = document.getElementById('promo-type');
     const promoValue = document.getElementById('promo-value');
@@ -862,7 +986,8 @@
     const promoTemplateButtons = Array.from(document.querySelectorAll('.js-promo-template'));
     const promoNameInput = document.getElementById('promo-name');
     const promoDescription = document.getElementById('promo-description');
-    const openPromotionModalBtn = document.getElementById('open-promotion-modal-btn');
+    const openPromotionModalButtons = Array.from(document.querySelectorAll('[data-open-promotion-modal]'));
+    const createPlanReset = document.getElementById('create-plan-reset');
 
     const setButtonLoading = (button, loading) => {
         if (!button) return;
@@ -945,6 +1070,12 @@
                 ? 'inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-200'
                 : 'inline-flex rounded-full border border-slate-300/35 bg-slate-700/45 px-2.5 py-1 text-xs font-bold text-slate-200';
         }
+        if (previewValidity) {
+            const humanDuration = durationLabel(durationUnit, durationDays, durationMonths);
+            previewValidity.textContent = statusText === 'Activo'
+                ? `Vigencia: ${humanDuration}. Listo para vender en recepción.`
+                : `Vigencia: ${humanDuration}. Se guardará oculto hasta activarlo.`;
+        }
     };
 
     const syncDurationChips = () => {
@@ -1000,6 +1131,13 @@
     createForm?.addEventListener('submit', () => {
         syncDerivedDaysFromMonths();
         setButtonLoading(document.getElementById('create-plan-submit'), true);
+    });
+    createPlanReset?.addEventListener('click', () => {
+        createForm?.reset();
+        syncCreateDurationVisibility();
+        updatePreview();
+        syncDurationChips();
+        nameInput?.focus();
     });
 
     const syncPromotionTypeUi = () => {
@@ -1077,6 +1215,12 @@
 
     plansSearchInput?.addEventListener('input', applyTableFilters);
     plansStatusFilter?.addEventListener('change', applyTableFilters);
+    plansClearFilters?.addEventListener('click', () => {
+        if (plansSearchInput) plansSearchInput.value = '';
+        if (plansStatusFilter) plansStatusFilter.value = 'all';
+        applyTableFilters();
+        plansSearchInput?.focus();
+    });
 
     const routeFromTemplate = (template, id) => template ? template.replace('__PLAN__', String(id)) : '';
     const openModal = (id) => {
@@ -1109,12 +1253,27 @@
         });
     });
 
+    const planActionMenus = Array.from(document.querySelectorAll('.plan-row-menu'));
+    document.addEventListener('click', (event) => {
+        const target = event.target;
+        planActionMenus.forEach((menu) => {
+            if (!(target instanceof Node) || !menu.contains(target)) {
+                menu.removeAttribute('open');
+            }
+        });
+    });
+    document.querySelectorAll('.plan-row-menu .ui-action-button').forEach((button) => {
+        button.addEventListener('click', () => button.closest('.plan-row-menu')?.removeAttribute('open'));
+    });
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
+        planActionMenus.forEach((menu) => menu.removeAttribute('open'));
         ['promotion-create-modal', 'plan-edit-modal', 'plan-delete-modal', 'plan-toggle-modal'].forEach(closeModal);
     });
 
-    openPromotionModalBtn?.addEventListener('click', () => openModal('promotion-create-modal'));
+    openPromotionModalButtons.forEach((button) => {
+        button.addEventListener('click', () => openModal('promotion-create-modal'));
+    });
 
     const editForm = document.getElementById('edit-plan-form');
     const editName = document.getElementById('edit-plan-name');
