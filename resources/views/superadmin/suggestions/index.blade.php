@@ -55,9 +55,47 @@
                         @php
                             $isPending = $suggestion->status === 'pending';
                             $isReactivationRequest = mb_strtolower(trim((string) $suggestion->subject)) === 'solicitud de reactivacion de suscripcion';
+                            $message = (string) $suggestion->message;
+                            $displayMessage = $message;
                             $receiptUrl = null;
-                            if (preg_match('/Comprobante:\s*(https?:\/\/\S+)/u', (string) $suggestion->message, $matches)) {
-                                $receiptUrl = trim((string) ($matches[1] ?? ''));
+                            $receiptPath = null;
+                            if (preg_match('/Ruta interna:\s*([^\r\n]+)/u', $message, $pathMatch)) {
+                                $rawPath = trim((string) ($pathMatch[1] ?? ''));
+                                if ($rawPath !== '') {
+                                    $normalizedPath = ltrim($rawPath, '/');
+                                    if (\Illuminate\Support\Str::startsWith($normalizedPath, 'storage/')) {
+                                        $normalizedPath = ltrim(\Illuminate\Support\Str::after($normalizedPath, 'storage/'), '/');
+                                    }
+                                    if ($normalizedPath !== '') {
+                                        $receiptPath = $normalizedPath;
+                                    }
+                                }
+                            }
+                            if ($receiptPath === null && preg_match('/Comprobante:\s*(https?:\/\/\S+|\/storage\/\S+)/u', $message, $receiptMatch)) {
+                                $rawReceiptUrl = trim((string) ($receiptMatch[1] ?? ''));
+                                if (\Illuminate\Support\Str::startsWith($rawReceiptUrl, '/storage/')) {
+                                    $receiptPath = ltrim(\Illuminate\Support\Str::after($rawReceiptUrl, '/storage/'), '/');
+                                } elseif (filter_var($rawReceiptUrl, FILTER_VALIDATE_URL)) {
+                                    $parsedPath = parse_url($rawReceiptUrl, PHP_URL_PATH);
+                                    $parsedPath = is_string($parsedPath) ? trim($parsedPath) : '';
+                                    if ($parsedPath !== '' && \Illuminate\Support\Str::startsWith($parsedPath, '/storage/')) {
+                                        $receiptPath = ltrim(\Illuminate\Support\Str::after($parsedPath, '/storage/'), '/');
+                                    }
+                                }
+                            }
+                            if ($receiptPath !== null && $receiptPath !== '') {
+                                $receiptUrl = url('/storage/'.$receiptPath);
+                            } elseif (preg_match('/Comprobante:\s*(https?:\/\/\S+|\/storage\/\S+)/u', $message, $receiptMatch)) {
+                                $rawReceiptUrl = trim((string) ($receiptMatch[1] ?? ''));
+                                if (\Illuminate\Support\Str::startsWith($rawReceiptUrl, '/storage/')) {
+                                    $receiptUrl = url($rawReceiptUrl);
+                                } else {
+                                    $receiptUrl = $rawReceiptUrl !== '' ? $rawReceiptUrl : null;
+                                }
+                            }
+                            if (is_string($receiptUrl) && $receiptUrl !== '') {
+                                $normalizedLine = 'Comprobante: '.$receiptUrl;
+                                $displayMessage = preg_replace('/Comprobante:\s*(https?:\/\/\S+|\/storage\/\S+)/u', $normalizedLine, $message, 1) ?? $message;
                             }
                             $statusClass = $isPending
                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/45 dark:text-amber-200'
@@ -81,8 +119,8 @@
                                 <p class="font-semibold">{{ $suggestion->subject }}</p>
                             </td>
                             <td class="px-3 py-3 dark:text-slate-200">
-                                <p class="max-w-lg whitespace-pre-wrap break-words text-sm">{{ $suggestion->message }}</p>
-                                @if ($receiptUrl !== '')
+                                <p class="max-w-lg whitespace-pre-wrap break-words text-sm">{{ $displayMessage }}</p>
+                                @if (is_string($receiptUrl) && $receiptUrl !== '')
                                     <a href="{{ $receiptUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-800 hover:bg-cyan-200 dark:bg-cyan-900/45 dark:text-cyan-200 dark:hover:bg-cyan-900/65">
                                         Ver comprobante
                                     </a>

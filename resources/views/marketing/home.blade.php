@@ -90,9 +90,9 @@
         'commercial' => 'Términos comerciales',
         default => 'Software para gimnasios',
     };
-    $tabIconUrl = asset('pwa/fg-favicon-32.png?v=20260322');
-    $tabIconSmallUrl = asset('pwa/fg-favicon-16.png?v=20260322');
-    $tabTouchIconUrl = asset('pwa/fg-favicon-180.png?v=20260322');
+    $tabIconUrl = asset('pwa/fg-favicon-32.png?v=20260317');
+    $tabIconSmallUrl = asset('pwa/fg-favicon-16.png?v=20260317');
+    $tabTouchIconUrl = asset('pwa/fg-favicon-180.png?v=20260317');
 @endphp
 @php
     $serviceCards = [
@@ -222,7 +222,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#05080f">
     <title>{{ $brandName }} | {{ $pageTitleSuffix }}</title>
-    <link rel="icon" href="{{ asset('favicon.ico?v=20260322') }}" sizes="any">
+    <link rel="icon" href="{{ asset('favicon.ico?v=20260317') }}" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ $tabIconUrl }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ $tabIconSmallUrl }}">
     <link rel="shortcut icon" href="{{ $tabIconUrl }}">

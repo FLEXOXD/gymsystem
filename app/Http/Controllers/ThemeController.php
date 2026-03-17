@@ -225,7 +225,6 @@ class ThemeController extends Controller
         $customMessage = trim((string) ($data['reactivation_message'] ?? ''));
         $receiptFile = $request->file('reactivation_receipt');
         $receiptPath = null;
-        $receiptUrl = null;
         if ($receiptFile) {
             $receiptPath = $receiptFile->store('support/reactivation-receipts', 'public');
             if (! is_string($receiptPath) || trim($receiptPath) === '') {
@@ -233,7 +232,6 @@ class ThemeController extends Controller
                     ->route('subscription.expired')
                     ->withErrors(['reactivation_receipt' => 'No se pudo guardar el comprobante. Intenta nuevamente.']);
             }
-            $receiptUrl = Storage::disk('public')->url($receiptPath);
         }
 
         $supportMessageLines = [
@@ -245,10 +243,12 @@ class ThemeController extends Controller
             'Mensaje del gimnasio:',
             $customMessage !== '' ? $customMessage : 'Solicito activacion de la cuenta.',
         ];
-        if ($receiptUrl !== null) {
+        if (is_string($receiptPath) && trim($receiptPath) !== '') {
+            $receiptPathForMessage = ltrim((string) $receiptPath, '/');
+            $receiptPublicPath = '/storage/'.$receiptPathForMessage;
             $supportMessageLines[] = '';
-            $supportMessageLines[] = 'Comprobante: '.$receiptUrl;
-            $supportMessageLines[] = 'Ruta interna: '.$receiptPath;
+            $supportMessageLines[] = 'Comprobante: '.$receiptPublicPath;
+            $supportMessageLines[] = 'Ruta interna: '.$receiptPathForMessage;
         }
 
         ContactSuggestion::query()->create([

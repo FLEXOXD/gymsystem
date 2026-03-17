@@ -458,14 +458,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FlexGym">
     @if ($canInstallPwa)
-        <link rel="manifest" href="{{ asset('manifest.webmanifest?v=20260322') }}">
+        <link rel="manifest" href="{{ asset('manifest.webmanifest?v=20260317') }}">
     @endif
-    <link rel="icon" href="{{ asset('favicon.ico?v=20260322') }}" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/fg-favicon-32.png?v=20260322') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/fg-favicon-16.png?v=20260322') }}">
-    <link rel="shortcut icon" href="{{ asset('pwa/fg-favicon-32.png?v=20260322') }}">
+    <link rel="icon" href="{{ asset('favicon.ico?v=20260317') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/fg-favicon-32.png?v=20260317') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('pwa/fg-favicon-16.png?v=20260317') }}">
+    <link rel="shortcut icon" href="{{ asset('pwa/fg-favicon-32.png?v=20260317') }}">
     @if ($canInstallPwa)
-        <link rel="apple-touch-icon" href="{{ asset('pwa/fg-favicon-180.png?v=20260322') }}">
+        <link rel="apple-touch-icon" href="{{ asset('pwa/fg-favicon-180.png?v=20260317') }}">
     @endif
     <title>{{ $pageTitle }} - {{ config('app.name', 'GymSystem') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f3cc9"/>
-      <stop offset="100%" stop-color="#0fb5ff"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="176" r="78" fill="#ffffff" opacity="0.98"/>
-  <path d="M146 376c0-61 49-110 110-110s110 49 110 110v32H146z" fill="#ffffff" opacity="0.98"/>
-  <path d="M114 94h84v32h-84zm200 0h84v32h-84z" fill="#dbeafe"/>
-</svg>
+﻿<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'><image href='/pwa/flexgymlogo.png' x='0' y='0' width='512' height='512' preserveAspectRatio='xMidYMid meet'/></svg>
