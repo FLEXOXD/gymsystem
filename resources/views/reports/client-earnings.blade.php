@@ -83,7 +83,7 @@
     @endphp
 
     <div class="report-client-earnings space-y-4">
-        <x-ui.card title="Filtro de facturacion por cliente" subtitle="Analiza cuanto se ha facturado por cliente en el rango seleccionado.">
+        <x-ui.card title="Filtro de facturación por cliente" subtitle="Analiza cuánto se ha facturado por cliente en el rango seleccionado.">
             <form method="GET" action="{{ route('reports.client-earnings', ['contextGym' => $contextGym]) }}" class="filter-grid grid gap-3 md:grid-cols-2 xl:grid-cols-6">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
@@ -122,7 +122,7 @@
                     <span>Origen</span>
                     <select name="source" class="ui-input">
                         <option value="all" @selected($sourceFilter === 'all')>Todo</option>
-                        <option value="membership" @selected($sourceFilter === 'membership')>Solo membresias</option>
+                        <option value="membership" @selected($sourceFilter === 'membership')>Solo membresías</option>
                         <option value="sale" @selected($sourceFilter === 'sale')>Solo ventas de productos</option>
                         <option value="mixed" @selected($sourceFilter === 'mixed')>Clientes mixtos</option>
                     </select>
@@ -131,10 +131,10 @@
                 <label class="space-y-1 text-sm font-semibold ui-muted">
                     <span>Orden</span>
                     <select name="order" class="ui-input">
-                        <option value="amount_desc" @selected($orderFilter === 'amount_desc')>Mayor facturacion</option>
-                        <option value="amount_asc" @selected($orderFilter === 'amount_asc')>Menor facturacion</option>
-                        <option value="last_desc" @selected($orderFilter === 'last_desc')>Ultima facturacion reciente</option>
-                        <option value="last_asc" @selected($orderFilter === 'last_asc')>Ultima facturacion antigua</option>
+                        <option value="amount_desc" @selected($orderFilter === 'amount_desc')>Mayor facturación</option>
+                        <option value="amount_asc" @selected($orderFilter === 'amount_asc')>Menor facturación</option>
+                        <option value="last_desc" @selected($orderFilter === 'last_desc')>Última facturación reciente</option>
+                        <option value="last_asc" @selected($orderFilter === 'last_asc')>Última facturación antigua</option>
                         <option value="name_asc" @selected($orderFilter === 'name_asc')>Nombre A-Z</option>
                         <option value="name_desc" @selected($orderFilter === 'name_desc')>Nombre Z-A</option>
                     </select>
@@ -168,7 +168,7 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Cliente con mayor facturacion">
+        <x-ui.card title="Cliente con mayor facturación">
             @if ($topClient)
                 <div class="top-client-wrap">
                     <div>
@@ -177,7 +177,7 @@
                         @if ($showGymColumn)
                             <p class="text-sm ui-muted">Sede: {{ (string) ($topClient->gym_name ?? '-') }}</p>
                         @endif
-                        <p class="text-sm ui-muted">Ultima facturacion: {{ $topClient->last_billed_at ? \Carbon\Carbon::parse((string) $topClient->last_billed_at)->format('Y-m-d H:i') : '-' }}</p>
+                        <p class="text-sm ui-muted">Última facturación: {{ $topClient->last_billed_at ? \Carbon\Carbon::parse((string) $topClient->last_billed_at)->format('Y-m-d H:i') : '-' }}</p>
                     </div>
                     <x-ui.badge variant="success">{{ $currencyFormatter::format((float) ($topClient->total_billed ?? 0), $appCurrencyCode) }}</x-ui.badge>
                 </div>
@@ -194,7 +194,7 @@
                 <strong>{{ $clients->lastItem() ?? 0 }}</strong>
                 de
                 <strong>{{ $clients->total() }}</strong>
-                registros (50 por pagina).
+                registros (50 por página).
             </p>
 
             <div class="detail-table-wrap table-mobile-stack">
@@ -207,10 +207,10 @@
                             <th>Sede</th>
                         @endif
                         <th>Total facturado</th>
-                        <th>Membresias</th>
+                        <th>Membresías</th>
                         <th>Ventas de productos</th>
                         <th>Operaciones</th>
-                        <th>Ultima facturacion</th>
+                        <th>Última facturación</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -222,10 +222,10 @@
                                 <td data-label="Sede">{{ (string) ($client->gym_name ?? '-') }}</td>
                             @endif
                             <td data-label="Total facturado" class="font-bold text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($client->total_billed ?? 0), $appCurrencyCode) }}</td>
-                            <td data-label="Membresias">{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td data-label="Membresías">{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
                             <td data-label="Ventas productos">{{ $currencyFormatter::format((float) ($client->sales_billed ?? 0), $appCurrencyCode) }}</td>
                             <td data-label="Operaciones">{{ (int) ($client->operations_count ?? 0) }}</td>
-                            <td data-label="Ultima facturacion">{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
+                            <td data-label="Última facturación">{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
                         </tr>
                     @empty
                         <tr>
