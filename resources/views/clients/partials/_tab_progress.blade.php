@@ -8,6 +8,8 @@
     $timelineEntries = collect($timeline['entries'] ?? []);
     $training = (array) ($progressOverview['training'] ?? []);
     $profile = (array) ($progressOverview['profile'] ?? []);
+    $profileReady = (bool) ($profile['ready'] ?? false);
+    $canManageClientAccounts = (bool) ($canManageClientAccounts ?? false);
     $membership = (array) ($progressOverview['membership'] ?? []);
     $performance = (array) ($progressOverview['performance'] ?? []);
     $snapshotSourceLabel = trim((string) ($progressOverview['snapshot_source_label'] ?? ''));
@@ -296,8 +298,8 @@
         @endforeach
     </section>
 
-    <div class="grid gap-6 xl:grid-cols-12">
-        <div class="space-y-6 xl:col-span-8">
+    <div class="client-layout-wide">
+        <div class="space-y-6">
             <x-ui.card title="Analisis de rendimiento" subtitle="Lectura operativa del progreso del cliente.">
                 <div class="grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
                     <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
@@ -453,7 +455,7 @@
             </x-ui.card>
         </div>
 
-        <div class="space-y-6 xl:col-span-4">
+        <div class="space-y-6">
             <x-ui.card title="Alertas operativas" subtitle="Senales para recepcion, renovacion y seguimiento.">
                 @if ($alerts->isNotEmpty())
                     <div class="space-y-3">
@@ -531,6 +533,17 @@
                 <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Limitaciones: {{ $profile['limitations_label'] ?? 'Sin datos' }}</p>
                 @if (! empty($profile['updated_label']))
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Ultima actualizacion: {{ $profile['updated_label'] }}</p>
+                @endif
+                @if (! $profileReady)
+                    <div class="client-empty-state mt-4 rounded-xl border border-dashed border-slate-400 bg-slate-50 p-3">
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Completa datos fisicos para activar recomendaciones mas precisas.</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @if ($canManageClientAccounts)
+                                <x-ui.button type="button" size="sm" variant="ghost" x-on:click="setTab('app_access')">Configurar usuario app</x-ui.button>
+                            @endif
+                            <x-ui.button type="button" size="sm" variant="secondary" x-on:click="setTab('credentials')">Enviar acceso PWA</x-ui.button>
+                        </div>
+                    </div>
                 @endif
             </x-ui.card>
 

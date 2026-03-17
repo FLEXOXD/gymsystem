@@ -176,7 +176,7 @@
                 </table>
             </div>
         @else
-            <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+            <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
                 <p class="font-semibold">Sin historial de membresías todavía.</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">La primera venta aparecerá aquí junto con su ventana original.</p>
             </div>
@@ -232,7 +232,7 @@
                 </table>
             </div>
         @else
-            <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+            <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
                 <p class="font-semibold">No hay ajustes registrados.</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cuando se mueva el inicio, se sumen dias al final o se corrija una ventana, el historial aparecerá aquí.</p>
             </div>
@@ -268,7 +268,7 @@
                 </table>
             </div>
         @else
-            <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+            <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
                 <div class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 7h16"/>

@@ -1,5 +1,5 @@
-<div class="grid gap-6 xl:grid-cols-12">
-    <div class="space-y-6 xl:col-span-8">
+<div class="client-layout-wide">
+    <div class="space-y-6">
         <x-ui.card title="Estado de membresía" subtitle="Vista rápida para recepción, cobro y ajustes.">
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-slate-300 bg-slate-100 p-4 dark:border-white/10 dark:bg-slate-900/40">
@@ -50,7 +50,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+                    <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
                         <div class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 12h18"/>
@@ -78,7 +78,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+                    <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
                         <div class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 7h16"/>
@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <div class="space-y-6 xl:col-span-4">
+    <div class="space-y-6">
         <x-ui.card title="Perfil del cliente" subtitle="Datos base de contacto.">
             <div class="space-y-4">
                 <div class="h-40 overflow-hidden rounded-xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-slate-900/50">
@@ -177,7 +177,9 @@
                     <span class="text-slate-500 dark:text-slate-400">Tab</span>
                 </button>
 
-                <button type="button" class="text-xs font-semibold text-cyan-700 underline dark:text-cyan-300" x-on:click="quickMoreOpen = !quickMoreOpen">
+                <button type="button"
+                        class="inline-flex rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-500/20 dark:border-cyan-400/40 dark:bg-cyan-400/10 dark:text-cyan-200"
+                        x-on:click="quickMoreOpen = !quickMoreOpen">
                     Ver más
                 </button>
 

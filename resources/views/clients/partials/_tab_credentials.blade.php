@@ -122,7 +122,7 @@
         }
     @endphp
 
-    <div class="mb-4 flex flex-wrap gap-2">
+    <div class="client-credentials-toolbar">
         <x-ui.button type="button" size="sm" x-on:click="openRfidModal()">Asignar RFID</x-ui.button>
         <form method="POST" action="{{ route('client-credentials.generate-qr', $client->id) }}">
             @csrf
@@ -137,14 +137,14 @@
     @endif
 
     @if ($activeQrCredential)
-        <div class="mb-5 grid gap-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 md:grid-cols-[210px_1fr] md:items-center">
+        <div class="client-credentials-hero mb-5 grid gap-4 rounded-xl p-4 md:grid-cols-[210px_1fr] md:items-center">
             <div class="rounded-lg border border-slate-300 bg-slate-100 p-3 text-center dark:border-white/10 dark:bg-slate-900/60">
                 {!! $activeQrSvg !!}
             </div>
             <div class="space-y-3">
                 <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">QR activo para acceso</p>
                 <p class="break-all rounded-lg border border-slate-300 bg-slate-100 p-2 font-mono text-xs text-slate-800 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200">{{ $activeQrCredential->value }}</p>
-                <div class="flex flex-wrap gap-2">
+                <div class="client-credentials-actions">
                     <x-ui.button type="button" variant="muted" size="sm" x-on:click="copyQr(@js($activeQrCredential->value))">Copiar valor</x-ui.button>
                     <x-ui.button :href="route('clients.card', $client->id)" target="_blank" rel="noopener" variant="ghost" size="sm">Imprimir tarjeta</x-ui.button>
                     <x-ui.button :href="route('clients.card.pdf', $client->id)" target="_blank" rel="noopener" variant="secondary" size="sm">Exportar PDF</x-ui.button>
@@ -233,7 +233,7 @@
             </table>
         </div>
     @else
-        <div class="rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
+        <div class="client-empty-state rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
             <div class="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="4" width="18" height="16" rx="2"/>

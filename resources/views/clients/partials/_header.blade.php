@@ -78,48 +78,43 @@
                 <div x-cloak
                      x-show="actionsOpen"
                      x-transition.origin.top.right
-                     class="client-action-popover absolute right-0 z-30 mt-2 rounded-2xl border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                     class="client-action-popover absolute right-0 z-30 mt-2 rounded-2xl p-2">
                     <div class="space-y-1.5">
                     <form method="POST" action="{{ route('client-credentials.generate-qr', $client->id) }}">
                         @csrf
                         <button type="submit"
-                                class="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-left text-sm font-medium text-slate-100 transition hover:border-slate-700 hover:bg-slate-800"
+                                class="client-action-item"
                                 x-on:click="actionsOpen = false">
                             <span>Generar QR</span>
-                            <span class="text-xs text-slate-400">POST</span>
                         </button>
                     </form>
 
                     <button type="button"
-                            class="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-left text-sm font-medium text-slate-100 transition hover:border-slate-700 hover:bg-slate-800"
+                            class="client-action-item"
                             x-on:click="actionsOpen = false; openRfidModal()">
                         <span>Asignar RFID</span>
-                        <span class="text-xs text-slate-400">Modal</span>
                     </button>
 
                     @if (! empty($canAdjustMemberships) && $latestMembership)
                         <button type="button"
-                                class="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-left text-sm font-medium text-slate-100 transition hover:border-slate-700 hover:bg-slate-800"
+                                class="client-action-item"
                                 x-on:click="actionsOpen = false; openMembershipAdjustmentModal({{ (int) $latestMembership->id }})">
                             <span>Ajustar membresía</span>
-                            <span class="text-xs text-slate-400">Modal</span>
                         </button>
                     @endif
 
                     <a href="{{ route('clients.card', $client->id) }}"
                        target="_blank"
                        rel="noopener"
-                       class="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-sm font-medium text-slate-100 transition hover:border-slate-700 hover:bg-slate-800"
+                       class="client-action-item"
                        x-on:click="actionsOpen = false">
                         <span>Imprimir tarjeta</span>
-                        <span class="text-xs text-slate-400">Nueva pestaña</span>
                     </a>
 
                     <a href="{{ route('reception.index') }}"
-                       class="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-sm font-medium text-slate-100 transition hover:border-slate-700 hover:bg-slate-800"
+                       class="client-action-item"
                        x-on:click="actionsOpen = false">
                         <span>Ir a recepción</span>
-                        <span class="text-xs text-slate-400">Ir</span>
                     </a>
                     </div>
                 </div>

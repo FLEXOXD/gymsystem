@@ -73,6 +73,35 @@
             justify-content: flex-start;
         }
 
+        .client-detail-shell {
+            --client-sticky-offset: 5.7rem;
+            position: relative;
+            scroll-padding-top: calc(var(--client-sticky-offset) + 0.9rem);
+        }
+
+        .client-hero-card,
+        .client-tab-panel,
+        .client-tabs-wrap {
+            scroll-margin-top: calc(var(--client-sticky-offset) + 0.8rem);
+        }
+
+        .client-tabs-wrap {
+            position: sticky;
+            top: calc(var(--client-sticky-offset) - 0.35rem);
+            z-index: 18;
+            border-radius: 1.05rem;
+            border: 1px solid rgb(148 163 184 / 0.3);
+            background: linear-gradient(145deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.92));
+            box-shadow: 0 20px 32px -28px rgb(15 23 42 / 0.5);
+            backdrop-filter: blur(7px);
+        }
+
+        .theme-dark .client-tabs-wrap {
+            border-color: rgb(148 163 184 / 0.18);
+            background: linear-gradient(150deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.8));
+            box-shadow: 0 22px 36px -30px rgb(2 8 23 / 0.9);
+        }
+
         .client-tabs-strip {
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -86,6 +115,160 @@
             min-height: 2.7rem;
             white-space: nowrap;
             border-radius: 0.95rem;
+        }
+
+        .client-tab-chip-active {
+            box-shadow: 0 14px 24px -16px rgb(14 165 233 / 0.85);
+        }
+
+        .client-tab-chip-idle {
+            opacity: 0.95;
+        }
+
+        .client-tab-chip-idle:hover {
+            opacity: 1;
+        }
+
+        .client-tab-panel .ui-card {
+            border: 1px solid rgb(148 163 184 / 0.28);
+            background: linear-gradient(156deg, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.94));
+            box-shadow: 0 22px 38px -34px rgb(15 23 42 / 0.56);
+        }
+
+        .theme-dark .client-tab-panel .ui-card {
+            border-color: rgb(148 163 184 / 0.18);
+            background: linear-gradient(160deg, rgb(2 6 23 / 0.86), rgb(15 23 42 / 0.7));
+            box-shadow: 0 24px 40px -30px rgb(2 8 23 / 0.88);
+        }
+
+        .client-tab-panel .ui-card > header {
+            margin-bottom: 0.95rem;
+        }
+
+        .client-tab-panel .ui-card > header .ui-heading {
+            letter-spacing: -0.015em;
+        }
+
+        .client-tab-panel .ui-card > header .ui-muted {
+            margin-top: 0.3rem;
+            font-size: 0.86rem;
+        }
+
+        .client-tab-panel .ui-table thead tr {
+            background: rgb(241 245 249 / 0.94);
+            border-bottom-color: rgb(203 213 225 / 0.8);
+        }
+
+        .theme-dark .client-tab-panel .ui-table thead tr {
+            background: rgb(51 65 85 / 0.88);
+            border-bottom-color: rgb(71 85 105 / 0.9);
+        }
+
+        .client-tab-panel .ui-table th {
+            font-size: 0.69rem;
+            letter-spacing: 0.11em;
+        }
+
+        .client-tab-panel .ui-table th,
+        .client-tab-panel .ui-table td {
+            padding-top: 0.86rem;
+            padding-bottom: 0.86rem;
+        }
+
+        .client-empty-state {
+            border-style: dashed !important;
+            border-color: rgb(148 163 184 / 0.52) !important;
+            background: linear-gradient(160deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.84)) !important;
+        }
+
+        .theme-dark .client-empty-state {
+            border-color: rgb(100 116 139 / 0.62) !important;
+            background: linear-gradient(160deg, rgb(15 23 42 / 0.85), rgb(2 6 23 / 0.75)) !important;
+        }
+
+        .client-action-popover {
+            border: 1px solid rgb(148 163 184 / 0.28);
+            background: rgb(255 255 255 / 0.92);
+            box-shadow: 0 20px 34px -24px rgb(15 23 42 / 0.62);
+            backdrop-filter: blur(8px);
+            padding: 0.38rem;
+        }
+
+        .theme-dark .client-action-popover {
+            border-color: rgb(71 85 105 / 0.74);
+            background: rgb(2 6 23 / 0.93);
+            box-shadow: 0 22px 38px -26px rgb(2 8 23 / 0.92);
+        }
+
+        .client-action-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            border-radius: 0.78rem;
+            border: 1px solid rgb(148 163 184 / 0.28);
+            background: rgb(248 250 252 / 0.82);
+            padding: 0.6rem 0.72rem;
+            text-align: left;
+            font-size: 0.79rem;
+            font-weight: 700;
+            color: rgb(15 23 42 / 0.96);
+            transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+        }
+
+        .client-action-item:hover {
+            border-color: rgb(14 165 233 / 0.55);
+            background: rgb(224 242 254 / 0.85);
+            transform: translateY(-1px);
+        }
+
+        .theme-dark .client-action-item {
+            border-color: rgb(71 85 105 / 0.72);
+            background: rgb(15 23 42 / 0.8);
+            color: rgb(226 232 240 / 0.94);
+        }
+
+        .theme-dark .client-action-item:hover {
+            border-color: rgb(34 211 238 / 0.6);
+            background: rgb(8 47 73 / 0.55);
+        }
+
+        .client-credentials-toolbar {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .client-credentials-hero {
+            border-radius: 1rem;
+            border: 1px solid rgb(34 211 238 / 0.32);
+            background: linear-gradient(155deg, rgb(6 182 212 / 0.13), rgb(14 116 144 / 0.06));
+            padding: 0.95rem;
+            gap: 0.9rem;
+        }
+
+        .theme-dark .client-credentials-hero {
+            border-color: rgb(34 211 238 / 0.25);
+            background: linear-gradient(165deg, rgb(6 182 212 / 0.16), rgb(8 47 73 / 0.22));
+        }
+
+        .client-credentials-actions {
+            display: grid;
+            gap: 0.45rem;
+            grid-template-columns: repeat(auto-fit, minmax(9.8rem, 1fr));
+        }
+
+        .client-layout-wide {
+            display: grid;
+            gap: 1.4rem;
+        }
+
+        @media (min-width: 1536px) {
+            .client-layout-wide {
+                grid-template-columns: minmax(0, 1fr) minmax(18rem, 23rem);
+                align-items: start;
+            }
         }
 
         .client-tab-panel {
@@ -110,6 +293,10 @@
         }
 
         @media (min-width: 1280px) {
+            .client-detail-shell {
+                --client-sticky-offset: 6.35rem;
+            }
+
             .client-hero-layout {
                 grid-template-columns: minmax(0, 1fr) 18rem;
                 align-items: start;
@@ -124,11 +311,32 @@
             }
         }
 
+        @media (max-width: 1279px) {
+            .client-detail-shell {
+                --client-sticky-offset: 7.1rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .client-detail-shell {
+                --client-sticky-offset: 7.7rem;
+            }
+        }
+
         @media (max-width: 639px) {
+            .client-detail-shell {
+                --client-sticky-offset: 8.2rem;
+            }
+
             .client-action-popover {
                 left: 0;
                 right: 0;
                 width: auto;
+            }
+
+            .client-tabs-wrap {
+                position: static;
+                top: auto;
             }
         }
     </style>
@@ -420,9 +628,9 @@
             initialAdjustmentMembershipId: @js($initialAdjustmentMembershipId ? (int) $initialAdjustmentMembershipId : null),
             oldAdjustmentInput: @js($oldAdjustmentInput),
             hasAdjustmentOldInput: @js($hasAdjustmentOldInput),
-        })"
+         })"
          x-init="init()"
-         class="space-y-4 sm:space-y-6">
+         class="client-detail-shell space-y-4 sm:space-y-6">
 
         @include('clients.partials._header', [
             'client' => $client,
@@ -474,6 +682,7 @@
                 @include('clients.partials._tab_progress', [
                     'client' => $client,
                     'progressOverview' => $progressOverview,
+                    'canManageClientAccounts' => $canManageClientAccounts,
                 ])
             </section>
         @endif

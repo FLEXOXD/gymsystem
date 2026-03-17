@@ -5,8 +5,8 @@
     $appAccessEnabled = $hasAppUsername && $hasAppPassword;
 @endphp
 
-<div class="grid gap-6 xl:grid-cols-12">
-    <div class="space-y-6 xl:col-span-8">
+<div class="client-layout-wide">
+    <div class="space-y-6">
         <x-ui.card title="Usuario app del cliente" subtitle="Edita el usuario usado para iniciar sesión en la app cliente.">
             <form method="POST"
                   action="{{ route('clients.app-account.update', $client->id) }}"
@@ -92,7 +92,7 @@
         </x-ui.card>
     </div>
 
-    <div class="xl:col-span-4">
+    <div>
         <x-ui.card title="Estado de acceso" subtitle="Resumen rápido del acceso cliente PWA.">
             <dl class="space-y-3 text-sm">
                 <div class="flex items-center justify-between gap-3">
