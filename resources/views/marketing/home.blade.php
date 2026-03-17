@@ -13,6 +13,7 @@
     $demoLimitSeconds = max(0, (int) data_get($demoLimitModal, 'retry_after_seconds', 0));
     $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rápido'));
     $heroTitleText = trim((string) preg_replace('/\bsin\s+fricción\b\.?/i', '', $heroTitleText));
+    $heroHasClosingPhrase = (bool) preg_match('/\bsin\s+problemas\b/i', $heroTitleText);
     $heroSlides = [];
     for ($slide = 1; $slide <= 4; $slide++) {
         $slideUrl = trim((string) ($content['hero_slide_'.$slide.'_url'] ?? ''));
@@ -298,26 +299,26 @@
         }
         body::before {
             background:
-                radial-gradient(42% 34% at 22% 18%, rgba(57, 255, 141, .24), transparent 72%),
-                radial-gradient(36% 30% at 78% 72%, rgba(29, 214, 116, .18), transparent 74%);
-            filter: blur(14px);
+                radial-gradient(42% 34% at 22% 18%, rgba(57, 255, 141, .17), transparent 72%),
+                radial-gradient(36% 30% at 78% 72%, rgba(29, 214, 116, .12), transparent 74%);
+            filter: blur(18px);
             will-change: transform, opacity;
             animation: neonBreath 10s ease-in-out infinite alternate;
         }
         body::after {
             background:
-                radial-gradient(30% 26% at 50% 40%, rgba(90, 255, 170, .12), transparent 76%);
-            filter: blur(24px);
+                radial-gradient(30% 26% at 50% 40%, rgba(90, 255, 170, .08), transparent 76%);
+            filter: blur(30px);
             will-change: transform, opacity;
             animation: neonDrift 16s ease-in-out infinite alternate;
         }
         @keyframes neonBreath {
-            0% { opacity: .55; transform: scale(1) translate3d(0, 0, 0); }
-            100% { opacity: .9; transform: scale(1.04) translate3d(0, -8px, 0); }
+            0% { opacity: .38; transform: scale(1) translate3d(0, 0, 0); }
+            100% { opacity: .62; transform: scale(1.03) translate3d(0, -6px, 0); }
         }
         @keyframes neonDrift {
-            0% { opacity: .35; transform: translate3d(-10px, 0, 0); }
-            100% { opacity: .6; transform: translate3d(12px, -6px, 0); }
+            0% { opacity: .22; transform: translate3d(-10px, 0, 0); }
+            100% { opacity: .42; transform: translate3d(12px, -6px, 0); }
         }
 
         .top-wrap {
@@ -325,14 +326,25 @@
             padding-top: 0.55rem;
             backdrop-filter: blur(6px);
             background: linear-gradient(180deg, rgba(2, 11, 7, 0.92), rgba(2, 11, 7, 0.52));
+            transition: padding .2s ease, background .2s ease;
         }
         .top-nav {
             display: flex; align-items: center; gap: 1rem;
             border: 1px solid #294437;
             border-radius: 1.1rem;
-            background: rgba(8, 14, 10, 0.92);
-            box-shadow: 0 16px 40px rgba(4, 18, 10, 0.5);
+            background: rgba(8, 14, 10, 0.9);
+            box-shadow: 0 14px 32px rgba(4, 18, 10, 0.42);
             padding: 0.75rem 1rem;
+            transition: padding .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .top-wrap.is-compact {
+            padding-top: .28rem;
+            background: linear-gradient(180deg, rgba(2, 10, 7, 0.95), rgba(2, 10, 7, 0.68));
+        }
+        .top-wrap.is-compact .top-nav {
+            padding: .58rem .84rem;
+            border-color: #2f4e3e;
+            box-shadow: 0 12px 26px rgba(3, 14, 8, .44);
         }
         .brand {
             display: inline-flex;
@@ -451,9 +463,20 @@
             cursor: pointer; transition: transform .2s ease, box-shadow .2s ease;
         }
         .btn:hover { transform: translateY(-1px); }
-        .btn-outline { color: #effff3; border: 1px solid #2e5940; background: rgba(11,20,14,.9); }
-        .btn-demo { color: #061209; background: linear-gradient(140deg, #57ff54, #20dc78); box-shadow: 0 16px 34px var(--neon-soft); }
-        .btn-wa { color: #f4f9ff; border: 1px solid #2f4f3f; background: rgba(13,20,16,.86); }
+        .btn-outline { color: #effff3; border: 1px solid #2e5940; background: rgba(11,20,14,.84); }
+        .btn-demo { color: #061209; background: linear-gradient(140deg, #57ff54, #20dc78); box-shadow: 0 12px 24px rgba(40, 160, 86, .28); }
+        .btn-wa { color: #f4f9ff; border: 1px solid #2f4f3f; background: rgba(13,20,16,.72); }
+        .btn-ghost {
+            color: #cde0d3;
+            border: 1px solid rgba(77, 114, 92, .84);
+            background: rgba(8, 14, 10, .48);
+            box-shadow: none;
+        }
+        .btn-ghost:hover {
+            color: #f2fff8;
+            border-color: rgba(109, 160, 130, .9);
+            background: rgba(10, 18, 13, .74);
+        }
         .btn-icon { width: 16px; height: 16px; flex: 0 0 16px; }
         .btn-quote-trigger .btn-icon {
             width: 18px;
@@ -527,7 +550,7 @@
             inset: -34% -26% -24% -26%;
             pointer-events: none;
             z-index: 1;
-            opacity: .48;
+            opacity: .3;
             will-change: transform, opacity;
         }
         .hero-fx::before {
@@ -543,7 +566,7 @@
             position: absolute;
             height: 1px;
             background: linear-gradient(90deg, rgba(76,255,140,0), rgba(76,255,140,.25), rgba(76,255,140,0));
-            opacity: .34;
+            opacity: .24;
             transform-origin: left center;
         }
         .hero-fx-line.l1 { width: 220px; left: 60%; top: 18%; transform: rotate(18deg); animation: heroLinePulse 5.6s ease-in-out infinite; }
@@ -554,8 +577,8 @@
             width: 8px;
             height: 8px;
             border-radius: 999px;
-            background: rgba(109, 255, 162, .52);
-            box-shadow: 0 0 10px rgba(109, 255, 162, .34);
+            background: rgba(109, 255, 162, .34);
+            box-shadow: 0 0 8px rgba(109, 255, 162, .22);
             animation: heroNodeFloat 4.8s ease-in-out infinite;
         }
         .hero-fx-node.n1 { left: 58%; top: 15%; animation-delay: .2s; }
@@ -587,10 +610,10 @@
             margin: .95rem 0 0; font-size: clamp(2.3rem, 4.2vw, 4.35rem);
             line-height: 1.03; letter-spacing: -.03em; max-width: 16ch;
         }
-        .hero h1 .neon { color: #8fff8f; text-shadow: 0 0 34px rgba(71,255,111,.42); }
-        .hero p { margin: 1.05rem 0 0; max-width: 62ch; color: var(--muted); font-size: 1.04rem; line-height: 1.58; }
+        .hero h1 .neon { color: #8fff8f; text-shadow: 0 0 18px rgba(71,255,111,.26); }
+        .hero p { margin: 1.05rem 0 0; max-width: 62ch; color: #c6dacd; font-size: 1.04rem; line-height: 1.58; }
         .hero-actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; }
-        .hero-note { margin-top: .8rem; font-size: .87rem; color: #b4cfbf; line-height: 1.45; max-width: 64ch; }
+        .hero-note { margin-top: .8rem; font-size: .87rem; color: #bed2c6; line-height: 1.45; max-width: 64ch; }
         .hero-note b { color: #f1f7ff; }
         .hero-proof-strip {
             margin-top: 1.15rem;
@@ -1054,6 +1077,13 @@
             gap: .65rem;
             justify-content: flex-end;
         }
+        .cta-band-actions .btn {
+            min-width: 176px;
+        }
+        .cta-band-actions .btn-wa {
+            border-color: rgba(68, 120, 94, .82);
+            background: rgba(10, 18, 13, .8);
+        }
 
         .pricing-grid { margin-top: 1.2rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
         .plan {
@@ -1138,8 +1168,17 @@
             margin-right: .26rem;
             font-weight: 700;
         }
-        .plan p { margin: .65rem 0 0; color: #b6c9be; line-height: 1.5; }
-        .plan ul { margin: .8rem 0 0; padding: 0; list-style: none; display: grid; gap: .45rem; color: #e1efe5; font-size: .95rem; }
+        .plan p { margin: .65rem 0 0; color: #c1d2c9; line-height: 1.55; }
+        .plan ul {
+            margin: .85rem 0 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: .52rem;
+            color: #e7f1eb;
+            font-size: .92rem;
+            line-height: 1.42;
+        }
         .plan li { display: flex; align-items: flex-start; gap: .45rem; }
         .plan li::before {
             content: "";
@@ -1147,7 +1186,7 @@
             height: .5rem;
             border-radius: 999px;
             background: #47ff6f;
-            box-shadow: 0 0 12px rgba(71, 255, 111, .9), 0 0 22px rgba(71, 255, 111, .5);
+            box-shadow: 0 0 8px rgba(71, 255, 111, .45);
             margin-top: .34rem;
             flex: 0 0 .5rem;
         }
@@ -4302,6 +4341,4 @@
     </script>
 </body>
 </html>
-
-
 
