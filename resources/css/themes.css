@@ -128,14 +128,26 @@
 
 @layer components {
     .theme-body {
-        background-color: var(--bg);
-        background-image: none;
+        background-color: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
+        background-image:
+            radial-gradient(
+                120% 85% at 15% 6%,
+                color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+                transparent 52%
+            ),
+            radial-gradient(
+                100% 70% at 88% 0%,
+                color-mix(in srgb, var(--primary) 16%, transparent) 0%,
+                transparent 48%
+            ),
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--bg) 96%, #000000 4%) 0%,
+                color-mix(in srgb, var(--bg) 82%, var(--accent) 18%) 100%
+            );
+        background-repeat: no-repeat;
         color: var(--text);
         transition: background-color 220ms ease, color 220ms ease;
-    }
-
-    .theme-dark.theme-body {
-        background-color: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
     }
 
     .theme-sidebar {
