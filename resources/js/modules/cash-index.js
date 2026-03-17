@@ -39,10 +39,12 @@ export function initCashIndexModule() {
 
     const movementForm = document.getElementById('cash-movement-form');
     const movementType = document.getElementById('movement-type');
+    const movementMethod = document.getElementById('movement-method');
     const movementDescription = document.getElementById('movement-description');
     const movementDescriptionLabel = document.getElementById('movement-description-label');
     const movementCategoryWrap = document.getElementById('movement-expense-category-wrap');
     const movementSubmit = document.getElementById('movement-submit');
+    const movementFormHint = document.getElementById('movement-form-hint');
     const movementAmount = document.getElementById('movement-amount');
     const highConfirmed = document.getElementById('movement-high-confirmed');
     const guardAlert = document.getElementById('movement-guard-alert');
@@ -57,7 +59,9 @@ export function initCashIndexModule() {
     const differenceCard = document.getElementById('difference-card');
     const differenceTransfer = document.getElementById('difference-transfer');
     const differenceTotal = document.getElementById('difference-total');
+    const differenceTotalCard = document.getElementById('difference-total-card');
     const differenceReason = document.getElementById('difference-reason');
+    const differenceReasonWrap = document.getElementById('difference-reason-wrap');
     const closeBalanceInput = document.getElementById('close-closing-balance');
     const closeAlert = document.getElementById('close-form-alert');
     const differenceApproved = document.getElementById('close-difference-approved');
@@ -73,6 +77,28 @@ export function initCashIndexModule() {
     const monthlyMovementsModal = document.getElementById('monthly-movements-modal');
     const openMonthlyMovementsModalButton = document.getElementById('open-monthly-movements-modal');
 
+    function updateMovementSubmitState() {
+        const hasType = Boolean(movementType?.value);
+        const hasMethod = Boolean(movementMethod?.value);
+        const amount = Number(movementAmount?.value || 0);
+        const hasAmount = amount > 0;
+        const hasDescription = (movementDescription?.value || '').trim() !== '';
+        const isValid = hasType && hasMethod && hasAmount && hasDescription;
+
+        if (movementSubmit) {
+            movementSubmit.disabled = !isValid;
+            movementSubmit.classList.toggle('opacity-60', !isValid);
+            movementSubmit.classList.toggle('cursor-not-allowed', !isValid);
+        }
+
+        if (movementFormHint) {
+            movementFormHint.textContent = isValid
+                ? 'Listo para registrar el movimiento.'
+                : 'Completa tipo, metodo, monto y descripcion para habilitar el registro.';
+            movementFormHint.setAttribute('data-tone', isValid ? 'ok' : 'warn');
+        }
+    }
+
     function updateMovementMode() {
         if (!movementType) {
             return;
@@ -82,11 +108,13 @@ export function initCashIndexModule() {
 
         if (movementDescription) {
             movementDescription.required = true;
-            movementDescription.placeholder = isExpense ? 'Motivo obligatorio del egreso.' : 'Ingresa descripción obligatoria.';
+            movementDescription.placeholder = isExpense
+                ? 'Motivo obligatorio del egreso.'
+                : 'Ingresa descripcion obligatoria.';
         }
 
         if (movementDescriptionLabel) {
-            movementDescriptionLabel.textContent = 'Descripción (obligatoria)';
+            movementDescriptionLabel.textContent = 'Descripcion (obligatoria)';
         }
 
         if (movementCategoryWrap) {
@@ -100,18 +128,19 @@ export function initCashIndexModule() {
         }
 
         if (guardAlert) {
-            if (isExpense) {
-                guardAlert.classList.remove('hidden');
-                guardAlert.textContent = 'Egreso requiere descripción obligatoria para auditoría.';
-            } else {
-                guardAlert.classList.add('hidden');
-                guardAlert.textContent = '';
-            }
+            guardAlert.classList.add('hidden');
+            guardAlert.textContent = '';
         }
+
+        updateMovementSubmitState();
     }
 
     movementType?.addEventListener('change', updateMovementMode);
+    movementMethod?.addEventListener('change', updateMovementSubmitState);
+    movementAmount?.addEventListener('input', updateMovementSubmitState);
+    movementDescription?.addEventListener('input', updateMovementSubmitState);
     updateMovementMode();
+    updateMovementSubmitState();
 
     movementForm?.addEventListener('submit', (event) => {
         const amount = Number(movementAmount?.value || 0);
@@ -119,14 +148,22 @@ export function initCashIndexModule() {
         const alreadyConfirmed = highConfirmed?.value === '1';
         const descriptionValue = (movementDescription?.value || '').trim();
 
+        if (!movementType?.value || !movementMethod?.value) {
+            event.preventDefault();
+            if (guardAlert) {
+                guardAlert.classList.remove('hidden');
+                guardAlert.textContent = 'Selecciona tipo y metodo antes de registrar.';
+            }
+            return;
+        }
+
         if (descriptionValue === '') {
             event.preventDefault();
             movementDescription?.focus();
             if (guardAlert) {
                 guardAlert.classList.remove('hidden');
-                guardAlert.textContent = 'Ingresa descripción obligatoria.';
+                guardAlert.textContent = 'Ingresa descripcion obligatoria.';
             }
-
             return;
         }
 
@@ -136,7 +173,6 @@ export function initCashIndexModule() {
                 guardAlert.classList.remove('hidden');
                 guardAlert.textContent = 'Monto debe ser mayor a 0.';
             }
-
             return;
         }
 
@@ -199,6 +235,9 @@ export function initCashIndexModule() {
             differenceTotal.textContent = formatMoney(currencySymbol, totalDiff);
             setTone(differenceTotal, totalDiff);
         }
+        if (differenceTotalCard) {
+            differenceTotalCard.setAttribute('data-tone', totalDiff > 0 ? 'warn' : (totalDiff < 0 ? 'bad' : 'ok'));
+        }
 
         if (closeStatusText) {
             if (totalDiff === 0) {
@@ -215,6 +254,9 @@ export function initCashIndexModule() {
 
         if (differenceReason) {
             differenceReason.required = totalDiff !== 0;
+        }
+        if (differenceReasonWrap) {
+            differenceReasonWrap.classList.toggle('hidden', totalDiff === 0);
         }
 
         if (closeBalanceInput) {
@@ -243,7 +285,6 @@ export function initCashIndexModule() {
             if (differenceApproved) {
                 differenceApproved.value = '0';
             }
-
             return;
         }
 
@@ -253,7 +294,6 @@ export function initCashIndexModule() {
                 closeAlert.classList.remove('hidden');
                 closeAlert.textContent = 'Debes ingresar un motivo porque el cierre no cuadra.';
             }
-
             return;
         }
 
@@ -263,7 +303,6 @@ export function initCashIndexModule() {
                 closeAlert.classList.remove('hidden');
                 closeAlert.textContent = 'Solo Admin puede confirmar cierre con diferencia.';
             }
-
             return;
         }
 
