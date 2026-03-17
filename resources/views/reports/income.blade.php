@@ -58,6 +58,30 @@
             grid-template-columns: minmax(0, 1fr);
         }
     }
+
+    @media (max-width: 768px) {
+        .report-income .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-income .filter-form {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+
+        .report-income .movements-toolbar {
+            gap: 0.55rem;
+        }
+
+        .report-income .movements-counter {
+            font-size: 0.78rem;
+            line-height: 1.3;
+        }
+
+        .report-income .movements-scroll {
+            max-height: none;
+        }
+    }
 </style>
 @endpush
 
@@ -171,7 +195,7 @@
                 </p>
             </div>
 
-            <div class="movements-scroll">
+            <div class="movements-scroll table-mobile-stack">
                 <table class="ui-table min-w-[1260px] text-slate-800 dark:text-slate-100" data-smart-list-manual>
                     <thead>
                     <tr class="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:text-slate-300">
@@ -205,13 +229,13 @@
                             ]));
                         @endphp
                         <tr data-movement-row data-type="{{ $movement->type }}" data-search="{{ $searchIndex }}" class="border-b border-slate-100 text-sm odd:bg-slate-50/45 hover:bg-cyan-50/70 dark:border-slate-800 dark:odd:bg-slate-900/30 dark:hover:bg-cyan-500/10">
-                            <td class="px-3 py-3">{{ $movement->id }}</td>
-                            <td class="px-3 py-3">{{ $movement->occurred_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                            <td class="px-3 py-3">
+                            <td data-label="ID" class="px-3 py-3">{{ $movement->id }}</td>
+                            <td data-label="Fecha" class="px-3 py-3">{{ $movement->occurred_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                            <td data-label="Tipo" class="px-3 py-3">
                                 <x-ui.badge :variant="$movement->type === 'income' ? 'success' : 'danger'">{{ $movement->type }}</x-ui.badge>
                             </td>
-                            <td class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
-                            <td class="px-3 py-3">
+                            <td data-label="Metodo" class="px-3 py-3">{{ $methodLabels[$movement->method] ?? $movement->method }}</td>
+                            <td data-label="Monto" class="px-3 py-3">
                                 <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-black tracking-wide {{ $isIncome
                                     ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200'
                                     : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-400/40 dark:bg-rose-500/20 dark:text-rose-200' }}">
@@ -219,12 +243,12 @@
                                 </span>
                             </td>
                             @if (! empty($showGymColumn))
-                                <td class="px-3 py-3">{{ $movement->gym?->name ?? '-' }}</td>
+                                <td data-label="Sede" class="px-3 py-3">{{ $movement->gym?->name ?? '-' }}</td>
                             @endif
-                            <td class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
-                            <td class="px-3 py-3">{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
-                            <td class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
-                            <td class="px-3 py-3">{{ $movement->description ?: '-' }}</td>
+                            <td data-label="Cliente" class="px-3 py-3">{{ $movement->membership?->client?->full_name ?? '-' }}</td>
+                            <td data-label="Alta cliente" class="px-3 py-3">{{ \App\Support\ClientAudit::actorDisplay((string) ($movement->membership?->client?->created_by_name_snapshot ?? ''), (string) ($movement->membership?->client?->created_by_role_snapshot ?? '')) }}</td>
+                            <td data-label="Usuario" class="px-3 py-3">{{ $movement->createdBy?->name ?? '-' }}</td>
+                            <td data-label="Descripcion" class="px-3 py-3">{{ $movement->description ?: '-' }}</td>
                         </tr>
                     @empty
                         <tr id="movement-empty-range">

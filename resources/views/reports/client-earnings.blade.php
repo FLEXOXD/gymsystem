@@ -47,6 +47,17 @@
             grid-template-columns: minmax(0, 1fr);
         }
     }
+
+    @media (max-width: 768px) {
+        .report-client-earnings .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-client-earnings .filter-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+    }
 </style>
 @endpush
 
@@ -186,7 +197,7 @@
                 registros (50 por pagina).
             </p>
 
-            <div class="detail-table-wrap">
+            <div class="detail-table-wrap table-mobile-stack">
                 <table class="ui-table w-full min-w-[1080px] text-sm">
                     <thead>
                     <tr>
@@ -205,16 +216,16 @@
                     <tbody>
                     @forelse ($clients as $client)
                         <tr>
-                            <td class="font-semibold">{{ (string) ($client->client_name ?? '-') }}</td>
-                            <td>{{ (string) ($client->document_number ?? '-') }}</td>
+                            <td data-label="Cliente" class="font-semibold">{{ (string) ($client->client_name ?? '-') }}</td>
+                            <td data-label="Documento">{{ (string) ($client->document_number ?? '-') }}</td>
                             @if ($showGymColumn)
-                                <td>{{ (string) ($client->gym_name ?? '-') }}</td>
+                                <td data-label="Sede">{{ (string) ($client->gym_name ?? '-') }}</td>
                             @endif
-                            <td class="font-bold text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($client->total_billed ?? 0), $appCurrencyCode) }}</td>
-                            <td>{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
-                            <td>{{ $currencyFormatter::format((float) ($client->sales_billed ?? 0), $appCurrencyCode) }}</td>
-                            <td>{{ (int) ($client->operations_count ?? 0) }}</td>
-                            <td>{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
+                            <td data-label="Total facturado" class="font-bold text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($client->total_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td data-label="Membresias">{{ $currencyFormatter::format((float) ($client->memberships_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td data-label="Ventas productos">{{ $currencyFormatter::format((float) ($client->sales_billed ?? 0), $appCurrencyCode) }}</td>
+                            <td data-label="Operaciones">{{ (int) ($client->operations_count ?? 0) }}</td>
+                            <td data-label="Ultima facturacion">{{ $client->last_billed_at ? \Carbon\Carbon::parse((string) $client->last_billed_at)->format('Y-m-d H:i') : '-' }}</td>
                         </tr>
                     @empty
                         <tr>

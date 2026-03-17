@@ -43,6 +43,21 @@
     .theme-dark .report-sales-inventory .table-wrap .ui-table thead th {
         background: rgb(30 41 59 / 0.95);
     }
+
+    @media (max-width: 768px) {
+        .report-sales-inventory .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-sales-inventory .filter-form {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+
+        .report-sales-inventory .chart-shell {
+            height: 220px;
+        }
+    }
 </style>
 @endpush
 
@@ -184,7 +199,7 @@
 
         <section class="grid gap-4 xl:grid-cols-2">
             <x-ui.card title="Top productos" subtitle="Articulos con mejor salida y mejor ingreso del periodo.">
-                <div class="table-wrap">
+                <div class="table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[720px] text-sm">
                         <thead>
                         <tr>
@@ -201,14 +216,14 @@
                         <tbody>
                         @forelse ($topProducts as $product)
                             <tr>
-                                <td class="font-semibold">{{ $product->product_name }}</td>
+                                <td data-label="Producto" class="font-semibold">{{ $product->product_name }}</td>
                                 @if ($showGymColumn)
-                                    <td>{{ $product->gym_name ?? '-' }}</td>
+                                    <td data-label="Sede">{{ $product->gym_name ?? '-' }}</td>
                                 @endif
-                                <td>{{ $product->product_category ?: '-' }}</td>
-                                <td>{{ (int) $product->units_sold }}</td>
-                                <td class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
-                                <td class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
+                                <td data-label="Categoria">{{ $product->product_category ?: '-' }}</td>
+                                <td data-label="Unidades">{{ (int) $product->units_sold }}</td>
+                                <td data-label="Ingreso" class="text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) $product->total_revenue, $appCurrencyCode) }}</td>
+                                <td data-label="Utilidad" class="text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) $product->total_profit, $appCurrencyCode) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -221,7 +236,7 @@
             </x-ui.card>
 
             <x-ui.card title="Stock bajo" subtitle="Productos activos que necesitan reposicion.">
-                <div class="table-wrap">
+                <div class="table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[660px] text-sm">
                         <thead>
                         <tr>
@@ -237,13 +252,13 @@
                         <tbody>
                         @forelse ($lowStockProducts as $product)
                             <tr>
-                                <td class="font-semibold">{{ $product->name }}</td>
+                                <td data-label="Producto" class="font-semibold">{{ $product->name }}</td>
                                 @if ($showGymColumn)
-                                    <td>{{ $product->gym_name ?? '-' }}</td>
+                                    <td data-label="Sede">{{ $product->gym_name ?? '-' }}</td>
                                 @endif
-                                <td>{{ $product->category ?: '-' }}</td>
-                                <td class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
-                                <td>{{ (int) $product->min_stock }}</td>
+                                <td data-label="Categoria">{{ $product->category ?: '-' }}</td>
+                                <td data-label="Stock" class="text-amber-700 dark:text-amber-300 font-bold">{{ (int) $product->stock }}</td>
+                                <td data-label="Minimo">{{ (int) $product->min_stock }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -258,7 +273,7 @@
 
         <x-ui.card title="Detalle de ventas del periodo">
             @if ($recentSales)
-                <div class="table-wrap">
+                <div class="table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[1180px] text-sm">
                         <thead>
                         <tr>
@@ -279,21 +294,21 @@
                         <tbody>
                         @forelse ($recentSales as $sale)
                             <tr>
-                                <td>{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                <td data-label="Fecha">{{ $sale->sold_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 @if ($showGymColumn)
-                                    <td>{{ $sale->gym?->name ?? '-' }}</td>
+                                    <td data-label="Sede">{{ $sale->gym?->name ?? '-' }}</td>
                                 @endif
-                                <td>
+                                <td data-label="Producto">
                                     <div class="font-semibold">{{ $sale->product?->name ?? '-' }}</div>
                                     <div class="ui-muted text-xs">{{ $sale->product?->category ?: 'Sin categoria' }}</div>
                                 </td>
-                                <td>{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
-                                <td>{{ $sale->soldBy?->name ?? '-' }}</td>
-                                <td>{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
-                                <td>{{ (int) $sale->quantity }}</td>
-                                <td class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
-                                <td class="text-rose-700 dark:text-rose-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_cost, $appCurrencyCode) }}</td>
-                                <td class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
+                                <td data-label="Cliente">{{ $sale->client?->full_name ?? 'Venta sin cliente' }}</td>
+                                <td data-label="Usuario">{{ $sale->soldBy?->name ?? '-' }}</td>
+                                <td data-label="Metodo">{{ $methodLabels[$sale->payment_method] ?? $sale->payment_method }}</td>
+                                <td data-label="Cantidad">{{ (int) $sale->quantity }}</td>
+                                <td data-label="Total" class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_amount, $appCurrencyCode) }}</td>
+                                <td data-label="Costo" class="text-rose-700 dark:text-rose-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_cost, $appCurrencyCode) }}</td>
+                                <td data-label="Utilidad" class="text-violet-700 dark:text-violet-300 font-bold">{{ $currencyFormatter::format((float) $sale->total_profit, $appCurrencyCode) }}</td>
                             </tr>
                         @empty
                             <tr>

@@ -24,6 +24,17 @@
         top: 0;
         z-index: 4;
     }
+
+    @media (max-width: 768px) {
+        .report-memberships .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-memberships .report-toolbar {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+    }
 </style>
 @endpush
 
@@ -59,7 +70,7 @@
             <p class="mb-3 text-sm ui-muted">
                 Mostrando <strong id="active-visible-count">{{ $activeClients->count() }}</strong> de <strong id="active-total-count">{{ $activeClients->count() }}</strong> registros.
             </p>
-            <div class="members-table-wrap">
+            <div class="members-table-wrap table-mobile-stack">
                 <table class="ui-table min-w-[820px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
@@ -76,11 +87,11 @@
                             $activeSearch = \Illuminate\Support\Str::lower(trim((string) $client->full_name.' '.(string) $client->document_number));
                         @endphp
                         <tr data-membership-row data-group="active" data-search="{{ $activeSearch }}" class="border-b border-slate-100 text-sm">
-                            <td class="px-3 py-3">{{ $client->full_name }}</td>
-                            <td class="px-3 py-3">{{ $client->document_number }}</td>
-                            <td class="px-3 py-3">{{ $client->starts_at ?? '-' }}</td>
-                            <td class="px-3 py-3">{{ $client->ends_at ?? '-' }}</td>
-                            <td class="px-3 py-3"><x-ui.badge variant="success">{{ $client->status }}</x-ui.badge></td>
+                            <td data-label="Cliente" class="px-3 py-3">{{ $client->full_name }}</td>
+                            <td data-label="Documento" class="px-3 py-3">{{ $client->document_number }}</td>
+                            <td data-label="Inicio" class="px-3 py-3">{{ $client->starts_at ?? '-' }}</td>
+                            <td data-label="Fin" class="px-3 py-3">{{ $client->ends_at ?? '-' }}</td>
+                            <td data-label="Estado" class="px-3 py-3"><x-ui.badge variant="success">{{ $client->status }}</x-ui.badge></td>
                         </tr>
                     @empty
                         <tr>
@@ -99,7 +110,7 @@
             <p class="mb-3 text-sm ui-muted">
                 Mostrando <strong id="expired-visible-count">{{ $expiredClients->count() }}</strong> de <strong id="expired-total-count">{{ $expiredClients->count() }}</strong> registros.
             </p>
-            <div class="members-table-wrap">
+            <div class="members-table-wrap table-mobile-stack">
                 <table class="ui-table min-w-[820px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
@@ -116,11 +127,11 @@
                             $expiredSearch = \Illuminate\Support\Str::lower(trim((string) $client->full_name.' '.(string) $client->document_number));
                         @endphp
                         <tr data-membership-row data-group="expired" data-search="{{ $expiredSearch }}" class="border-b border-slate-100 text-sm">
-                            <td class="px-3 py-3">{{ $client->full_name }}</td>
-                            <td class="px-3 py-3">{{ $client->document_number }}</td>
-                            <td class="px-3 py-3">{{ $client->starts_at ?? '-' }}</td>
-                            <td class="px-3 py-3">{{ $client->ends_at ?? '-' }}</td>
-                            <td class="px-3 py-3"><x-ui.badge variant="danger">{{ $client->status }}</x-ui.badge></td>
+                            <td data-label="Cliente" class="px-3 py-3">{{ $client->full_name }}</td>
+                            <td data-label="Documento" class="px-3 py-3">{{ $client->document_number }}</td>
+                            <td data-label="Inicio" class="px-3 py-3">{{ $client->starts_at ?? '-' }}</td>
+                            <td data-label="Fin" class="px-3 py-3">{{ $client->ends_at ?? '-' }}</td>
+                            <td data-label="Estado" class="px-3 py-3"><x-ui.badge variant="danger">{{ $client->status }}</x-ui.badge></td>
                         </tr>
                     @empty
                         <tr>

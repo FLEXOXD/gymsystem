@@ -1,7 +1,7 @@
 ﻿@extends('layouts.panel')
 
 @section('title', 'Cajeros')
-@section('page-title', 'GestiÃ³n de cajeros')
+@section('page-title', 'Gestión de cajeros')
 
 @push('styles')
 <style>
@@ -33,6 +33,50 @@
     .staff-page .staff-password-trigger {
         min-width: 7.25rem;
     }
+    .staff-page .modal-shell {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgb(2 6 23 / .72);
+        backdrop-filter: blur(3px);
+    }
+    .staff-page .modal-shell.is-open {
+        display: flex;
+    }
+    .staff-page .modal-card {
+        width: min(100%, 34rem);
+        max-height: calc(100vh - 2rem);
+        max-height: calc(100dvh - 2rem);
+        overflow-y: auto;
+        border-radius: 1rem;
+        border: 1px solid rgb(148 163 184 / .35);
+        background: rgb(2 6 23 / .96);
+        color: rgb(226 232 240);
+        box-shadow: 0 32px 48px -28px rgb(0 0 0 / .72);
+    }
+    .staff-page .mini-action {
+        border: 1px solid rgb(148 163 184 / .35);
+        border-radius: .65rem;
+        background: rgb(15 23 42 / .75);
+        color: rgb(226 232 240);
+        padding: .38rem .68rem;
+        font-size: .78rem;
+        font-weight: 700;
+        transition: all .18s ease;
+    }
+    .staff-page .mini-action:hover {
+        border-color: rgb(34 211 238 / .45);
+        background: rgb(8 47 73 / .55);
+    }
+    @media (max-width: 640px) {
+        .staff-page .modal-shell {
+            padding: .65rem;
+        }
+    }
     @media (max-width: 640px) {
         .staff-page .staff-actions-wrap form,
         .staff-page .staff-actions-wrap .staff-password-trigger,
@@ -53,7 +97,7 @@
         $totalCashiers = (int) ($totalCashiers ?? ($cashiers instanceof \Illuminate\Support\Collection ? $cashiers->count() : 0));
         $activeCashiers = (int) ($activeCashiers ?? $currentCashiers ?? 0);
         $currentPlanLabel = match ($currentPlanKey ?? '') {
-            'basico' => 'BÃ¡sico',
+            'basico' => 'Básico',
             'profesional' => 'Profesional',
             'premium' => 'Premium',
             'sucursales' => 'Sucursales',
@@ -73,7 +117,7 @@
     <div class="staff-page space-y-5" data-password-route-template="{{ $passwordRouteTemplate }}">
         @if (! $roleSchemaReady)
             <div class="ui-alert ui-alert-danger text-sm">
-                {{ $schemaErrorMessage !== '' ? $schemaErrorMessage : 'Falta la migraciÃ³n de roles de usuarios.' }}
+                {{ $schemaErrorMessage !== '' ? $schemaErrorMessage : 'Falta la migración de roles de usuarios.' }}
             </div>
         @endif
 
@@ -81,7 +125,7 @@
             :title="$isGlobalStaffView ? 'Resumen global de cajeros' : 'Cupo de cajeros'"
             :subtitle="$isGlobalStaffView
                 ? 'Vista consolidada de cajeros en todas las sedes vinculadas (solo lectura).'
-                : 'LÃ­mites aplicados segÃºn el plan activo de esta sede.'">
+                : 'Límites aplicados según el plan activo de esta sede.'">
             <div class="grid gap-3 sm:grid-cols-4">
                 <article class="rounded-xl border border-slate-300/60 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Plan actual</p>
@@ -119,7 +163,7 @@
 
             @if ($isGlobalStaffView)
                 <div class="ui-alert ui-alert-info mt-4 text-sm">
-                    Modo global activo: puedes consultar cajeros de todas las sedes, pero crear/editar/eliminar se realiza desde una sede especÃ­fica.
+                    Modo global activo: puedes consultar cajeros de todas las sedes, pero crear/editar/eliminar se realiza desde una sede específica.
                 </div>
             @elseif ((int) $maxCashiers <= 0)
                 <div class="ui-alert ui-alert-warning mt-4 text-sm">
@@ -129,7 +173,7 @@
         </x-ui.card>
 
         @if (! $isGlobalStaffView)
-            <x-ui.card title="Crear cajero" subtitle="Acceso a panel/recepciÃ³n/clientes. Por defecto no abre ni cierra caja.">
+            <x-ui.card title="Crear cajero" subtitle="Acceso a panel/recepción/clientes. Por defecto no abre ni cierra caja.">
                 <form method="POST" action="{{ route('staff.cashiers.store', $contextParams) }}" class="grid gap-3 lg:grid-cols-6">
                     @csrf
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-3">
@@ -141,11 +185,11 @@
                         <input type="email" name="email" class="ui-input" value="{{ old('email') }}" required>
                     </label>
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
-                        ContraseÃ±a
+                        Contraseña
                         <input type="password" name="password" class="ui-input" required>
                     </label>
                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 lg:col-span-2">
-                        Confirmar contraseÃ±a
+                        Confirmar contraseña
                         <input type="password" name="password_confirmation" class="ui-input" required>
                     </label>
                     <div class="flex items-end lg:col-span-2">
@@ -194,7 +238,7 @@
                             @endif
                             <th class="px-3 py-3">Estado</th>
                             <th class="px-3 py-3">Creado</th>
-                            <th class="px-3 py-3">Ãºltimo acceso</th>
+                            <th class="px-3 py-3">último acceso</th>
                             <th class="px-3 py-3">Permisos caja</th>
                             @if (! $isGlobalStaffView)
                                 <th class="px-3 py-3">Acciones</th>
@@ -269,7 +313,7 @@
                                                 class="staff-password-trigger js-open-password-modal"
                                                 data-cashier-id="{{ $cashier->id }}"
                                                 data-cashier-name="{{ $cashier->name }}">
-                                                Actualizar clave
+                                                Actualizar contraseña
                                             </x-ui.button>
 
                                             @if ((bool) ($cashier->is_active ?? false))
@@ -328,7 +372,7 @@
                         </label>
                         <div class="flex justify-end gap-2 pt-1">
                             <x-ui.button type="button" variant="muted" size="sm" data-close-staff-modal="staff-password-modal">Cancelar</x-ui.button>
-                            <x-ui.button type="submit" variant="secondary" size="sm">Actualizar clave</x-ui.button>
+                            <x-ui.button type="submit" variant="secondary" size="sm">Actualizar contraseña</x-ui.button>
                         </div>
                     </form>
                 </div>
@@ -408,7 +452,7 @@
             const cashierName = String(button.getAttribute('data-cashier-name') || 'cajero');
             if (!cashierId || !passwordForm || routeTemplate === '') return;
             passwordForm.action = routeTemplate.replace('__CASHIER__', cashierId);
-            if (passwordLabel) passwordLabel.textContent = `Actualizar clave de ${cashierName}`;
+            if (passwordLabel) passwordLabel.textContent = `Actualizar contraseña de ${cashierName}`;
             passwordForm.reset();
             openModal(passwordModal);
         });

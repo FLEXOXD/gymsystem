@@ -37,6 +37,21 @@
         top: 0;
         z-index: 4;
     }
+
+    @media (max-width: 768px) {
+        .report-attendance .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-attendance .filter-form {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+
+        .report-attendance .chart-shell {
+            height: 220px;
+        }
+    }
 </style>
 @endpush
 
@@ -113,7 +128,7 @@
         </x-ui.card>
 
         <x-ui.card title="Asistencias por dia">
-            <div class="attendance-table-wrap">
+            <div class="attendance-table-wrap table-mobile-stack">
                 <table class="ui-table min-w-[560px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
@@ -124,8 +139,8 @@
                     <tbody>
                     @forelse ($attendanceByDay as $row)
                         <tr class="border-b border-slate-100 text-sm">
-                            <td class="px-3 py-3">{{ \Carbon\Carbon::parse($row->date)->format('Y-m-d') }}</td>
-                            <td class="px-3 py-3">{{ (int) $row->attendances_count }}</td>
+                            <td data-label="Fecha" class="px-3 py-3">{{ \Carbon\Carbon::parse($row->date)->format('Y-m-d') }}</td>
+                            <td data-label="Cantidad" class="px-3 py-3">{{ (int) $row->attendances_count }}</td>
                         </tr>
                     @empty
                         <tr>

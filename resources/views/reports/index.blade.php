@@ -29,9 +29,38 @@
         height: 100% !important;
     }
 
+    @media (max-width: 768px) {
+        .report-hub {
+            gap: 0.8rem;
+        }
+
+        .report-hub .ui-card {
+            padding: 0.9rem;
+        }
+
+        .report-hub .report-filter-form {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+
+        .report-hub .report-module-grid,
+        .report-hub .report-chart-grid {
+            gap: 0.8rem;
+        }
+
+        .report-hub .report-module-card .ui-heading {
+            font-size: 1.03rem;
+            line-height: 1.2;
+        }
+
+        .report-hub .report-module-card p {
+            line-height: 1.28;
+        }
+    }
+
     @media (max-width: 640px) {
         .report-hub .report-chart-shell {
-            height: 250px;
+            height: 215px;
         }
     }
 </style>
