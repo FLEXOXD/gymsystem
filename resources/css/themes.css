@@ -129,25 +129,23 @@
 @layer components {
     .theme-body {
         background-color: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
-        background-image:
-            radial-gradient(
-                120% 85% at 15% 6%,
-                color-mix(in srgb, var(--accent) 18%, transparent) 0%,
-                transparent 52%
-            ),
-            radial-gradient(
-                100% 70% at 88% 0%,
-                color-mix(in srgb, var(--primary) 16%, transparent) 0%,
-                transparent 48%
-            ),
-            linear-gradient(
-                165deg,
-                color-mix(in srgb, var(--bg) 96%, #000000 4%) 0%,
-                color-mix(in srgb, var(--bg) 82%, var(--accent) 18%) 100%
-            );
+        background-image: linear-gradient(
+            128deg,
+            color-mix(in srgb, var(--bg) 94%, var(--primary) 6%) 0%,
+            color-mix(in srgb, var(--bg) 86%, var(--accent) 14%) 48%,
+            color-mix(in srgb, var(--bg) 92%, #000000 8%) 100%
+        );
         background-repeat: no-repeat;
+        background-size: 100% 100%;
+        background-attachment: fixed;
         color: var(--text);
         transition: background-color 220ms ease, color 220ms ease;
+    }
+
+    @media (max-width: 1024px) {
+        .theme-body {
+            background-attachment: scroll;
+        }
     }
 
     .theme-sidebar {
