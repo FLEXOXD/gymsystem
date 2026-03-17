@@ -9,6 +9,10 @@
         display: none;
     }
 
+    .products-ops-grid {
+        align-items: start;
+    }
+
     @media (max-width: 1023px) {
         .products-ops-nav {
             position: sticky;
@@ -211,15 +215,15 @@
                         </label>
 
                         <div class="flex flex-wrap gap-2 md:col-span-2">
-                            <x-ui.button type="submit">{{ $editingProduct ? 'Guardar cambios' : 'Crear producto' }}</x-ui.button>
+                            <x-ui.button type="submit" class="w-full sm:w-auto">{{ $editingProduct ? 'Guardar cambios' : 'Crear producto' }}</x-ui.button>
                             @if ($editingProduct)
-                                <x-ui.button :href="route('products.index', $indexRouteParams)" variant="ghost">Cancelar edicion</x-ui.button>
+                                <x-ui.button :href="route('products.index', $indexRouteParams)" variant="ghost" class="w-full sm:w-auto">Cancelar edicion</x-ui.button>
                             @endif
                         </div>
                     </form>
                 </x-ui.card>
 
-                <x-ui.card title="Mover stock" subtitle="Registra entradas o ajustes manuales de inventario.">
+                <x-ui.card title="Mover stock" subtitle="Registra entradas o ajustes manuales de inventario." class="self-start">
                     <form id="stock-form" method="POST" action="{{ route('products.stock', ['contextGym' => $contextGym, 'product' => $stockProductId > 0 ? $stockProductId : (int) old('product_id', 0)]) }}" class="products-stock-form scroll-mt-28 space-y-4">
                         @csrf
 
@@ -274,7 +278,7 @@
                         </label>
 
                         <div class="products-stock-submit">
-                            <x-ui.button type="submit">Guardar movimiento</x-ui.button>
+                            <x-ui.button type="submit" class="w-full sm:w-auto">Guardar movimiento</x-ui.button>
                         </div>
                     </form>
                 </x-ui.card>
