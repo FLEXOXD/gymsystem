@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class SuperAdminSupportChatController extends Controller
 {
@@ -118,18 +119,28 @@ class SuperAdminSupportChatController extends Controller
             return 0;
         }
 
-        return SupportChatConversation::query()
-            ->whereIn('status', [
-                SupportChatConversation::STATUS_BOT,
-                SupportChatConversation::STATUS_WAITING_AGENT,
-                SupportChatConversation::STATUS_ACTIVE,
-            ])
-            ->whereHas('messages', function ($query): void {
-                $query
-                    ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                    ->whereNull('read_by_superadmin_at');
-            })
-            ->count();
+        if (! Schema::hasColumn('support_chat_messages', 'read_by_superadmin_at')) {
+            return 0;
+        }
+
+        try {
+            return SupportChatConversation::query()
+                ->whereIn('status', [
+                    SupportChatConversation::STATUS_BOT,
+                    SupportChatConversation::STATUS_WAITING_AGENT,
+                    SupportChatConversation::STATUS_ACTIVE,
+                ])
+                ->whereHas('messages', function ($query): void {
+                    $query
+                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                        ->whereNull('read_by_superadmin_at');
+                })
+                ->count();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return 0;
+        }
     }
 
     private function markConversationAsRead(SupportChatConversation $conversation): void

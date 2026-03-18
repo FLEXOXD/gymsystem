@@ -174,7 +174,7 @@
                 <p class="font-bold">El módulo de chat de soporte aún no está instalado completamente.</p>
                 <p class="mt-1">Ejecuta migraciones pendientes para habilitar la bandeja de conversaciones.</p>
             </div>
-        @elseif (($supportLoadError ?? false) === true)
+        @elseif (($supportLoadError ?? false) === true && $supportConversations->count() === 0)
             <div class="mb-4 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-500/30 dark:bg-rose-900/20 dark:text-rose-100">
                 <p class="font-bold">No se pudo cargar la bandeja de soporte.</p>
                 <p class="mt-1">Revisa logs del servidor y vuelve a cargar. Los datos pueden estar desincronizados temporalmente.</p>

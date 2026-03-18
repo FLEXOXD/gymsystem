@@ -130,6 +130,8 @@ class SuperAdminInboxController extends Controller
 
         $supportSchemaReady = Schema::hasTable('support_chat_conversations')
             && Schema::hasTable('support_chat_messages');
+        $supportReadTrackingReady = $supportSchemaReady
+            && Schema::hasColumn('support_chat_messages', 'read_by_superadmin_at');
 
         if ($supportSchemaReady) {
             try {
@@ -140,7 +142,13 @@ class SuperAdminInboxController extends Controller
                         'latestMessage',
                     ])
                     ->withCount([
-                        'messages as unread_for_superadmin_count' => static function (Builder $builder): void {
+                        'messages as unread_for_superadmin_count' => function (Builder $builder) use ($supportReadTrackingReady): void {
+                            if (! $supportReadTrackingReady) {
+                                $builder->whereRaw('1 = 0');
+
+                                return;
+                            }
+
                             $builder
                                 ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
                                 ->whereNull('read_by_superadmin_at');
@@ -150,7 +158,7 @@ class SuperAdminInboxController extends Controller
                     ->orderByDesc('last_message_at')
                     ->orderByDesc('id');
 
-                if ($supportStatus === 'unread') {
+                if ($supportStatus === 'unread' && $supportReadTrackingReady) {
                     $supportQuery->whereHas('messages', static function (Builder $builder): void {
                         $builder
                             ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
@@ -201,30 +209,38 @@ class SuperAdminInboxController extends Controller
                         'messages' => static fn (Builder $builder) => $builder->orderBy('id')->with('senderUser:id,name'),
                     ]);
 
-                    $selectedSupportConversation->messages()
-                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                        ->whereNull('read_by_superadmin_at')
-                        ->update(['read_by_superadmin_at' => now()]);
+                    if ($supportReadTrackingReady) {
+                        $selectedSupportConversation->messages()
+                            ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                            ->whereNull('read_by_superadmin_at')
+                            ->update(['read_by_superadmin_at' => now()]);
+                    }
 
                     $selectedSupportMessages = $selectedSupportConversation->messages;
                 }
-
-                $supportUnreadCount = SupportChatConversation::query()
-                    ->whereIn('status', [
-                        SupportChatConversation::STATUS_BOT,
-                        SupportChatConversation::STATUS_WAITING_AGENT,
-                        SupportChatConversation::STATUS_ACTIVE,
-                    ])
-                    ->whereHas('messages', static function (Builder $builder): void {
-                        $builder
-                            ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                            ->whereNull('read_by_superadmin_at');
-                    })
-                    ->count();
-                $supportTotalCount = SupportChatConversation::query()->count();
             } catch (Throwable $exception) {
                 report($exception);
                 $supportLoadError = true;
+            }
+
+            try {
+                if ($supportReadTrackingReady) {
+                    $supportUnreadCount = SupportChatConversation::query()
+                        ->whereIn('status', [
+                            SupportChatConversation::STATUS_BOT,
+                            SupportChatConversation::STATUS_WAITING_AGENT,
+                            SupportChatConversation::STATUS_ACTIVE,
+                        ])
+                        ->whereHas('messages', static function (Builder $builder): void {
+                            $builder
+                                ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                                ->whereNull('read_by_superadmin_at');
+                        })
+                        ->count();
+                }
+                $supportTotalCount = SupportChatConversation::query()->count();
+            } catch (Throwable $exception) {
+                report($exception);
             }
         }
 
