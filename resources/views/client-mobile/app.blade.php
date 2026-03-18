@@ -1972,6 +1972,65 @@
             place-items: center;
             padding: 16px;
         }
+        .training-finish-confirm-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 67;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+        }
+        .training-finish-confirm-modal.hidden {
+            display: none !important;
+        }
+        .training-finish-confirm-backdrop {
+            position: absolute;
+            inset: 0;
+            border: 0;
+            background: rgba(2,6,23,.8);
+            backdrop-filter: blur(2px);
+        }
+        .training-finish-confirm-panel {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 360px);
+            border-radius: 18px;
+            border: 1px solid rgba(34,211,238,.4);
+            background: linear-gradient(145deg, rgba(2,6,23,.96), rgba(8,47,73,.8));
+            box-shadow: 0 18px 40px rgba(0,0,0,.5);
+            padding: 14px;
+            display: grid;
+            gap: 10px;
+            animation: winPanelPop .22s ease-out;
+        }
+        .training-finish-confirm-eyebrow {
+            color: #a5f3fc;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .training-finish-confirm-title {
+            color: #f8fafc;
+            font-size: 19px;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+        .training-finish-confirm-text {
+            color: #dbeafe;
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+        .training-finish-confirm-actions {
+            display: grid;
+            gap: 8px;
+        }
+        .training-finish-confirm-cancel {
+            border: 1px solid rgba(148,163,184,.35);
+            background: rgba(30,41,59,.72);
+            color: #cbd5e1;
+        }
         .action-guide-backdrop {
             position: absolute;
             inset: 0;
@@ -2195,6 +2254,19 @@
         <div class="action-guide-actions">
             <button id="action-guide-cta" type="button" class="module-action module-action-primary">Entendido</button>
             <button id="action-guide-dismiss" type="button" class="module-action">Cerrar</button>
+        </div>
+    </article>
+</div>
+
+<div id="training-finish-confirm-modal" class="training-finish-confirm-modal hidden" aria-hidden="true">
+    <button type="button" class="training-finish-confirm-backdrop" data-training-finish-confirm-cancel aria-label="Cancelar finalizacion"></button>
+    <article class="training-finish-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="training-finish-confirm-title">
+        <p class="training-finish-confirm-eyebrow">Confirmar accion</p>
+        <h3 id="training-finish-confirm-title" class="training-finish-confirm-title">Finalizar entrenamiento</h3>
+        <p class="training-finish-confirm-text">Estas por cerrar la sesion actual. Se guardara tu progreso y no podras seguir en modo activo.</p>
+        <div class="training-finish-confirm-actions">
+            <button id="training-finish-confirm-accept" type="button" class="module-action module-action-secondary">Si, finalizar ahora</button>
+            <button id="training-finish-confirm-cancel" type="button" class="module-action training-finish-confirm-cancel">Cancelar y seguir entrenando</button>
         </div>
     </article>
 </div>
@@ -3380,6 +3452,10 @@
     const actionGuideCtaBtn = document.getElementById('action-guide-cta');
     const actionGuideDismissBtn = document.getElementById('action-guide-dismiss');
     const actionGuideDismissEls = Array.from(document.querySelectorAll('[data-action-guide-dismiss]'));
+    const trainingFinishConfirmModal = document.getElementById('training-finish-confirm-modal');
+    const trainingFinishConfirmAcceptBtn = document.getElementById('training-finish-confirm-accept');
+    const trainingFinishConfirmCancelBtn = document.getElementById('training-finish-confirm-cancel');
+    const trainingFinishConfirmCancelEls = Array.from(document.querySelectorAll('[data-training-finish-confirm-cancel]'));
     const trainingWinModal = document.getElementById('training-win-modal');
     const trainingWinTextEl = document.getElementById('training-win-text');
     const trainingWinExercisesEl = document.getElementById('training-win-exercises');
@@ -3524,6 +3600,7 @@
     let actionGuideMode = '';
     let actionGuideDismissedMode = '';
     let actionGuideCtaHandler = null;
+    let trainingFinishConfirmResolver = null;
     let cameraPermissionProbeState = 'unknown';
     let directPermissionPromptArmed = false;
     let directPermissionPromptDone = false;
@@ -4124,6 +4201,46 @@
         actionGuideCtaBtn.textContent = String(ctaLabel || 'Entendido');
         actionGuideCtaHandler = typeof ctaHandler === 'function' ? ctaHandler : null;
         setActionGuideOpen(true);
+    }
+
+    function setTrainingFinishConfirmOpen(isOpen) {
+        if (!trainingFinishConfirmModal) return;
+
+        if (!isOpen && document.activeElement instanceof HTMLElement && trainingFinishConfirmModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+
+        trainingFinishConfirmModal.classList.toggle('hidden', !isOpen);
+        trainingFinishConfirmModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        if ('inert' in trainingFinishConfirmModal) {
+            trainingFinishConfirmModal.inert = !isOpen;
+        }
+
+        if (isOpen && trainingFinishConfirmCancelBtn instanceof HTMLElement) {
+            window.setTimeout(() => trainingFinishConfirmCancelBtn.focus(), 20);
+        }
+    }
+
+    function resolveTrainingFinishConfirm(accepted) {
+        const resolver = trainingFinishConfirmResolver;
+        trainingFinishConfirmResolver = null;
+        setTrainingFinishConfirmOpen(false);
+        if (typeof resolver === 'function') {
+            resolver(Boolean(accepted));
+        }
+    }
+
+    function requestTrainingFinishConfirm() {
+        if (!trainingFinishConfirmModal) {
+            return Promise.resolve(true);
+        }
+        if (typeof trainingFinishConfirmResolver === 'function') {
+            return Promise.resolve(false);
+        }
+        return new Promise((resolve) => {
+            trainingFinishConfirmResolver = resolve;
+            setTrainingFinishConfirmOpen(true);
+        });
     }
 
     function readTrainingWinSeenKey() {
@@ -6153,6 +6270,10 @@
 
     window.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
+        if (trainingFinishConfirmModal && !trainingFinishConfirmModal.classList.contains('hidden')) {
+            resolveTrainingFinishConfirm(false);
+            return;
+        }
         setUserMenuOpen(false);
         setLeaderboardOpen(false);
         closeTrainingWin();
@@ -6185,6 +6306,18 @@
             return;
         }
         actionGuideCtaHandler();
+    });
+
+    trainingFinishConfirmCancelEls.forEach((element) => {
+        element.addEventListener('click', () => {
+            resolveTrainingFinishConfirm(false);
+        });
+    });
+    trainingFinishConfirmCancelBtn?.addEventListener('click', () => {
+        resolveTrainingFinishConfirm(false);
+    });
+    trainingFinishConfirmAcceptBtn?.addEventListener('click', () => {
+        resolveTrainingFinishConfirm(true);
     });
 
     trainingWinCloseEls.forEach((element) => {
@@ -6277,7 +6410,7 @@
     });
 
     trainingFinishBtn?.addEventListener('click', async () => {
-        const shouldFinish = window.confirm('¿Seguro que deseas finalizar tu entrenamiento ahora?');
+        const shouldFinish = await requestTrainingFinishConfirm();
         if (!shouldFinish) return;
         await triggerTrainingAction(trainingFinishUrl, 'Finalizando entrenamiento...');
     });
@@ -6301,6 +6434,7 @@
         clearTrainingCountdown();
         clearTrainingRestCountdown();
         closeTrainingWin();
+        resolveTrainingFinishConfirm(false);
     });
 
     window.addEventListener('popstate', () => {
