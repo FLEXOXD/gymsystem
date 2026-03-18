@@ -8,6 +8,7 @@ use App\Models\Gym;
 use App\Models\LegalAcceptance;
 use App\Models\LandingContactMessage;
 use App\Models\LandingQuoteRequest;
+use App\Models\Subscription;
 use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
 use App\Services\DemoSessionService;
@@ -412,7 +413,7 @@ class MarketingController extends Controller
         }
 
         if ($cards !== []) {
-            return $cards;
+            return $this->applyDynamicFeaturedPlan($cards);
         }
 
         foreach (SuperAdminPlanCatalog::keys() as $planKey) {
@@ -425,7 +426,125 @@ class MarketingController extends Controller
             );
         }
 
-        return $cards;
+        return $this->applyDynamicFeaturedPlan($cards);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cards
+     * @return array<int, array<string, mixed>>
+     */
+    private function applyDynamicFeaturedPlan(array $cards): array
+    {
+        $availablePlanKeys = collect($cards)
+            ->map(static fn (array $card): string => mb_strtolower(trim((string) ($card['plan_key'] ?? ''))))
+            ->filter(static fn (string $planKey): bool => $planKey !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        $featuredPlanKey = $this->resolveMostUsedPublicPlanKey($availablePlanKeys);
+        if ($featuredPlanKey === null) {
+            return $cards;
+        }
+
+        return collect($cards)
+            ->map(static function (array $card) use ($featuredPlanKey): array {
+                $planKey = mb_strtolower(trim((string) ($card['plan_key'] ?? '')));
+                $card['featured'] = $planKey === $featuredPlanKey;
+
+                return $card;
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, string>  $availablePlanKeys
+     */
+    private function resolveMostUsedPublicPlanKey(array $availablePlanKeys): ?string
+    {
+        $normalizedKeys = collect($availablePlanKeys)
+            ->map(static fn (string $key): string => mb_strtolower(trim($key)))
+            ->filter(static fn (string $key): bool => $key !== '')
+            ->unique()
+            ->values();
+
+        if ($normalizedKeys->isEmpty()) {
+            return null;
+        }
+
+        try {
+            if (! Schema::hasTable('subscriptions') || ! Schema::hasTable('gyms') || ! Schema::hasColumn('subscriptions', 'plan_key')) {
+                return null;
+            }
+
+            $supportsBranchManagedFlag = Schema::hasColumn('subscriptions', 'is_branch_managed');
+            $planCountQuery = Subscription::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions());
+
+            if ($supportsBranchManagedFlag) {
+                $planCountQuery->where(function ($query): void {
+                    $query
+                        ->where('is_branch_managed', false)
+                        ->orWhereNull('is_branch_managed');
+                });
+            }
+
+            $planCountRows = $planCountQuery
+                ->selectRaw('LOWER(COALESCE(plan_key, "")) as plan_key, COUNT(*) as total')
+                ->groupBy('plan_key')
+                ->pluck('total', 'plan_key');
+
+            $countsByKey = $normalizedKeys->mapWithKeys(
+                static fn (string $key): array => [$key => (int) ($planCountRows[$key] ?? 0)]
+            );
+
+            $maxCount = (int) ($countsByKey->max() ?? 0);
+            if ($maxCount <= 0) {
+                return null;
+            }
+
+            $candidates = $countsByKey
+                ->filter(static fn (int $count): bool => $count === $maxCount)
+                ->keys()
+                ->values();
+
+            if ($candidates->count() === 1) {
+                return (string) $candidates->first();
+            }
+
+            $candidateLookup = $candidates->flip();
+            $staticFeatured = collect(SuperAdminPlanPresentation::metadata())
+                ->filter(static fn (array $meta): bool => (bool) ($meta['featured'] ?? false))
+                ->keys()
+                ->map(static fn (string $key): string => mb_strtolower(trim($key)))
+                ->values();
+
+            foreach ($staticFeatured as $planKey) {
+                if ($candidateLookup->has($planKey)) {
+                    return (string) $planKey;
+                }
+            }
+
+            foreach (SuperAdminPlanCatalog::keys() as $planKey) {
+                $normalized = mb_strtolower(trim((string) $planKey));
+                if ($candidateLookup->has($normalized)) {
+                    return $normalized;
+                }
+            }
+
+            $fallbackCandidate = $candidates->sort()->first();
+
+            return is_string($fallbackCandidate) && trim($fallbackCandidate) !== ''
+                ? trim($fallbackCandidate)
+                : null;
+        } catch (Throwable $exception) {
+            Log::warning('No se pudo resolver el plan destacado dinámico para la landing.', [
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

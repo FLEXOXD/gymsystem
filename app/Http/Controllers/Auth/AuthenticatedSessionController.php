@@ -9,6 +9,7 @@ use App\Models\GymBranchLink;
 use App\Models\User;
 use App\Services\DemoSessionService;
 use App\Services\PlanAccessService;
+use App\Services\SupportChatPresenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,8 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     public function __construct(
-        private readonly PlanAccessService $planAccessService
+        private readonly PlanAccessService $planAccessService,
+        private readonly SupportChatPresenceService $supportChatPresenceService,
     ) {
     }
 
@@ -117,6 +119,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request, DemoSessionService $demoSessionService): RedirectResponse
     {
+        $authUser = $request->user();
         $userId = (int) ($request->user()?->id ?? 0);
         $demoSession = null;
         if ($userId > 0) {
@@ -126,6 +129,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         Auth::logout();
+        $this->supportChatPresenceService->clearForUser($authUser);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -160,6 +164,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function endDemo(Request $request, DemoSessionService $demoSessionService): RedirectResponse|JsonResponse
     {
+        $authUser = $request->user();
         $userId = (int) ($request->user()?->id ?? 0);
         $demoSession = $this->resolveDemoSessionForUser($userId);
         $ended = false;
@@ -178,6 +183,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         Auth::logout();
+        $this->supportChatPresenceService->clearForUser($authUser);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

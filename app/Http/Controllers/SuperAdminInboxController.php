@@ -126,6 +126,7 @@ class SuperAdminInboxController extends Controller
         $selectedSupportMessages = collect();
         $supportUnreadCount = 0;
         $supportTotalCount = 0;
+        $supportLoadError = false;
 
         $supportSchemaReady = Schema::hasTable('support_chat_conversations')
             && Schema::hasTable('support_chat_messages');
@@ -208,13 +209,22 @@ class SuperAdminInboxController extends Controller
                     $selectedSupportMessages = $selectedSupportConversation->messages;
                 }
 
-                $supportUnreadCount = SupportChatMessage::query()
-                    ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                    ->whereNull('read_by_superadmin_at')
+                $supportUnreadCount = SupportChatConversation::query()
+                    ->whereIn('status', [
+                        SupportChatConversation::STATUS_BOT,
+                        SupportChatConversation::STATUS_WAITING_AGENT,
+                        SupportChatConversation::STATUS_ACTIVE,
+                    ])
+                    ->whereHas('messages', static function (Builder $builder): void {
+                        $builder
+                            ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                            ->whereNull('read_by_superadmin_at');
+                    })
                     ->count();
                 $supportTotalCount = SupportChatConversation::query()->count();
             } catch (Throwable $exception) {
                 report($exception);
+                $supportLoadError = true;
             }
         }
 
@@ -239,6 +249,8 @@ class SuperAdminInboxController extends Controller
             ],
             'supportUnreadCount' => $supportUnreadCount,
             'supportTotalCount' => $supportTotalCount,
+            'supportSchemaReady' => $supportSchemaReady,
+            'supportLoadError' => $supportLoadError,
             'supportRepresentativeOnline' => $activeRepresentative !== null,
             'supportRepresentativeName' => trim((string) ($activeRepresentative['name'] ?? 'SuperAdmin')),
         ]);

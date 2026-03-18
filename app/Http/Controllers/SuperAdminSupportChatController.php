@@ -9,6 +9,7 @@ use App\Services\SupportChatPresenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class SuperAdminSupportChatController extends Controller
 {
@@ -113,6 +114,10 @@ class SuperAdminSupportChatController extends Controller
 
     public function unreadCount(): int
     {
+        if (! Schema::hasTable('support_chat_conversations') || ! Schema::hasTable('support_chat_messages')) {
+            return 0;
+        }
+
         return SupportChatConversation::query()
             ->whereIn('status', [
                 SupportChatConversation::STATUS_BOT,

@@ -169,6 +169,18 @@
     </x-ui.card>
 
     <x-ui.card title="Bandeja de chat de soporte" subtitle="Conversaciones del botón flotante (página principal y panel de gimnasios)." class="mt-6">
+        @if (! ($supportSchemaReady ?? false))
+            <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
+                <p class="font-bold">El módulo de chat de soporte aún no está instalado completamente.</p>
+                <p class="mt-1">Ejecuta migraciones pendientes para habilitar la bandeja de conversaciones.</p>
+            </div>
+        @elseif (($supportLoadError ?? false) === true)
+            <div class="mb-4 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-500/30 dark:bg-rose-900/20 dark:text-rose-100">
+                <p class="font-bold">No se pudo cargar la bandeja de soporte.</p>
+                <p class="mt-1">Revisa logs del servidor y vuelve a cargar. Los datos pueden estar desincronizados temporalmente.</p>
+            </div>
+        @endif
+
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide">
                 <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -197,6 +209,12 @@
                 <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
             </form>
         </div>
+
+        @if (($supportUnreadCount ?? 0) > 0 && ($supportTotalCount ?? 0) === 0)
+            <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
+                Se detectaron pendientes sin conversaciones visibles. Refresca la página y valida que las tablas de soporte estén actualizadas.
+            </div>
+        @endif
 
         <div class="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
             <aside class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">

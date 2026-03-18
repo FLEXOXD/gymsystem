@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class SupportChatPresenceService
 {
@@ -11,7 +13,7 @@ class SupportChatPresenceService
 
     public function touchSuperAdmin(User $user): void
     {
-        $ttlSeconds = max(30, (int) config('support_chat.agent_presence_ttl_seconds', 90));
+        $ttlSeconds = $this->ttlSeconds();
         Cache::put(
             self::CACHE_KEY,
             [
@@ -25,7 +27,7 @@ class SupportChatPresenceService
 
     public function isSuperAdminOnline(): bool
     {
-        return Cache::has(self::CACHE_KEY);
+        return $this->activeRepresentative() !== null;
     }
 
     /**
@@ -38,11 +40,55 @@ class SupportChatPresenceService
             return null;
         }
 
+        $userId = (int) ($payload['user_id'] ?? 0);
+        $touchedAtRaw = trim((string) ($payload['touched_at'] ?? ''));
+        if ($userId <= 0 || $touchedAtRaw === '') {
+            Cache::forget(self::CACHE_KEY);
+
+            return null;
+        }
+
+        try {
+            $touchedAt = Carbon::parse($touchedAtRaw);
+        } catch (Throwable $exception) {
+            Cache::forget(self::CACHE_KEY);
+
+            return null;
+        }
+
+        if ($touchedAt->lt(now()->subSeconds($this->ttlSeconds()))) {
+            Cache::forget(self::CACHE_KEY);
+
+            return null;
+        }
+
         return [
-            'user_id' => (int) ($payload['user_id'] ?? 0),
+            'user_id' => $userId,
             'name' => trim((string) ($payload['name'] ?? 'SuperAdmin')),
-            'touched_at' => trim((string) ($payload['touched_at'] ?? '')),
+            'touched_at' => $touchedAtRaw,
         ];
     }
-}
 
+    public function clearForUser(?User $user): void
+    {
+        if (! $user instanceof User || ! $user->hasRole(User::ROLE_SUPERADMIN)) {
+            return;
+        }
+
+        $active = $this->activeRepresentative();
+        if ($active === null) {
+            Cache::forget(self::CACHE_KEY);
+
+            return;
+        }
+
+        if ((int) ($active['user_id'] ?? 0) === (int) $user->id) {
+            Cache::forget(self::CACHE_KEY);
+        }
+    }
+
+    private function ttlSeconds(): int
+    {
+        return max(30, (int) config('support_chat.agent_presence_ttl_seconds', 45));
+    }
+}

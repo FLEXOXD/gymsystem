@@ -114,6 +114,10 @@
         bottom: var(--gs-chat-bottom, 16px);
         z-index: 120;
         font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+        transition: right 0.18s ease, bottom 0.18s ease;
+    }
+    .gs-support-chat-root.is-open .gs-support-chat-launcher {
+        display: none;
     }
     .gs-support-chat-root[data-context-type="gym_panel"] {
         z-index: 110;
@@ -176,6 +180,9 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
+    }
+    .gs-support-chat-root.is-open .gs-support-chat-panel {
+        margin-top: 0;
     }
     .gs-support-chat-header {
         padding: 0.8rem 0.9rem;
@@ -289,23 +296,45 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.56rem;
         padding-right: 0.2rem;
+    }
+    .gs-support-chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+    .gs-support-chat-messages::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.24);
     }
     .gs-support-chat-bubble {
         display: inline-flex;
         flex-direction: column;
         max-width: 86%;
         border-radius: 12px;
-        padding: 0.5rem 0.62rem;
+        padding: 0.52rem 0.66rem;
         font-size: 0.78rem;
         line-height: 1.35;
-        gap: 0.25rem;
+        gap: 0.32rem;
         border: 1px solid transparent;
     }
-    .gs-support-chat-bubble small {
+    .gs-support-chat-bubble__meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
         font-size: 0.66rem;
-        opacity: 0.72;
+        font-weight: 700;
+        opacity: 0.76;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .gs-support-chat-bubble__meta .sep {
+        font-size: 0.58rem;
+        opacity: 0.7;
+    }
+    .gs-support-chat-bubble__text {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
     }
     .gs-support-chat-bubble.is-mine {
         align-self: flex-end;
@@ -330,16 +359,33 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
+        max-height: 130px;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+    }
+    .gs-support-chat-quick::-webkit-scrollbar {
+        width: 6px;
+    }
+    .gs-support-chat-quick::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.34);
     }
     .gs-support-chat-quick button {
         border: 1px solid #2a69db;
-        background: #ffffff;
+        background: #f8fbff;
         color: #1d4ed8;
         border-radius: 999px;
         padding: 0.35rem 0.58rem;
         font-size: 0.7rem;
         font-weight: 700;
         cursor: pointer;
+    }
+    .gs-support-chat-quick button:hover {
+        background: #dbeafe;
+    }
+    .gs-support-chat-quick button:disabled {
+        opacity: 0.58;
+        cursor: not-allowed;
     }
     .gs-support-chat-helper {
         margin: 0;
@@ -372,22 +418,45 @@
         font-weight: 800;
         cursor: pointer;
     }
+    .gs-support-chat-footer button:disabled {
+        opacity: 0.62;
+        cursor: not-allowed;
+    }
     @media (max-width: 1023px) {
+        .gs-support-chat-root {
+            right: 12px;
+        }
         .gs-support-chat-root[data-context-type="gym_panel"] {
             bottom: calc(var(--gs-chat-bottom-mobile, 92px) + env(safe-area-inset-bottom));
         }
+        .gs-support-chat-panel {
+            width: min(420px, calc(100vw - 24px));
+            height: min(78vh, 640px);
+        }
     }
     @media (max-width: 640px) {
-        .gs-support-chat-root {
-            right: 10px;
+        .gs-support-chat-root:not([data-context-type="gym_panel"]) {
+            left: 8px;
+            right: 8px;
             bottom: calc(var(--gs-chat-bottom-mobile, 10px) + env(safe-area-inset-bottom));
+        }
+        .gs-support-chat-root[data-context-type="gym_panel"] {
+            right: 10px;
+            left: auto;
         }
         .gs-support-chat-launcher__label {
             display: none;
         }
+        .gs-support-chat-launcher {
+            width: 56px;
+            height: 56px;
+            justify-content: center;
+            padding: 0;
+            gap: 0;
+        }
         .gs-support-chat-panel {
-            width: min(100vw - 10px, 390px);
-            height: min(78vh, 640px);
+            width: 100%;
+            height: min(80vh, 680px);
         }
     }
 </style>
@@ -419,11 +488,83 @@
         const pollSeconds = Math.max(3, parseInt(root.getAttribute('data-poll-seconds') || '7', 10) || 7);
         const leadCaptureEnabled = root.getAttribute('data-lead-capture') === '1';
         const initialQuick = JSON.parse(root.getAttribute('data-initial-quick') || '[]');
+        const isGymPanelContext = root.getAttribute('data-context-type') === 'gym_panel';
+        const stackedGapPx = 12;
+        const remoteScannerSelector = '#remote-scan-fab';
 
         let pollTimer = null;
         let panelOpen = false;
         let loading = false;
+        let stateLoading = false;
         let messageCountRendered = 0;
+        let stackSyncTimer = null;
+
+        function clearStackedPosition() {
+            root.classList.remove('is-stacked-with-scanner');
+            root.style.removeProperty('right');
+            root.style.removeProperty('bottom');
+        }
+
+        function syncStackedPosition() {
+            if (!isGymPanelContext) {
+                return;
+            }
+
+            clearStackedPosition();
+            const scannerFab = document.querySelector(remoteScannerSelector);
+            if (!(scannerFab instanceof HTMLElement)) {
+                return;
+            }
+
+            const scannerRect = scannerFab.getBoundingClientRect();
+            if (!Number.isFinite(scannerRect.height) || scannerRect.height <= 0) {
+                return;
+            }
+
+            const scannerStyle = window.getComputedStyle(scannerFab);
+            if (scannerStyle.display === 'none' || scannerStyle.visibility === 'hidden') {
+                return;
+            }
+
+            const baseBottom = parseFloat(window.getComputedStyle(root).bottom) || 0;
+            const scannerBottomGap = Math.max(0, window.innerHeight - scannerRect.bottom);
+            const scannerRightGap = Math.max(0, window.innerWidth - scannerRect.right);
+            const requiredBottom = scannerBottomGap + scannerRect.height + stackedGapPx;
+
+            root.style.bottom = `${Math.round(Math.max(baseBottom, requiredBottom))}px`;
+            root.style.right = `${Math.round(scannerRightGap)}px`;
+            root.classList.add('is-stacked-with-scanner');
+        }
+
+        function scheduleStackSync() {
+            if (!isGymPanelContext) {
+                return;
+            }
+
+            if (stackSyncTimer) {
+                window.clearTimeout(stackSyncTimer);
+            }
+
+            stackSyncTimer = window.setTimeout(function () {
+                syncStackedPosition();
+                stackSyncTimer = null;
+            }, 30);
+        }
+
+        function setBusy(isBusy) {
+            const busy = Boolean(isBusy);
+            if (sendButton) {
+                sendButton.disabled = busy;
+            }
+            if (input) {
+                input.disabled = busy;
+            }
+            if (quickWrap) {
+                quickWrap.querySelectorAll('button[data-action-key]').forEach(function (button) {
+                    button.disabled = busy;
+                });
+            }
+        }
 
         function setHelper(text, isError) {
             if (!helper) return;
@@ -515,8 +656,19 @@
                     bubble.className = 'gs-support-chat-bubble is-system';
                 }
 
-                const labelPart = senderLabel !== '' ? '<strong>' + escapeHtml(senderLabel) + '</strong><br>' : '';
-                bubble.innerHTML = labelPart + escapeHtml(text) + (time !== '' ? '<small>' + escapeHtml(time) + '</small>' : '');
+                const metaParts = [];
+                if (senderLabel !== '') {
+                    metaParts.push('<span class="who">' + escapeHtml(senderLabel) + '</span>');
+                }
+                if (time !== '') {
+                    metaParts.push('<span class="when">' + escapeHtml(time) + '</span>');
+                }
+
+                const metaRow = metaParts.length > 0
+                    ? '<div class="gs-support-chat-bubble__meta">' + metaParts.join('<span class="sep">&middot;</span>') + '</div>'
+                    : '';
+
+                bubble.innerHTML = metaRow + '<p class="gs-support-chat-bubble__text">' + escapeHtml(text) + '</p>';
                 messagesWrap.appendChild(bubble);
             });
 
@@ -528,17 +680,32 @@
 
         function applyPayload(payload) {
             const data = payload && typeof payload === 'object' ? payload : {};
-            updatePresence(Boolean(data.representative_online), data.representative_name || '');
+            const representativeOnline = Boolean(data.representative_online);
+            updatePresence(representativeOnline, data.representative_name || '');
             renderMessages(data.messages || []);
             renderQuickButtons(data.quick_replies || initialQuick);
 
             const conversation = data.conversation || null;
             if (!conversation) {
-                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opción o escribe un mensaje.', false);
+                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opciÃƒÂ³n o escribe un mensaje.', false);
                 return;
             }
 
+            const status = String(conversation.status || '').trim();
             const statusLabel = String(conversation.status_label || '').trim();
+            if (status === 'active') {
+                setHelper('Estado: conversaciÃƒÂ³n activa con soporte.', false);
+                return;
+            }
+            if (status === 'waiting_agent') {
+                setHelper(
+                    representativeOnline
+                        ? 'Estado: representante conectado. Puedes escribir para continuar.'
+                        : 'Estado: caso en cola para representante. Te responderemos en este chat.',
+                    false
+                );
+                return;
+            }
             if (statusLabel !== '') {
                 setHelper('Estado: ' + statusLabel, false);
             }
@@ -562,8 +729,8 @@
         }
 
         async function loadState() {
-            if (loading) return;
-            loading = true;
+            if (stateLoading || loading) return;
+            stateLoading = true;
             try {
                 const payload = await requestJson(stateUrl, 'GET');
                 if (!payload) {
@@ -573,9 +740,9 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('Error de conexión. Reintentando...', true);
+                setHelper('Error de conexiÃ³n. Reintentando...', true);
             } finally {
-                loading = false;
+                stateLoading = false;
             }
         }
 
@@ -595,17 +762,20 @@
             }
 
             loading = true;
+            setBusy(true);
+            setHelper('Procesando tu solicitud...', false);
             try {
                 const payload = await requestJson(quickUrl, 'POST', Object.assign({ action_key: key }, collectLeadPayload()));
                 if (!payload) {
-                    setHelper('No se pudo enviar la opción seleccionada.', true);
+                    setHelper('No se pudo enviar la opciÃƒÂ³n seleccionada.', true);
                     return;
                 }
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar la opción. Intenta otra vez.', true);
+                setHelper('No se pudo enviar la opciÃƒÂ³n. Intenta otra vez.', true);
             } finally {
                 loading = false;
+                setBusy(false);
             }
         }
 
@@ -619,6 +789,8 @@
 
             input.value = '';
             loading = true;
+            setBusy(true);
+            setHelper('Enviando mensaje...', false);
             try {
                 const payload = await requestJson(
                     messageUrl,
@@ -633,9 +805,10 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar. Verifica conexión.', true);
+                setHelper('No se pudo enviar. Verifica conexiÃƒÂ³n.', true);
             } finally {
                 loading = false;
+                setBusy(false);
             }
         }
 
@@ -658,7 +831,9 @@
             if (!panel) return;
             panel.hidden = false;
             panelOpen = true;
+            root.classList.add('is-open');
             launcher.setAttribute('aria-expanded', 'true');
+            scheduleStackSync();
             loadState();
             startPolling();
         }
@@ -667,7 +842,9 @@
             if (!panel) return;
             panel.hidden = true;
             panelOpen = false;
+            root.classList.remove('is-open');
             launcher.setAttribute('aria-expanded', 'false');
+            scheduleStackSync();
         }
 
         launcher.addEventListener('click', function () {
@@ -710,11 +887,25 @@
             if (!document.hidden && panelOpen) {
                 loadState();
             }
+
+            if (!document.hidden) {
+                scheduleStackSync();
+            }
         });
 
-        window.addEventListener('beforeunload', stopPolling);
+        window.addEventListener('resize', scheduleStackSync);
+        window.addEventListener('orientationchange', scheduleStackSync);
+        window.addEventListener('beforeunload', function () {
+            stopPolling();
+            if (stackSyncTimer) {
+                window.clearTimeout(stackSyncTimer);
+                stackSyncTimer = null;
+            }
+        });
+
+        root.classList.remove('is-open');
+        scheduleStackSync();
         renderQuickButtons(initialQuick);
         loadState();
     })();
 </script>
-

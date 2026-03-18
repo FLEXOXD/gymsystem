@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'agent_presence_ttl_seconds' => 90,
+    'agent_presence_ttl_seconds' => 45,
     'polling_interval_seconds' => 7,
     'max_messages_per_minute' => 35,
     'contexts' => [

@@ -3,6 +3,7 @@
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
     use App\Models\PresenceSession;
+    use App\Models\SupportChatConversation;
     use App\Models\SupportChatMessage;
     use App\Models\Subscription;
     use App\Services\LegalAcceptanceEligibilityService;
@@ -397,12 +398,21 @@
     }
     if (
         $isSuperAdmin
+        && \Illuminate\Support\Facades\Schema::hasTable('support_chat_conversations')
         && \Illuminate\Support\Facades\Schema::hasTable('support_chat_messages')
     ) {
         try {
-            $supportChatUnread = SupportChatMessage::query()
-                ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
-                ->whereNull('read_by_superadmin_at')
+            $supportChatUnread = SupportChatConversation::query()
+                ->whereIn('status', [
+                    SupportChatConversation::STATUS_BOT,
+                    SupportChatConversation::STATUS_WAITING_AGENT,
+                    SupportChatConversation::STATUS_ACTIVE,
+                ])
+                ->whereHas('messages', static function (\Illuminate\Database\Eloquent\Builder $query): void {
+                    $query
+                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                        ->whereNull('read_by_superadmin_at');
+                })
                 ->count();
         } catch (\Throwable $exception) {
             $supportChatUnread = 0;
@@ -2319,4 +2329,3 @@
 @stack('scripts')
 </body>
 </html>
-
