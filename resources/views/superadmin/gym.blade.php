@@ -19,12 +19,10 @@
         $defaultAdminPhoneCountryDial = old('admin_phone_country_dial', '+593');
         $defaultAdminPhoneNumber = old('admin_phone_number', '');
         $planTemplates = $planTemplates ?? collect();
+        $planPromotionRules = is_array($planPromotionRules ?? null) ? $planPromotionRules : [];
         $defaultPlanTemplateId = old('subscription_plan_template_id', (string) optional($planTemplates->first())->id);
+        $defaultSubscriptionBillingCycles = old('subscription_billing_cycles', '1');
         $defaultSubscriptionCustomPrice = old('subscription_custom_price', '');
-        $defaultSubscriptionIntroDiscountByTemplate = old('subscription_intro_discount_percent', []);
-        if (! is_array($defaultSubscriptionIntroDiscountByTemplate)) {
-            $defaultSubscriptionIntroDiscountByTemplate = [];
-        }
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
     @endphp
@@ -205,17 +203,10 @@
                             @forelse ($planTemplates as $template)
                                 @php
                                     $templateId = (int) $template->id;
-                                    $templateBasePrice = (float) $template->price;
-                                    $templateDiscountPercentDefault = 0;
-                                    if ($template->discount_price !== null && $templateBasePrice > 0) {
-                                        $templateDiscountPrice = (float) $template->discount_price;
-                                        if ($templateDiscountPrice >= 0 && $templateDiscountPrice < $templateBasePrice) {
-                                            $templateDiscountPercentDefault = (int) round((($templateBasePrice - $templateDiscountPrice) / $templateBasePrice) * 100);
-                                        }
-                                    }
-                                    $introDiscountValue = $defaultSubscriptionIntroDiscountByTemplate[$templateId]
-                                        ?? $defaultSubscriptionIntroDiscountByTemplate[(string) $templateId]
-                                        ?? $templateDiscountPercentDefault;
+                                    $templateFeaturePlanKey = method_exists($template, 'resolvedFeaturePlanKey')
+                                        ? (string) $template->resolvedFeaturePlanKey()
+                                        : (string) ($template->feature_plan_key ?? $template->plan_key ?? 'basico');
+                                    $planPromotions = collect($planPromotionRules[$templateId] ?? $planPromotionRules[(string) $templateId] ?? []);
                                 @endphp
                                 <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50/60 dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-cyan-500/40 dark:hover:bg-cyan-500/10">
                                     <input type="radio"
@@ -223,12 +214,16 @@
                                            value="{{ $template->id }}"
                                            class="mt-1"
                                            data-plan-template-radio="1"
-                                           data-plan-key="{{ (string) ($template->plan_key ?? '') }}"
+                                           data-plan-template-id="{{ $templateId }}"
+                                           data-plan-name="{{ $template->name }}"
+                                           data-feature-plan-key="{{ $templateFeaturePlanKey }}"
                                            data-plan-price="{{ number_format((float) $template->price, 2, '.', '') }}"
                                            @checked((string) $defaultPlanTemplateId === (string) $template->id)
                                            required>
                                     <span class="block">
-                                        <span class="block text-sm font-black text-slate-900 dark:text-slate-100">{{ $template->name }}</span>
+                                        <span class="block text-sm font-black text-slate-900 dark:text-slate-100">
+                                            {{ $template->name }}
+                                        </span>
                                         <span class="mt-1 block text-xs text-slate-600 dark:text-slate-300">
                                             {{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}
                                         </span>
@@ -240,19 +235,34 @@
                                                 Desc. {{ \App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode ?? 'USD') }}
                                             </span>
                                         @endif
-                                        <span class="mt-3 block">
-                                            <span class="ui-muted mb-1 block text-[11px] font-bold uppercase tracking-wide">Descuento primer mes (%)</span>
-                                            <input type="number"
-                                                   name="subscription_intro_discount_percent[{{ $templateId }}]"
-                                                   value="{{ $introDiscountValue }}"
-                                                   min="0"
-                                                   max="100"
-                                                   step="1"
-                                                   class="ui-input h-9 text-sm"
-                                                   data-intro-discount-input="1"
-                                                   data-plan-template-id="{{ $templateId }}">
-                                            <span class="ui-muted mt-1 block text-[11px]">0 sin descuento | 100 primer mes gratis.</span>
-                                        </span>
+                                        @if ($planPromotions->isNotEmpty())
+                                            <span class="mt-3 block">
+                                                <span class="ui-muted mb-1 block text-[11px] font-bold uppercase tracking-wide">Promociones activas</span>
+                                                <span class="flex flex-wrap gap-2">
+                                                    @foreach ($planPromotions as $promotionRule)
+                                                        @php
+                                                            $promotionDuration = isset($promotionRule['duration_months']) && $promotionRule['duration_months'] !== null
+                                                                ? (int) $promotionRule['duration_months']
+                                                                : null;
+                                                            $promotionType = (string) ($promotionRule['type'] ?? '');
+                                                            $promotionValue = isset($promotionRule['value']) && $promotionRule['value'] !== null
+                                                                ? (float) $promotionRule['value']
+                                                                : null;
+                                                            $promotionLabel = match ($promotionType) {
+                                                                'percentage' => ($promotionValue !== null ? rtrim(rtrim(number_format($promotionValue, 2, '.', ''), '0'), '.') : '0').'% off',
+                                                                'fixed' => '-'.\App\Support\Currency::format((float) ($promotionValue ?? 0), $appCurrencyCode ?? 'USD'),
+                                                                'final_price' => 'Total '.\App\Support\Currency::format((float) ($promotionValue ?? 0), $appCurrencyCode ?? 'USD'),
+                                                                'bonus_days' => '+'.(int) round((float) ($promotionValue ?? 0)).' dias',
+                                                                default => (string) ($promotionRule['name'] ?? 'Promo'),
+                                                            };
+                                                        @endphp
+                                                        <span class="inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
+                                                            {{ $promotionDuration ? $promotionDuration.' meses' : 'General' }} · {{ $promotionLabel }}
+                                                        </span>
+                                                    @endforeach
+                                                </span>
+                                            </span>
+                                        @endif
                                     </span>
                                 </label>
                             @empty
@@ -262,11 +272,20 @@
                         @error('subscription_plan_template_id')
                             <p class="text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                         @enderror
-                        @if ($errors->has('subscription_intro_discount_percent') || $errors->has('subscription_intro_discount_percent.*'))
-                            <p class="text-xs font-semibold text-rose-600 dark:text-rose-300">
-                                {{ $errors->first('subscription_intro_discount_percent') ?: $errors->first('subscription_intro_discount_percent.*') }}
-                            </p>
-                        @endif
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Meses pagados por adelantado</label>
+                            <select id="subscription-billing-cycles" name="subscription_billing_cycles" class="ui-input">
+                                @for ($billingCycleOption = 1; $billingCycleOption <= 12; $billingCycleOption++)
+                                    <option value="{{ $billingCycleOption }}" @selected((string) $defaultSubscriptionBillingCycles === (string) $billingCycleOption)>
+                                        {{ $billingCycleOption }} {{ $billingCycleOption === 1 ? 'mes' : 'meses' }}
+                                    </option>
+                                @endfor
+                            </select>
+                            <p class="ui-muted mt-1 text-[11px]">Si existe una promocion activa para ese plan y ese plazo, se aplica automaticamente.</p>
+                            @error('subscription_billing_cycles')
+                                <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
                         <p id="subscription-plan-feedback" class="sa-filter-note" role="status" aria-live="polite"></p>
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
@@ -401,7 +420,7 @@
                 <x-ui.card title="Resumen operativo" subtitle="Puntos a revisar antes de confirmar la creacion.">
                     <ul class="sa-check-list">
                         <li>Verifica país, ciudad y zona horaria antes de crear el slug y la operación inicial.</li>
-                        <li>Revisa si el plan requiere precio personalizado o descuento introductorio.</li>
+                        <li>Revisa si el plan tiene una promocion activa para el plazo que elijas entre 1 y 12 meses.</li>
                         <li>Confirma correo y teléfono del admin para evitar bloqueos en el primer acceso.</li>
                         <li>La cuenta nace lista para operar panel, recepción y cobros según el plan elegido.</li>
                     </ul>
@@ -495,36 +514,96 @@
         syncStates(selectedStateValue, selectedCityValue);
 
         const planTemplateRadios = Array.from(document.querySelectorAll('input[data-plan-template-radio="1"]'));
+        const billingCyclesSelect = document.getElementById('subscription-billing-cycles');
         const customPriceInput = document.getElementById('subscription-custom-price');
-        const introDiscountInputs = new Map();
-        document.querySelectorAll('input[data-intro-discount-input="1"]').forEach(function (input) {
-            const templateId = String(input.getAttribute('data-plan-template-id') || '').trim();
-            if (templateId !== '') {
-                introDiscountInputs.set(templateId, input);
-            }
-        });
+        const promotionRules = @json($planPromotionRules);
         const subscriptionPlanFeedback = document.getElementById('subscription-plan-feedback');
         const formatUsd = function (value) {
             const numeric = Number(value);
             if (!Number.isFinite(numeric)) return '$0.00';
             return '$' + numeric.toFixed(2);
         };
+        const resolvePromotion = function (templateId, billingCycles) {
+            const rules = promotionRules[String(templateId)] || [];
+            if (!Array.isArray(rules)) {
+                return null;
+            }
+
+            let fallbackRule = null;
+            for (const rule of rules) {
+                const duration = Number(rule?.duration_months || 0);
+                if (Number.isFinite(duration) && duration > 0 && duration === billingCycles) {
+                    return rule;
+                }
+                if (!fallbackRule && !rule?.duration_months) {
+                    fallbackRule = rule;
+                }
+            }
+
+            return fallbackRule;
+        };
+        const resolvePromotionPricing = function (baseMonthlyPrice, billingCycles, promotion) {
+            const safeMonthlyPrice = Number.isFinite(baseMonthlyPrice) ? Math.max(0, baseMonthlyPrice) : 0;
+            const safeBillingCycles = Math.max(1, Math.round(Number(billingCycles) || 1));
+            const baseTotal = Number((safeMonthlyPrice * safeBillingCycles).toFixed(2));
+
+            if (!promotion) {
+                return {
+                    baseTotal: baseTotal,
+                    finalTotal: baseTotal,
+                    discountAmount: 0,
+                    effectiveMonthlyPrice: Number((baseTotal / safeBillingCycles).toFixed(2)),
+                    bonusDays: 0,
+                };
+            }
+
+            const type = String(promotion.type || '').trim().toLowerCase();
+            const value = Number(promotion.value || 0);
+            let finalTotal = baseTotal;
+            let discountAmount = 0;
+            let bonusDays = 0;
+
+            if (type === 'percentage') {
+                const percent = Math.max(0, Math.min(100, value));
+                discountAmount = Number((baseTotal * (percent / 100)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            } else if (type === 'fixed') {
+                discountAmount = Number(Math.max(0, Math.min(baseTotal, value)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            } else if (type === 'final_price') {
+                finalTotal = Number(Math.max(0, value).toFixed(2));
+                discountAmount = Number(Math.max(0, baseTotal - finalTotal).toFixed(2));
+            } else if (type === 'bonus_days') {
+                bonusDays = Math.max(0, Math.round(value));
+            } else if (type === 'two_for_one' || type === 'bring_friend') {
+                const percent = value > 0 ? Math.max(0, Math.min(100, value)) : 50;
+                discountAmount = Number((baseTotal * (percent / 100)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            }
+
+            return {
+                baseTotal: baseTotal,
+                finalTotal: finalTotal,
+                discountAmount: discountAmount,
+                effectiveMonthlyPrice: Number((finalTotal / safeBillingCycles).toFixed(2)),
+                bonusDays: bonusDays,
+            };
+        };
         const syncCustomSubscriptionPriceState = function () {
             if (!customPriceInput) return;
             const selectedRadio = planTemplateRadios.find(function (radio) {
                 return radio.checked;
             }) || null;
-            const selectedPlanKey = String(selectedRadio?.getAttribute('data-plan-key') || '').toLowerCase();
+            const selectedPlanKey = String(selectedRadio?.getAttribute('data-feature-plan-key') || '').toLowerCase();
             const selectedPlanPrice = Number(selectedRadio?.getAttribute('data-plan-price') || '0');
-            const selectedTemplateId = String(selectedRadio?.value || '').trim();
-            const selectedIntroInput = introDiscountInputs.get(selectedTemplateId) || null;
-            let selectedIntroDiscountPercent = Number(selectedIntroInput?.value || '0');
-            if (!Number.isFinite(selectedIntroDiscountPercent)) {
-                selectedIntroDiscountPercent = 0;
+            const selectedTemplateId = String(selectedRadio?.getAttribute('data-plan-template-id') || selectedRadio?.value || '').trim();
+            let selectedBillingCycles = Number(billingCyclesSelect?.value || '1');
+            if (!Number.isFinite(selectedBillingCycles)) {
+                selectedBillingCycles = 1;
             }
-            selectedIntroDiscountPercent = Math.max(0, Math.min(100, Math.round(selectedIntroDiscountPercent)));
+            selectedBillingCycles = Math.max(1, Math.min(12, Math.round(selectedBillingCycles)));
             const selectedPlanLabel = selectedRadio
-                ? String(selectedRadio.closest('label')?.querySelector('.text-sm.font-black')?.textContent || 'Plan seleccionado').trim()
+                ? String(selectedRadio.getAttribute('data-plan-name') || selectedRadio.closest('label')?.querySelector('.text-sm.font-black')?.textContent || 'Plan seleccionado').trim()
                 : 'Selecciona un plan base para continuar.';
             const canUseCustomPrice = selectedPlanKey === 'sucursales';
             const selectedCustomPrice = Number(customPriceInput.value || '0');
@@ -542,20 +621,25 @@
                 customPriceInput.value = '';
             }
 
-            const firstMonthPrice = Math.max(0, effectivePlanPrice * (1 - (selectedIntroDiscountPercent / 100)));
+            const selectedPromotion = resolvePromotion(selectedTemplateId, selectedBillingCycles);
+            const pricing = resolvePromotionPricing(effectivePlanPrice, selectedBillingCycles, selectedPromotion);
             if (subscriptionPlanFeedback) {
-                subscriptionPlanFeedback.textContent = selectedRadio
-                    ? selectedPlanLabel + ': primer mes ' + formatUsd(firstMonthPrice) + ' (' + selectedIntroDiscountPercent + '% desc.). Desde mes 2: ' + formatUsd(effectivePlanPrice) + '.'
-                    : selectedPlanLabel;
+                if (!selectedRadio) {
+                    subscriptionPlanFeedback.textContent = selectedPlanLabel;
+                } else if (selectedPromotion) {
+                    const promotionName = String(selectedPromotion.name || 'Promocion activa').trim();
+                    const bonusDaysSuffix = pricing.bonusDays > 0 ? ' +' + pricing.bonusDays + ' dias.' : '.';
+                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': normal ' + formatUsd(pricing.baseTotal) + ', promo "' + promotionName + '" aplicada. Total a cobrar ' + formatUsd(pricing.finalTotal) + ' (' + formatUsd(pricing.effectiveMonthlyPrice) + '/mes promedio)' + bonusDaysSuffix;
+                } else {
+                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': sin promocion activa para ' + selectedBillingCycles + ' mes(es). Total a cobrar ' + formatUsd(pricing.baseTotal) + '.';
+                }
             }
         };
         planTemplateRadios.forEach(function (radio) {
             radio.addEventListener('change', syncCustomSubscriptionPriceState);
         });
-        introDiscountInputs.forEach(function (input) {
-            input.addEventListener('input', syncCustomSubscriptionPriceState);
-        });
         customPriceInput?.addEventListener('input', syncCustomSubscriptionPriceState);
+        billingCyclesSelect?.addEventListener('change', syncCustomSubscriptionPriceState);
         syncCustomSubscriptionPriceState();
         const timezoneSearch = document.getElementById('gym-timezone-search');
         const timezoneSelect = document.getElementById('gym-timezone-select');

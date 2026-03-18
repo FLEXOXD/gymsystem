@@ -17,6 +17,7 @@ class ClientFitnessProfile extends Model
     protected $fillable = [
         'gym_id',
         'client_id',
+        'birth_date',
         'age',
         'sex',
         'height_cm',
@@ -35,6 +36,7 @@ class ClientFitnessProfile extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'birth_date' => 'date',
         'limitations' => 'array',
         'body_metrics' => 'array',
         'onboarding_completed_at' => 'datetime',

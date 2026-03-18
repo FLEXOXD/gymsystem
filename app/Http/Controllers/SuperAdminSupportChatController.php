@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\CarbonInterface;
 use App\Models\SupportChatConversation;
 use App\Models\SupportChatMessage;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\SupportChatPresenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -53,7 +55,15 @@ class SuperAdminSupportChatController extends Controller
         ]);
     }
 
-    public function reply(Request $request, SupportChatConversation $conversation): RedirectResponse
+    public function state(Request $request, SupportChatConversation $conversation): JsonResponse
+    {
+        $this->lifecycleService->runInactivitySweep((int) $conversation->id);
+        $this->markConversationAsRead($conversation);
+
+        return response()->json($this->buildStatePayload($request, $conversation));
+    }
+
+    public function reply(Request $request, SupportChatConversation $conversation): JsonResponse|RedirectResponse
     {
         $this->lifecycleService->runInactivitySweep((int) $conversation->id);
 
@@ -96,10 +106,17 @@ class SuperAdminSupportChatController extends Controller
         $this->markConversationAsRead($conversation);
         $this->presenceService->touchSuperAdmin($user);
 
+        if ($request->expectsJson()) {
+            return response()->json(array_merge(
+                $this->buildStatePayload($request, $conversation),
+                ['notice' => 'Respuesta enviada al chat de soporte.']
+            ));
+        }
+
         return back()->with('status', 'Respuesta enviada al chat de soporte.');
     }
 
-    public function updateStatus(Request $request, SupportChatConversation $conversation): RedirectResponse
+    public function updateStatus(Request $request, SupportChatConversation $conversation): JsonResponse|RedirectResponse
     {
         $this->lifecycleService->runInactivitySweep((int) $conversation->id);
 
@@ -122,6 +139,13 @@ class SuperAdminSupportChatController extends Controller
 
         $conversation->forceFill($forceFill)->save();
 
+        if ($request->expectsJson()) {
+            return response()->json(array_merge(
+                $this->buildStatePayload($request, $conversation),
+                ['notice' => 'Estado de conversacion actualizado.']
+            ));
+        }
+
         return back()->with('status', 'Estado de conversacion actualizado.');
     }
 
@@ -133,16 +157,29 @@ class SuperAdminSupportChatController extends Controller
         return back()->with('status', 'Conversacion marcada como leida.');
     }
 
-    public function finalize(Request $request, SupportChatConversation $conversation): RedirectResponse
+    public function finalize(Request $request, SupportChatConversation $conversation): JsonResponse|RedirectResponse
     {
-        $this->lifecycleService->finalizeAndDelete($conversation, 'manual_superadmin');
+        $conversationIds = $this->resolveConversationIdsForImmediatePurge($conversation);
+        $this->deleteConversationsImmediately($conversationIds);
 
         $query = $request->only(['status', 'q', 'page', 'support_status', 'support_q', 'support_page']);
-        $query['support'] = (int) $conversation->id;
+        unset($query['support']);
+        $redirectUrl = route('superadmin.inbox.index', $query);
+        $notice = 'Conversacion finalizada y eliminada con su historial.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'deleted' => true,
+                'deleted_conversation_ids' => $conversationIds,
+                'notice' => $notice,
+                'redirect_url' => $redirectUrl,
+            ]);
+        }
 
         return redirect()
             ->route('superadmin.inbox.index', $query)
-            ->with('status', 'Conversacion finalizada. El historial se eliminara automaticamente en 15 minutos.');
+            ->with('status', $notice);
     }
 
     public function unreadCount(): int
@@ -185,5 +222,169 @@ class SuperAdminSupportChatController extends Controller
             ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
             ->whereNull('read_by_superadmin_at')
             ->update(['read_by_superadmin_at' => now()]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildStatePayload(Request $request, SupportChatConversation $conversation): array
+    {
+        $conversation = $conversation->fresh([
+            'gym:id,name,logo_path',
+            'initiatedBy:id,name,email',
+            'messages' => static fn ($query) => $query->orderBy('id')->with('senderUser:id,name'),
+        ]) ?? $conversation;
+
+        $panelTimezone = $this->resolvePanelTimezone($request);
+        $activeRepresentative = $this->presenceService->activeRepresentative();
+
+        return [
+            'ok' => true,
+            'representative_online' => $activeRepresentative !== null,
+            'representative_name' => trim((string) ($activeRepresentative['name'] ?? 'SuperAdmin')),
+            'conversation' => [
+                'id' => (int) $conversation->id,
+                'status' => (string) $conversation->status,
+                'status_label' => $conversation->statusLabel(),
+                'display_name' => $conversation->displayName(),
+                'source_label' => $conversation->sourceLabel(),
+                'requester_label' => $conversation->requesterLabel(),
+                'visitor_email' => trim((string) $conversation->visitor_email),
+                'visitor_name' => trim((string) $conversation->visitor_name),
+                'is_closed' => (string) $conversation->status === SupportChatConversation::STATUS_CLOSED,
+                'minutes_until_purge' => $this->minutesUntilPurge($conversation),
+            ],
+            'messages' => $conversation->messages
+                ->map(static function (SupportChatMessage $message) use ($panelTimezone): array {
+                    $senderType = (string) ($message->sender_type ?? '');
+                    $senderLabel = trim((string) ($message->sender_label ?? ''));
+
+                    if ($senderLabel === '') {
+                        $senderLabel = match ($senderType) {
+                            SupportChatMessage::SENDER_VISITOR => 'Visitante',
+                            SupportChatMessage::SENDER_GYM => 'Gimnasio',
+                            SupportChatMessage::SENDER_SUPERADMIN => trim((string) ($message->senderUser?->name ?? 'SuperAdmin')),
+                            SupportChatMessage::SENDER_BOT => 'Bot de soporte',
+                            default => 'Sistema',
+                        };
+                    }
+
+                    return [
+                        'id' => (int) $message->id,
+                        'sender_type' => $senderType,
+                        'sender_label' => $senderLabel,
+                        'message' => (string) $message->message,
+                        'mine' => $senderType === SupportChatMessage::SENDER_SUPERADMIN,
+                        'is_system' => in_array($senderType, [SupportChatMessage::SENDER_SYSTEM, SupportChatMessage::SENDER_BOT], true),
+                        'created_at' => $message->created_at instanceof CarbonInterface
+                            ? $message->created_at->copy()->timezone($panelTimezone)->format('d/m/Y H:i')
+                            : '',
+                    ];
+                })
+                ->values()
+                ->all(),
+        ];
+    }
+
+    private function minutesUntilPurge(SupportChatConversation $conversation): ?int
+    {
+        if ((string) $conversation->status !== SupportChatConversation::STATUS_CLOSED || ! $conversation->closed_at) {
+            return null;
+        }
+
+        $purgeAfterMinutes = max(1, (int) config('support_chat.inactivity.close_after_minutes', 15));
+
+        return max(0, now()->diffInMinutes($conversation->closed_at->copy()->addMinutes($purgeAfterMinutes), false));
+    }
+
+    private function resolvePanelTimezone(Request $request): string
+    {
+        $panelTimezone = trim((string) ($request->user()?->timezone ?? ''));
+        if (
+            $panelTimezone === ''
+            || $panelTimezone === 'UTC'
+            || ! in_array($panelTimezone, timezone_identifiers_list(), true)
+        ) {
+            return 'America/Guayaquil';
+        }
+
+        return $panelTimezone;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function resolveConversationIdsForImmediatePurge(SupportChatConversation $conversation): array
+    {
+        $channel = trim((string) $conversation->channel);
+        $ids = [];
+
+        if ($channel === SupportChatConversation::CHANNEL_GYM_PANEL && (int) $conversation->gym_id > 0) {
+            $ids = SupportChatConversation::query()
+                ->where('channel', SupportChatConversation::CHANNEL_GYM_PANEL)
+                ->where('gym_id', (int) $conversation->gym_id)
+                ->pluck('id')
+                ->map(static fn (mixed $id): int => (int) $id)
+                ->filter(static fn (int $id): bool => $id > 0)
+                ->values()
+                ->all();
+        } elseif ($channel === SupportChatConversation::CHANNEL_LANDING) {
+            $visitorEmail = trim((string) $conversation->visitor_email);
+            $visitorGymName = trim((string) $conversation->visitor_gym_name);
+
+            $query = SupportChatConversation::query()
+                ->where('channel', SupportChatConversation::CHANNEL_LANDING);
+
+            if ($visitorEmail !== '') {
+                $query->where('visitor_email', $visitorEmail);
+            } elseif ($visitorGymName !== '') {
+                $query->where('visitor_gym_name', $visitorGymName);
+            } else {
+                $query->whereKey((int) $conversation->id);
+            }
+
+            $ids = $query
+                ->pluck('id')
+                ->map(static fn (mixed $id): int => (int) $id)
+                ->filter(static fn (int $id): bool => $id > 0)
+                ->values()
+                ->all();
+        }
+
+        $ids[] = (int) $conversation->id;
+
+        return collect($ids)
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<int>  $conversationIds
+     */
+    private function deleteConversationsImmediately(array $conversationIds): void
+    {
+        $ids = collect($conversationIds)
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        DB::transaction(static function () use ($ids): void {
+            SupportChatMessage::query()
+                ->whereIn('conversation_id', $ids)
+                ->delete();
+
+            SupportChatConversation::query()
+                ->whereIn('id', $ids)
+                ->delete();
+        });
     }
 }

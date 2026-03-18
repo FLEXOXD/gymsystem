@@ -2011,6 +2011,198 @@
                 :lead-capture="false"
                 :compact-launcher="true"
                 launcher-title="Soporte SuperAdmin" />
+
+            @if(false)
+                (function () {
+                    const widgetRoot = document.querySelector('.gs-support-chat-root[data-context-type="gym_panel"]');
+                    if (!(widgetRoot instanceof HTMLElement)) {
+                        return;
+                    }
+
+                    function normalizeText(value) {
+                        return String(value || '').toLowerCase();
+                    }
+
+                    function isBusyHelper(helperText) {
+                        return helperText.includes('enviando')
+                            || helperText.includes('procesando')
+                            || helperText.includes('iniciando nueva');
+                    }
+
+                    function isLiveConversation(helperText) {
+                        return helperText.includes('conversacion activa')
+                            || helperText.includes('conversación activa')
+                            || helperText.includes('representante conectado')
+                            || helperText.includes('caso en cola');
+                    }
+
+                    function enforceSupportChatInteraction() {
+                        const helper = widgetRoot.querySelector('[data-chat-helper]');
+                        const helperText = normalizeText(helper ? helper.textContent : '');
+                        const input = widgetRoot.querySelector('[data-chat-input]');
+                        const sendButton = widgetRoot.querySelector('[data-chat-send]');
+                        const quickWrap = widgetRoot.querySelector('[data-chat-quick]');
+                        const restartButton = widgetRoot.querySelector('[data-chat-restart]');
+
+                        if (restartButton instanceof HTMLButtonElement) {
+                            restartButton.hidden = true;
+                            restartButton.disabled = true;
+                            restartButton.style.display = 'none';
+                        }
+
+                        if (!isBusyHelper(helperText)) {
+                            if (input instanceof HTMLInputElement && input.disabled) {
+                                input.disabled = false;
+                            }
+                            if (sendButton instanceof HTMLButtonElement && sendButton.disabled) {
+                                sendButton.disabled = false;
+                            }
+                        }
+
+                        if (quickWrap instanceof HTMLElement) {
+                            quickWrap.style.display = isLiveConversation(helperText) ? 'none' : 'flex';
+                        }
+                    }
+
+                    const observer = new MutationObserver(function () {
+                        enforceSupportChatInteraction();
+                    });
+
+                    observer.observe(widgetRoot, {
+                        subtree: true,
+                        childList: true,
+                        characterData: true,
+                        attributes: true,
+                    });
+
+                    window.setInterval(enforceSupportChatInteraction, 350);
+                    document.addEventListener('visibilitychange', function () {
+                        if (!document.hidden) {
+                            enforceSupportChatInteraction();
+                        }
+                    });
+
+                    enforceSupportChatInteraction();
+                })();
+            @endif
+
+            <script>
+                (function () {
+                    const rootSelector = '.gs-support-chat-root[data-context-type="gym_panel"]';
+
+                    function unlockChat(root) {
+                        if (!(root instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        const panel = root.querySelector('[data-chat-panel]');
+                        if (!(panel instanceof HTMLElement) || panel.hidden) {
+                            return;
+                        }
+
+                        const helper = root.querySelector('[data-chat-helper]');
+                        const helperText = String(helper ? helper.textContent : '').toLowerCase();
+                        const isBusyHelper = helperText.includes('enviando')
+                            || helperText.includes('procesando')
+                            || helperText.includes('iniciando nueva');
+
+                        const input = root.querySelector('[data-chat-input]');
+                        const sendButton = root.querySelector('[data-chat-send]');
+                        let inputWasDisabled = false;
+
+                        if (input instanceof HTMLInputElement && input.disabled) {
+                            input.disabled = false;
+                            inputWasDisabled = true;
+                        }
+                        if (sendButton instanceof HTMLButtonElement && sendButton.disabled) {
+                            sendButton.disabled = false;
+                        }
+
+                        if (input instanceof HTMLInputElement && !isBusyHelper) {
+                            const wantsFocus = root.getAttribute('data-chat-should-focus') === '1'
+                                || String(input.value || '').trim() !== '';
+
+                            if ((inputWasDisabled || wantsFocus) && document.activeElement !== input) {
+                                const cursorAt = input.value.length;
+                                input.focus({ preventScroll: true });
+                                try {
+                                    input.setSelectionRange(cursorAt, cursorAt);
+                                } catch (error) {
+                                }
+                            }
+                        }
+                    }
+
+                    function bindRoot(root) {
+                        if (!(root instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        if (root.getAttribute('data-chat-unlock-bound') === '1') {
+                            unlockChat(root);
+                            return;
+                        }
+                        root.setAttribute('data-chat-unlock-bound', '1');
+
+                        const input = root.querySelector('[data-chat-input]');
+                        const sendButton = root.querySelector('[data-chat-send]');
+                        if (input instanceof HTMLInputElement) {
+                            input.addEventListener('focus', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                            input.addEventListener('input', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                            input.addEventListener('blur', function () {
+                                if (!input.disabled) {
+                                    root.setAttribute('data-chat-should-focus', '0');
+                                }
+                            });
+                        }
+                        if (sendButton instanceof HTMLButtonElement) {
+                            sendButton.addEventListener('click', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                        }
+
+                        const observer = new MutationObserver(function () {
+                            unlockChat(root);
+                        });
+
+                        observer.observe(root, {
+                            subtree: true,
+                            childList: true,
+                            attributes: true,
+                            attributeFilter: ['disabled', 'hidden', 'class'],
+                        });
+
+                        window.setInterval(function () {
+                            unlockChat(root);
+                        }, 90);
+
+                        unlockChat(root);
+                    }
+
+                    function bootstrap() {
+                        document.querySelectorAll(rootSelector).forEach(bindRoot);
+                    }
+
+                    const pageObserver = new MutationObserver(bootstrap);
+                    pageObserver.observe(document.body, {
+                        subtree: true,
+                        childList: true,
+                    });
+
+                    document.addEventListener('visibilitychange', function () {
+                        if (!document.hidden) {
+                            bootstrap();
+                        }
+                    });
+                    window.addEventListener('focus', bootstrap);
+
+                    bootstrap();
+                })();
+            </script>
         @endif
     </div>
 </div>

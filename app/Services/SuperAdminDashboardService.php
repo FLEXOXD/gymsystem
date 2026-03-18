@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Models\Gym;
 use App\Models\Subscription;
+use App\Models\SubscriptionChargeEvent;
+use App\Support\SuperAdminPlanCatalog;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class SuperAdminDashboardService
 {
@@ -15,29 +18,42 @@ class SuperAdminDashboardService
     }
 
     /**
-     * Get global KPI cards for SuperAdmin.
-     *
-     * @return array<string, int|float>
+     * @return array<string, mixed>
      */
-    public function getKpis(): array
+    public function getDashboardData(): array
     {
         $this->syncSubscriptionData();
+        $hasChargeEventsTable = Schema::hasTable('subscription_charge_events');
 
         $today = Carbon::today();
-        $limitDate = $today->copy()->addDays(7)->toDateString();
-        $currentCycleRevenueQuery = Subscription::query()
+        $monthStart = $today->copy()->startOfMonth();
+        $monthEnd = $today->copy()->endOfMonth();
+        $yearStart = $today->copy()->startOfYear();
+        $yearEnd = $today->copy()->endOfYear();
+        $expiringLimit = $today->copy()->addDays(7)->toDateString();
+
+        $portfolioSubscriptions = Subscription::query()
             ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-            ->whereIn('status', ['active', 'grace'])
             ->where(function ($query): void {
                 $query
                     ->where('is_branch_managed', false)
                     ->orWhereNull('is_branch_managed');
-            });
+            })
+            ->get();
+        if ($hasChargeEventsTable) {
+            $portfolioSubscriptions->load('latestChargeEvent');
+        }
 
-        $currentCycleRevenue = (float) (clone $currentCycleRevenueQuery)->sum('price');
-        $recurringMrr = (float) ((clone $currentCycleRevenueQuery)
-            ->selectRaw('COALESCE(SUM(CASE WHEN sucursales_intro_pending = 1 AND sucursales_base_price IS NOT NULL THEN sucursales_base_price ELSE price END), 0) as total')
-            ->value('total') ?? 0);
+        $activePortfolio = $portfolioSubscriptions
+            ->filter(fn (Subscription $subscription): bool => in_array((string) ($subscription->status ?? ''), ['active', 'grace'], true))
+            ->values();
+
+        $currentCycleRevenue = round($activePortfolio->sum(fn (Subscription $subscription): float => $this->resolveCurrentCycleTotal($subscription)), 2);
+        $recurringMrr = round($activePortfolio->sum(fn (Subscription $subscription): float => $this->resolveRecurringMonthlyValue($subscription)), 2);
+        $currentCycleDiscount = round($activePortfolio->sum(fn (Subscription $subscription): float => $this->resolveCurrentCycleDiscount($subscription)), 2);
+        $discountedSubscriptions = $activePortfolio
+            ->filter(fn (Subscription $subscription): bool => $this->resolveCurrentCycleDiscount($subscription) > 0.009)
+            ->count();
 
         $planCountRows = Subscription::query()
             ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
@@ -50,36 +66,117 @@ class SuperAdminDashboardService
             ->groupBy('plan_key')
             ->pluck('total', 'plan_key');
 
+        $currentMonthRevenue = 0.0;
+        $currentYearRevenue = 0.0;
+        $currentMonthDiscount = 0.0;
+        $currentYearDiscount = 0.0;
+        $chargeCountMonth = 0;
+        $chargeCountYear = 0;
+
+        if ($hasChargeEventsTable) {
+            $chargeEventsQuery = SubscriptionChargeEvent::query()
+                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                ->whereHas('subscription', function ($query): void {
+                    $query->where(function ($subQuery): void {
+                        $subQuery
+                            ->where('is_branch_managed', false)
+                            ->orWhereNull('is_branch_managed');
+                    });
+                });
+
+            $currentMonthRevenue = round((float) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$monthStart->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+                ->sum('total_paid'), 2);
+
+            $currentYearRevenue = round((float) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$yearStart->copy()->startOfDay(), $yearEnd->copy()->endOfDay()])
+                ->sum('total_paid'), 2);
+
+            $currentMonthDiscount = round((float) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$monthStart->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+                ->sum('discount_amount'), 2);
+
+            $currentYearDiscount = round((float) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$yearStart->copy()->startOfDay(), $yearEnd->copy()->endOfDay()])
+                ->sum('discount_amount'), 2);
+
+            $chargeCountMonth = (int) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$monthStart->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+                ->count();
+
+            $chargeCountYear = (int) (clone $chargeEventsQuery)
+                ->whereBetween('charged_at', [$yearStart->copy()->startOfDay(), $yearEnd->copy()->endOfDay()])
+                ->count();
+        }
+
+        $newGymsMonth = Gym::query()
+            ->withoutDemoSessions()
+            ->whereBetween('created_at', [$monthStart->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+            ->count();
+
+        $newGymsYear = Gym::query()
+            ->withoutDemoSessions()
+            ->whereBetween('created_at', [$yearStart->copy()->startOfDay(), $yearEnd->copy()->endOfDay()])
+            ->count();
+
+        $avgTicketMonth = $chargeCountMonth > 0
+            ? round($currentMonthRevenue / $chargeCountMonth, 2)
+            : 0.0;
+
         return [
-            'total_gyms' => Gym::query()->withoutDemoSessions()->count(),
-            'active_gyms' => Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->where('status', 'active')
-                ->count(),
-            'grace_gyms' => Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->where('status', 'grace')
-                ->count(),
-            'suspended_gyms' => Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->where('status', 'suspended')
-                ->count(),
-            'current_cycle_revenue' => $currentCycleRevenue,
-            'recurring_mrr' => $recurringMrr,
-            'mrr_estimated' => $recurringMrr,
-            'vencen_en_7_dias' => Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->where('status', '<>', 'suspended')
-                ->whereDate('ends_at', '<=', $limitDate)
-                ->count(),
-            'en_gracia_hoy' => Subscription::query()
-                ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
-                ->where('status', 'grace')
-                ->count(),
-            'plan_count_basico' => (int) ($planCountRows['basico'] ?? 0),
-            'plan_count_profesional' => (int) ($planCountRows['profesional'] ?? 0),
-            'plan_count_premium' => (int) ($planCountRows['premium'] ?? 0),
-            'plan_count_sucursales' => (int) ($planCountRows['sucursales'] ?? 0),
+            'kpis' => [
+                'total_gyms' => Gym::query()->withoutDemoSessions()->count(),
+                'active_gyms' => Subscription::query()
+                    ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                    ->where('status', 'active')
+                    ->count(),
+                'grace_gyms' => Subscription::query()
+                    ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                    ->where('status', 'grace')
+                    ->count(),
+                'suspended_gyms' => Subscription::query()
+                    ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                    ->where('status', 'suspended')
+                    ->count(),
+                'current_cycle_revenue' => $currentCycleRevenue,
+                'current_cycle_discount' => $currentCycleDiscount,
+                'recurring_mrr' => $recurringMrr,
+                'annual_run_rate' => round($recurringMrr * 12, 2),
+                'current_month_revenue' => $currentMonthRevenue,
+                'current_year_revenue' => $currentYearRevenue,
+                'current_month_discount' => $currentMonthDiscount,
+                'current_year_discount' => $currentYearDiscount,
+                'charges_this_month' => $chargeCountMonth,
+                'charges_this_year' => $chargeCountYear,
+                'new_gyms_month' => $newGymsMonth,
+                'new_gyms_year' => $newGymsYear,
+                'avg_ticket_month' => $avgTicketMonth,
+                'discounted_subscriptions' => $discountedSubscriptions,
+                'vencen_en_7_dias' => Subscription::query()
+                    ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                    ->where('status', '<>', 'suspended')
+                    ->whereDate('ends_at', '<=', $expiringLimit)
+                    ->count(),
+                'en_gracia_hoy' => Subscription::query()
+                    ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+                    ->where('status', 'grace')
+                    ->count(),
+            ],
+            'plan_mix' => collect(SuperAdminPlanCatalog::defaults())
+                ->map(function (array $plan) use ($planCountRows): array {
+                    $planKey = strtolower(trim((string) ($plan['plan_key'] ?? '')));
+
+                    return [
+                        'plan_key' => $planKey,
+                        'name' => (string) ($plan['name'] ?? 'PLAN'),
+                        'count' => (int) ($planCountRows[$planKey] ?? 0),
+                    ];
+                })
+                ->values()
+                ->all(),
+            'reports' => [
+                'monthly_rows' => $this->buildMonthlyRevenueRows($today, $hasChargeEventsTable),
+            ],
         ];
     }
 
@@ -99,6 +196,8 @@ class SuperAdminDashboardService
             ->select([
                 'gyms.id as gym_id',
                 'gyms.name as gym_name',
+                'subscriptions.plan_key',
+                'subscriptions.plan_template_id',
                 'subscriptions.plan_name',
                 'subscriptions.price',
                 'subscriptions.ends_at',
@@ -130,6 +229,128 @@ class SuperAdminDashboardService
 
                 return $row;
             });
+    }
+
+    /**
+     * @return array<int, array<string, int|float|string>>
+     */
+    private function buildMonthlyRevenueRows(Carbon $today, bool $hasChargeEventsTable): array
+    {
+        if (! $hasChargeEventsTable) {
+            return [];
+        }
+
+        $windowStart = $today->copy()->startOfMonth()->subMonths(11);
+        $windowEnd = $today->copy()->endOfMonth();
+
+        $events = SubscriptionChargeEvent::query()
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+            ->whereHas('subscription', function ($query): void {
+                $query->where(function ($subQuery): void {
+                    $subQuery
+                        ->where('is_branch_managed', false)
+                        ->orWhereNull('is_branch_managed');
+                });
+            })
+            ->whereBetween('charged_at', [$windowStart->copy()->startOfDay(), $windowEnd->copy()->endOfDay()])
+            ->get(['charged_at', 'total_paid', 'discount_amount']);
+
+        $newGyms = Gym::query()
+            ->withoutDemoSessions()
+            ->whereBetween('created_at', [$windowStart->copy()->startOfDay(), $windowEnd->copy()->endOfDay()])
+            ->get(['created_at']);
+
+        $rows = [];
+
+        for ($index = 0; $index < 12; $index++) {
+            $month = $windowStart->copy()->addMonths($index);
+            $key = $month->format('Y-m');
+            $monthEvents = $events->filter(fn (SubscriptionChargeEvent $event): bool => $event->charged_at?->format('Y-m') === $key);
+            $monthNewGyms = $newGyms->filter(fn (Gym $gym): bool => $gym->created_at?->format('Y-m') === $key)->count();
+
+            $rows[] = [
+                'month_key' => $key,
+                'month_label' => $month->format('m/Y'),
+                'revenue' => round($monthEvents->sum(fn (SubscriptionChargeEvent $event): float => (float) ($event->total_paid ?? 0)), 2),
+                'discount' => round($monthEvents->sum(fn (SubscriptionChargeEvent $event): float => (float) ($event->discount_amount ?? 0)), 2),
+                'charges' => $monthEvents->count(),
+                'new_gyms' => $monthNewGyms,
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function resolveCurrentCycleTotal(Subscription $subscription): float
+    {
+        $latestChargeEvent = $subscription->relationLoaded('latestChargeEvent')
+            ? $subscription->getRelation('latestChargeEvent')
+            : null;
+        if ($latestChargeEvent !== null && (float) ($latestChargeEvent->total_paid ?? 0) > 0) {
+            return round((float) $latestChargeEvent->total_paid, 2);
+        }
+
+        $billingCycles = $this->estimateBillingCyclesFromSubscription($subscription);
+
+        return round(max(0, (float) ($subscription->price ?? 0)) * $billingCycles, 2);
+    }
+
+    private function resolveCurrentCycleDiscount(Subscription $subscription): float
+    {
+        $latestChargeEvent = $subscription->relationLoaded('latestChargeEvent')
+            ? $subscription->getRelation('latestChargeEvent')
+            : null;
+        if ($latestChargeEvent !== null) {
+            return round(max(0, (float) ($latestChargeEvent->discount_amount ?? 0)), 2);
+        }
+
+        $baseMonthlyPrice = (float) ($subscription->sucursales_base_price ?? $subscription->price ?? 0);
+        $billingCycles = $this->estimateBillingCyclesFromSubscription($subscription);
+        $baseTotal = round(max(0, $baseMonthlyPrice) * $billingCycles, 2);
+        $effectiveTotal = round(max(0, (float) ($subscription->price ?? 0)) * $billingCycles, 2);
+
+        return round(max(0, $baseTotal - $effectiveTotal), 2);
+    }
+
+    private function resolveRecurringMonthlyValue(Subscription $subscription): float
+    {
+        $latestChargeEvent = $subscription->relationLoaded('latestChargeEvent')
+            ? $subscription->getRelation('latestChargeEvent')
+            : null;
+        if ($latestChargeEvent !== null && (float) ($latestChargeEvent->base_monthly_price ?? 0) > 0) {
+            return round((float) $latestChargeEvent->base_monthly_price, 2);
+        }
+
+        if ($subscription->sucursales_base_price !== null && (float) $subscription->sucursales_base_price > 0) {
+            return round((float) $subscription->sucursales_base_price, 2);
+        }
+
+        return round((float) ($subscription->price ?? 0), 2);
+    }
+
+    private function estimateBillingCyclesFromSubscription(Subscription $subscription): int
+    {
+        try {
+            $startsAt = Carbon::parse($subscription->starts_at)->startOfDay();
+            $endsAt = Carbon::parse($subscription->ends_at)->startOfDay();
+            $coverageDays = max(1, $startsAt->diffInDays($endsAt) + 1);
+        } catch (\Throwable) {
+            return 1;
+        }
+
+        $baseDurationDays = 30;
+        if ($coverageDays <= $baseDurationDays) {
+            return 1;
+        }
+
+        $ratio = $coverageDays / $baseDurationDays;
+        $rounded = max(1, (int) round($ratio));
+
+        if (abs($ratio - $rounded) <= 0.35) {
+            return $rounded;
+        }
+
+        return max(1, (int) floor($ratio));
     }
 
     /**

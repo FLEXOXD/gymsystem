@@ -25,6 +25,9 @@
             --card-border: rgba(34,211,238,.35);
             --card-bg: rgba(2,6,23,.84);
         }
+        html, body {
+            overflow-x: hidden;
+        }
         .mobile-guard { display: none; }
         .mobile-shell {
             min-height: 100vh;
@@ -35,7 +38,7 @@
                 url('https://drive.google.com/thumbnail?id=1roKHbuS8zikZL_VWUOC-Tz9wxGoIhZFk&sz=w2048') center 28% / cover no-repeat;
             color: #e2e8f0;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         .mobile-shell.has-training-fab #progress-view {
             padding-bottom: calc(210px + env(safe-area-inset-bottom));
@@ -126,16 +129,774 @@
         .home-btn {
             margin-top: 2px;
         }
-        .top-user-menu {
+        .nutrition-home-card {
+            border: 1px solid rgba(45, 212, 191, .34);
+            background:
+                radial-gradient(circle at top right, rgba(45, 212, 191, .12), transparent 46%),
+                linear-gradient(155deg, rgba(2, 6, 23, .94), rgba(7, 89, 133, .34), rgba(2, 6, 23, .94));
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, .35);
+        }
+        .nutrition-home-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .nutrition-home-eyebrow {
+            color: #67e8f9;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+        }
+        .nutrition-home-kcal {
+            border: 1px solid rgba(45, 212, 191, .46);
+            background: rgba(15, 23, 42, .8);
+            color: #d1fae5;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .nutrition-home-title {
+            margin-top: 7px;
+            color: #f8fafc;
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .nutrition-home-subtitle {
+            margin-top: 5px;
+            color: #bfdbfe;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .nutrition-home-summary {
+            margin-top: 8px;
+            color: #e2e8f0;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .nutrition-home-impact {
+            margin-top: 8px;
+            border: 1px solid rgba(147, 197, 253, .3);
+            background: rgba(15, 23, 42, .7);
+            border-radius: 12px;
+            padding: 8px 9px;
+            color: #dbeafe;
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 700;
+        }
+        .nutrition-home-list {
+            margin-top: 10px;
+            display: grid;
+            gap: 9px;
+        }
+        .nutrition-meal-card {
+            border: 1px solid rgba(14, 165, 233, .26);
+            background: rgba(2, 6, 23, .8);
+            border-radius: 14px;
+            padding: 9px;
+            display: grid;
+            grid-template-columns: 74px minmax(0, 1fr);
+            gap: 9px;
+            align-items: center;
+        }
+        .nutrition-meal-image {
+            width: 74px;
+            height: 74px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(56, 189, 248, .25);
+            background: #0f172a;
+        }
+        .nutrition-meal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .nutrition-meal-slot {
+            color: #a5f3fc;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .nutrition-meal-kcal {
+            color: #6ee7b7;
+            font-size: 12px;
+            font-weight: 900;
+        }
+        .nutrition-meal-dish {
+            margin-top: 4px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .nutrition-meal-portion {
+            margin-top: 3px;
+            color: #cbd5e1;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .nutrition-meal-macros {
+            margin-top: 4px;
+            color: #99f6e4;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+        .nutrition-home-note {
+            margin-top: 9px;
+            color: #94a3b8;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+        .nutrition-home-empty {
+            margin-top: 10px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.42;
+        }
+        .nutrition-home-cta {
+            margin-top: 10px;
+        }
+        .nutrition-screen {
+            display: grid;
+            gap: 14px;
+        }
+        .nutrition-header-card {
+            border: 1px solid rgba(56,189,248,.34);
+            border-radius: 20px;
+            background:
+                radial-gradient(circle at top right, rgba(34,211,238,.14), transparent 38%),
+                linear-gradient(156deg, rgba(2,6,23,.95), rgba(8,47,73,.9), rgba(2,6,23,.95));
+            padding: 13px;
+            box-shadow: 0 18px 32px rgba(0,0,0,.36);
+        }
+        .nutrition-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .nutrition-header-tag {
+            color: #67e8f9;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+        .nutrition-header-chip {
+            border: 1px solid rgba(56,189,248,.36);
+            border-radius: 999px;
+            background: rgba(15,23,42,.74);
+            color: #d1fae5;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .nutrition-header-title {
+            margin-top: 7px;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.05;
+        }
+        .nutrition-header-subtitle {
+            margin-top: 5px;
+            color: #bfdbfe;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .nutrition-header-lines {
+            margin-top: 10px;
+            display: grid;
+            gap: 7px;
+        }
+        .nutrition-header-line {
+            border: 1px solid rgba(56,189,248,.24);
+            border-radius: 11px;
+            background: rgba(2,6,23,.56);
+            color: #dbeafe;
+            font-size: 12px;
+            line-height: 1.42;
+            font-weight: 700;
+            padding: 8px 9px;
+        }
+        .nutrition-allergy-alert {
+            border: 1px solid rgba(248,113,113,.34);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(30,12,24,.92), rgba(69,10,10,.38), rgba(15,23,42,.84));
+            padding: 11px;
+        }
+        .nutrition-allergy-alert-title {
+            color: #fecaca;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        .nutrition-allergy-alert-text {
+            margin-top: 5px;
+            color: #fee2e2;
+            font-size: 12px;
+            line-height: 1.42;
+            font-weight: 700;
+        }
+        .nutrition-totals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .nutrition-total-card {
+            border: 1px solid rgba(56,189,248,.28);
+            border-radius: 12px;
+            background: rgba(2,6,23,.66);
+            padding: 8px 9px;
+        }
+        .nutrition-total-label {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+        .nutrition-total-value {
+            margin-top: 4px;
+            color: #f8fafc;
+            font-size: 16px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+        .nutrition-day-list {
+            display: grid;
+            gap: 9px;
+        }
+        .nutrition-day-item {
+            border: 1px solid rgba(14,165,233,.28);
+            border-radius: 14px;
+            background: rgba(2,6,23,.76);
+            padding: 9px;
+            display: grid;
+            grid-template-columns: 78px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+        }
+        .nutrition-day-image {
+            width: 78px;
+            height: 78px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(56,189,248,.28);
+            background: #0f172a;
+        }
+        .nutrition-day-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .nutrition-day-slot {
+            color: #a5f3fc;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        .nutrition-day-kcal {
+            color: #6ee7b7;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .nutrition-day-dish {
+            margin-top: 4px;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.25;
+            font-weight: 800;
+        }
+        .nutrition-day-portion {
+            margin-top: 4px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .nutrition-day-macros {
+            margin-top: 5px;
+            color: #99f6e4;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+        .nutrition-empty-card {
+            border: 1px solid rgba(56,189,248,.3);
+            border-radius: 14px;
+            background: rgba(2,6,23,.62);
+            padding: 11px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .nutrition-screen-footnote {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+        .nutrition-customize-card {
+            border: 1px solid rgba(45,212,191,.34);
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(2,6,23,.92), rgba(15,118,110,.28), rgba(2,6,23,.92));
+            padding: 12px;
+            box-shadow: 0 16px 32px rgba(0,0,0,.35);
+        }
+        .nutrition-customize-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .nutrition-customize-title {
+            color: #e6fffa;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .nutrition-customize-status {
+            border: 1px solid rgba(45,212,191,.34);
+            border-radius: 999px;
+            background: rgba(2,6,23,.65);
+            color: #99f6e4;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            white-space: nowrap;
+        }
+        .nutrition-customize-status.is-custom {
+            border-color: rgba(134,239,172,.48);
+            color: #bbf7d0;
+            background: rgba(20,83,45,.28);
+        }
+        .nutrition-customize-text {
+            margin-top: 8px;
+            color: #dbeafe;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .nutrition-customize-actions {
+            margin-top: 10px;
+            display: grid;
+            gap: 8px;
+        }
+        .nutrition-customize-trigger {
+            width: 100%;
+            border: 1px solid rgba(56,189,248,.45);
+            border-radius: 12px;
+            background: linear-gradient(120deg, rgba(29,78,216,.95), rgba(8,145,178,.94), rgba(16,185,129,.9));
+            color: #eff6ff;
+            min-height: 42px;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: .01em;
+            padding: 0 12px;
+        }
+        .nutrition-customize-reset {
+            width: 100%;
+            border: 1px solid rgba(148,163,184,.34);
+            border-radius: 12px;
+            background: rgba(2,6,23,.72);
+            color: #cbd5e1;
+            min-height: 38px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            padding: 0 10px;
+        }
+        .nutrition-customize-note {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.38;
+        }
+        .nutrition-customize-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 95;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 14px;
+        }
+        .nutrition-customize-modal.hidden {
+            display: none;
+        }
+        .nutrition-customize-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2,6,23,.84);
+            backdrop-filter: blur(2px);
+        }
+        .nutrition-customize-panel {
             position: relative;
-            z-index: 48;
+            width: min(100%, 440px);
+            max-height: calc(100vh - 28px);
+            overflow: auto;
+            border: 1px solid rgba(56,189,248,.35);
+            border-radius: 20px;
+            background:
+                radial-gradient(circle at top right, rgba(45,212,191,.14), transparent 34%),
+                linear-gradient(156deg, rgba(2,6,23,.97), rgba(15,23,42,.96), rgba(2,6,23,.98));
+            box-shadow: 0 26px 48px rgba(0,0,0,.48);
+            padding: 14px;
+        }
+        .nutrition-customize-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .nutrition-customize-eyebrow {
+            color: #67e8f9;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+        .nutrition-customize-heading {
+            margin-top: 4px;
+            color: #fff;
+            font-size: 19px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .nutrition-customize-subtitle {
+            margin-top: 4px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .nutrition-customize-close {
+            border: 1px solid rgba(56,189,248,.44);
+            background: rgba(2,6,23,.72);
+            color: #e2e8f0;
+            border-radius: 10px;
+            min-width: 78px;
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .04em;
+        }
+        .nutrition-customize-groups {
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+        .nutrition-customize-group {
+            border: 1px solid rgba(56,189,248,.24);
+            border-radius: 13px;
+            background: rgba(2,6,23,.58);
+            padding: 9px;
+        }
+        .nutrition-customize-group-title {
+            color: #a5f3fc;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .nutrition-customize-chip-grid {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+        }
+        .nutrition-customize-chip {
+            border: 1px solid rgba(56,189,248,.28);
+            border-radius: 10px;
+            background: rgba(15,23,42,.78);
+            color: #e2e8f0;
+            min-height: 36px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .01em;
+            padding: 0 9px;
+            text-align: left;
+        }
+        .nutrition-customize-chip.is-selected {
+            border-color: rgba(74,222,128,.62);
+            background: linear-gradient(120deg, rgba(22,101,52,.42), rgba(6,95,70,.44));
+            color: #dcfce7;
+            box-shadow: inset 0 0 0 1px rgba(134,239,172,.28);
+        }
+        .nutrition-customize-chip.is-disabled,
+        .nutrition-customize-chip:disabled {
+            border-color: rgba(248,113,113,.42);
+            background: rgba(31,41,55,.82);
+            color: rgba(203,213,225,.72);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .nutrition-customize-chip.is-disabled::after {
+            content: 'Bloq.';
+            margin-left: 6px;
+            color: #fca5a5;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .02em;
+        }
+        .nutrition-allergy-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .nutrition-allergy-chip {
+            border: 1px solid rgba(248,113,113,.34);
+            border-radius: 999px;
+            background: rgba(127,29,29,.44);
+            color: #fecaca;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            white-space: nowrap;
+            letter-spacing: .03em;
+        }
+        .nutrition-allergy-text {
+            margin-top: 6px;
+            color: #fecdd3;
+            font-size: 11px;
+            line-height: 1.38;
+            font-weight: 700;
+        }
+        .nutrition-allergy-disclaimer {
+            margin-top: 8px;
+            border: 1px solid rgba(248,113,113,.26);
+            border-radius: 10px;
+            background: rgba(69,10,10,.35);
+            color: #fecaca;
+            font-size: 10px;
+            line-height: 1.4;
+            font-weight: 700;
+            padding: 7px 8px;
+        }
+        .nutrition-customize-filters {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .nutrition-customize-select-wrap {
+            display: grid;
+            gap: 5px;
+        }
+        .nutrition-customize-label {
+            color: #93c5fd;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .03em;
+        }
+        .nutrition-customize-select {
+            border: 1px solid rgba(56,189,248,.28);
+            border-radius: 10px;
+            background: rgba(2,6,23,.68);
+            color: #f8fafc;
+            min-height: 34px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 0 9px;
+        }
+        .nutrition-customize-toggle {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #bfdbfe;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .nutrition-customize-feedback {
+            margin-top: 9px;
+            border: 1px solid rgba(56,189,248,.22);
+            border-radius: 10px;
+            background: rgba(2,6,23,.55);
+            color: #dbeafe;
+            font-size: 11px;
+            line-height: 1.4;
+            padding: 8px 9px;
+        }
+        .nutrition-customize-panel-actions {
+            margin-top: 11px;
+            display: grid;
+            gap: 8px;
+        }
+        .nutrition-adapt-badge {
+            margin-top: 6px;
+            display: inline-flex;
+            border: 1px solid rgba(45,212,191,.34);
+            border-radius: 999px;
+            background: rgba(20,83,45,.26);
+            color: #bbf7d0;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            padding: 3px 9px;
+        }
+        .nutrition-shopping-list {
+            display: grid;
+            gap: 8px;
+        }
+        .nutrition-shopping-item {
+            border: 1px solid rgba(56,189,248,.24);
+            border-radius: 12px;
+            background: rgba(2,6,23,.62);
+            padding: 9px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .nutrition-shopping-check {
+            width: 16px;
+            height: 16px;
+            accent-color: #22c55e;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .nutrition-shopping-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .nutrition-shopping-label {
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .nutrition-shopping-hint {
+            color: #94a3b8;
+            font-size: 10px;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+        .nutrition-shopping-item.is-done .nutrition-shopping-label {
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+        .nutrition-shopping-reason {
+            margin-left: auto;
+            color: #86efac;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            white-space: nowrap;
+        }
+        .nutrition-shopping-empty {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .nutrition-shopping-add-row {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+        }
+        .nutrition-shopping-input {
+            min-height: 38px;
+            font-size: 12px;
+        }
+        .nutrition-shopping-add-btn {
+            border: 1px solid rgba(56,189,248,.38);
+            border-radius: 10px;
+            background: rgba(15,23,42,.84);
+            color: #e0f2fe;
+            min-width: 88px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .03em;
+        }
+        .nutrition-shopping-clear-btn {
+            margin-top: 9px;
+            width: 100%;
+            border: 1px solid rgba(148,163,184,.28);
+            border-radius: 10px;
+            background: rgba(2,6,23,.56);
+            color: #cbd5e1;
+            min-height: 34px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .nutrition-shopping-panel {
+            max-height: min(86vh, 760px);
+            overflow: auto;
+            padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        }
+        .nutrition-preview-list {
+            margin-top: 8px;
+            display: grid;
+            gap: 7px;
+            max-height: 180px;
+            overflow: auto;
+            padding-right: 2px;
+        }
+        .nutrition-preview-item {
+            border: 1px solid rgba(56,189,248,.24);
+            border-radius: 10px;
+            background: rgba(2,6,23,.62);
+            padding: 7px 8px;
+            display: grid;
+            gap: 3px;
+        }
+        .nutrition-preview-slot {
+            color: #7dd3fc;
+            font-size: 10px;
+            line-height: 1.2;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .nutrition-preview-dish {
+            color: #e2e8f0;
+            font-size: 12px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        .nutrition-allergy-chip.is-warn {
+            border-color: rgba(248,113,113,.4);
+            background: rgba(127,29,29,.56);
+            color: #fecaca;
+        }
+        .top-user-menu {
+            position: fixed;
+            top: calc(env(safe-area-inset-top) + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(calc(100vw - 2rem), 28rem);
+            box-sizing: border-box;
+            z-index: 60;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            margin-top: max(8px, env(safe-area-inset-top));
-            margin-bottom: 14px;
             min-height: 46px;
+        }
+        .top-user-menu-spacer {
+            height: calc(46px + env(safe-area-inset-top) + 18px);
         }
         .user-chip {
             border: 1px solid rgba(45,212,191,.34);
@@ -1412,6 +2173,10 @@
             background: linear-gradient(120deg, #0f172a, #164e63 56%, #15803d);
             border: 1px solid rgba(34,211,238,.35);
         }
+        .menu-nutrition {
+            background: linear-gradient(120deg, #10263d, #0b5d74 55%, #0f9f63);
+            border: 1px solid rgba(56,189,248,.36);
+        }
         .action-badge {
             width: 42px;
             height: 42px;
@@ -2263,7 +3028,7 @@
     <article class="training-finish-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="training-finish-confirm-title">
         <p class="training-finish-confirm-eyebrow">Confirmar accion</p>
         <h3 id="training-finish-confirm-title" class="training-finish-confirm-title">Finalizar entrenamiento</h3>
-        <p class="training-finish-confirm-text">Estas por cerrar la sesion actual. Se guardara tu progreso y no podras seguir en modo activo.</p>
+        <p class="training-finish-confirm-text">Estás por cerrar la sesión actual. Se guardará tu progreso y no podrás seguir en modo activo.</p>
         <div class="training-finish-confirm-actions">
             <button id="training-finish-confirm-accept" type="button" class="module-action module-action-secondary">Si, finalizar ahora</button>
             <button id="training-finish-confirm-cancel" type="button" class="module-action training-finish-confirm-cancel">Cancelar y seguir entrenando</button>
@@ -2288,7 +3053,7 @@
         </div>
         <p class="training-win-badge">Sesion completada</p>
         <h3 id="training-win-title" class="training-win-title">Excelente trabajo</h3>
-        <p id="training-win-text" class="training-win-text">Tu entrenamiento termino correctamente. Tu progreso ya fue actualizado.</p>
+        <p id="training-win-text" class="training-win-text">Tu entrenamiento terminó correctamente. Tu progreso ya fue actualizado.</p>
         <div class="training-win-grid">
             <div class="training-win-stat">
                 <p class="training-win-stat-label">Ejercicios</p>
@@ -2408,7 +3173,7 @@
         }
         $showFitnessModal = ! $fitnessProfileCompleted
             && ((bool) ($openFitnessModal ?? false) || old('_fitness_modal') === '1');
-        $fitnessFormHasErrors = $errors->has('age')
+        $fitnessFormHasErrors = $errors->has('birth_date')
             || $errors->has('sex')
             || $errors->has('height_cm')
             || $errors->has('weight_kg')
@@ -2436,6 +3201,22 @@
         }
         $fitnessLevelLabel = $fitnessLevelOptions[(string) ($fitnessProfileModel?->experience_level ?? '')] ?? '-';
         $fitnessSexLabel = $fitnessSexOptions[(string) ($fitnessProfileModel?->sex ?? '')] ?? '-';
+        $fitnessBirthDateRaw = trim((string) ($fitnessProfileModel?->birth_date?->toDateString() ?? ''));
+        $fitnessBirthDateLabel = $fitnessBirthDateRaw !== '' ? $fitnessBirthDateRaw : '-';
+        $fitnessAgeYears = null;
+        if ($fitnessBirthDateRaw !== '') {
+            try {
+                $fitnessAgeYears = \Carbon\Carbon::parse($fitnessBirthDateRaw)->age;
+            } catch (\Throwable) {
+                $fitnessAgeYears = null;
+            }
+        }
+        if (! is_int($fitnessAgeYears) || $fitnessAgeYears <= 0) {
+            $fitnessAgeYears = (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age : null;
+        }
+        $fitnessAgeLabel = is_int($fitnessAgeYears) && $fitnessAgeYears > 0
+            ? $fitnessAgeYears.' años'
+            : '-';
         $fitnessDaysLabel = $fitnessProfileModel?->days_per_week ? ((int) $fitnessProfileModel->days_per_week).' días/semana' : '-';
         $fitnessMinutesLabel = $fitnessProfileModel?->session_minutes ? ((int) $fitnessProfileModel->session_minutes).' min/sesión' : '-';
         $fitnessLimitationsLabel = collect($fitnessLimitations)
@@ -2506,6 +3287,106 @@
         $personalMessageLine1 = trim((string) ($personalMessage['line_1'] ?? 'Completa tus datos para activar tu mensaje personal.'));
         $personalMessageLine2 = trim((string) ($personalMessage['line_2'] ?? 'Tu progreso diario aparecerá aquí.'));
         $personalMessageContext = trim((string) ($personalMessage['context_line'] ?? 'Mensaje generado según tu actividad reciente.'));
+        $nutritionPlan = is_array($progress['nutrition_plan'] ?? null) ? $progress['nutrition_plan'] : [];
+        $nutritionReady = (bool) ($nutritionPlan['is_ready'] ?? false);
+        $nutritionTitle = trim((string) ($nutritionPlan['title'] ?? 'Nutrición personalizada'));
+        $nutritionSubtitle = trim((string) ($nutritionPlan['subtitle'] ?? 'Esto debes comer hoy según tus datos.'));
+        $nutritionSummaryLine = trim((string) ($nutritionPlan['summary_line'] ?? 'Completa tus datos físicos para activar este módulo.'));
+        $nutritionImpactLine = trim((string) ($nutritionPlan['impact_line'] ?? 'Sin impacto estimado por ahora.'));
+        $nutritionGoalLabel = trim((string) ($nutritionPlan['goal_label'] ?? 'General'));
+        $nutritionTargetKcal = is_numeric($nutritionPlan['target_kcal'] ?? null)
+            ? (int) round((float) $nutritionPlan['target_kcal'])
+            : null;
+        $nutritionMaintenanceKcal = is_numeric($nutritionPlan['maintenance_kcal'] ?? null)
+            ? (int) round((float) $nutritionPlan['maintenance_kcal'])
+            : null;
+        $nutritionFootnote = trim((string) ($nutritionPlan['footnote'] ?? ''));
+        $nutritionItemsRaw = is_array($nutritionPlan['items'] ?? null) ? $nutritionPlan['items'] : [];
+        $nutritionItems = [];
+        foreach ($nutritionItemsRaw as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $imagePath = trim((string) ($item['image_path'] ?? ''));
+            $nutritionItems[] = [
+                'slot' => trim((string) ($item['slot'] ?? 'Comida')),
+                'dish' => trim((string) ($item['dish'] ?? 'Plato sugerido')),
+                'portion' => trim((string) ($item['portion'] ?? 'Porción sugerida')),
+                'kcal' => max(0, (int) ($item['kcal'] ?? 0)),
+                'protein_g' => max(0, (int) ($item['protein_g'] ?? 0)),
+                'carbs_g' => max(0, (int) ($item['carbs_g'] ?? 0)),
+                'fat_g' => max(0, (int) ($item['fat_g'] ?? 0)),
+                'image_url' => $imagePath !== '' ? asset(ltrim($imagePath, '/')) : asset('images/nutrition/nutri-lunch.svg'),
+            ];
+        }
+        $nutritionTotalKcal = array_sum(array_map(static fn (array $item): int => (int) ($item['kcal'] ?? 0), $nutritionItems));
+        $nutritionTotalProtein = array_sum(array_map(static fn (array $item): int => (int) ($item['protein_g'] ?? 0), $nutritionItems));
+        $nutritionTotalCarbs = array_sum(array_map(static fn (array $item): int => (int) ($item['carbs_g'] ?? 0), $nutritionItems));
+        $nutritionTotalFat = array_sum(array_map(static fn (array $item): int => (int) ($item['fat_g'] ?? 0), $nutritionItems));
+        $nutritionIngredientGroups = [
+            [
+                'title' => 'Proteínas',
+                'items' => [
+                    ['key' => 'pollo', 'label' => 'Pollo'],
+                    ['key' => 'atun', 'label' => 'Atún'],
+                    ['key' => 'huevo', 'label' => 'Huevo'],
+                    ['key' => 'pavo', 'label' => 'Pavo'],
+                    ['key' => 'carne', 'label' => 'Carne magra'],
+                    ['key' => 'pescado', 'label' => 'Pescado'],
+                    ['key' => 'yogur', 'label' => 'Yogur'],
+                    ['key' => 'tofu', 'label' => 'Tofu'],
+                    ['key' => 'queso_fresco', 'label' => 'Queso fresco'],
+                    ['key' => 'leche', 'label' => 'Leche'],
+                    ['key' => 'sardina', 'label' => 'Sardina'],
+                    ['key' => 'queso_cottage', 'label' => 'Queso cottage'],
+                ],
+            ],
+            [
+                'title' => 'Carbohidratos',
+                'items' => [
+                    ['key' => 'avena', 'label' => 'Avena'],
+                    ['key' => 'arroz', 'label' => 'Arroz'],
+                    ['key' => 'quinoa', 'label' => 'Quinoa'],
+                    ['key' => 'papa', 'label' => 'Papa'],
+                    ['key' => 'camote', 'label' => 'Camote'],
+                    ['key' => 'pasta', 'label' => 'Pasta integral'],
+                    ['key' => 'pan_integral', 'label' => 'Pan integral'],
+                    ['key' => 'fruta', 'label' => 'Fruta'],
+                    ['key' => 'legumbres', 'label' => 'Legumbres'],
+                    ['key' => 'platano', 'label' => 'Plátano'],
+                    ['key' => 'yuca', 'label' => 'Yuca'],
+                    ['key' => 'tortilla_integral', 'label' => 'Tortilla integral'],
+                    ['key' => 'maiz', 'label' => 'Maíz'],
+                    ['key' => 'arepa_integral', 'label' => 'Arepa integral'],
+                ],
+            ],
+            [
+                'title' => 'Fibra y grasas buenas',
+                'items' => [
+                    ['key' => 'verduras', 'label' => 'Verduras'],
+                    ['key' => 'ensalada', 'label' => 'Ensalada'],
+                    ['key' => 'tomate', 'label' => 'Tomate'],
+                    ['key' => 'cebolla', 'label' => 'Cebolla'],
+                    ['key' => 'aguacate', 'label' => 'Aguacate'],
+                    ['key' => 'frutos_secos', 'label' => 'Frutos secos'],
+                    ['key' => 'mani', 'label' => 'Maní'],
+                    ['key' => 'aceite_oliva', 'label' => 'Aceite de oliva'],
+                    ['key' => 'mantequilla_mani', 'label' => 'Mantequilla de maní'],
+                    ['key' => 'chia', 'label' => 'Chía'],
+                    ['key' => 'zanahoria', 'label' => 'Zanahoria'],
+                    ['key' => 'pepino', 'label' => 'Pepino'],
+                    ['key' => 'espinaca', 'label' => 'Espinaca'],
+                    ['key' => 'semilla_girasol', 'label' => 'Semilla de girasol'],
+                ],
+            ],
+        ];
+        $nutritionClientPayload = [
+            'ready' => $nutritionReady,
+            'goal_label' => $nutritionGoalLabel,
+            'target_kcal' => $nutritionTargetKcal,
+            'maintenance_kcal' => $nutritionMaintenanceKcal,
+            'items' => $nutritionItems,
+        ];
         $weeklyGoalSummary = is_array($progress['weekly_goal'] ?? null) ? $progress['weekly_goal'] : [];
         $weeklyGoalTarget = max(0, min(7, (int) ($weeklyGoalSummary['target'] ?? 3)));
         $weeklyGoalConfiguredTarget = max(3, min(7, (int) ($weeklyGoalSummary['configured_target'] ?? $weeklyGoalTarget)));
@@ -2597,12 +3478,14 @@
             <div id="user-menu-panel" class="user-dropdown hidden" role="menu" aria-hidden="true">
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
+                <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'nutrition']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Guía nutricional</a>
                 <form id="client-mobile-logout-form" method="POST" action="{{ route('client-mobile.logout', ['gymSlug' => $gym->slug]) }}">
                     @csrf
                     <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesión</button>
                 </form>
             </div>
         </div>
+        <div class="top-user-menu-spacer" aria-hidden="true"></div>
         <header class="hero-card home-clean home-welcome rounded-3xl p-4">
             <p class="text-xs font-black uppercase tracking-[.18em] text-emerald-100">{{ (string) $gym->name }}</p>
             <h1 class="mt-1 text-xl font-black text-white">Hola, {{ (string) $client->full_name }}</h1>
@@ -2671,7 +3554,7 @@
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                 @else
-                    <button id="open-fitness-modal-trigger" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos físicos para ver rendimiento">
+                    <button id="open-fitness-modal-trigger" data-open-fitness-modal="1" data-next-screen="progress" type="button" class="menu-cta menu-progress home-btn" aria-label="Completar datos físicos para ver rendimiento">
                         <span class="action-badge" aria-hidden="true">
                             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 10v4"></path>
@@ -2684,6 +3567,38 @@
                         <span class="action-copy">
                             <span class="action-title">Ver mi rendimiento</span>
                             <span class="action-hint">Primero completa tus datos físicos</span>
+                        </span>
+                        <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
+                    </button>
+                @endif
+
+                @if ($fitnessProfileCompleted)
+                    <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'nutrition']) }}" class="menu-cta menu-nutrition home-btn" aria-label="Abrir guía nutricional personalizada">
+                        <span class="action-badge" aria-hidden="true">
+                            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12.4 6.3c.4-1.8 1.9-3.2 3.8-3.5.2 1.8-.5 3.8-2.4 4.8"></path>
+                                <path d="M10.1 6.9c-.9-1.1-2.2-1.8-3.6-1.8 0 1.7.8 3.2 2.2 4"></path>
+                                <path d="M9.1 7.9c.8 0 1.5.2 2.1.6.5.3 1.1.3 1.6 0 .6-.4 1.3-.6 2.1-.6 2.6 0 4.7 2.3 4.7 5.2 0 3.6-2.4 6.8-5.4 6.8-.8 0-1.3-.2-1.8-.4a1.9 1.9 0 0 0-1.7 0c-.5.2-1 .4-1.8.4-3 0-5.4-3.2-5.4-6.8 0-2.9 2.1-5.2 4.7-5.2Z"></path>
+                            </svg>
+                        </span>
+                        <span class="action-copy">
+                            <span class="action-title">Guía nutricional</span>
+                            <span class="action-hint">Comidas, calorías y macros según tus datos</span>
+                        </span>
+                        <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+                @else
+                    <button id="open-fitness-modal-trigger-nutrition" data-open-fitness-modal="1" data-next-screen="nutrition" type="button" class="menu-cta menu-nutrition home-btn" aria-label="Completar datos físicos para activar guía nutricional">
+                        <span class="action-badge" aria-hidden="true">
+                            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12.4 6.3c.4-1.8 1.9-3.2 3.8-3.5.2 1.8-.5 3.8-2.4 4.8"></path>
+                                <path d="M10.1 6.9c-.9-1.1-2.2-1.8-3.6-1.8 0 1.7.8 3.2 2.2 4"></path>
+                                <path d="M9.1 7.9c.8 0 1.5.2 2.1.6.5.3 1.1.3 1.6 0 .6-.4 1.3-.6 2.1-.6 2.6 0 4.7 2.3 4.7 5.2 0 3.6-2.4 6.8-5.4 6.8-.8 0-1.3-.2-1.8-.4a1.9 1.9 0 0 0-1.7 0c-.5.2-1 .4-1.8.4-3 0-5.4-3.2-5.4-6.8 0-2.9 2.1-5.2 4.7-5.2Z"></path>
+                            </svg>
+                        </span>
+                        <span class="action-copy">
+                            <span class="action-title">Guía nutricional</span>
+                            <span class="action-hint">Completa primero tus datos físicos</span>
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </button>
@@ -2705,14 +3620,14 @@
                             <button type="button" class="leaderboard-close" data-leaderboard-close>Cerrar</button>
                         </div>
                         <p id="leaderboard-window" class="leaderboard-window">Mes actual</p>
-                        <p id="leaderboard-helper" class="leaderboard-helper">La asistencia pesa mas y el tiempo solo suma como extra segun tu objetivo personal durante el mes.</p>
+                        <p id="leaderboard-helper" class="leaderboard-helper">La asistencia pesa más y el tiempo solo suma como extra según tu objetivo personal durante el mes.</p>
                         <div id="leaderboard-top-list" class="leaderboard-list"></div>
-                        <p id="leaderboard-empty" class="leaderboard-empty hidden">Todavia no hay puntajes suficientes para mostrar el Top 5 del mes.</p>
+                        <p id="leaderboard-empty" class="leaderboard-empty hidden">Todavía no hay puntajes suficientes para mostrar el Top 5 del mes.</p>
                         <article id="leaderboard-current-card" class="leaderboard-current-card hidden">
                             <p class="leaderboard-current-tag">Tu lugar actual</p>
-                            <p id="leaderboard-current-title" class="leaderboard-current-title">Aun no entras al ranking</p>
-                            <p id="leaderboard-current-meta" class="leaderboard-current-meta">Cuando sumes sesiones validas este mes aparecera tu posicion aqui.</p>
-                            <p id="leaderboard-current-hint" class="leaderboard-current-hint">Recuerda: cada visita valida suma fuerte y el tiempo solo te da empuje extra.</p>
+                            <p id="leaderboard-current-title" class="leaderboard-current-title">Aún no entras al ranking</p>
+                            <p id="leaderboard-current-meta" class="leaderboard-current-meta">Cuando sumes sesiones válidas este mes aparecerá tu posición aquí.</p>
+                            <p id="leaderboard-current-hint" class="leaderboard-current-hint">Recuerda: cada visita válida suma fuerte y el tiempo solo te da empuje extra.</p>
                         </article>
                     </article>
                 </div>
@@ -2780,6 +3695,286 @@
                     </ul>
                     <p id="month-attendance-empty" class="month-log-empty {{ count($monthEntries) > 0 ? 'hidden' : '' }}">Todavía no registras asistencias en este mes.</p>
                 </article>
+            </section>
+        @endif
+
+        @if ($screen === 'nutrition')
+            <section id="nutrition-view" class="nutrition-screen">
+                <article class="nutrition-header-card">
+                    <div class="nutrition-header-top">
+                        <p class="nutrition-header-tag">Guía nutricional</p>
+                        @if ($nutritionTargetKcal !== null)
+                            <span class="nutrition-header-chip">{{ $nutritionTargetKcal }} kcal/día</span>
+                        @endif
+                    </div>
+                    <h2 class="nutrition-header-title">{{ $nutritionTitle !== '' ? $nutritionTitle : 'Nutrición personalizada' }}</h2>
+                    <p class="nutrition-header-subtitle">{{ $nutritionSubtitle !== '' ? $nutritionSubtitle : 'Esto debes comer hoy según tus datos.' }}</p>
+                    <div class="nutrition-header-lines">
+                        <p class="nutrition-header-line">Objetivo actual: {{ $nutritionGoalLabel !== '' ? $nutritionGoalLabel : 'General' }}.</p>
+                        <p class="nutrition-header-line">{{ $nutritionSummaryLine !== '' ? $nutritionSummaryLine : 'Sin resumen por ahora.' }}</p>
+                        <p class="nutrition-header-line">{{ $nutritionImpactLine !== '' ? $nutritionImpactLine : 'Sin impacto estimado por ahora.' }}</p>
+                    </div>
+                </article>
+
+                <article class="nutrition-allergy-alert">
+                    <p class="nutrition-allergy-alert-title">Aviso de alergias</p>
+                    <p id="nutrition-allergy-alert-text" class="nutrition-allergy-alert-text">
+                        Declara tus alergias en "Personalizar con lo que tengo". Esta guía es informativa y no reemplaza evaluación profesional.
+                    </p>
+                </article>
+
+                @if ($nutritionReady && count($nutritionItems) > 0)
+                    <article class="nutrition-customize-card">
+                        <div class="nutrition-customize-head">
+                            <p class="nutrition-customize-title">Asistente de despensa</p>
+                            <span id="nutrition-customize-status" class="nutrition-customize-status">Plan base</span>
+                        </div>
+                        <p class="nutrition-customize-text">
+                            Elige lo que sí tienes en casa y te armamos un plan más realista para hoy.
+                        </p>
+                        <div class="nutrition-customize-actions">
+                            <button id="nutrition-customize-open" type="button" class="nutrition-customize-trigger">
+                                Personalizar con lo que tengo
+                            </button>
+                            <button id="nutrition-customize-reset" type="button" class="nutrition-customize-reset hidden">
+                                Restablecer plan sugerido
+                            </button>
+                        </div>
+                        <p id="nutrition-customize-note" class="nutrition-customize-note">
+                            Consejo: marca mínimo 1 proteína y 1 carbohidrato para mejores resultados.
+                        </p>
+                    </article>
+
+                    <article class="glass-card rounded-3xl p-4">
+                        <p class="text-xs font-black uppercase tracking-[.15em] text-cyan-100">Resumen nutricional</p>
+                        <div class="nutrition-totals-grid mt-3">
+                            <div class="nutrition-total-card">
+                                <p class="nutrition-total-label">Total del día</p>
+                                <p id="nutrition-total-kcal" class="nutrition-total-value">{{ $nutritionTotalKcal }} kcal</p>
+                            </div>
+                            <div class="nutrition-total-card">
+                                <p class="nutrition-total-label">Mantenimiento</p>
+                                <p id="nutrition-maintenance-kcal" class="nutrition-total-value">{{ $nutritionMaintenanceKcal !== null ? $nutritionMaintenanceKcal.' kcal' : '-' }}</p>
+                            </div>
+                            <div class="nutrition-total-card">
+                                <p class="nutrition-total-label">Proteína total</p>
+                                <p id="nutrition-total-protein" class="nutrition-total-value">{{ $nutritionTotalProtein }} g</p>
+                            </div>
+                            <div class="nutrition-total-card">
+                                <p class="nutrition-total-label">Carb/Grasa total</p>
+                                <p class="nutrition-total-value">
+                                    <span id="nutrition-total-carbs">{{ $nutritionTotalCarbs }}</span> g
+                                    /
+                                    <span id="nutrition-total-fat">{{ $nutritionTotalFat }}</span> g
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="glass-card rounded-3xl p-4">
+                        <p class="text-xs font-black uppercase tracking-[.15em] text-cyan-100">Plan de comidas de hoy</p>
+                        <div id="nutrition-day-list" class="nutrition-day-list mt-3">
+                            @foreach ($nutritionItems as $nutritionItem)
+                                <article class="nutrition-day-item">
+                                    <img
+                                        src="{{ (string) ($nutritionItem['image_url'] ?? asset('images/nutrition/nutri-lunch.svg')) }}"
+                                        alt="Plato recomendado"
+                                        class="nutrition-day-image"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                    <div>
+                                        <div class="nutrition-day-head">
+                                            <p class="nutrition-day-slot">{{ (string) ($nutritionItem['slot'] ?? 'Comida') }}</p>
+                                            <p class="nutrition-day-kcal">{{ (int) ($nutritionItem['kcal'] ?? 0) }} kcal</p>
+                                        </div>
+                                        <p class="nutrition-day-dish">{{ (string) ($nutritionItem['dish'] ?? 'Plato sugerido') }}</p>
+                                        <p class="nutrition-day-portion">{{ (string) ($nutritionItem['portion'] ?? 'Porción sugerida') }}</p>
+                                        <p class="nutrition-day-macros">
+                                            P {{ (int) ($nutritionItem['protein_g'] ?? 0) }}g
+                                            | C {{ (int) ($nutritionItem['carbs_g'] ?? 0) }}g
+                                            | G {{ (int) ($nutritionItem['fat_g'] ?? 0) }}g
+                                        </p>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    </article>
+
+                    @if ($nutritionFootnote !== '')
+                        <p id="nutrition-screen-footnote" class="nutrition-screen-footnote">{{ $nutritionFootnote }}</p>
+                    @endif
+
+                    <article id="nutrition-shopping-card" class="glass-card rounded-3xl p-4">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-xs font-black uppercase tracking-[.15em] text-cyan-100">Compra inteligente</p>
+                            <span id="nutrition-shopping-count" class="nutrition-customize-status">0 productos</span>
+                        </div>
+                        <p id="nutrition-shopping-preview" class="mt-2 text-xs text-slate-300">
+                            Administra tu lista en un modal para no alargar esta pantalla.
+                        </p>
+                        <div class="nutrition-customize-actions mt-3">
+                            <button id="nutrition-shopping-open" type="button" class="nutrition-customize-trigger">
+                                Ver lista en modal
+                            </button>
+                            <button type="button" class="nutrition-customize-reset" data-nutrition-open-customizer>
+                                Actualizar platos
+                            </button>
+                        </div>
+                    </article>
+
+                    <div id="nutrition-customize-modal" class="nutrition-customize-modal hidden" aria-hidden="true">
+                        <button type="button" class="nutrition-customize-backdrop" data-nutrition-customize-close aria-label="Cerrar personalización"></button>
+                        <article class="nutrition-customize-panel" role="dialog" aria-modal="true" aria-labelledby="nutrition-customize-title">
+                            <div class="nutrition-customize-top">
+                                <div>
+                                    <p class="nutrition-customize-eyebrow">Modo wow</p>
+                                    <h3 id="nutrition-customize-title" class="nutrition-customize-heading">Plan según lo que tienes</h3>
+                                    <p class="nutrition-customize-subtitle">Marca ingredientes reales, presupuesto y tiempo. Nosotros ajustamos platos y macros.</p>
+                                </div>
+                                <button type="button" class="nutrition-customize-close" data-nutrition-customize-close>Cerrar</button>
+                            </div>
+
+                            <div class="nutrition-customize-groups">
+                                @foreach ($nutritionIngredientGroups as $nutritionGroup)
+                                    <section class="nutrition-customize-group">
+                                        <p class="nutrition-customize-group-title">{{ (string) ($nutritionGroup['title'] ?? 'Ingredientes') }}</p>
+                                        <div class="nutrition-customize-chip-grid">
+                                            @foreach ((array) ($nutritionGroup['items'] ?? []) as $nutritionIngredient)
+                                                @php
+                                                    $ingredientKey = trim((string) ($nutritionIngredient['key'] ?? ''));
+                                                    $ingredientLabel = trim((string) ($nutritionIngredient['label'] ?? $ingredientKey));
+                                                @endphp
+                                                @if ($ingredientKey !== '')
+                                                    <button
+                                                        type="button"
+                                                        class="nutrition-customize-chip"
+                                                        data-nutrition-ingredient="{{ $ingredientKey }}"
+                                                        aria-pressed="false"
+                                                    >
+                                                        {{ $ingredientLabel }}
+                                                    </button>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </section>
+                                @endforeach
+
+                                <section class="nutrition-customize-group">
+                                    <div class="nutrition-allergy-head">
+                                        <p class="nutrition-customize-group-title">Alergias e intolerancias</p>
+                                        <span class="nutrition-allergy-chip">Se excluyen automáticamente</span>
+                                    </div>
+                                    <p class="nutrition-allergy-text">
+                                        Marca lo que te causa reacción. Esos ingredientes no se usarán en tu plan ni en la lista de compras sugerida.
+                                    </p>
+                                    <div class="nutrition-customize-chip-grid">
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="huevo" aria-pressed="false">Huevo</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="lacteos" aria-pressed="false">Lácteos</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="pescado" aria-pressed="false">Pescado/mariscos</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="mani" aria-pressed="false">Maní</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="frutos_secos" aria-pressed="false">Frutos secos</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="gluten" aria-pressed="false">Gluten</button>
+                                        <button type="button" class="nutrition-customize-chip" data-nutrition-allergy="soya" aria-pressed="false">Soya</button>
+                                    </div>
+                                    <p class="nutrition-allergy-disclaimer">
+                                        Aviso legal: debes verificar ingredientes y etiquetas antes de consumir. La app no sustituye consejo médico ni se responsabiliza por omisiones del usuario.
+                                    </p>
+                                </section>
+                            </div>
+
+                            <div class="nutrition-customize-filters">
+                                <label class="nutrition-customize-select-wrap">
+                                    <span class="nutrition-customize-label">Tiempo disponible</span>
+                                    <select id="nutrition-customize-time" class="nutrition-customize-select">
+                                        <option value="rapido">Rápido (15-20 min)</option>
+                                        <option value="normal" selected>Normal (20-40 min)</option>
+                                        <option value="relajado">Relajado (40+ min)</option>
+                                    </select>
+                                </label>
+                                <label class="nutrition-customize-select-wrap">
+                                    <span class="nutrition-customize-label">Presupuesto</span>
+                                    <select id="nutrition-customize-budget" class="nutrition-customize-select">
+                                        <option value="bajo">Bajo</option>
+                                        <option value="medio" selected>Medio</option>
+                                        <option value="alto">Libre</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <label class="nutrition-customize-toggle">
+                                <input id="nutrition-customize-strict" type="checkbox" value="1">
+                                Solo platos que usen ingredientes seleccionados.
+                            </label>
+
+                            <label class="nutrition-customize-toggle">
+                                <input id="nutrition-customize-allergy-ack" type="checkbox" value="1">
+                                Confirmo que revisé alergias e ingredientes antes de consumir.
+                            </label>
+
+                            <p id="nutrition-customize-feedback" class="nutrition-customize-feedback">
+                                Selecciona tus ingredientes para personalizar tus comidas.
+                            </p>
+
+                            <section class="nutrition-customize-group">
+                                <div class="nutrition-allergy-head">
+                                    <p class="nutrition-customize-group-title">Vista previa de platos</p>
+                                    <span id="nutrition-customize-preview-status" class="nutrition-allergy-chip">Sin aplicar</span>
+                                </div>
+                                <p class="nutrition-allergy-text">
+                                    Aquí ves qué platos se arman con lo que marques, antes de aplicar el plan.
+                                </p>
+                                <ul id="nutrition-customize-preview-list" class="nutrition-preview-list"></ul>
+                                <p id="nutrition-customize-preview-empty" class="nutrition-shopping-empty">Aún no hay vista previa disponible.</p>
+                            </section>
+
+                            <div class="nutrition-customize-panel-actions">
+                                <button id="nutrition-customize-apply" type="button" class="nutrition-customize-trigger">Aplicar plan wow</button>
+                                <button type="button" class="nutrition-customize-reset" data-nutrition-customize-close>Cancelar</button>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div id="nutrition-shopping-modal" class="nutrition-customize-modal hidden" aria-hidden="true">
+                        <button type="button" class="nutrition-customize-backdrop" data-nutrition-shopping-close aria-label="Cerrar lista de compras"></button>
+                        <article class="nutrition-customize-panel nutrition-shopping-panel" role="dialog" aria-modal="true" aria-labelledby="nutrition-shopping-title">
+                            <div class="nutrition-customize-top">
+                                <div>
+                                    <p class="nutrition-customize-eyebrow">Compra inteligente</p>
+                                    <h3 id="nutrition-shopping-title" class="nutrition-customize-heading">Lista de compras en modal</h3>
+                                    <p class="nutrition-customize-subtitle">No estiramos la pantalla. Gestiona todo aquí y vuelve a tu plan.</p>
+                                </div>
+                                <button type="button" class="nutrition-customize-close" data-nutrition-shopping-close>Cerrar</button>
+                            </div>
+
+                            <div class="nutrition-customize-actions mt-3">
+                                <button id="nutrition-shopping-autofill" type="button" class="nutrition-customize-trigger">Actualizar lista por plan</button>
+                                <button type="button" class="nutrition-customize-reset" data-nutrition-open-customizer>Ver platos con lo que tengo</button>
+                            </div>
+
+                            <p class="mt-2 text-xs text-slate-300">
+                                Si agregas nuevos ingredientes, entra a "Ver platos con lo que tengo", márcalos y aplica para ver el plato final.
+                            </p>
+                            <ul id="nutrition-shopping-list" class="nutrition-shopping-list mt-3"></ul>
+                            <p id="nutrition-shopping-empty" class="nutrition-shopping-empty">Aún no tienes productos en tu lista.</p>
+                            <div class="nutrition-shopping-add-row">
+                                <input id="nutrition-shopping-input" type="text" class="module-input nutrition-shopping-input" maxlength="80" placeholder="Ej: yogur griego, tomate, avena...">
+                                <button id="nutrition-shopping-add" type="button" class="nutrition-shopping-add-btn">Agregar</button>
+                            </div>
+                            <button id="nutrition-shopping-clear-done" type="button" class="nutrition-shopping-clear-btn">Limpiar marcados</button>
+                            <p class="nutrition-allergy-disclaimer">
+                                Nota: agregar productos en esta lista no cambia platos automáticamente. Para generar platos, usa "Ver platos con lo que tengo".
+                            </p>
+                        </article>
+                    </div>
+                @else
+                    <article class="nutrition-empty-card">
+                        Completa tus datos físicos para generar una guía nutricional personalizada.
+                    </article>
+                    <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="module-action module-action-secondary">
+                        Configurar datos físicos
+                    </a>
+                @endif
             </section>
         @endif
 
@@ -3286,8 +4481,12 @@
                     @if ($fitnessProfileCompleted)
                         <div class="fitness-meta-grid">
                             <div class="fitness-meta-card">
-                                <p class="fitness-meta-label">Edad</p>
-                                <p class="fitness-meta-value">{{ (int) ($fitnessProfileModel?->age ?? 0) > 0 ? (int) $fitnessProfileModel->age.' años' : '-' }}</p>
+                                <p class="fitness-meta-label">Fecha de nacimiento</p>
+                                <p class="fitness-meta-value">{{ $fitnessBirthDateLabel }}</p>
+                            </div>
+                            <div class="fitness-meta-card">
+                                <p class="fitness-meta-label">Edad (auto)</p>
+                                <p class="fitness-meta-value">{{ $fitnessAgeLabel }}</p>
                             </div>
                             <div class="fitness-meta-card">
                                 <p class="fitness-meta-label">Sexo</p>
@@ -3398,7 +4597,7 @@
                         <div class="flex items-start justify-between gap-2">
                             <div>
                                 <h3 id="fitness-onboarding-title" class="fitness-onboarding-title">Completa tus datos físicos</h3>
-                                <p class="fitness-onboarding-help">Necesitamos estos datos para calcular IMC, metabolismo y habilitar tu pantalla de rendimiento.</p>
+                                <p class="fitness-onboarding-help">Necesitamos estos datos para calcular IMC, metabolismo y habilitar tu pantalla de rendimiento y tu guía nutricional.</p>
                             </div>
                             <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home', '_close_fitness' => time()]) }}" class="fitness-modal-close" aria-label="Volver al panel anterior">Cerrar</a>
                         </div>
@@ -3412,7 +4611,7 @@
                             'fitnessLimitationsOptions' => $fitnessLimitationsOptions,
                             'fitnessLimitations' => $fitnessLimitations,
                             'formIdPrefix' => 'fitness-modal',
-                            'nextScreen' => 'progress',
+                            'nextScreen' => $openFitnessModalNextScreen ?? 'progress',
                             'isModalForm' => true,
                             'submitLabel' => 'Guardar y continuar',
                         ])
@@ -3441,6 +4640,13 @@
     const bootStateKey = 'client-mobile-boot-seen';
     const csrfMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialProgressPayload = @json($progress);
+    const nutritionInitialPayload = @json($nutritionClientPayload);
+    const nutritionImageMap = {
+        breakfast: @json(asset('images/nutrition/nutri-breakfast.svg')),
+        lunch: @json(asset('images/nutrition/nutri-lunch.svg')),
+        snack: @json(asset('images/nutrition/nutri-snack.svg')),
+        dinner: @json(asset('images/nutrition/nutri-dinner.svg')),
+    };
 
     const bootScreen = document.getElementById('boot-screen');
     const bootBar = document.getElementById('boot-progress-bar');
@@ -3487,8 +4693,16 @@
     const openPhysicalEditBtn = document.getElementById('open-physical-edit');
     const closePhysicalEditBtn = document.getElementById('close-physical-edit');
     const physicalEditPanel = document.getElementById('physical-edit-panel');
-    const openFitnessModalTrigger = document.getElementById('open-fitness-modal-trigger');
+    const openFitnessModalTriggers = Array.from(document.querySelectorAll('[data-open-fitness-modal]'));
     const fitnessModal = document.getElementById('fitness-onboarding-modal');
+    const fitnessModalNextScreenInput = fitnessModal ? fitnessModal.querySelector('input[name="next_screen"]') : null;
+    const allowedFitnessNextScreens = ['home', 'progress', 'physical', 'nutrition'];
+    const defaultFitnessNextScreenRaw = fitnessModalNextScreenInput instanceof HTMLInputElement
+        ? String(fitnessModalNextScreenInput.value || '').trim().toLowerCase()
+        : '';
+    const fitnessModalDefaultNextScreen = allowedFitnessNextScreens.includes(defaultFitnessNextScreenRaw)
+        ? defaultFitnessNextScreenRaw
+        : 'progress';
     const fitnessModalCloseTargets = document.querySelectorAll('[data-fitness-modal-close]');
     const clientPushStatusEl = document.getElementById('client-push-status');
     const clientPushToggleBtn = document.getElementById('client-push-toggle');
@@ -3567,6 +4781,46 @@
     const monthAttendanceCountEl = document.getElementById('month-attendance-count');
     const monthAttendanceListEl = document.getElementById('month-attendance-list');
     const monthAttendanceEmptyEl = document.getElementById('month-attendance-empty');
+    const nutritionDayListEl = document.getElementById('nutrition-day-list');
+    const nutritionCustomizeOpenBtn = document.getElementById('nutrition-customize-open');
+    const nutritionCustomizeResetBtn = document.getElementById('nutrition-customize-reset');
+    const nutritionCustomizeStatusEl = document.getElementById('nutrition-customize-status');
+    const nutritionCustomizeNoteEl = document.getElementById('nutrition-customize-note');
+    const nutritionTotalKcalEl = document.getElementById('nutrition-total-kcal');
+    const nutritionTotalProteinEl = document.getElementById('nutrition-total-protein');
+    const nutritionTotalCarbsEl = document.getElementById('nutrition-total-carbs');
+    const nutritionTotalFatEl = document.getElementById('nutrition-total-fat');
+    const nutritionAllergyAlertTextEl = document.getElementById('nutrition-allergy-alert-text');
+    const nutritionCustomizeModal = document.getElementById('nutrition-customize-modal');
+    const nutritionCustomizeCloseEls = Array.from(document.querySelectorAll('[data-nutrition-customize-close]'));
+    const nutritionCustomizeIngredientBtns = Array.from(document.querySelectorAll('[data-nutrition-ingredient]'));
+    const nutritionCustomizeAllergyBtns = Array.from(document.querySelectorAll('[data-nutrition-allergy]'));
+    const nutritionCustomizeTimeEl = document.getElementById('nutrition-customize-time');
+    const nutritionCustomizeBudgetEl = document.getElementById('nutrition-customize-budget');
+    const nutritionCustomizeStrictEl = document.getElementById('nutrition-customize-strict');
+    const nutritionCustomizeAllergyAckEl = document.getElementById('nutrition-customize-allergy-ack');
+    const nutritionCustomizeFeedbackEl = document.getElementById('nutrition-customize-feedback');
+    const nutritionCustomizeApplyBtn = document.getElementById('nutrition-customize-apply');
+    const nutritionCustomizePreviewListEl = document.getElementById('nutrition-customize-preview-list');
+    const nutritionCustomizePreviewEmptyEl = document.getElementById('nutrition-customize-preview-empty');
+    const nutritionCustomizePreviewStatusEl = document.getElementById('nutrition-customize-preview-status');
+    const nutritionOpenCustomizerBtns = Array.from(document.querySelectorAll('[data-nutrition-open-customizer]'));
+    const nutritionShoppingCountEl = document.getElementById('nutrition-shopping-count');
+    const nutritionShoppingPreviewEl = document.getElementById('nutrition-shopping-preview');
+    const nutritionShoppingOpenBtn = document.getElementById('nutrition-shopping-open');
+    const nutritionShoppingModal = document.getElementById('nutrition-shopping-modal');
+    const nutritionShoppingCloseEls = Array.from(document.querySelectorAll('[data-nutrition-shopping-close]'));
+    const nutritionShoppingListEl = document.getElementById('nutrition-shopping-list');
+    const nutritionShoppingEmptyEl = document.getElementById('nutrition-shopping-empty');
+    const nutritionShoppingAutoFillBtn = document.getElementById('nutrition-shopping-autofill');
+    const nutritionShoppingInputEl = document.getElementById('nutrition-shopping-input');
+    const nutritionShoppingAddBtn = document.getElementById('nutrition-shopping-add');
+    const nutritionShoppingClearDoneBtn = document.getElementById('nutrition-shopping-clear-done');
+    const nutritionAllowedIngredientKeys = Array.from(new Set(
+        nutritionCustomizeIngredientBtns
+            .map((button) => String(button.dataset.nutritionIngredient || '').trim())
+            .filter((value) => value !== '')
+    ));
 
     const mobileI18n = {
         ready_to_scan: @json(__('messages.client_mobile.ready_to_scan')),
@@ -3612,6 +4866,143 @@
     const trainingChecklistStorageKey = trainingChecklistStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
     const trainingWinSeenStorageBase = 'client-mobile:training-win-seen:v1';
     const trainingWinSeenStorageKey = trainingWinSeenStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    const nutritionStorageBase = 'client-mobile:nutrition-custom:v3';
+    const nutritionStorageKey = nutritionStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    const nutritionShoppingStorageBase = 'client-mobile:nutrition-shopping:v1';
+    const nutritionShoppingStorageKey = nutritionShoppingStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    const nutritionSlotOrder = ['Desayuno', 'Almuerzo', 'Snack', 'Cena'];
+    const nutritionSlotShares = {
+        Desayuno: 0.28,
+        Almuerzo: 0.34,
+        Snack: 0.14,
+        Cena: 0.24,
+    };
+    const nutritionIngredientCatalog = {
+        pollo: { label: 'Pollo', category: 'protein', portion: '170 g', kcal: 280, protein: 45, carbs: 0, fat: 8, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '600 g' },
+        atun: { label: 'Atún', category: 'protein', portion: '160 g', kcal: 220, protein: 41, carbs: 0, fat: 5, prep: 'rapido', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '2 latas' },
+        huevo: { label: 'Huevo', category: 'protein', portion: '3 unidades', kcal: 210, protein: 18, carbs: 1, fat: 15, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack', 'Cena'], shopping: '1 docena' },
+        pavo: { label: 'Pavo', category: 'protein', portion: '170 g', kcal: 260, protein: 43, carbs: 0, fat: 7, prep: 'normal', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        carne: { label: 'Carne magra', category: 'protein', portion: '170 g', kcal: 310, protein: 40, carbs: 0, fat: 14, prep: 'normal', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        pescado: { label: 'Pescado', category: 'protein', portion: '170 g', kcal: 250, protein: 38, carbs: 0, fat: 10, prep: 'normal', budget: 'alto', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        yogur: { label: 'Yogur', category: 'protein', portion: '250 g', kcal: 170, protein: 17, carbs: 14, fat: 5, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Snack'], shopping: '1 kg' },
+        tofu: { label: 'Tofu', category: 'protein', portion: '180 g', kcal: 170, protein: 21, carbs: 5, fat: 8, prep: 'normal', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '400 g' },
+        queso_fresco: { label: 'Queso fresco', category: 'protein', portion: '80 g', kcal: 210, protein: 15, carbs: 2, fat: 15, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Snack', 'Cena'], shopping: '250 g' },
+        queso_cottage: { label: 'Queso cottage', category: 'protein', portion: '120 g', kcal: 118, protein: 14, carbs: 4, fat: 4, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Snack', 'Cena'], shopping: '250 g' },
+        leche: { label: 'Leche', category: 'protein', portion: '250 ml', kcal: 145, protein: 9, carbs: 12, fat: 7, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '1 L' },
+        sardina: { label: 'Sardina', category: 'protein', portion: '130 g', kcal: 230, protein: 30, carbs: 0, fat: 11, prep: 'rapido', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '2 latas' },
+
+        avena: { label: 'Avena', category: 'carb', portion: '70 g', kcal: 266, protein: 9, carbs: 46, fat: 5, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '500 g' },
+        arroz: { label: 'Arroz', category: 'carb', portion: '170 g', kcal: 220, protein: 4, carbs: 48, fat: 1, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 kg' },
+        quinoa: { label: 'Quinoa', category: 'carb', portion: '140 g', kcal: 220, protein: 8, carbs: 38, fat: 4, prep: 'normal', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        papa: { label: 'Papa', category: 'carb', portion: '220 g', kcal: 190, protein: 5, carbs: 43, fat: 0, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 kg' },
+        camote: { label: 'Camote', category: 'carb', portion: '220 g', kcal: 200, protein: 4, carbs: 46, fat: 0, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 kg' },
+        pasta: { label: 'Pasta integral', category: 'carb', portion: '150 g', kcal: 260, protein: 10, carbs: 51, fat: 2, prep: 'normal', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        pan_integral: { label: 'Pan integral', category: 'carb', portion: '2 rebanadas', kcal: 170, protein: 7, carbs: 30, fat: 3, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '1 funda' },
+        fruta: { label: 'Fruta', category: 'fruit', portion: '1 porción', kcal: 90, protein: 1, carbs: 22, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '6 unidades' },
+        legumbres: { label: 'Legumbres', category: 'carb', portion: '130 g', kcal: 190, protein: 12, carbs: 31, fat: 2, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '500 g' },
+        platano: { label: 'Plátano', category: 'fruit', portion: '1 unidad', kcal: 120, protein: 1, carbs: 31, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '5 unidades' },
+        yuca: { label: 'Yuca', category: 'carb', portion: '180 g', kcal: 220, protein: 2, carbs: 52, fat: 0, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 kg' },
+        tortilla_integral: { label: 'Tortilla integral', category: 'carb', portion: '2 unidades', kcal: 160, protein: 6, carbs: 28, fat: 3, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Almuerzo', 'Cena'], shopping: '1 paquete' },
+        maiz: { label: 'Maíz', category: 'carb', portion: '160 g', kcal: 180, protein: 5, carbs: 39, fat: 2, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '4 choclos o 1 funda' },
+        arepa_integral: { label: 'Arepa integral', category: 'carb', portion: '1 unidad', kcal: 170, protein: 4, carbs: 31, fat: 3, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '4 unidades' },
+
+        verduras: { label: 'Verduras', category: 'veggie', portion: '200 g', kcal: 70, protein: 4, carbs: 12, fat: 1, prep: 'normal', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 kg mix' },
+        ensalada: { label: 'Ensalada', category: 'veggie', portion: '200 g', kcal: 55, protein: 2, carbs: 10, fat: 1, prep: 'rapido', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '1 funda grande' },
+        tomate: { label: 'Tomate', category: 'veggie', portion: '150 g', kcal: 30, protein: 1, carbs: 7, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Almuerzo', 'Cena'], shopping: '4 unidades' },
+        cebolla: { label: 'Cebolla', category: 'veggie', portion: '120 g', kcal: 45, protein: 1, carbs: 10, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Almuerzo', 'Cena'], shopping: '3 unidades' },
+        zanahoria: { label: 'Zanahoria', category: 'veggie', portion: '150 g', kcal: 55, protein: 1, carbs: 13, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Almuerzo', 'Cena', 'Snack'], shopping: '4 unidades' },
+        pepino: { label: 'Pepino', category: 'veggie', portion: '150 g', kcal: 24, protein: 1, carbs: 5, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Almuerzo', 'Cena', 'Snack'], shopping: '2 unidades' },
+        espinaca: { label: 'Espinaca', category: 'veggie', portion: '120 g', kcal: 30, protein: 3, carbs: 4, fat: 0, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Almuerzo', 'Cena'], shopping: '1 atado' },
+        aguacate: { label: 'Aguacate', category: 'fat', portion: '80 g', kcal: 128, protein: 2, carbs: 6, fat: 12, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Almuerzo', 'Cena'], shopping: '2 unidades' },
+        frutos_secos: { label: 'Frutos secos', category: 'fat', portion: '20 g', kcal: 120, protein: 4, carbs: 4, fat: 10, prep: 'rapido', budget: 'alto', slots: ['Snack', 'Desayuno'], shopping: '200 g' },
+        mani: { label: 'Maní', category: 'fat', portion: '20 g', kcal: 110, protein: 5, carbs: 4, fat: 9, prep: 'rapido', budget: 'bajo', slots: ['Snack', 'Desayuno'], shopping: '250 g' },
+        aceite_oliva: { label: 'Aceite de oliva', category: 'fat', portion: '1 cda', kcal: 90, protein: 0, carbs: 0, fat: 10, prep: 'rapido', budget: 'medio', slots: ['Almuerzo', 'Cena'], shopping: '250 ml' },
+        mantequilla_mani: { label: 'Mantequilla de maní', category: 'fat', portion: '1 cda', kcal: 95, protein: 4, carbs: 3, fat: 8, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Snack'], shopping: '1 frasco' },
+        chia: { label: 'Chía', category: 'fat', portion: '15 g', kcal: 70, protein: 3, carbs: 6, fat: 5, prep: 'rapido', budget: 'medio', slots: ['Desayuno', 'Snack'], shopping: '150 g' },
+        semilla_girasol: { label: 'Semilla de girasol', category: 'fat', portion: '15 g', kcal: 87, protein: 3, carbs: 3, fat: 7, prep: 'rapido', budget: 'bajo', slots: ['Desayuno', 'Snack'], shopping: '200 g' },
+    };
+    const nutritionSlotBlueprints = {
+        Desayuno: { required: ['protein', 'carb'], optional: ['fruit', 'fat'] },
+        Almuerzo: { required: ['protein', 'carb', 'veggie'], optional: ['fat'] },
+        Snack: { required: ['protein', 'fruit_or_carb'], optional: ['fat'] },
+        Cena: { required: ['protein', 'veggie'], optional: ['carb', 'fat'] },
+    };
+    const nutritionDefaultShoppingIdeas = [
+        'huevo',
+        'avena',
+        'yogur',
+        'fruta',
+        'verduras',
+        'zanahoria',
+        'tomate',
+        'pan_integral',
+        'legumbres',
+        'atun',
+        'sardina',
+        'aceite_oliva',
+        'queso_fresco',
+    ];
+    const nutritionAllergyCatalog = {
+        huevo: {
+            label: 'Huevo',
+            excludes: ['huevo'],
+        },
+        lacteos: {
+            label: 'Lácteos',
+            excludes: ['leche', 'yogur', 'queso_fresco', 'queso_cottage'],
+        },
+        pescado: {
+            label: 'Pescado/mariscos',
+            excludes: ['pescado', 'atun', 'sardina'],
+        },
+        mani: {
+            label: 'Maní',
+            excludes: ['mani', 'mantequilla_mani'],
+        },
+        frutos_secos: {
+            label: 'Frutos secos',
+            excludes: ['frutos_secos', 'semilla_girasol'],
+        },
+        gluten: {
+            label: 'Gluten',
+            excludes: ['avena', 'pasta', 'pan_integral', 'tortilla_integral', 'arepa_integral'],
+        },
+        soya: {
+            label: 'Soya',
+            excludes: ['tofu'],
+        },
+    };
+    const nutritionAllowedAllergyKeys = Object.keys(nutritionAllergyCatalog);
+    const nutritionDefaultPreferences = {
+        ingredients: [],
+        allergies: [],
+        time: 'normal',
+        budget: 'medio',
+        strict: false,
+        allergy_ack: false,
+    };
+    const nutritionInitialItems = Array.isArray(nutritionInitialPayload && nutritionInitialPayload.items)
+        ? nutritionInitialPayload.items
+            .filter((item) => item && typeof item === 'object')
+            .map((item) => ({
+                slot: String(item.slot || 'Comida').trim(),
+                dish: String(item.dish || 'Plato sugerido').trim(),
+                portion: String(item.portion || 'Porción sugerida').trim(),
+                kcal: Math.max(0, Math.round(Number(item.kcal || 0))),
+                protein_g: Math.max(0, Math.round(Number(item.protein_g || 0))),
+                carbs_g: Math.max(0, Math.round(Number(item.carbs_g || 0))),
+                fat_g: Math.max(0, Math.round(Number(item.fat_g || 0))),
+                image_url: String(item.image_url || nutritionImageMap.lunch),
+                is_adapted: false,
+                match_coverage: 0,
+            }))
+        : [];
+    const nutritionTargetKcal = Math.max(1200, Math.round(Number(nutritionInitialPayload && nutritionInitialPayload.target_kcal ? nutritionInitialPayload.target_kcal : 0)) || 1900);
+    let nutritionCurrentItems = nutritionInitialItems.slice();
+    let nutritionIsCustomPlan = false;
+    let nutritionCurrentPreferences = { ...nutritionDefaultPreferences };
+    let nutritionCurrentMissingIngredients = [];
+    let nutritionShoppingItems = [];
     let actionGuideAlreadySeen = false;
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
@@ -3744,7 +5135,7 @@
         }
         if (leaderboardHelperEl) {
             const helperLabel = String(leaderboard.helper || '').trim();
-            leaderboardHelperEl.textContent = helperLabel !== '' ? helperLabel : 'La asistencia pesa mas y el tiempo solo suma como extra segun tu objetivo personal durante el mes.';
+            leaderboardHelperEl.textContent = helperLabel !== '' ? helperLabel : 'La asistencia pesa más y el tiempo solo suma como extra según tu objetivo personal durante el mes.';
         }
         if (leaderboardEmptyEl) {
             leaderboardEmptyEl.classList.toggle('hidden', entries.length > 0);
@@ -3814,19 +5205,1443 @@
                 String(currentClient.attendance_label || '0 asistencias'),
                 String(currentClient.time_label || '0 min'),
             ].join(' | ');
-            leaderboardCurrentHintEl.textContent = 'Sigue sumando asistencias validas este mes para meterte al Top 5.';
+            leaderboardCurrentHintEl.textContent = 'Sigue sumando asistencias válidas este mes para meterte al Top 5.';
             return;
         }
 
         if (!currentClient) {
             leaderboardCurrentCardEl.classList.remove('hidden');
-            leaderboardCurrentTitleEl.textContent = 'Todavia no sumas puntaje';
-            leaderboardCurrentMetaEl.textContent = 'Cuando registres una sesion valida este mes apareceras con tu posicion actual.';
-            leaderboardCurrentHintEl.textContent = 'La asistencia pesa mas y el tiempo te da un empuje extra durante el mes.';
+            leaderboardCurrentTitleEl.textContent = 'Todavía no sumas puntaje';
+            leaderboardCurrentMetaEl.textContent = 'Cuando registres una sesión válida este mes aparecerás con tu posición actual.';
+            leaderboardCurrentHintEl.textContent = 'La asistencia pesa más y el tiempo te da un empuje extra durante el mes.';
             return;
         }
 
         leaderboardCurrentCardEl.classList.add('hidden');
+    }
+
+    function escapeNutritionHtml(value) {
+        return String(value || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function calculateNutritionTotals(items) {
+        return (Array.isArray(items) ? items : []).reduce((totals, item) => {
+            totals.kcal += Math.max(0, Math.round(Number(item.kcal || 0)));
+            totals.protein += Math.max(0, Math.round(Number(item.protein_g || 0)));
+            totals.carbs += Math.max(0, Math.round(Number(item.carbs_g || 0)));
+            totals.fat += Math.max(0, Math.round(Number(item.fat_g || 0)));
+            return totals;
+        }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+    }
+
+    function resolveNutritionImageBySlot(slot) {
+        const normalizedSlot = String(slot || '').trim().toLowerCase();
+        if (normalizedSlot === 'desayuno') return nutritionImageMap.breakfast;
+        if (normalizedSlot === 'almuerzo') return nutritionImageMap.lunch;
+        if (normalizedSlot === 'snack') return nutritionImageMap.snack;
+        if (normalizedSlot === 'cena') return nutritionImageMap.dinner;
+        return nutritionImageMap.lunch;
+    }
+
+    function resolveNutritionMacroRatios(goalLabel) {
+        const normalizedGoal = String(goalLabel || '').trim().toLowerCase();
+        if (normalizedGoal.includes('perder') || normalizedGoal.includes('definir')) {
+            return { protein: 0.36, carbs: 0.34, fat: 0.30 };
+        }
+        if (normalizedGoal.includes('resistencia')) {
+            return { protein: 0.25, carbs: 0.50, fat: 0.25 };
+        }
+        if (normalizedGoal.includes('fuerza') || normalizedGoal.includes('musculo') || normalizedGoal.includes('músculo')) {
+            return { protein: 0.30, carbs: 0.45, fat: 0.25 };
+        }
+        return { protein: 0.30, carbs: 0.40, fat: 0.30 };
+    }
+
+    function normalizeNutritionPreferences(raw) {
+        const source = raw && typeof raw === 'object' ? raw : {};
+        const normalized = {
+            ingredients: [],
+            allergies: [],
+            time: 'normal',
+            budget: 'medio',
+            strict: false,
+            allergy_ack: false,
+        };
+
+        const candidateAllergies = Array.isArray(source.allergies) ? source.allergies : [];
+        normalized.allergies = Array.from(new Set(candidateAllergies
+            .map((item) => String(item || '').trim())
+            .filter((item) => nutritionAllowedAllergyKeys.includes(item))));
+
+        const allergyBlockedKeys = new Set();
+        normalized.allergies.forEach((allergyKey) => {
+            const allergyMeta = nutritionAllergyCatalog[allergyKey];
+            if (!allergyMeta || !Array.isArray(allergyMeta.excludes)) return;
+            allergyMeta.excludes.forEach((ingredientKey) => {
+                allergyBlockedKeys.add(String(ingredientKey || '').trim());
+            });
+        });
+
+        const candidateIngredients = Array.isArray(source.ingredients) ? source.ingredients : [];
+        normalized.ingredients = Array.from(new Set(candidateIngredients
+            .map((item) => String(item || '').trim())
+            .filter((item) => nutritionAllowedIngredientKeys.includes(item))
+            .filter((item) => !allergyBlockedKeys.has(item))));
+
+        const candidateTime = String(source.time || '').trim().toLowerCase();
+        if (['rapido', 'normal', 'relajado'].includes(candidateTime)) {
+            normalized.time = candidateTime;
+        }
+
+        const candidateBudget = String(source.budget || '').trim().toLowerCase();
+        if (['bajo', 'medio', 'alto'].includes(candidateBudget)) {
+            normalized.budget = candidateBudget;
+        }
+
+        normalized.strict = Boolean(source.strict);
+        normalized.allergy_ack = Boolean(source.allergy_ack);
+        return normalized;
+    }
+
+    function resolveAllergyLabels(allergyKeys) {
+        const keys = Array.isArray(allergyKeys) ? allergyKeys : [];
+        return keys
+            .map((key) => nutritionAllergyCatalog[String(key || '').trim()])
+            .filter((meta) => meta && typeof meta === 'object')
+            .map((meta) => String(meta.label || '').trim())
+            .filter((label) => label !== '');
+    }
+
+    function resolveAllergyExcludedKeys(preferences) {
+        const normalized = normalizeNutritionPreferences(preferences);
+        const excluded = new Set();
+
+        normalized.allergies.forEach((allergyKey) => {
+            const allergyMeta = nutritionAllergyCatalog[allergyKey];
+            if (!allergyMeta || !Array.isArray(allergyMeta.excludes)) return;
+            allergyMeta.excludes.forEach((ingredientKey) => {
+                const key = String(ingredientKey || '').trim();
+                if (key !== '') {
+                    excluded.add(key);
+                }
+            });
+        });
+
+        return excluded;
+    }
+
+    function updateNutritionAllergyAlert(preferences) {
+        if (!nutritionAllergyAlertTextEl) return;
+        const normalized = normalizeNutritionPreferences(preferences);
+        const allergyLabels = resolveAllergyLabels(normalized.allergies);
+        if (allergyLabels.length === 0) {
+            nutritionAllergyAlertTextEl.textContent = 'Declara tus alergias en "Personalizar con lo que tengo". Esta guía es informativa y no reemplaza evaluación profesional.';
+            return;
+        }
+
+        nutritionAllergyAlertTextEl.textContent = 'Alergias declaradas: '
+            + allergyLabels.join(', ')
+            + '. Esos ingredientes fueron excluidos automáticamente. Verifica etiquetas antes de consumir.';
+    }
+
+    function readNutritionPreferences() {
+        try {
+            const raw = window.localStorage.getItem(nutritionStorageKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return null;
+            const normalized = normalizeNutritionPreferences(parsed);
+            return {
+                ...normalized,
+                applied: Boolean(parsed.applied),
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function writeNutritionPreferences(preferences, applied) {
+        try {
+            const payload = {
+                ...normalizeNutritionPreferences(preferences),
+                applied: Boolean(applied),
+            };
+            window.localStorage.setItem(nutritionStorageKey, JSON.stringify(payload));
+        } catch (error) {
+            // ignore persistence errors
+        }
+    }
+
+    function clearNutritionPreferences() {
+        try {
+            window.localStorage.removeItem(nutritionStorageKey);
+        } catch (error) {
+            // ignore persistence errors
+        }
+    }
+
+    function slugifyShoppingKey(raw) {
+        return String(raw || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function normalizeNutritionShoppingItems(items) {
+        const rawItems = Array.isArray(items) ? items : [];
+        return rawItems
+            .filter((item) => item && typeof item === 'object')
+            .map((item) => {
+                const key = String(item.key || '').trim();
+                const label = String(item.label || '').trim();
+                if (key === '' || label === '') return null;
+                return {
+                    key,
+                    label,
+                    reason: String(item.reason || 'sugerido').trim(),
+                    hint: String(item.hint || '').trim(),
+                    checked: Boolean(item.checked),
+                };
+            })
+            .filter((item) => item !== null);
+    }
+
+    function readNutritionShoppingItems() {
+        try {
+            const raw = window.localStorage.getItem(nutritionShoppingStorageKey);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return normalizeNutritionShoppingItems(parsed);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function writeNutritionShoppingItems(items) {
+        try {
+            window.localStorage.setItem(
+                nutritionShoppingStorageKey,
+                JSON.stringify(normalizeNutritionShoppingItems(items))
+            );
+        } catch (error) {
+            // ignore persistence errors
+        }
+    }
+
+    function resolveNutritionShoppingReasonLabel(reason) {
+        const normalized = String(reason || '').trim().toLowerCase();
+        if (normalized === 'faltante') return 'Prioridad';
+        if (normalized === 'comprar') return 'Completar';
+        if (normalized === 'manual') return 'Manual';
+        return 'Sugerido';
+    }
+
+    function renderNutritionShoppingItems() {
+        if (!nutritionShoppingListEl || !nutritionShoppingEmptyEl) return;
+        nutritionShoppingListEl.textContent = '';
+
+        nutritionShoppingItems.forEach((item) => {
+            const row = document.createElement('li');
+            row.className = 'nutrition-shopping-item' + (item.checked ? ' is-done' : '');
+            row.dataset.shoppingKey = item.key;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'nutrition-shopping-check';
+            checkbox.checked = Boolean(item.checked);
+            checkbox.setAttribute('aria-label', 'Marcar compra: ' + item.label);
+
+            const copyWrap = document.createElement('div');
+            copyWrap.className = 'nutrition-shopping-copy';
+
+            const label = document.createElement('span');
+            label.className = 'nutrition-shopping-label';
+            label.textContent = item.label;
+            copyWrap.appendChild(label);
+
+            const hintText = String(item.hint || '').trim();
+            if (hintText !== '') {
+                const hint = document.createElement('span');
+                hint.className = 'nutrition-shopping-hint';
+                hint.textContent = 'Compra sugerida: ' + hintText;
+                copyWrap.appendChild(hint);
+            }
+
+            const reason = document.createElement('span');
+            reason.className = 'nutrition-shopping-reason';
+            reason.textContent = resolveNutritionShoppingReasonLabel(item.reason);
+
+            row.appendChild(checkbox);
+            row.appendChild(copyWrap);
+            row.appendChild(reason);
+            nutritionShoppingListEl.appendChild(row);
+        });
+
+        nutritionShoppingEmptyEl.classList.toggle('hidden', nutritionShoppingItems.length > 0);
+
+        if (nutritionShoppingCountEl) {
+            const pending = nutritionShoppingItems.filter((item) => !item.checked).length;
+            nutritionShoppingCountEl.textContent = String(pending) + ' productos';
+        }
+        if (nutritionShoppingPreviewEl) {
+            const pending = nutritionShoppingItems.filter((item) => !item.checked).length;
+            nutritionShoppingPreviewEl.textContent = pending > 0
+                ? 'Tienes ' + String(pending) + ' productos pendientes. Ábrelos en modal.'
+                : 'Tu lista está al día. Puedes agregar más productos cuando quieras.';
+        }
+    }
+
+    function mergeNutritionShoppingSuggestions(suggestions) {
+        const incoming = normalizeNutritionShoppingItems(suggestions);
+        const mergedMap = new Map(
+            normalizeNutritionShoppingItems(nutritionShoppingItems).map((item) => [item.key, item])
+        );
+
+        incoming.forEach((item) => {
+            if (!mergedMap.has(item.key)) {
+                mergedMap.set(item.key, item);
+                return;
+            }
+            const prev = mergedMap.get(item.key);
+            if (!prev) return;
+            mergedMap.set(item.key, {
+                ...prev,
+                reason: prev.reason === 'manual' ? prev.reason : item.reason,
+                hint: prev.hint !== '' ? prev.hint : item.hint,
+            });
+        });
+
+        const reasonOrder = {
+            faltante: 0,
+            comprar: 1,
+            sugerido: 2,
+            manual: 3,
+        };
+        nutritionShoppingItems = Array.from(mergedMap.values()).sort((a, b) => {
+            if (Boolean(a.checked) !== Boolean(b.checked)) {
+                return a.checked ? 1 : -1;
+            }
+            const aReason = String(a.reason || '').trim().toLowerCase();
+            const bReason = String(b.reason || '').trim().toLowerCase();
+            const aOrder = Object.prototype.hasOwnProperty.call(reasonOrder, aReason) ? reasonOrder[aReason] : 99;
+            const bOrder = Object.prototype.hasOwnProperty.call(reasonOrder, bReason) ? reasonOrder[bReason] : 99;
+            if (aOrder !== bOrder) {
+                return aOrder - bOrder;
+            }
+            return String(a.label || '').localeCompare(String(b.label || ''), 'es', { sensitivity: 'base' });
+        });
+        writeNutritionShoppingItems(nutritionShoppingItems);
+        renderNutritionShoppingItems();
+    }
+
+    function buildDefaultNutritionShoppingSuggestions(selectedSet, excludedSet) {
+        const safeSelectedSet = selectedSet instanceof Set ? selectedSet : new Set();
+        const safeExcludedSet = excludedSet instanceof Set ? excludedSet : new Set();
+        return nutritionDefaultShoppingIdeas
+            .filter((key) => !safeSelectedSet.has(key))
+            .filter((key) => !safeExcludedSet.has(key))
+            .slice(0, 8)
+            .map((key) => {
+                const meta = nutritionIngredientCatalog[key];
+                if (!meta) return null;
+                return {
+                    key,
+                    label: meta.label,
+                    reason: 'sugerido',
+                    hint: String(meta.shopping || '').trim(),
+                    checked: false,
+                };
+            })
+            .filter((item) => item !== null);
+    }
+
+    function addManualNutritionShoppingItem(rawLabel) {
+        const label = String(rawLabel || '').trim();
+        if (label === '') return;
+        const keySlug = slugifyShoppingKey(label);
+        if (keySlug === '') return;
+        const key = 'manual:' + keySlug;
+        if (!nutritionShoppingItems.some((item) => item.key === key)) {
+            nutritionShoppingItems.push({
+                key,
+                label,
+                reason: 'manual',
+                hint: '',
+                checked: false,
+            });
+            writeNutritionShoppingItems(nutritionShoppingItems);
+            renderNutritionShoppingItems();
+        }
+    }
+
+    function setNutritionCustomizeModalOpen(isOpen) {
+        if (!nutritionCustomizeModal) return;
+        nutritionCustomizeModal.classList.toggle('hidden', !isOpen);
+        nutritionCustomizeModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
+    function setNutritionShoppingModalOpen(isOpen) {
+        if (!nutritionShoppingModal) return;
+        nutritionShoppingModal.classList.toggle('hidden', !isOpen);
+        nutritionShoppingModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
+    function syncNutritionIngredientButtons(preferences) {
+        const selected = new Set(Array.isArray(preferences.ingredients) ? preferences.ingredients : []);
+        const blocked = resolveAllergyExcludedKeys(preferences);
+        nutritionCustomizeIngredientBtns.forEach((button) => {
+            const ingredient = String(button.dataset.nutritionIngredient || '').trim();
+            const isBlocked = blocked.has(ingredient);
+            const isSelected = !isBlocked && selected.has(ingredient);
+            button.classList.toggle('is-selected', isSelected);
+            button.classList.toggle('is-disabled', isBlocked);
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+            button.disabled = isBlocked;
+            if (isBlocked) {
+                button.setAttribute('aria-disabled', 'true');
+                button.classList.remove('is-selected');
+                button.setAttribute('aria-pressed', 'false');
+            } else {
+                button.removeAttribute('aria-disabled');
+            }
+        });
+    }
+
+    function syncNutritionAllergyButtons(preferences) {
+        const selected = new Set(Array.isArray(preferences.allergies) ? preferences.allergies : []);
+        nutritionCustomizeAllergyBtns.forEach((button) => {
+            const allergyKey = String(button.dataset.nutritionAllergy || '').trim();
+            const isSelected = selected.has(allergyKey);
+            button.classList.toggle('is-selected', isSelected);
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        });
+    }
+
+    function syncNutritionModalControls(preferences) {
+        const normalized = normalizeNutritionPreferences(preferences);
+        syncNutritionIngredientButtons(normalized);
+        syncNutritionAllergyButtons(normalized);
+        if (nutritionCustomizeTimeEl instanceof HTMLSelectElement) {
+            nutritionCustomizeTimeEl.value = normalized.time;
+        }
+        if (nutritionCustomizeBudgetEl instanceof HTMLSelectElement) {
+            nutritionCustomizeBudgetEl.value = normalized.budget;
+        }
+        if (nutritionCustomizeStrictEl instanceof HTMLInputElement) {
+            nutritionCustomizeStrictEl.checked = normalized.strict;
+        }
+        if (nutritionCustomizeAllergyAckEl instanceof HTMLInputElement) {
+            nutritionCustomizeAllergyAckEl.checked = normalized.allergy_ack;
+        }
+    }
+
+    function collectNutritionPreferencesFromModal() {
+        const selectedIngredients = nutritionCustomizeIngredientBtns
+            .filter((button) => button.classList.contains('is-selected'))
+            .map((button) => String(button.dataset.nutritionIngredient || '').trim())
+            .filter((item) => item !== '');
+        const selectedAllergies = nutritionCustomizeAllergyBtns
+            .filter((button) => button.classList.contains('is-selected'))
+            .map((button) => String(button.dataset.nutritionAllergy || '').trim())
+            .filter((item) => item !== '');
+
+        return normalizeNutritionPreferences({
+            ingredients: selectedIngredients,
+            allergies: selectedAllergies,
+            time: nutritionCustomizeTimeEl instanceof HTMLSelectElement ? nutritionCustomizeTimeEl.value : nutritionDefaultPreferences.time,
+            budget: nutritionCustomizeBudgetEl instanceof HTMLSelectElement ? nutritionCustomizeBudgetEl.value : nutritionDefaultPreferences.budget,
+            strict: nutritionCustomizeStrictEl instanceof HTMLInputElement ? nutritionCustomizeStrictEl.checked : false,
+            allergy_ack: nutritionCustomizeAllergyAckEl instanceof HTMLInputElement ? nutritionCustomizeAllergyAckEl.checked : false,
+        });
+    }
+
+    function renderNutritionCustomizePreview(preferences) {
+        if (!nutritionCustomizePreviewListEl || !nutritionCustomizePreviewEmptyEl || !nutritionCustomizePreviewStatusEl) {
+            return;
+        }
+
+        const normalized = normalizeNutritionPreferences(preferences);
+        const generated = buildNutritionPlanFromPreferences(normalized);
+        const items = Array.isArray(generated.items) ? generated.items : [];
+        nutritionCustomizePreviewListEl.textContent = '';
+
+        items.forEach((item) => {
+            const row = document.createElement('li');
+            row.className = 'nutrition-preview-item';
+
+            const slot = document.createElement('span');
+            slot.className = 'nutrition-preview-slot';
+            slot.textContent = String(item.slot || 'Comida');
+
+            const dish = document.createElement('span');
+            dish.className = 'nutrition-preview-dish';
+            dish.textContent = Boolean(item.is_blocked)
+                ? 'Faltan ingredientes para esta comida'
+                : String(item.dish || 'Plato sugerido');
+
+            row.appendChild(slot);
+            row.appendChild(dish);
+            nutritionCustomizePreviewListEl.appendChild(row);
+        });
+
+        nutritionCustomizePreviewEmptyEl.classList.toggle('hidden', items.length > 0);
+        const blockedCount = items.filter((item) => Boolean(item && item.is_blocked)).length;
+        if (blockedCount > 0) {
+            nutritionCustomizePreviewStatusEl.textContent = 'Faltan ' + String(blockedCount);
+            nutritionCustomizePreviewStatusEl.classList.add('is-warn');
+        } else {
+            nutritionCustomizePreviewStatusEl.textContent = items.length > 0 ? 'Listo' : 'Sin aplicar';
+            nutritionCustomizePreviewStatusEl.classList.remove('is-warn');
+        }
+    }
+
+    function ingredientMatchesCategory(ingredientKey, category) {
+        const meta = nutritionIngredientCatalog[ingredientKey];
+        if (!meta) return false;
+        const ingredientCategory = String(meta.category || '').trim();
+        if (category === 'fruit_or_carb') {
+            return ingredientCategory === 'fruit' || ingredientCategory === 'carb';
+        }
+        return ingredientCategory === category;
+    }
+
+    function resolveCategoryLabel(category) {
+        if (category === 'protein') return 'proteína';
+        if (category === 'carb') return 'carbohidrato';
+        if (category === 'veggie') return 'vegetales';
+        if (category === 'fat') return 'grasa saludable';
+        if (category === 'fruit_or_carb') return 'fruta o carbohidrato';
+        return category;
+    }
+
+    function scoreIngredientForSlot(ingredientKey, slot, preferences, selectedSet) {
+        const meta = nutritionIngredientCatalog[ingredientKey];
+        if (!meta) return -9999;
+        const goalLabel = String(nutritionInitialPayload && nutritionInitialPayload.goal_label ? nutritionInitialPayload.goal_label : '').toLowerCase();
+
+        let score = selectedSet.has(ingredientKey) ? 24 : 0;
+        if (preferences.budget === String(meta.budget || 'medio')) {
+            score += 8;
+        } else if (preferences.budget === 'bajo' && String(meta.budget || '') === 'alto') {
+            score -= 8;
+        }
+
+        if (preferences.time === String(meta.prep || 'normal')) {
+            score += 8;
+        } else if (preferences.time === 'rapido' && String(meta.prep || '') === 'relajado') {
+            score -= 7;
+        }
+
+        const preferredSlots = Array.isArray(meta.slots) ? meta.slots : [];
+        if (preferredSlots.length > 0) {
+            score += preferredSlots.includes(slot) ? 10 : -6;
+        }
+
+        if (slot === 'Desayuno' && ['atun', 'pescado', 'carne', 'pavo', 'sardina'].includes(ingredientKey)) {
+            score -= 8;
+        }
+        if (slot === 'Snack' && ['pollo', 'carne', 'pavo', 'pescado', 'atun', 'sardina'].includes(ingredientKey)) {
+            score -= 8;
+        }
+
+        score += Number(meta.protein || 0) * 0.22;
+        score += Number(meta.carbs || 0) * (slot === 'Almuerzo' ? 0.06 : 0.03);
+        score += Number(meta.fat || 0) * 0.03;
+
+        if (goalLabel.includes('perder') || goalLabel.includes('definir')) {
+            score += Number(meta.protein || 0) * 0.14;
+            score -= Number(meta.kcal || 0) * 0.03;
+        } else if (goalLabel.includes('musculo') || goalLabel.includes('músculo') || goalLabel.includes('fuerza')) {
+            score += Number(meta.protein || 0) * 0.16;
+            score += Number(meta.kcal || 0) * 0.01;
+        }
+
+        return score;
+    }
+
+    function pickBestIngredientForCategory(category, slot, preferences, selectedSet, strictMode, excludedSet) {
+        const blocked = excludedSet instanceof Set ? excludedSet : new Set();
+        const candidates = Object.keys(nutritionIngredientCatalog)
+            .filter((key) => ingredientMatchesCategory(key, category))
+            .filter((key) => {
+                const meta = nutritionIngredientCatalog[key];
+                if (!meta) return false;
+                const allowedSlots = Array.isArray(meta.slots) ? meta.slots : [];
+                return allowedSlots.length === 0 || allowedSlots.includes(slot);
+            })
+            .filter((key) => !blocked.has(key))
+            .filter((key) => !strictMode || selectedSet.has(key));
+
+        if (!candidates.length) {
+            return null;
+        }
+
+        let bestKey = null;
+        let bestScore = -Infinity;
+        candidates.forEach((key) => {
+            const score = scoreIngredientForSlot(key, slot, preferences, selectedSet);
+            if (score > bestScore) {
+                bestScore = score;
+                bestKey = key;
+            }
+        });
+
+        return bestKey;
+    }
+
+    function composeDishName(slot, ingredientKeys) {
+        const labels = ingredientKeys
+            .map((key) => nutritionIngredientCatalog[key]?.label || '')
+            .filter((label) => label !== '');
+        if (!labels.length) {
+            return 'Plato sugerido';
+        }
+        if (labels.length === 1) {
+            return labels[0];
+        }
+        const hasIngredient = (key) => ingredientKeys.includes(key);
+
+        if (slot === 'Desayuno') {
+            if (hasIngredient('avena')) {
+                const complement = labels.filter((label) => label !== 'Avena').slice(0, 2).join(' y ');
+                return complement !== '' ? 'Avena con ' + complement : 'Avena proteica';
+            }
+            if (hasIngredient('huevo')) {
+                const complement = labels.filter((label) => label !== 'Huevo').slice(0, 2).join(' y ');
+                return complement !== '' ? 'Huevos con ' + complement : 'Huevos al gusto';
+            }
+            return 'Desayuno de ' + labels.slice(0, 2).join(' + ');
+        }
+
+        if (slot === 'Almuerzo') {
+            return 'Bowl de ' + labels.slice(0, 3).join(' con ');
+        }
+
+        if (slot === 'Snack') {
+            return 'Snack de ' + labels.slice(0, 2).join(' + ');
+        }
+
+        if (slot === 'Cena') {
+            return 'Cena ligera de ' + labels.slice(0, 3).join(' con ');
+        }
+
+        return labels[0] + ' con ' + labels.slice(1).join(' + ');
+    }
+
+    function composePortionLine(ingredientKeys) {
+        const pieces = ingredientKeys
+            .map((key) => nutritionIngredientCatalog[key])
+            .filter((meta) => meta && typeof meta === 'object')
+            .map((meta) => String(meta.portion || '').trim() + ' ' + String(meta.label || '').trim())
+            .filter((text) => text.trim() !== '');
+        if (!pieces.length) {
+            return 'Porción sugerida';
+        }
+        return pieces.join(' + ');
+    }
+
+    function buildNutritionIngredientGroups(ingredientKeys) {
+        return (Array.isArray(ingredientKeys) ? ingredientKeys : []).reduce((groups, key) => {
+            const meta = nutritionIngredientCatalog[key];
+            if (!meta) return groups;
+
+            const category = String(meta.category || '').trim();
+            if (Object.prototype.hasOwnProperty.call(groups, category)) {
+                groups[category].push(key);
+            } else {
+                groups.other.push(key);
+            }
+
+            return groups;
+        }, {
+            protein: [],
+            carb: [],
+            fruit: [],
+            veggie: [],
+            fat: [],
+            other: [],
+        });
+    }
+
+    function pickFirstNutritionIngredient(group) {
+        return Array.isArray(group) && group.length > 0 ? group[0] : null;
+    }
+
+    function joinNutritionLabels(labels) {
+        const safeLabels = (Array.isArray(labels) ? labels : [])
+            .map((label) => String(label || '').trim())
+            .filter((label) => label !== '');
+
+        if (!safeLabels.length) return '';
+        if (safeLabels.length === 1) return safeLabels[0];
+        if (safeLabels.length === 2) return safeLabels[0] + ' y ' + safeLabels[1];
+
+        return safeLabels.slice(0, -1).join(', ') + ' y ' + safeLabels[safeLabels.length - 1];
+    }
+
+    function appendNutritionSide(base, side) {
+        return side !== '' ? base + ', ' + side : base;
+    }
+
+    function resolveDishIngredientLabel(key) {
+        const customLabels = {
+            carne: 'carne magra',
+            pasta: 'pasta integral',
+            pan_integral: 'pan integral',
+            tortilla_integral: 'tortilla integral',
+            arepa_integral: 'arepa integral',
+            frutos_secos: 'frutos secos',
+            mantequilla_mani: 'mantequilla de mani',
+            semilla_girasol: 'semillas de girasol',
+        };
+
+        if (Object.prototype.hasOwnProperty.call(customLabels, key)) {
+            return customLabels[key];
+        }
+
+        const meta = nutritionIngredientCatalog[key];
+        return meta ? String(meta.label || '').trim().toLowerCase() : '';
+    }
+
+    function resolvePreparedIngredientLabel(key) {
+        const preparedLabels = {
+            pollo: 'pollo a la plancha',
+            atun: 'atun escurrido',
+            huevo: 'huevo revuelto',
+            pavo: 'pavo a la plancha',
+            carne: 'carne magra a la plancha',
+            pescado: 'pescado a la plancha',
+            yogur: 'yogur natural',
+            tofu: 'tofu salteado',
+            queso_fresco: 'queso fresco',
+            queso_cottage: 'queso cottage',
+            leche: 'leche',
+            sardina: 'sardina',
+            avena: 'avena cocida',
+            arroz: 'arroz cocido',
+            quinoa: 'quinoa cocida',
+            papa: 'papa cocida',
+            camote: 'camote al horno',
+            pasta: 'pasta integral cocida',
+            pan_integral: 'pan integral tostado',
+            fruta: 'fruta fresca',
+            legumbres: 'legumbres cocidas',
+            platano: 'platano',
+            yuca: 'yuca cocida',
+            tortilla_integral: 'tortilla integral caliente',
+            maiz: 'maiz cocido',
+            arepa_integral: 'arepa integral',
+            verduras: 'verduras salteadas',
+            ensalada: 'ensalada fresca',
+            tomate: 'tomate en rodajas',
+            cebolla: 'cebolla salteada',
+            zanahoria: 'zanahoria cocida',
+            pepino: 'pepino en rodajas',
+            espinaca: 'espinaca salteada',
+            aguacate: 'aguacate',
+            frutos_secos: 'frutos secos',
+            mani: 'mani',
+            aceite_oliva: 'aceite de oliva',
+            mantequilla_mani: 'mantequilla de mani',
+            chia: 'chia',
+            semilla_girasol: 'semillas de girasol',
+        };
+
+        if (Object.prototype.hasOwnProperty.call(preparedLabels, key)) {
+            return preparedLabels[key];
+        }
+
+        return resolveDishIngredientLabel(key);
+    }
+
+    function pickNutritionVariant(options, slot, ingredientKeys) {
+        const variants = (Array.isArray(options) ? options : [])
+            .map((option) => String(option || '').trim())
+            .filter((option) => option !== '');
+
+        if (!variants.length) return '';
+
+        const seed = [slot]
+            .concat((Array.isArray(ingredientKeys) ? ingredientKeys.slice() : []).sort())
+            .join('|');
+        let hash = 0;
+
+        for (let index = 0; index < seed.length; index += 1) {
+            hash = ((hash * 31) + seed.charCodeAt(index)) >>> 0;
+        }
+
+        return variants[hash % variants.length];
+    }
+
+    function composeBreakfastDish(ingredientKeys) {
+        const groups = buildNutritionIngredientGroups(ingredientKeys);
+        const protein = pickFirstNutritionIngredient(groups.protein);
+        const carb = pickFirstNutritionIngredient(groups.carb);
+        const fruit = pickFirstNutritionIngredient(groups.fruit);
+        const veggie = pickFirstNutritionIngredient(groups.veggie);
+        const fat = pickFirstNutritionIngredient(groups.fat);
+
+        if (carb === 'avena' && protein === 'yogur') {
+            const extras = joinNutritionLabels([fruit, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            const suffix = extras !== '' ? ', ' + extras : '';
+            return pickNutritionVariant([
+                'Parfait de yogur con avena' + suffix,
+                'Bowl de yogur con avena' + suffix,
+                'Avena cremosa con yogur' + suffix,
+            ], 'Desayuno', ingredientKeys);
+        }
+
+        if (carb === 'avena') {
+            const extras = joinNutritionLabels([protein, fruit, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            const suffix = extras !== '' ? ' con ' + extras : '';
+            return pickNutritionVariant([
+                'Avena proteica' + suffix,
+                'Avena cocida' + suffix,
+                'Bowl de avena' + suffix,
+            ], 'Desayuno', ingredientKeys);
+        }
+
+        if (carb === 'pan_integral') {
+            const filling = joinNutritionLabels([protein, veggie, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Tostadas integrales con ' + filling,
+                'Pan integral tostado con ' + filling,
+                'Sandwich abierto de ' + filling,
+            ], 'Desayuno', ingredientKeys);
+        }
+
+        if (carb === 'arepa_integral') {
+            const filling = joinNutritionLabels([protein, veggie, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Arepa integral rellena de ' + filling,
+                'Arepa integral con ' + filling,
+                'Arepa tostada con ' + filling,
+            ], 'Desayuno', ingredientKeys);
+        }
+
+        if (carb === 'tortilla_integral') {
+            const filling = joinNutritionLabels([protein, veggie, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Wrap integral de ' + filling,
+                'Tortilla integral rellena de ' + filling,
+                'Roll integral con ' + filling,
+            ], 'Desayuno', ingredientKeys);
+        }
+
+        const pieces = [protein, carb, fruit, fat, veggie]
+            .filter((key) => key !== null)
+            .map(resolveDishIngredientLabel);
+        return pieces.length > 0 ? 'Desayuno de ' + joinNutritionLabels(pieces.slice(0, 3)) : 'Plato sugerido';
+    }
+
+    function composeSnackDish(ingredientKeys) {
+        const groups = buildNutritionIngredientGroups(ingredientKeys);
+        const protein = pickFirstNutritionIngredient(groups.protein);
+        const carb = pickFirstNutritionIngredient(groups.carb);
+        const fruit = pickFirstNutritionIngredient(groups.fruit);
+        const veggie = pickFirstNutritionIngredient(groups.veggie);
+        const fat = pickFirstNutritionIngredient(groups.fat);
+
+        if (protein === 'yogur' || protein === 'queso_cottage' || protein === 'queso_fresco') {
+            const base = fruit !== null ? fruit : carb;
+            const extras = joinNutritionLabels([base, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            const suffix = extras !== '' ? ' con ' + extras : '';
+            return pickNutritionVariant([
+                'Parfait rapido de ' + resolveDishIngredientLabel(protein) + suffix,
+                'Vaso de ' + resolveDishIngredientLabel(protein) + suffix,
+                'Bowl ligero de ' + resolveDishIngredientLabel(protein) + suffix,
+            ], 'Snack', ingredientKeys);
+        }
+
+        if (carb === 'pan_integral') {
+            const filling = joinNutritionLabels([protein, veggie, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Mini sandwich integral de ' + filling,
+                'Tostada integral con ' + filling,
+                'Pan integral con ' + filling,
+            ], 'Snack', ingredientKeys);
+        }
+
+        if (carb === 'arepa_integral') {
+            const filling = joinNutritionLabels([protein, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Arepa integral con ' + filling,
+                'Arepa ligera de ' + filling,
+                'Media arepa con ' + filling,
+            ], 'Snack', ingredientKeys);
+        }
+
+        if (carb === 'tortilla_integral') {
+            const filling = joinNutritionLabels([protein, veggie, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            return pickNutritionVariant([
+                'Wrap rapido de ' + filling,
+                'Roll integral de ' + filling,
+                'Tortilla integral con ' + filling,
+            ], 'Snack', ingredientKeys);
+        }
+
+        if (carb === 'avena') {
+            const extras = joinNutritionLabels([protein, fruit, fat].filter((key) => key !== null).map(resolveDishIngredientLabel));
+            const suffix = extras !== '' ? ' con ' + extras : '';
+            return pickNutritionVariant([
+                'Bowl de avena' + suffix,
+                'Avena suave' + suffix,
+                'Avena rapida' + suffix,
+            ], 'Snack', ingredientKeys);
+        }
+
+        const pieces = [protein, fruit, carb, fat]
+            .filter((key) => key !== null)
+            .map(resolveDishIngredientLabel);
+        return pieces.length > 0 ? 'Snack de ' + joinNutritionLabels(pieces.slice(0, 3)) : 'Plato sugerido';
+    }
+
+    function composeSavoryDish(slot, ingredientKeys) {
+        const groups = buildNutritionIngredientGroups(ingredientKeys);
+        const protein = pickFirstNutritionIngredient(groups.protein);
+        const carb = pickFirstNutritionIngredient(groups.carb);
+        const veggie = pickFirstNutritionIngredient(groups.veggie);
+        const fat = pickFirstNutritionIngredient(groups.fat);
+        const proteinLabel = resolveDishIngredientLabel(protein);
+        const veggieLabel = resolveDishIngredientLabel(veggie);
+        const fatLabel = resolveDishIngredientLabel(fat);
+
+        if (carb === 'tortilla_integral') {
+            const filling = joinNutritionLabels([proteinLabel, veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                'Wrap integral de ' + filling,
+                'Tortilla integral rellena de ' + filling,
+                'Roll salado de ' + filling,
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'arroz') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide('Arroz con ' + proteinLabel, side),
+                appendNutritionSide(proteinLabel + ' con arroz', side),
+                appendNutritionSide('Salteado de ' + proteinLabel + ' con arroz', side),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'quinoa') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide('Bowl de quinoa con ' + proteinLabel, side),
+                appendNutritionSide('Quinoa con ' + proteinLabel, side),
+                appendNutritionSide(proteinLabel + ' con quinoa', side),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'pasta') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide('Pasta integral con ' + proteinLabel, side),
+                appendNutritionSide(proteinLabel + ' con pasta integral', side),
+                appendNutritionSide('Bowl de pasta integral con ' + proteinLabel, side),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'papa') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            if (protein === 'atun' || protein === 'sardina') {
+                return pickNutritionVariant([
+                    appendNutritionSide('Ensalada de ' + proteinLabel + ' con papa cocida', side),
+                    appendNutritionSide(proteinLabel + ' con papa cocida', side),
+                    appendNutritionSide('Bowl de ' + proteinLabel + ' con papa cocida', side),
+                ], slot, ingredientKeys);
+            }
+
+            return pickNutritionVariant([
+                appendNutritionSide(proteinLabel + ' con papa cocida', side),
+                appendNutritionSide(proteinLabel + ' con papas cocidas', side),
+                appendNutritionSide('Plato de ' + proteinLabel + ' con papa cocida', side),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'camote') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide(proteinLabel + ' con camote al horno', side),
+                appendNutritionSide('Plato de ' + proteinLabel + ' con camote asado', side),
+                proteinLabel + ' con camote y ' + (side !== '' ? side : 'vegetales'),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'legumbres') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide('Guiso de ' + proteinLabel + ' con legumbres', side),
+                appendNutritionSide(proteinLabel + ' con legumbres', side),
+                appendNutritionSide('Bowl de legumbres con ' + proteinLabel, side),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'yuca') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide(proteinLabel + ' con yuca cocida', side),
+                appendNutritionSide('Plato de ' + proteinLabel + ' con yuca cocida', side),
+                proteinLabel + ' con yuca y ' + (side !== '' ? side : 'vegetales'),
+            ], slot, ingredientKeys);
+        }
+
+        if (carb === 'maiz') {
+            const side = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                appendNutritionSide(proteinLabel + ' con maiz', side),
+                appendNutritionSide('Salteado de ' + proteinLabel + ' con maiz', side),
+                appendNutritionSide('Bowl de ' + proteinLabel + ' con maiz', side),
+            ], slot, ingredientKeys);
+        }
+
+        if ((protein === 'atun' || protein === 'sardina') && veggieLabel !== '') {
+            const extras = joinNutritionLabels([veggieLabel, fatLabel].filter((label) => label !== ''));
+            return pickNutritionVariant([
+                'Ensalada de ' + proteinLabel + (extras !== '' ? ' con ' + extras : ''),
+                proteinLabel + ' con ' + extras,
+                'Bowl fresco de ' + proteinLabel + (extras !== '' ? ' con ' + extras : ''),
+            ], slot, ingredientKeys);
+        }
+
+        const pieces = [proteinLabel, veggieLabel, fatLabel]
+            .filter((label) => label !== '');
+        if (!pieces.length) {
+            return 'Plato sugerido';
+        }
+
+        return pickNutritionVariant([
+            pieces[0] + (pieces.length > 1 ? ' con ' + joinNutritionLabels(pieces.slice(1)) : ''),
+            'Plato de ' + joinNutritionLabels(pieces),
+            'Bowl salado de ' + joinNutritionLabels(pieces),
+        ], slot, ingredientKeys);
+    }
+
+    function composeDishName(slot, ingredientKeys) {
+        if (slot === 'Desayuno') {
+            return composeBreakfastDish(ingredientKeys);
+        }
+        if (slot === 'Snack') {
+            return composeSnackDish(ingredientKeys);
+        }
+        if (slot === 'Almuerzo' || slot === 'Cena') {
+            return composeSavoryDish(slot, ingredientKeys);
+        }
+
+        const labels = (Array.isArray(ingredientKeys) ? ingredientKeys : [])
+            .map(resolveDishIngredientLabel)
+            .filter((label) => label !== '');
+        return labels.length > 0 ? joinNutritionLabels(labels.slice(0, 3)) : 'Plato sugerido';
+    }
+
+    function composePortionLine(ingredientKeys) {
+        const pieces = (Array.isArray(ingredientKeys) ? ingredientKeys : [])
+            .map((key) => {
+                const meta = nutritionIngredientCatalog[key];
+                if (!meta) return '';
+
+                const portion = String(meta.portion || '').trim();
+                const preparedLabel = resolvePreparedIngredientLabel(key);
+                if (portion === '' && preparedLabel === '') return '';
+                if (portion === '') return preparedLabel;
+                if (preparedLabel === '') return portion;
+                return portion + ' de ' + preparedLabel;
+            })
+            .filter((text) => text !== '');
+
+        if (!pieces.length) {
+            return 'PorciÃ³n sugerida';
+        }
+
+        return pieces.join(' + ');
+    }
+
+    function composePortionLine(ingredientKeys) {
+        const pieces = (Array.isArray(ingredientKeys) ? ingredientKeys : [])
+            .map((key) => {
+                const meta = nutritionIngredientCatalog[key];
+                if (!meta) return '';
+
+                const portion = String(meta.portion || '').trim();
+                const preparedLabel = resolvePreparedIngredientLabel(key);
+                if (portion === '' && preparedLabel === '') return '';
+                if (portion === '') return preparedLabel;
+                if (preparedLabel === '') return portion;
+                return portion + ' de ' + preparedLabel;
+            })
+            .filter((text) => text !== '');
+
+        if (!pieces.length) {
+            return 'Porcion sugerida';
+        }
+
+        return pieces.join(' + ');
+    }
+
+    function suggestIngredientByCategory(category, slot, preferences, selectedSet, excludedSet) {
+        const candidate = pickBestIngredientForCategory(category, slot, preferences, selectedSet, false, excludedSet);
+        if (!candidate) return null;
+        return candidate;
+    }
+
+    function buildNutritionMealFromBlueprint(slot, preferences, selectedSet, excludedSet) {
+        const blueprint = nutritionSlotBlueprints[slot] || { required: [], optional: [] };
+        const strictMode = Boolean(preferences.strict);
+        const chosenKeys = [];
+        const missingCategories = [];
+        const suggestedKeys = [];
+
+        blueprint.required.forEach((category) => {
+            const found = pickBestIngredientForCategory(category, slot, preferences, selectedSet, strictMode, excludedSet);
+            if (found) {
+                chosenKeys.push(found);
+                return;
+            }
+
+            missingCategories.push(category);
+            if (!strictMode) {
+                const suggested = suggestIngredientByCategory(category, slot, preferences, selectedSet, excludedSet);
+                if (suggested) {
+                    chosenKeys.push(suggested);
+                    suggestedKeys.push(suggested);
+                }
+            }
+        });
+
+        blueprint.optional.forEach((category) => {
+            const optionalFound = pickBestIngredientForCategory(category, slot, preferences, selectedSet, strictMode, excludedSet);
+            if (!optionalFound) return;
+            if (!chosenKeys.includes(optionalFound)) {
+                chosenKeys.push(optionalFound);
+            }
+        });
+
+        if (!chosenKeys.length || (strictMode && missingCategories.length > 0)) {
+            return {
+                slot,
+                blocked: true,
+                missingCategories,
+                suggestedKeys,
+            };
+        }
+
+        const nutritionTotals = chosenKeys.reduce((acc, key) => {
+            const meta = nutritionIngredientCatalog[key];
+            if (!meta) return acc;
+            acc.kcal += Number(meta.kcal || 0);
+            acc.protein += Number(meta.protein || 0);
+            acc.carbs += Number(meta.carbs || 0);
+            acc.fat += Number(meta.fat || 0);
+            return acc;
+        }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+        const selectedCount = chosenKeys.filter((key) => selectedSet.has(key)).length;
+        const coverage = Math.round((selectedCount / Math.max(1, chosenKeys.length)) * 100);
+
+        return {
+            slot,
+            blocked: false,
+            chosenKeys,
+            suggestedKeys,
+            dish: composeDishName(slot, chosenKeys),
+            portion: composePortionLine(chosenKeys),
+            kcal: Math.max(0, Math.round(nutritionTotals.kcal)),
+            protein_g: Math.max(0, Math.round(nutritionTotals.protein)),
+            carbs_g: Math.max(0, Math.round(nutritionTotals.carbs)),
+            fat_g: Math.max(0, Math.round(nutritionTotals.fat)),
+            image_url: resolveNutritionImageBySlot(slot),
+            match_coverage: coverage,
+        };
+    }
+
+    function buildNutritionPlanFromPreferences(preferences) {
+        const normalized = normalizeNutritionPreferences(preferences);
+        const allergyExcludedSet = resolveAllergyExcludedKeys(normalized);
+        const selectedSet = new Set(
+            normalized.ingredients.filter((key) => !allergyExcludedSet.has(key))
+        );
+        const generatedItems = [];
+        const missingIngredients = [];
+        let strictMissedSlots = 0;
+        let accumulatedTarget = 0;
+
+        nutritionSlotOrder.forEach((slot, index) => {
+            const slotShare = Number(nutritionSlotShares[slot] || 0.25);
+            let targetSlotKcal = Math.max(120, Math.round(nutritionTargetKcal * slotShare));
+            if (index === nutritionSlotOrder.length - 1) {
+                targetSlotKcal = Math.max(120, nutritionTargetKcal - accumulatedTarget);
+            }
+            accumulatedTarget += targetSlotKcal;
+
+            const meal = buildNutritionMealFromBlueprint(slot, normalized, selectedSet, allergyExcludedSet);
+            if (meal.blocked) {
+                strictMissedSlots += 1;
+                const categorySuggestions = meal.missingCategories
+                    .map((category) => suggestIngredientByCategory(category, slot, normalized, selectedSet, allergyExcludedSet))
+                    .filter((value) => value !== null);
+
+                categorySuggestions.forEach((key) => {
+                    const meta = nutritionIngredientCatalog[key];
+                    if (!meta) return;
+                    missingIngredients.push({
+                        key,
+                        label: meta.label,
+                        reason: 'faltante',
+                        hint: String(meta.shopping || '').trim(),
+                    });
+                });
+
+                generatedItems.push({
+                    slot,
+                    dish: 'No alcanza para ' + slot.toLowerCase(),
+                    portion: 'Falta: ' + meal.missingCategories.map(resolveCategoryLabel).join(', '),
+                    kcal: 0,
+                    protein_g: 0,
+                    carbs_g: 0,
+                    fat_g: 0,
+                    image_url: resolveNutritionImageBySlot(slot),
+                    is_adapted: true,
+                    match_coverage: 0,
+                    is_blocked: true,
+                });
+                return;
+            }
+
+            let adjustedKcal = targetSlotKcal;
+            if (meal.kcal <= 0) {
+                adjustedKcal = 0;
+            }
+            const factor = meal.kcal > 0 ? (adjustedKcal / meal.kcal) : 0;
+            const protein = Math.max(0, Math.round(meal.protein_g * factor));
+            const carbs = Math.max(0, Math.round(meal.carbs_g * factor));
+            const fat = Math.max(0, Math.round(meal.fat_g * factor));
+
+            meal.suggestedKeys.forEach((key) => {
+                const meta = nutritionIngredientCatalog[key];
+                if (!meta) return;
+                missingIngredients.push({
+                    key,
+                    label: meta.label,
+                    reason: 'comprar',
+                    hint: String(meta.shopping || '').trim(),
+                });
+            });
+
+            generatedItems.push({
+                slot,
+                dish: meal.dish,
+                portion: meal.portion,
+                kcal: adjustedKcal,
+                protein_g: protein,
+                carbs_g: carbs,
+                fat_g: fat,
+                image_url: meal.image_url,
+                is_adapted: true,
+                match_coverage: meal.match_coverage,
+                is_blocked: false,
+            });
+        });
+
+        const dedupMissing = Array.from(new Map(
+            missingIngredients.map((item) => [String(item.key || '').trim(), item])
+        ).values()).filter((item) => item.key !== '');
+
+        const totals = calculateNutritionTotals(generatedItems);
+        return {
+            items: generatedItems,
+            totals,
+            selectedCount: selectedSet.size,
+            strictMissedSlots,
+            strict: normalized.strict,
+            allergies: normalized.allergies.slice(),
+            missingIngredients: dedupMissing,
+        };
+    }
+
+    function renderNutritionTotals(items) {
+        const totals = calculateNutritionTotals(items);
+        if (nutritionTotalKcalEl) {
+            nutritionTotalKcalEl.textContent = String(totals.kcal) + ' kcal';
+        }
+        if (nutritionTotalProteinEl) {
+            nutritionTotalProteinEl.textContent = String(totals.protein) + ' g';
+        }
+        if (nutritionTotalCarbsEl) {
+            nutritionTotalCarbsEl.textContent = String(totals.carbs);
+        }
+        if (nutritionTotalFatEl) {
+            nutritionTotalFatEl.textContent = String(totals.fat);
+        }
+    }
+
+    function renderNutritionItems(items) {
+        if (!nutritionDayListEl) return;
+        const list = Array.isArray(items) ? items : [];
+        nutritionDayListEl.innerHTML = list.map((item) => {
+            const dish = escapeNutritionHtml(item.dish || 'Plato sugerido');
+            const portion = escapeNutritionHtml(item.portion || 'Porción sugerida');
+            const slot = escapeNutritionHtml(item.slot || 'Comida');
+            const image = escapeNutritionHtml(item.image_url || resolveNutritionImageBySlot(item.slot));
+            const kcal = Math.max(0, Math.round(Number(item.kcal || 0)));
+            const protein = Math.max(0, Math.round(Number(item.protein_g || 0)));
+            const carbs = Math.max(0, Math.round(Number(item.carbs_g || 0)));
+            const fat = Math.max(0, Math.round(Number(item.fat_g || 0)));
+            const showBadge = Boolean(item.is_adapted);
+            const isBlocked = Boolean(item.is_blocked);
+            const coverage = Math.max(0, Math.min(100, Math.round(Number(item.match_coverage || 0))));
+
+            return ''
+                + '<article class="nutrition-day-item">'
+                + '<img src="' + image + '" alt="Plato recomendado" class="nutrition-day-image" loading="lazy" decoding="async">'
+                + '<div>'
+                + '<div class="nutrition-day-head">'
+                + '<p class="nutrition-day-slot">' + slot + '</p>'
+                + '<p class="nutrition-day-kcal">' + String(kcal) + ' kcal</p>'
+                + '</div>'
+                + '<p class="nutrition-day-dish">' + dish + '</p>'
+                + '<p class="nutrition-day-portion">' + portion + '</p>'
+                + '<p class="nutrition-day-macros">P ' + String(protein) + 'g | C ' + String(carbs) + 'g | G ' + String(fat) + 'g</p>'
+                + (isBlocked
+                    ? '<span class="nutrition-adapt-badge">Faltan ingredientes</span>'
+                    : (showBadge ? '<span class="nutrition-adapt-badge">Adaptado ' + String(coverage) + '%</span>' : '')
+                )
+                + '</div>'
+                + '</article>';
+        }).join('');
+    }
+
+    function setNutritionCustomStatus(isCustom) {
+        if (!nutritionCustomizeStatusEl) return;
+        nutritionCustomizeStatusEl.textContent = isCustom ? 'Plan personalizado' : 'Plan base';
+        nutritionCustomizeStatusEl.classList.toggle('is-custom', isCustom);
+        nutritionCustomizeResetBtn?.classList.toggle('hidden', !isCustom);
+        nutritionIsCustomPlan = isCustom;
+    }
+
+    function applyNutritionPlan(items, options) {
+        nutritionCurrentItems = Array.isArray(items) ? items.slice() : [];
+        renderNutritionItems(nutritionCurrentItems);
+        renderNutritionTotals(nutritionCurrentItems);
+        setNutritionCustomStatus(Boolean(options && options.custom));
+        updateNutritionAllergyAlert(nutritionCurrentPreferences);
+        nutritionCurrentMissingIngredients = Array.isArray(options && options.missingIngredients)
+            ? options.missingIngredients.slice()
+            : [];
+
+        const note = options && typeof options.note === 'string'
+            ? options.note.trim()
+            : '';
+        if (nutritionCustomizeNoteEl) {
+            nutritionCustomizeNoteEl.textContent = note !== ''
+                ? note
+                : 'Consejo: marca mínimo 1 proteína y 1 carbohidrato para mejores resultados.';
+        }
+
+        if (Boolean(options && options.refreshShopping)) {
+            const selectedSet = new Set(Array.isArray(nutritionCurrentPreferences.ingredients) ? nutritionCurrentPreferences.ingredients : []);
+            const excludedSet = resolveAllergyExcludedKeys(nutritionCurrentPreferences);
+            const missingSuggestions = nutritionCurrentMissingIngredients
+                .filter((item) => item && typeof item === 'object')
+                .map((item) => {
+                    const key = String(item.key || '').trim();
+                    const meta = key !== '' ? nutritionIngredientCatalog[key] : null;
+                    return {
+                        key,
+                        label: String(item.label || '').trim(),
+                        reason: String(item.reason || 'faltante').trim(),
+                        hint: String(item.hint || (meta && meta.shopping ? meta.shopping : '')).trim(),
+                        checked: false,
+                    };
+                })
+                .filter((item) => item.key !== '' && item.label !== '')
+                .filter((item) => !excludedSet.has(item.key));
+
+            if (missingSuggestions.length > 0) {
+                mergeNutritionShoppingSuggestions(missingSuggestions);
+            } else if (nutritionShoppingItems.length === 0) {
+                mergeNutritionShoppingSuggestions(buildDefaultNutritionShoppingSuggestions(selectedSet, excludedSet));
+            } else {
+                renderNutritionShoppingItems();
+            }
+        }
+    }
+
+    function initializeNutritionCustomization() {
+        const hasNutritionUi = currentScreen === 'nutrition'
+            && Boolean(nutritionCustomizeOpenBtn)
+            && Boolean(nutritionDayListEl)
+            && Boolean(nutritionInitialPayload && nutritionInitialPayload.ready);
+        if (!hasNutritionUi) return;
+
+        nutritionShoppingItems = readNutritionShoppingItems();
+        const savedPreferences = readNutritionPreferences();
+        if (savedPreferences) {
+            nutritionCurrentPreferences = normalizeNutritionPreferences(savedPreferences);
+            syncNutritionModalControls(nutritionCurrentPreferences);
+            updateNutritionAllergyAlert(nutritionCurrentPreferences);
+            if (savedPreferences.applied) {
+                const generatedPlan = buildNutritionPlanFromPreferences(nutritionCurrentPreferences);
+                applyNutritionPlan(generatedPlan.items, {
+                    custom: true,
+                    note: generatedPlan.strict && generatedPlan.strictMissedSlots > 0
+                        ? 'Modo estricto: algunas comidas no se pudieron construir con tus ingredientes actuales.'
+                        : 'Plan personalizado con tus ingredientes, tiempo y presupuesto.',
+                    missingIngredients: generatedPlan.missingIngredients,
+                    refreshShopping: true,
+                });
+            } else {
+                renderNutritionShoppingItems();
+            }
+            updateNutritionSelectionFeedback();
+            return;
+        }
+
+        nutritionCurrentPreferences = { ...nutritionDefaultPreferences };
+        syncNutritionModalControls(nutritionCurrentPreferences);
+        updateNutritionAllergyAlert(nutritionCurrentPreferences);
+        applyNutritionPlan(nutritionInitialItems, {
+            custom: false,
+            refreshShopping: true,
+        });
+        updateNutritionSelectionFeedback();
+    }
+
+    function updateNutritionSelectionFeedback() {
+        if (!nutritionCustomizeFeedbackEl) return;
+        const prefs = collectNutritionPreferencesFromModal();
+        const proteins = prefs.ingredients.filter((item) => {
+            const meta = nutritionIngredientCatalog[item];
+            return meta && meta.category === 'protein';
+        }).length;
+        const carbs = prefs.ingredients.filter((item) => {
+            const meta = nutritionIngredientCatalog[item];
+            return meta && (meta.category === 'carb' || meta.category === 'fruit');
+        }).length;
+        const allergyLabels = resolveAllergyLabels(prefs.allergies);
+        const strictLabel = prefs.strict ? 'Modo estricto activo.' : 'Modo flexible activo.';
+        const allergyLabel = allergyLabels.length > 0
+            ? 'Alergias: ' + allergyLabels.join(', ') + '.'
+            : 'Alergias: ninguna declarada.';
+        const ackLabel = prefs.allergy_ack
+            ? 'Aviso de alergias confirmado.'
+            : 'Falta confirmar aviso de alergias.';
+        nutritionCustomizeFeedbackEl.textContent = 'Ingredientes seleccionados: ' + String(prefs.ingredients.length)
+            + '. Proteínas: ' + String(proteins)
+            + ', Carbohidratos: ' + String(carbs)
+            + '. ' + strictLabel
+            + ' ' + allergyLabel
+            + ' ' + ackLabel;
+        renderNutritionCustomizePreview(prefs);
     }
 
     function setProfileEditOpen(isOpen) {
@@ -3962,6 +6777,14 @@
             document.activeElement.blur();
         }
         setFitnessModalOpen(false);
+    }
+
+    function setFitnessModalNextScreen(nextScreen) {
+        if (!(fitnessModalNextScreenInput instanceof HTMLInputElement)) return;
+        const normalized = String(nextScreen || '').trim().toLowerCase();
+        fitnessModalNextScreenInput.value = allowedFitnessNextScreens.includes(normalized)
+            ? normalized
+            : fitnessModalDefaultNextScreen;
     }
 
     function resetFitnessFormSubmitState() {
@@ -4342,7 +7165,7 @@
             const summary = String(message || trainingStatus.status_label || '').trim();
             trainingWinTextEl.textContent = summary !== ''
                 ? summary
-                : 'Tu entrenamiento termino correctamente. Tu progreso ya fue actualizado.';
+                : 'Tu entrenamiento terminó correctamente. Tu progreso ya fue actualizado.';
         }
         if (trainingWinExercisesEl) {
             trainingWinExercisesEl.textContent = String(completion.done) + '/' + String(completion.total);
@@ -6274,6 +9097,10 @@
             resolveTrainingFinishConfirm(false);
             return;
         }
+        if (nutritionCustomizeModal && !nutritionCustomizeModal.classList.contains('hidden')) {
+            setNutritionCustomizeModalOpen(false);
+            return;
+        }
         setUserMenuOpen(false);
         setLeaderboardOpen(false);
         closeTrainingWin();
@@ -6332,9 +9159,204 @@
         closeTrainingWin();
     });
 
-    openFitnessModalTrigger?.addEventListener('click', () => {
+    nutritionCustomizeOpenBtn?.addEventListener('click', () => {
         setUserMenuOpen(false);
-        setFitnessModalOpen(true);
+        setNutritionShoppingModalOpen(false);
+        syncNutritionModalControls(nutritionCurrentPreferences);
+        updateNutritionSelectionFeedback();
+        setNutritionCustomizeModalOpen(true);
+    });
+
+    nutritionShoppingOpenBtn?.addEventListener('click', () => {
+        setUserMenuOpen(false);
+        renderNutritionShoppingItems();
+        setNutritionShoppingModalOpen(true);
+    });
+
+    nutritionShoppingCloseEls.forEach((element) => {
+        element.addEventListener('click', () => {
+            setNutritionShoppingModalOpen(false);
+        });
+    });
+
+    nutritionOpenCustomizerBtns.forEach((button) => {
+        button.addEventListener('click', () => {
+            setNutritionShoppingModalOpen(false);
+            syncNutritionModalControls(nutritionCurrentPreferences);
+            updateNutritionSelectionFeedback();
+            setNutritionCustomizeModalOpen(true);
+        });
+    });
+
+    nutritionCustomizeCloseEls.forEach((element) => {
+        element.addEventListener('click', () => {
+            setNutritionCustomizeModalOpen(false);
+        });
+    });
+
+    nutritionCustomizeIngredientBtns.forEach((button) => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('is-selected');
+            const isSelected = button.classList.contains('is-selected');
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+            updateNutritionSelectionFeedback();
+        });
+    });
+
+    nutritionCustomizeAllergyBtns.forEach((button) => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('is-selected');
+            const isSelected = button.classList.contains('is-selected');
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+            const nextPreferences = collectNutritionPreferencesFromModal();
+            syncNutritionIngredientButtons(nextPreferences);
+            updateNutritionSelectionFeedback();
+            updateNutritionAllergyAlert(nextPreferences);
+        });
+    });
+
+    nutritionCustomizeTimeEl?.addEventListener('change', () => {
+        updateNutritionSelectionFeedback();
+    });
+
+    nutritionCustomizeBudgetEl?.addEventListener('change', () => {
+        updateNutritionSelectionFeedback();
+    });
+
+    nutritionCustomizeStrictEl?.addEventListener('change', () => {
+        updateNutritionSelectionFeedback();
+    });
+
+    nutritionCustomizeAllergyAckEl?.addEventListener('change', () => {
+        updateNutritionSelectionFeedback();
+    });
+
+    nutritionCustomizeApplyBtn?.addEventListener('click', () => {
+        const preferences = collectNutritionPreferencesFromModal();
+        const selectedCount = preferences.ingredients.length;
+
+        if (selectedCount < 2) {
+            if (nutritionCustomizeFeedbackEl) {
+                nutritionCustomizeFeedbackEl.textContent = 'Para personalizar mejor, selecciona al menos 2 ingredientes.';
+            }
+            return;
+        }
+
+        if (!preferences.allergy_ack) {
+            if (nutritionCustomizeFeedbackEl) {
+                nutritionCustomizeFeedbackEl.textContent = 'Debes confirmar el aviso de alergias para aplicar el plan.';
+            }
+            return;
+        }
+
+        nutritionCurrentPreferences = preferences;
+        const generatedPlan = buildNutritionPlanFromPreferences(preferences);
+        if (!Array.isArray(generatedPlan.items) || generatedPlan.items.length === 0) {
+            if (nutritionCustomizeFeedbackEl) {
+                nutritionCustomizeFeedbackEl.textContent = 'No encontramos combinaciones suficientes con esa selección. Prueba agregando más ingredientes.';
+            }
+            return;
+        }
+        const allergyLabels = resolveAllergyLabels(preferences.allergies);
+        const allergyNote = allergyLabels.length > 0
+            ? 'Alergias excluidas: ' + allergyLabels.join(', ') + '.'
+            : 'Sin alergias declaradas.';
+        const note = generatedPlan.strict && generatedPlan.strictMissedSlots > 0
+            ? 'Modo estricto activo: algunas comidas no se armaron porque faltan ingredientes. Revisa la lista de compras. ' + allergyNote
+            : 'Plan personalizado exitoso: comidas adaptadas a lo que tienes hoy. ' + allergyNote;
+
+        applyNutritionPlan(generatedPlan.items, {
+            custom: true,
+            note,
+            missingIngredients: generatedPlan.missingIngredients,
+            refreshShopping: true,
+        });
+        writeNutritionPreferences(preferences, true);
+        setNutritionCustomizeModalOpen(false);
+    });
+
+    nutritionCustomizeResetBtn?.addEventListener('click', () => {
+        nutritionCurrentPreferences = { ...nutritionDefaultPreferences };
+        applyNutritionPlan(nutritionInitialItems, {
+            custom: false,
+            note: 'Volviste al plan sugerido por la app. Puedes personalizarlo de nuevo cuando quieras.',
+            missingIngredients: [],
+            refreshShopping: true,
+        });
+        clearNutritionPreferences();
+        syncNutritionModalControls(nutritionCurrentPreferences);
+        if (nutritionCustomizeFeedbackEl) {
+            nutritionCustomizeFeedbackEl.textContent = 'Selecciona tus ingredientes para personalizar tus comidas.';
+        }
+    });
+
+    nutritionShoppingAutoFillBtn?.addEventListener('click', () => {
+        const selectedSet = new Set(Array.isArray(nutritionCurrentPreferences.ingredients) ? nutritionCurrentPreferences.ingredients : []);
+        const excludedSet = resolveAllergyExcludedKeys(nutritionCurrentPreferences);
+        const fromMissing = nutritionCurrentMissingIngredients
+            .map((item) => {
+                const key = String(item.key || '').trim();
+                const meta = key !== '' ? nutritionIngredientCatalog[key] : null;
+                return {
+                    key,
+                    label: String(item.label || '').trim(),
+                    reason: 'faltante',
+                    hint: String(item.hint || (meta && meta.shopping ? meta.shopping : '')).trim(),
+                    checked: false,
+                };
+            })
+            .filter((item) => item.key !== '' && item.label !== '')
+            .filter((item) => !excludedSet.has(item.key));
+        if (fromMissing.length > 0) {
+            mergeNutritionShoppingSuggestions(fromMissing);
+            return;
+        }
+        mergeNutritionShoppingSuggestions(buildDefaultNutritionShoppingSuggestions(selectedSet, excludedSet));
+    });
+
+    nutritionShoppingAddBtn?.addEventListener('click', () => {
+        addManualNutritionShoppingItem(nutritionShoppingInputEl?.value || '');
+        if (nutritionShoppingInputEl) {
+            nutritionShoppingInputEl.value = '';
+            nutritionShoppingInputEl.focus();
+        }
+    });
+
+    nutritionShoppingInputEl?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        addManualNutritionShoppingItem(nutritionShoppingInputEl.value || '');
+        nutritionShoppingInputEl.value = '';
+    });
+
+    nutritionShoppingClearDoneBtn?.addEventListener('click', () => {
+        nutritionShoppingItems = nutritionShoppingItems.filter((item) => !item.checked);
+        writeNutritionShoppingItems(nutritionShoppingItems);
+        renderNutritionShoppingItems();
+    });
+
+    nutritionShoppingListEl?.addEventListener('change', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+        const row = target.closest('[data-shopping-key]');
+        if (!(row instanceof HTMLElement)) return;
+        const key = String(row.dataset.shoppingKey || '').trim();
+        if (key === '') return;
+        nutritionShoppingItems = nutritionShoppingItems.map((item) => (
+            item.key === key ? { ...item, checked: target.checked } : item
+        ));
+        writeNutritionShoppingItems(nutritionShoppingItems);
+        renderNutritionShoppingItems();
+    });
+
+    openFitnessModalTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            setFitnessModalNextScreen(String(trigger.dataset.nextScreen || '').trim());
+            setUserMenuOpen(false);
+            setFitnessModalOpen(true);
+        });
     });
 
     fitnessModalCloseTargets.forEach((target) => {
@@ -6464,6 +9486,7 @@
     armDirectPermissionPrompt();
     refreshClientPushStatus();
     initBootScreen();
+    initializeNutritionCustomization();
     hideModuleLoader();
     const focusFlags = consumeFocusParamsFromUrl();
     if (currentScreen === 'progress' && (focusFlags.focusStart || focusFlags.focusFinish)) {
@@ -6491,7 +9514,3 @@
 </script>
 </body>
 </html>
-
-
-
-

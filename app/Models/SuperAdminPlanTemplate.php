@@ -20,6 +20,7 @@ class SuperAdminPlanTemplate extends Model
      */
     protected $fillable = [
         'plan_key',
+        'feature_plan_key',
         'name',
         'duration_days',
         'duration_unit',
@@ -36,6 +37,7 @@ class SuperAdminPlanTemplate extends Model
     {
         return [
             'plan_key' => 'string',
+            'feature_plan_key' => 'string',
             'duration_days' => 'integer',
             'duration_months' => 'integer',
             'price' => 'decimal:2',
@@ -51,7 +53,7 @@ class SuperAdminPlanTemplate extends Model
         if (! Schema::hasTable('superadmin_plan_templates')) {
             return;
         }
-        if (! Schema::hasColumns('superadmin_plan_templates', ['plan_key', 'discount_price'])) {
+        if (! Schema::hasColumns('superadmin_plan_templates', ['plan_key', 'feature_plan_key', 'discount_price'])) {
             return;
         }
 
@@ -61,6 +63,7 @@ class SuperAdminPlanTemplate extends Model
             $plan = self::query()->firstOrNew(['plan_key' => $planKey]);
 
             $plan->name = (string) $default['name'];
+            $plan->feature_plan_key = $planKey;
             $plan->duration_unit = (string) $default['duration_unit'];
             $plan->duration_days = (int) $default['duration_days'];
             $plan->duration_months = (int) $default['duration_months'];
@@ -86,5 +89,25 @@ class SuperAdminPlanTemplate extends Model
     public function durationLabel(): string
     {
         return PlanDuration::label($this->duration_unit, (int) $this->duration_days, $this->duration_months);
+    }
+
+    public function isBaseCatalog(): bool
+    {
+        return in_array((string) $this->plan_key, SuperAdminPlanCatalog::keys(), true);
+    }
+
+    public function resolvedFeaturePlanKey(): string
+    {
+        $featurePlanKey = strtolower(trim((string) ($this->feature_plan_key ?? '')));
+        if (in_array($featurePlanKey, SuperAdminPlanCatalog::keys(), true)) {
+            return $featurePlanKey;
+        }
+
+        $planKey = strtolower(trim((string) ($this->plan_key ?? '')));
+        if (in_array($planKey, SuperAdminPlanCatalog::keys(), true)) {
+            return $planKey;
+        }
+
+        return 'basico';
     }
 }

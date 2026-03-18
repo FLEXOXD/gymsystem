@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateGymAdminUserRequest;
 use App\Models\Gym;
 use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
+use App\Services\SuperAdminPlanPricingService;
 use App\Services\SubscriptionService;
 use App\Services\SuperAdminDashboardService;
 use App\Support\Currency;
@@ -19,6 +20,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -26,7 +28,8 @@ class SuperAdminDashboardController extends Controller
 {
     public function __construct(
         private readonly SuperAdminDashboardService $dashboardService,
-        private readonly SubscriptionService $subscriptionService
+        private readonly SubscriptionService $subscriptionService,
+        private readonly SuperAdminPlanPricingService $planPricingService
     ) {
     }
 
@@ -35,8 +38,12 @@ class SuperAdminDashboardController extends Controller
      */
     public function dashboard(): View
     {
+        $dashboard = $this->dashboardService->getDashboardData();
+
         return view('superadmin.dashboard', [
-            'kpis' => $this->dashboardService->getKpis(),
+            'kpis' => (array) ($dashboard['kpis'] ?? []),
+            'planMix' => $dashboard['plan_mix'] ?? [],
+            'reports' => (array) ($dashboard['reports'] ?? []),
         ]);
     }
 
@@ -47,15 +54,13 @@ class SuperAdminDashboardController extends Controller
     {
         SuperAdminPlanTemplate::ensureDefaultCatalog();
 
+        $planTemplates = $this->selectablePlanTemplates();
+
         return view('superadmin.gyms', [
             'gyms' => $this->dashboardService->getGymsTable(),
             'paymentMethods' => SubscriptionService::PAYMENT_METHODS,
-            'planTemplates' => SuperAdminPlanTemplate::query()
-                ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
-                ->where('status', 'active')
-                ->select(['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'])
-                ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
-                ->get(),
+            'planTemplates' => $planTemplates,
+            'planPromotionRules' => $this->planPricingService->promotionRulesForPlanTemplates($planTemplates),
         ]);
     }
 
@@ -85,31 +90,33 @@ class SuperAdminDashboardController extends Controller
     {
         $data = $request->validated();
         SuperAdminPlanTemplate::ensureDefaultCatalog();
+        if (! $this->supportsCommercialPlanCatalog()) {
+            return back()
+                ->withInput()
+                ->withErrors(['subscription_plan_template_id' => 'El catalogo comercial aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.']);
+        }
 
         $selectedPlanTemplate = SuperAdminPlanTemplate::query()
-            ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
             ->where('status', 'active')
-            ->findOrFail((int) ($data['subscription_plan_template_id'] ?? 0));
+            ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
+            ->find((int) ($data['subscription_plan_template_id'] ?? 0));
+        if (! $selectedPlanTemplate) {
+            return back()
+                ->withInput()
+                ->withErrors(['subscription_plan_template_id' => 'El plan comercial seleccionado ya no esta disponible.']);
+        }
+
+        $selectedFeaturePlanKey = $selectedPlanTemplate->resolvedFeaturePlanKey();
+        $selectedBillingCycles = max(1, (int) ($data['subscription_billing_cycles'] ?? 1));
         $customPrice = array_key_exists('subscription_custom_price', $data) && $data['subscription_custom_price'] !== null
             ? (float) $data['subscription_custom_price']
             : null;
-        $introDiscountByTemplate = is_array($data['subscription_intro_discount_percent'] ?? null)
-            ? (array) $data['subscription_intro_discount_percent']
-            : [];
-        $introDiscountRaw = null;
-        foreach ([(int) $selectedPlanTemplate->id, (string) ((int) $selectedPlanTemplate->id)] as $templateIdKey) {
-            if (! array_key_exists($templateIdKey, $introDiscountByTemplate)) {
-                continue;
-            }
-            $introDiscountRaw = $introDiscountByTemplate[$templateIdKey];
-            break;
-        }
-        $selectedIntroDiscountPercent = is_numeric($introDiscountRaw) ? (int) round((float) $introDiscountRaw) : 0;
-        $selectedIntroDiscountPercent = max(0, min(100, $selectedIntroDiscountPercent));
-        $resolvedTemplatePrice = (float) $selectedPlanTemplate->price;
-        if ((string) ($selectedPlanTemplate->plan_key ?? '') === 'sucursales' && $customPrice !== null) {
-            $resolvedTemplatePrice = $customPrice;
-        }
+        $pricing = $this->planPricingService->resolveSelection(
+            planTemplate: $selectedPlanTemplate,
+            billingCycles: $selectedBillingCycles,
+            customMonthlyPrice: $customPrice
+        );
+        $promotionTemplateId = $pricing['promotion']?->id;
         $profilePhotoPath = $request->hasFile('admin_profile_photo')
             ? $request->file('admin_profile_photo')->store('users/profiles', 'public')
             : null;
@@ -166,15 +173,30 @@ class SuperAdminDashboardController extends Controller
             gymId: (int) $gym->id,
             planTemplate: [
                 'template_id' => (int) $selectedPlanTemplate->id,
-                'plan_key' => (string) ($selectedPlanTemplate->plan_key ?? ''),
+                'plan_key' => $selectedFeaturePlanKey,
                 'feature_version' => (string) config('plan_features.default_feature_version', 'v1'),
                 'name' => (string) $selectedPlanTemplate->name,
-                'price' => $resolvedTemplatePrice,
+                'price' => (float) $pricing['effective_monthly_price'],
                 'duration_unit' => (string) ($selectedPlanTemplate->duration_unit ?? 'days'),
                 'duration_days' => (int) $selectedPlanTemplate->duration_days,
                 'duration_months' => $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null,
-                'intro_discount_first_cycle' => $selectedIntroDiscountPercent > 0,
-                'intro_discount_percent' => $selectedIntroDiscountPercent,
+                'billing_cycles' => $selectedBillingCycles,
+                'bonus_days' => (int) ($pricing['bonus_days'] ?? 0),
+                'billing_event' => [
+                    'plan_template_id' => (int) $selectedPlanTemplate->id,
+                    'promotion_template_id' => $promotionTemplateId !== null ? (int) $promotionTemplateId : null,
+                    'plan_key' => $selectedFeaturePlanKey,
+                    'plan_name' => (string) $selectedPlanTemplate->name,
+                    'event_type' => 'signup',
+                    'billing_cycles' => $selectedBillingCycles,
+                    'base_monthly_price' => (float) ($pricing['base_monthly_price'] ?? 0),
+                    'effective_monthly_price' => (float) ($pricing['effective_monthly_price'] ?? 0),
+                    'base_total' => (float) ($pricing['base_total'] ?? 0),
+                    'discount_amount' => (float) ($pricing['discount_amount'] ?? 0),
+                    'final_total' => (float) ($pricing['final_total'] ?? 0),
+                    'bonus_days' => (int) ($pricing['bonus_days'] ?? 0),
+                    'charged_at' => now(),
+                ],
             ],
             paymentMethod: null
         );
@@ -354,6 +376,8 @@ class SuperAdminDashboardController extends Controller
     {
         SuperAdminPlanTemplate::ensureDefaultCatalog();
 
+        $planTemplates = $this->selectablePlanTemplates();
+
         return [
             'currencyOptions' => Currency::options(),
             'languageOptions' => [
@@ -364,13 +388,46 @@ class SuperAdminDashboardController extends Controller
             'timezoneOptions' => $this->timezoneOptions(),
             'locationCatalog' => GymLocationCatalog::catalog(),
             'defaultTimezone' => 'America/Guayaquil',
-            'planTemplates' => SuperAdminPlanTemplate::query()
-                ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
-                ->where('status', 'active')
-                ->select(['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'])
-                ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
-                ->get(),
+            'planTemplates' => $planTemplates,
+            'planPromotionRules' => $this->planPricingService->promotionRulesForPlanTemplates($planTemplates),
         ];
+    }
+
+    private function selectablePlanTemplates()
+    {
+        if (! $this->supportsCommercialPlanCatalog()) {
+            return collect();
+        }
+
+        $columns = ['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'];
+        if (Schema::hasColumn('superadmin_plan_templates', 'feature_plan_key')) {
+            $columns[] = 'feature_plan_key';
+        }
+
+        return SuperAdminPlanTemplate::query()
+            ->where('status', 'active')
+            ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
+            ->select($columns)
+            ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
+            ->orderBy('name')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    private function supportsCommercialPlanCatalog(): bool
+    {
+        return Schema::hasTable('superadmin_plan_templates')
+            && Schema::hasColumns('superadmin_plan_templates', [
+                'id',
+                'plan_key',
+                'name',
+                'duration_days',
+                'duration_unit',
+                'duration_months',
+                'price',
+                'discount_price',
+                'status',
+            ]);
     }
 
     private function deletePublicAssetIfLocal(string $path): void

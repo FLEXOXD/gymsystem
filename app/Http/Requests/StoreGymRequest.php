@@ -6,6 +6,7 @@ use App\Support\Currency;
 use App\Support\GymLocationCatalog;
 use App\Support\SuperAdminPlanCatalog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class StoreGymRequest extends FormRequest
@@ -17,34 +18,6 @@ class StoreGymRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $introDiscountRaw = $this->input('subscription_intro_discount_percent', []);
-        if (! is_array($introDiscountRaw)) {
-            $introDiscountRaw = [];
-        }
-        $normalizedIntroDiscount = [];
-        foreach ($introDiscountRaw as $templateId => $percent) {
-            if (! is_numeric($templateId)) {
-                continue;
-            }
-            $templateIdInt = (int) $templateId;
-            if ($templateIdInt <= 0) {
-                continue;
-            }
-
-            $rawPercent = trim((string) $percent);
-            if ($rawPercent === '') {
-                $normalizedIntroDiscount[$templateIdInt] = 0;
-                continue;
-            }
-
-            if (is_numeric($rawPercent)) {
-                $normalizedIntroDiscount[$templateIdInt] = (int) round((float) $rawPercent);
-                continue;
-            }
-
-            $normalizedIntroDiscount[$templateIdInt] = $rawPercent;
-        }
-
         $this->merge([
             'gym_name' => $this->normalizeText($this->input('gym_name')),
             'gym_phone' => $this->normalizeText($this->input('gym_phone')),
@@ -64,8 +37,8 @@ class StoreGymRequest extends FormRequest
             'admin_phone_country_dial' => ($dial = trim((string) $this->input('admin_phone_country_dial'))) !== '' ? $dial : null,
             'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
             'subscription_plan_template_id' => ($templateId = trim((string) $this->input('subscription_plan_template_id'))) !== '' ? (int) $templateId : null,
+            'subscription_billing_cycles' => ($billingCycles = trim((string) $this->input('subscription_billing_cycles'))) !== '' ? (int) $billingCycles : 1,
             'subscription_custom_price' => ($customPrice = trim((string) $this->input('subscription_custom_price'))) !== '' ? (float) $customPrice : null,
-            'subscription_intro_discount_percent' => $normalizedIntroDiscount,
         ]);
     }
 
@@ -74,6 +47,21 @@ class StoreGymRequest extends FormRequest
      */
     public function rules(): array
     {
+        $supportsCommercialPlanCatalog = Schema::hasTable('superadmin_plan_templates')
+            && Schema::hasColumns('superadmin_plan_templates', ['id', 'plan_key', 'status']);
+        $subscriptionPlanTemplateRules = ['required', 'integer'];
+        if ($supportsCommercialPlanCatalog) {
+            $subscriptionPlanTemplateRules[] = Rule::exists('superadmin_plan_templates', 'id')->where(function ($query): void {
+                $query
+                    ->where('status', 'active')
+                    ->whereIn('plan_key', SuperAdminPlanCatalog::keys());
+            });
+        } else {
+            $subscriptionPlanTemplateRules[] = function (string $attribute, mixed $value, \Closure $fail): void {
+                $fail('El catalogo comercial aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.');
+            };
+        }
+
         return [
             'gym_name' => ['required', 'string', 'max:120'],
             'gym_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
@@ -116,18 +104,9 @@ class StoreGymRequest extends FormRequest
             'admin_phone_number' => ['nullable', 'string', 'min:6', 'max:15', 'regex:/^\d+$/'],
             'admin_profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'admin_password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
-            'subscription_plan_template_id' => [
-                'required',
-                'integer',
-                Rule::exists('superadmin_plan_templates', 'id')->where(function ($query): void {
-                    $query
-                        ->where('status', 'active')
-                        ->whereIn('plan_key', SuperAdminPlanCatalog::keys());
-                }),
-            ],
+            'subscription_plan_template_id' => $subscriptionPlanTemplateRules,
+            'subscription_billing_cycles' => ['required', 'integer', 'min:1', 'max:12'],
             'subscription_custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'subscription_intro_discount_percent' => ['nullable', 'array'],
-            'subscription_intro_discount_percent.*' => ['nullable', 'integer', 'min:0', 'max:100'],
         ];
     }
 
@@ -158,15 +137,15 @@ class StoreGymRequest extends FormRequest
             'admin_profile_photo.max' => 'La foto del admin no puede superar 15MB.',
             'admin_password.confirmed' => 'La confirmación de contraseña no coincide.',
             'admin_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
-            'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
-            'subscription_plan_template_id.exists' => 'El plan base seleccionado no está disponible.',
+            'subscription_plan_template_id.required' => 'Selecciona un plan comercial para el nuevo gimnasio.',
+            'subscription_plan_template_id.exists' => 'El plan comercial seleccionado no está disponible.',
+            'subscription_billing_cycles.required' => 'Indica cuántos meses cubrirá el prepago.',
+            'subscription_billing_cycles.integer' => 'La cobertura prepaga debe ser un número entero.',
+            'subscription_billing_cycles.min' => 'La cobertura prepaga no puede ser menor a 1 mes.',
+            'subscription_billing_cycles.max' => 'La cobertura prepaga no puede superar 12 meses.',
             'subscription_custom_price.numeric' => 'El precio personalizado debe ser numérico.',
             'subscription_custom_price.min' => 'El precio personalizado no puede ser negativo.',
             'subscription_custom_price.max' => 'El precio personalizado supera el límite permitido.',
-            'subscription_intro_discount_percent.array' => 'El descuento del primer mes debe enviarse por plan.',
-            'subscription_intro_discount_percent.*.integer' => 'El descuento del primer mes debe ser un número entero.',
-            'subscription_intro_discount_percent.*.min' => 'El descuento del primer mes no puede ser menor a 0%.',
-            'subscription_intro_discount_percent.*.max' => 'El descuento del primer mes no puede superar 100%.',
         ];
     }
 

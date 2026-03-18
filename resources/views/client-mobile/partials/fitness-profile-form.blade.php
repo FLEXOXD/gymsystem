@@ -4,8 +4,8 @@
         $formIdPrefix = 'fitness-form';
     }
 
-    $nextScreen = mb_strtolower(trim((string) ($nextScreen ?? 'progress')));
-    if (! in_array($nextScreen, ['home', 'progress', 'physical'], true)) {
+    $nextScreen = mb_strtolower(trim((string) old('next_screen', ($nextScreen ?? 'progress'))));
+    if (! in_array($nextScreen, ['home', 'progress', 'physical', 'nutrition'], true)) {
         $nextScreen = 'progress';
     }
 
@@ -15,7 +15,7 @@
         $submitLabel = 'Guardar datos físicos';
     }
 
-    $ageValue = old('age', $fitnessProfileModel?->age);
+    $birthDateValue = old('birth_date', $fitnessProfileModel?->birth_date?->format('Y-m-d'));
     $heightValue = old('height_cm', $fitnessProfileModel?->height_cm);
     $weightValue = old('weight_kg', $fitnessProfileModel?->weight_kg);
     $sexValue = mb_strtolower(trim((string) old('sex', (string) ($fitnessProfileModel?->sex ?? ''))));
@@ -38,7 +38,7 @@
         $selectedLimitations = ['ninguna'];
     }
 
-    $hasFitnessErrors = $errors->has('age')
+    $hasFitnessErrors = $errors->has('birth_date')
         || $errors->has('sex')
         || $errors->has('height_cm')
         || $errors->has('weight_kg')
@@ -63,9 +63,9 @@
 
     <div class="fitness-grid-2">
         <label class="block space-y-1 text-sm">
-            <span class="fitness-field-label">Edad</span>
-            <input type="number" name="age" class="module-input" min="12" max="90" step="1" value="{{ $ageValue !== null ? $ageValue : '' }}" placeholder="Ej: 29" required>
-            @error('age')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
+            <span class="fitness-field-label">Fecha de nacimiento</span>
+            <input type="date" name="birth_date" class="module-input" min="{{ now()->subYears(90)->format('Y-m-d') }}" max="{{ now()->subYears(12)->format('Y-m-d') }}" value="{{ is_string($birthDateValue) ? $birthDateValue : '' }}" required>
+            @error('birth_date')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
         </label>
         <label class="block space-y-1 text-sm">
             <span class="fitness-field-label">Sexo</span>
@@ -137,7 +137,7 @@
             @endforeach
         </div>
         @error('secondary_goal')<p class="profile-field-error">{{ (string) $message }}</p>@enderror
-        <p class="fitness-inline-help">Se usa para afinar prediccion, estado corporal y rutina sugerida.</p>
+        <p class="fitness-inline-help">Se usa para afinar predicción, estado corporal y rutina sugerida.</p>
     </div>
 
     <div class="space-y-1">

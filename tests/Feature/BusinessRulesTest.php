@@ -21,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -1252,13 +1253,283 @@ it('allows custom renewal price for sucursales plan per gym', function () {
     ]);
 });
 
-it('applies 50 percent on first sucursales cycle and restores full price on next renewal', function () {
+it('creates duration-based promotions on base plans from superadmin plans', function () {
     SuperAdminPlanTemplate::ensureDefaultCatalog();
 
-    $gym = makeGym('intro-sucursales-discount');
     $superAdmin = User::query()->create([
-        'name' => 'Super Admin Intro',
-        'email' => 'superadmin-intro-sucursales@example.test',
+        'name' => 'Super Admin Base Promotion',
+        'email' => 'superadmin-base-promotion@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $premiumTemplate = SuperAdminPlanTemplate::query()
+        ->where('plan_key', 'premium')
+        ->where('status', 'active')
+        ->firstOrFail();
+
+    $this->actingAs($superAdmin)
+        ->post(route('superadmin.plan-templates.promotions.store'), [
+            'name' => 'Elite trimestre 25',
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'description' => '25% si paga 3 meses por adelantado.',
+            'type' => 'percentage',
+            'value' => '25',
+            'status' => 'active',
+            'duration_months' => 3,
+        ])
+        ->assertRedirect(route('superadmin.plan-templates.index'));
+
+    $this->assertDatabaseHas('superadmin_promotion_templates', [
+        'plan_template_id' => (int) $premiumTemplate->id,
+        'name' => 'Elite trimestre 25',
+        'type' => 'percentage',
+        'value' => 25.00,
+        'status' => 'active',
+        'duration_months' => 3,
+    ]);
+});
+
+it('creates gyms with base plan promotions and prepaid coverage cycles', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Gym Create',
+            'email' => 'superadmin-gym-create@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        \App\Models\SuperAdminPromotionTemplate::query()->create([
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'name' => 'Elite trimestre 25',
+            'description' => '25% si paga 3 meses por adelantado.',
+            'type' => 'percentage',
+            'value' => 25,
+            'status' => 'active',
+            'duration_months' => 3,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.gyms.store'), [
+                'gym_name' => 'Gym Preventa Pro',
+                'gym_phone' => '+593 999 999 999',
+                'gym_address_country' => 'ec',
+                'gym_address_state' => 'Pichincha',
+                'gym_address_city' => 'Quito',
+                'gym_address_line' => 'Av. Siempre Viva 123',
+                'gym_timezone' => 'America/Guayaquil',
+                'gym_currency_code' => 'USD',
+                'gym_language_code' => 'es',
+                'subscription_plan_template_id' => (int) $premiumTemplate->id,
+                'subscription_billing_cycles' => 3,
+                'admin_name' => 'Admin Preventa',
+                'admin_email' => 'admin-preventa@example.test',
+                'admin_password' => 'Password#2026',
+                'admin_password_confirmation' => 'Password#2026',
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $gym = Gym::query()
+            ->where('name', 'Gym Preventa Pro')
+            ->firstOrFail();
+
+        $subscription = Subscription::query()
+            ->where('gym_id', $gym->id)
+            ->firstOrFail();
+
+        expect((string) $subscription->plan_key)->toBe('premium');
+        expect((int) $subscription->plan_template_id)->toBe((int) $premiumTemplate->id);
+        expect((string) $subscription->plan_name)->toBe((string) $premiumTemplate->name);
+        expect((float) $subscription->price)->toBe(37.5);
+        expect($subscription->starts_at?->toDateString())->toBe('2026-03-18');
+        expect($subscription->ends_at?->toDateString())
+            ->toBe(Carbon::parse('2026-03-18')->addDays(90)->subDay()->toDateString());
+
+        $this->assertDatabaseHas('subscription_charge_events', [
+            'gym_id' => $gym->id,
+            'subscription_id' => $subscription->id,
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'plan_key' => 'premium',
+            'event_type' => 'signup',
+            'billing_cycles' => 3,
+            'base_monthly_price' => 50.00,
+            'effective_monthly_price' => 37.50,
+            'base_total' => 150.00,
+            'discount_amount' => 37.50,
+            'total_paid' => 112.50,
+        ]);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('creates gyms from superadmin even when charge events history table is unavailable', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    $backupTable = 'subscription_charge_events_tmp_test';
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Charge Events Fallback',
+            'email' => 'superadmin-charge-events-fallback@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        if (Schema::hasTable($backupTable)) {
+            Schema::drop($backupTable);
+        }
+
+        Schema::rename('subscription_charge_events', $backupTable);
+
+        try {
+            $this->actingAs($superAdmin)
+                ->post(route('superadmin.gyms.store'), [
+                    'gym_name' => 'Gym Sin Historial Cobros',
+                    'gym_phone' => '+593 999 999 002',
+                    'gym_address_country' => 'ec',
+                    'gym_address_state' => 'Pichincha',
+                    'gym_address_city' => 'Quito',
+                    'gym_address_line' => 'Av. Dos 456',
+                    'gym_timezone' => 'America/Guayaquil',
+                    'gym_currency_code' => 'USD',
+                    'gym_language_code' => 'es',
+                    'subscription_plan_template_id' => (int) $premiumTemplate->id,
+                    'subscription_billing_cycles' => 3,
+                    'admin_name' => 'Admin Sin Historial',
+                    'admin_email' => 'admin-sin-historial@example.test',
+                    'admin_password' => 'Password#2026',
+                    'admin_password_confirmation' => 'Password#2026',
+                ])
+                ->assertRedirect(route('superadmin.gyms.index'));
+
+            $gym = Gym::query()
+                ->where('name', 'Gym Sin Historial Cobros')
+                ->firstOrFail();
+
+            $subscription = Subscription::query()
+                ->where('gym_id', $gym->id)
+                ->firstOrFail();
+
+            expect((string) $subscription->plan_key)->toBe('premium');
+            expect((float) $subscription->price)->toBe(50.0);
+        } finally {
+            if (Schema::hasTable($backupTable)) {
+                Schema::rename($backupTable, 'subscription_charge_events');
+            }
+        }
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('renews the current base plan with matching duration promotion when months are prepaid', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $gym = makeGym('base-plan-promotion-renewal');
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Base Renewal',
+            'email' => 'superadmin-base-renewal@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        app(\App\Services\SubscriptionService::class)->applyPlanTemplate(
+            gymId: (int) $gym->id,
+            planTemplate: [
+                'template_id' => (int) $premiumTemplate->id,
+                'plan_key' => 'premium',
+                'feature_version' => 'v1',
+                'name' => (string) $premiumTemplate->name,
+                'price' => (float) $premiumTemplate->price,
+                'duration_unit' => (string) ($premiumTemplate->duration_unit ?? 'days'),
+                'duration_days' => (int) $premiumTemplate->duration_days,
+                'duration_months' => $premiumTemplate->duration_months !== null ? (int) $premiumTemplate->duration_months : null,
+                'billing_cycles' => 1,
+            ],
+            paymentMethod: 'efectivo'
+        );
+
+        \App\Models\SuperAdminPromotionTemplate::query()->create([
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'name' => 'Elite trimestre 25',
+            'description' => '25% si paga 3 meses por adelantado.',
+            'type' => 'percentage',
+            'value' => 25,
+            'status' => 'active',
+            'duration_months' => 3,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
+                'payment_method' => 'efectivo',
+                'months' => 3,
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $subscription = Subscription::query()
+            ->where('gym_id', $gym->id)
+            ->firstOrFail();
+
+        expect((string) $subscription->plan_key)->toBe('premium');
+        expect((int) $subscription->plan_template_id)->toBe((int) $premiumTemplate->id);
+        expect((string) $subscription->plan_name)->toBe((string) $premiumTemplate->name);
+        expect((float) $subscription->price)->toBe(37.5);
+        expect((string) $subscription->last_payment_method)->toBe('efectivo');
+        expect($subscription->starts_at?->toDateString())->toBe('2026-03-18');
+        expect($subscription->ends_at?->toDateString())
+            ->toBe(Carbon::parse('2026-03-18')->addDays(90)->subDay()->toDateString());
+
+        $this->assertDatabaseHas('subscription_charge_events', [
+            'gym_id' => $gym->id,
+            'subscription_id' => $subscription->id,
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'plan_key' => 'premium',
+            'event_type' => 'renewal',
+            'payment_method' => 'efectivo',
+            'billing_cycles' => 3,
+            'base_monthly_price' => 50.00,
+            'effective_monthly_price' => 37.50,
+            'base_total' => 150.00,
+            'discount_amount' => 37.50,
+            'total_paid' => 112.50,
+        ]);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('applies a one-month promotion on sucursales custom renewal price', function () {
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    $gym = makeGym('promo-sucursales-discount');
+    $superAdmin = User::query()->create([
+        'name' => 'Super Admin Promo Sucursales',
+        'email' => 'superadmin-promo-sucursales@example.test',
         'password' => 'password',
         'gym_id' => null,
     ]);
@@ -1268,38 +1539,158 @@ it('applies 50 percent on first sucursales cycle and restores full price on next
         ->where('status', 'active')
         ->firstOrFail();
 
+    \App\Models\SuperAdminPromotionTemplate::query()->create([
+        'plan_template_id' => (int) $sucursalesTemplate->id,
+        'name' => 'Sucursal mensual 50',
+        'description' => '50% si paga el primer mes cotizado.',
+        'type' => 'percentage',
+        'value' => 50,
+        'status' => 'active',
+        'duration_months' => 1,
+    ]);
+
     $this->actingAs($superAdmin)
         ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
             'plan_template_id' => (int) $sucursalesTemplate->id,
             'payment_method' => 'efectivo',
             'custom_price' => '200.00',
-            'apply_intro_50' => '1',
-        ])
-        ->assertRedirect(route('superadmin.gyms.index'));
-
-    $firstCycleSubscription = Subscription::query()
-        ->where('gym_id', $gym->id)
-        ->firstOrFail();
-
-    expect((string) $firstCycleSubscription->plan_key)->toBe('sucursales');
-    expect((float) $firstCycleSubscription->price)->toBe(100.0);
-    expect((bool) $firstCycleSubscription->sucursales_intro_pending)->toBeTrue();
-    expect((float) $firstCycleSubscription->sucursales_base_price)->toBe(200.0);
-    expect((int) $firstCycleSubscription->sucursales_intro_discount_percent)->toBe(50);
-
-    $this->actingAs($superAdmin)
-        ->post(route('superadmin.subscriptions.renew', ['gym' => $gym->id]), [
-            'payment_method' => 'efectivo',
             'months' => 1,
         ])
         ->assertRedirect(route('superadmin.gyms.index'));
 
-    $firstCycleSubscription->refresh();
+    $subscription = Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->firstOrFail();
 
-    expect((float) $firstCycleSubscription->price)->toBe(200.0);
-    expect((bool) $firstCycleSubscription->sucursales_intro_pending)->toBeFalse();
-    expect($firstCycleSubscription->sucursales_base_price)->toBeNull();
-    expect($firstCycleSubscription->sucursales_intro_discount_percent)->toBeNull();
+    expect((string) $subscription->plan_key)->toBe('sucursales');
+    expect((int) $subscription->plan_template_id)->toBe((int) $sucursalesTemplate->id);
+    expect((float) $subscription->price)->toBe(100.0);
+    expect((string) $subscription->last_payment_method)->toBe('efectivo');
+    expect($subscription->starts_at?->toDateString())->toBe(Carbon::today()->toDateString());
+    expect($subscription->ends_at?->toDateString())->toBe(Carbon::today()->addDays(30)->subDay()->toDateString());
+
+    $this->assertDatabaseHas('subscription_charge_events', [
+        'gym_id' => $gym->id,
+        'subscription_id' => $subscription->id,
+        'plan_template_id' => (int) $sucursalesTemplate->id,
+        'plan_key' => 'sucursales',
+        'event_type' => 'renewal',
+        'payment_method' => 'efectivo',
+        'billing_cycles' => 1,
+        'base_monthly_price' => 200.00,
+        'effective_monthly_price' => 100.00,
+        'base_total' => 200.00,
+        'discount_amount' => 100.00,
+        'total_paid' => 100.00,
+    ]);
+});
+
+it('summarizes dashboard revenue and discounts from recorded subscription charges', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Dashboard Revenue',
+            'email' => 'superadmin-dashboard-revenue@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        \App\Models\SuperAdminPromotionTemplate::query()->create([
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'name' => 'Elite trimestre 25',
+            'description' => '25% si paga 3 meses por adelantado.',
+            'type' => 'percentage',
+            'value' => 25,
+            'status' => 'active',
+            'duration_months' => 3,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.gyms.store'), [
+                'gym_name' => 'Gym Dashboard Uno',
+                'gym_phone' => '+593 999 999 001',
+                'gym_address_country' => 'ec',
+                'gym_address_state' => 'Pichincha',
+                'gym_address_city' => 'Quito',
+                'gym_address_line' => 'Av. Uno 123',
+                'gym_timezone' => 'America/Guayaquil',
+                'gym_currency_code' => 'USD',
+                'gym_language_code' => 'es',
+                'subscription_plan_template_id' => (int) $premiumTemplate->id,
+                'subscription_billing_cycles' => 3,
+                'admin_name' => 'Admin Uno',
+                'admin_email' => 'admin-dashboard-uno@example.test',
+                'admin_password' => 'Password#2026',
+                'admin_password_confirmation' => 'Password#2026',
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $secondGym = makeGym('dashboard-revenue-second');
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.subscriptions.renew', ['gym' => $secondGym->id]), [
+                'plan_template_id' => (int) $premiumTemplate->id,
+                'payment_method' => 'efectivo',
+                'months' => 1,
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $dashboard = app(\App\Services\SuperAdminDashboardService::class)->getDashboardData();
+        $kpis = (array) ($dashboard['kpis'] ?? []);
+        $planMix = collect($dashboard['plan_mix'] ?? []);
+
+        expect((float) ($kpis['current_month_revenue'] ?? 0))->toBe(162.5);
+        expect((float) ($kpis['current_year_revenue'] ?? 0))->toBe(162.5);
+        expect((float) ($kpis['current_month_discount'] ?? 0))->toBe(37.5);
+        expect((int) ($kpis['charges_this_month'] ?? 0))->toBe(2);
+        expect((int) ($kpis['new_gyms_month'] ?? 0))->toBe(2);
+        expect((float) ($kpis['current_cycle_revenue'] ?? 0))->toBe(162.5);
+        expect((float) ($kpis['annual_run_rate'] ?? 0))->toBe(1200.0);
+        expect((int) ($planMix->firstWhere('plan_key', 'premium')['count'] ?? 0))->toBe(2);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('renders superadmin dashboard without charge events history table', function () {
+    $backupTable = 'subscription_charge_events_tmp_dashboard';
+
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    $superAdmin = User::query()->create([
+        'name' => 'Super Admin Dashboard Fallback',
+        'email' => 'superadmin-dashboard-fallback@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    if (Schema::hasTable($backupTable)) {
+        Schema::drop($backupTable);
+    }
+
+    Schema::rename('subscription_charge_events', $backupTable);
+
+    try {
+        $this->actingAs($superAdmin)
+            ->get(route('superadmin.dashboard'))
+            ->assertOk();
+
+        $this->actingAs($superAdmin)
+            ->get(route('superadmin.gyms.index'))
+            ->assertOk();
+    } finally {
+        if (Schema::hasTable($backupTable)) {
+            Schema::rename($backupTable, 'subscription_charge_events');
+        }
+    }
 });
 
 it('blocks reports module when current plan does not include reports_base', function () {

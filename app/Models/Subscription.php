@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Subscription extends Model
 {
@@ -80,5 +81,21 @@ class Subscription extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(SubscriptionNotification::class);
+    }
+
+    /**
+     * Billing history for this SaaS subscription.
+     */
+    public function chargeEvents(): HasMany
+    {
+        return $this->hasMany(SubscriptionChargeEvent::class);
+    }
+
+    /**
+     * Latest recorded billing event for the current subscription cycle.
+     */
+    public function latestChargeEvent(): HasOne
+    {
+        return $this->hasOne(SubscriptionChargeEvent::class)->latestOfMany();
     }
 }

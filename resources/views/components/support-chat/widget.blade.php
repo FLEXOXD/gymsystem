@@ -576,11 +576,14 @@
             const busy = Boolean(isBusy);
             if (sendButton) {
                 sendButton.disabled = busy || conversationLocked;
-                sendButton.style.display = conversationLocked ? 'none' : '';
+                sendButton.style.removeProperty('display');
             }
             if (input) {
                 input.disabled = busy || conversationLocked;
-                input.style.display = conversationLocked ? 'none' : '';
+                input.placeholder = conversationLocked
+                    ? 'Conversacion finalizada. Inicia una nueva conversacion.'
+                    : 'Escribe tu mensaje...';
+                input.style.removeProperty('display');
             }
             if (restartButton) {
                 restartButton.hidden = !conversationLocked;
@@ -588,7 +591,7 @@
                 restartButton.style.display = conversationLocked ? '' : 'none';
             }
             if (footerEl) {
-                footerEl.classList.toggle('is-closed', conversationLocked);
+                footerEl.classList.toggle('is-closed', false);
             }
             if (quickWrap) {
                 quickWrap.querySelectorAll('button[data-action-key]').forEach(function (button) {
@@ -730,22 +733,28 @@
             const canRestart = Boolean(conversation.can_restart) || status === 'closed';
             const minutesUntilPurge = Number(conversation.minutes_until_purge);
 
-            setConversationLocked(canRestart);
-            renderQuickButtons(canRestart ? [] : quickReplies);
+            setConversationLocked(false);
+            renderQuickButtons(quickReplies);
 
             if (canRestart) {
                 const purgeLabel = Number.isFinite(minutesUntilPurge)
                     ? ' El historial se eliminar\u00e1 en ' + Math.max(0, Math.round(minutesUntilPurge)) + ' min.'
                     : '';
-                setHelper('Estado: conversaci\u00f3n finalizada. Pulsa "Iniciar nueva conversaci\u00f3n" para continuar.' + purgeLabel, false);
+                setHelper('Estado: conversaci\u00f3n cerrada por inactividad. Puedes escribir y el chat se reabrir\u00e1 autom\u00e1ticamente.' + purgeLabel, false);
                 return;
             }
 
             if (status === 'active') {
+                if (input && !input.disabled) {
+                    input.focus();
+                }
                 setHelper('Estado: conversaci\u00f3n activa con soporte.', false);
                 return;
             }
             if (status === 'waiting_agent') {
+                if (representativeOnline && input && !input.disabled) {
+                    input.focus();
+                }
                 setHelper(
                     representativeOnline
                         ? 'Estado: representante conectado. Puedes escribir para continuar.'
@@ -835,7 +844,6 @@
                 return;
             }
 
-            input.value = '';
             loading = true;
             setBusy(true);
             setHelper('Enviando mensaje...', false);
@@ -851,6 +859,7 @@
                     return;
                 }
 
+                input.value = '';
                 applyPayload(payload);
             } catch (error) {
                 setHelper('No se pudo enviar. Verifica conexi\u00f3n.', true);

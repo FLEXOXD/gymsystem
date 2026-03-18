@@ -55,9 +55,7 @@ class SupportChatController extends Controller
 
         $this->applyLandingLeadData($conversation, $data);
         if ($this->isConversationClosed($conversation)) {
-            return response()->json(
-                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
-            );
+            $conversation = $this->createLandingConversation($request, $data, $conversation);
         }
 
         $selectedQuickReply = collect($this->botService->quickReplies(SupportChatConversation::CHANNEL_LANDING))
@@ -102,9 +100,7 @@ class SupportChatController extends Controller
 
         $this->applyLandingLeadData($conversation, $data);
         if ($this->isConversationClosed($conversation)) {
-            return response()->json(
-                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
-            );
+            $conversation = $this->createLandingConversation($request, $data, $conversation);
         }
 
         $this->appendUserMessage(
@@ -171,9 +167,10 @@ class SupportChatController extends Controller
             abort(404);
         }
         if ($this->isConversationClosed($conversation)) {
-            return response()->json(
-                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
-            );
+            $conversation = $this->createGymConversation($request);
+            if (! $conversation instanceof SupportChatConversation) {
+                abort(404);
+            }
         }
         $actor = $request->user();
 
@@ -212,9 +209,10 @@ class SupportChatController extends Controller
             abort(404);
         }
         if ($this->isConversationClosed($conversation)) {
-            return response()->json(
-                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
-            );
+            $conversation = $this->createGymConversation($request);
+            if (! $conversation instanceof SupportChatConversation) {
+                abort(404);
+            }
         }
         $actor = $request->user();
         $message = trim((string) $data['message']);
@@ -394,12 +392,14 @@ class SupportChatController extends Controller
 
     private function handleBotForFreeMessage(SupportChatConversation $conversation, string $context, string $message): void
     {
-        $status = (string) $conversation->status;
         $representativeOnline = $this->presenceService->isSuperAdminOnline();
-        $shouldPauseBotForLiveAgent = $representativeOnline
-            && in_array($status, [SupportChatConversation::STATUS_WAITING_AGENT, SupportChatConversation::STATUS_ACTIVE], true);
+        $status = (string) $conversation->status;
 
-        if ($shouldPauseBotForLiveAgent) {
+        if (in_array($status, [SupportChatConversation::STATUS_WAITING_AGENT, SupportChatConversation::STATUS_ACTIVE], true)) {
+            if ($status === SupportChatConversation::STATUS_WAITING_AGENT && ! $representativeOnline) {
+                $this->appendStatusHintIfNeeded($conversation, $this->botService->agentOfflineMessage());
+            }
+
             return;
         }
 
@@ -532,6 +532,7 @@ class SupportChatController extends Controller
             ];
         }
 
+        $this->syncLiveAgentStatus($conversation);
         $conversation->loadMissing([
             'gym:id,name,logo_path',
             'messages' => static fn ($query) => $query->orderBy('id')->limit(120),
@@ -540,13 +541,17 @@ class SupportChatController extends Controller
         /** @var Collection<int, SupportChatMessage> $messages */
         $messages = $conversation->messages;
         $isClosedConversation = $this->isConversationClosed($conversation);
+        $isLiveConversation = in_array((string) $conversation->status, [
+            SupportChatConversation::STATUS_WAITING_AGENT,
+            SupportChatConversation::STATUS_ACTIVE,
+        ], true);
         $minutesUntilPurge = $this->minutesUntilPurge($conversation);
 
         return [
             'ok' => true,
             'context' => $context,
             'assistant' => $assistantProfile,
-            'quick_replies' => $isClosedConversation ? [] : $quickReplies,
+            'quick_replies' => $isLiveConversation ? [] : $quickReplies,
             'representative_online' => $representativeOnline,
             'representative_name' => trim((string) ($activeRepresentative['name'] ?? 'SuperAdmin')),
             'conversation' => [
@@ -591,6 +596,39 @@ class SupportChatController extends Controller
         $purgeAfterMinutes = max(1, (int) config('support_chat.inactivity.close_after_minutes', 15));
 
         return max(0, now()->diffInMinutes($conversation->closed_at->copy()->addMinutes($purgeAfterMinutes), false));
+    }
+
+    private function syncLiveAgentStatus(SupportChatConversation $conversation): void
+    {
+        $status = (string) $conversation->status;
+        if (! in_array($status, [SupportChatConversation::STATUS_WAITING_AGENT, SupportChatConversation::STATUS_ACTIVE], true)) {
+            return;
+        }
+
+        $representativeOnline = $this->presenceService->isSuperAdminOnline();
+
+        if ($representativeOnline && $status === SupportChatConversation::STATUS_WAITING_AGENT) {
+            $conversation->forceFill([
+                'status' => SupportChatConversation::STATUS_ACTIVE,
+                'representative_requested_at' => $conversation->representative_requested_at ?? now(),
+                'representative_joined_at' => $conversation->representative_joined_at ?? now(),
+                'closed_at' => null,
+            ])->save();
+
+            $this->appendStatusHintIfNeeded($conversation, $this->botService->agentOnlineMessage());
+
+            return;
+        }
+
+        if (! $representativeOnline && $status === SupportChatConversation::STATUS_ACTIVE) {
+            $conversation->forceFill([
+                'status' => SupportChatConversation::STATUS_WAITING_AGENT,
+                'representative_requested_at' => $conversation->representative_requested_at ?? now(),
+                'closed_at' => null,
+            ])->save();
+
+            $this->appendStatusHintIfNeeded($conversation, $this->botService->agentOfflineMessage());
+        }
     }
 
     private function safeLeadName(mixed $value): string

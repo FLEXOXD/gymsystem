@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\SubscriptionChargeEvent;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 
 class SubscriptionService
@@ -275,6 +277,12 @@ class SubscriptionService
                 $this->invalidatePlanAccessCache((int) $subscription->gym_id);
 
                 $updated = $subscription->fresh();
+                $this->recordRenewalChargeEvent(
+                    subscription: $updated,
+                    months: $months,
+                    paymentMethod: $paymentMethod,
+                    planTemplate: $planTemplate
+                );
                 if (! (bool) ($updated->is_branch_managed ?? false)) {
                     $this->syncManagedBranchesFromHub((int) $updated->gym_id);
                 }
@@ -287,6 +295,12 @@ class SubscriptionService
                 ...$payload,
             ]);
             $this->invalidatePlanAccessCache((int) $created->gym_id);
+            $this->recordRenewalChargeEvent(
+                subscription: $created,
+                months: $months,
+                paymentMethod: $paymentMethod,
+                planTemplate: $planTemplate
+            );
 
             if (! (bool) ($created->is_branch_managed ?? false)) {
                 $this->syncManagedBranchesFromHub((int) $created->gym_id);
@@ -374,6 +388,11 @@ class SubscriptionService
                 $this->invalidatePlanAccessCache((int) $subscription->gym_id);
 
                 $updated = $subscription->fresh();
+                $this->recordAppliedPlanChargeEvent(
+                    subscription: $updated,
+                    planTemplate: $planTemplate,
+                    paymentMethod: $paymentMethod
+                );
                 if (! (bool) ($updated->is_branch_managed ?? false)) {
                     $this->syncManagedBranchesFromHub((int) $updated->gym_id);
                 }
@@ -386,6 +405,11 @@ class SubscriptionService
                 ...$payload,
             ]);
             $this->invalidatePlanAccessCache((int) $created->gym_id);
+            $this->recordAppliedPlanChargeEvent(
+                subscription: $created,
+                planTemplate: $planTemplate,
+                paymentMethod: $paymentMethod
+            );
 
             if (! (bool) ($created->is_branch_managed ?? false)) {
                 $this->syncManagedBranchesFromHub((int) $created->gym_id);
@@ -490,6 +514,339 @@ class SubscriptionService
     }
 
     /**
+     * @param  array<string, mixed>|null  $planTemplate
+     */
+    private function recordRenewalChargeEvent(
+        Subscription $subscription,
+        int $months,
+        string $paymentMethod,
+        ?array $planTemplate = null
+    ): void {
+        $payload = $this->buildChargeEventPayload(
+            subscription: $subscription,
+            planTemplate: $planTemplate,
+            defaultEventType: 'renewal',
+            paymentMethod: $paymentMethod,
+            fallbackBillingCycles: $months,
+            allowFallbackWithoutBillingEvent: true
+        );
+
+        if ($payload === null) {
+            return;
+        }
+
+        $this->persistChargeEvent($subscription, $payload);
+    }
+
+    /**
+     * @param  array<string, mixed>  $planTemplate
+     */
+    private function recordAppliedPlanChargeEvent(
+        Subscription $subscription,
+        array $planTemplate,
+        ?string $paymentMethod = null
+    ): void {
+        $payload = $this->buildChargeEventPayload(
+            subscription: $subscription,
+            planTemplate: $planTemplate,
+            defaultEventType: 'signup',
+            paymentMethod: $paymentMethod,
+            fallbackBillingCycles: (int) ($planTemplate['billing_cycles'] ?? 1),
+            allowFallbackWithoutBillingEvent: false
+        );
+
+        if ($payload === null) {
+            return;
+        }
+
+        $this->persistChargeEvent($subscription, $payload);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     * @return array<string, float|int|string|null|Carbon>|null
+     */
+    private function buildChargeEventPayload(
+        Subscription $subscription,
+        ?array $planTemplate,
+        string $defaultEventType,
+        ?string $paymentMethod,
+        int $fallbackBillingCycles,
+        bool $allowFallbackWithoutBillingEvent
+    ): ?array {
+        if ((bool) ($subscription->is_branch_managed ?? false)) {
+            return null;
+        }
+
+        $resolvedPlanTemplate = is_array($planTemplate) ? $planTemplate : [];
+        $billingEvent = is_array($resolvedPlanTemplate['billing_event'] ?? null)
+            ? $resolvedPlanTemplate['billing_event']
+            : [];
+
+        if ($billingEvent === [] && ! $allowFallbackWithoutBillingEvent) {
+            return null;
+        }
+
+        $billingCycles = max(1, (int) ($billingEvent['billing_cycles']
+            ?? $resolvedPlanTemplate['billing_cycles']
+            ?? $fallbackBillingCycles));
+
+        $effectiveMonthlyPrice = round((float) ($billingEvent['effective_monthly_price']
+            ?? $resolvedPlanTemplate['price']
+            ?? $subscription->price
+            ?? 0), 2);
+
+        $baseMonthlyPrice = round((float) ($billingEvent['base_monthly_price']
+            ?? $this->resolveBaseMonthlyChargePrice($subscription, $resolvedPlanTemplate, $effectiveMonthlyPrice)), 2);
+
+        $baseTotal = round((float) ($billingEvent['base_total'] ?? ($baseMonthlyPrice * $billingCycles)), 2);
+        $totalPaid = round((float) ($billingEvent['final_total']
+            ?? $billingEvent['total_paid']
+            ?? ($effectiveMonthlyPrice * $billingCycles)), 2);
+        $discountAmount = round(max(0, (float) ($billingEvent['discount_amount'] ?? ($baseTotal - $totalPaid))), 2);
+        $bonusDays = max(0, (int) ($billingEvent['bonus_days'] ?? $resolvedPlanTemplate['bonus_days'] ?? 0));
+        $chargedAt = $this->resolveChargeEventDate($billingEvent['charged_at'] ?? null);
+
+        return [
+            'plan_template_id' => $this->resolveChargeEventPlanTemplateId($subscription, $resolvedPlanTemplate, $billingEvent),
+            'promotion_template_id' => $this->resolveChargeEventPromotionId($billingEvent),
+            'plan_key' => $this->resolveChargeEventPlanKey($subscription, $resolvedPlanTemplate, $billingEvent),
+            'plan_name' => $this->resolveChargeEventPlanName($subscription, $resolvedPlanTemplate, $billingEvent),
+            'event_type' => trim((string) ($billingEvent['event_type'] ?? $defaultEventType)) ?: $defaultEventType,
+            'payment_method' => $this->resolveChargeEventPaymentMethod($subscription, $paymentMethod, $billingEvent),
+            'billing_cycles' => $billingCycles,
+            'base_monthly_price' => max(0, $baseMonthlyPrice),
+            'effective_monthly_price' => max(0, $effectiveMonthlyPrice),
+            'base_total' => max(0, $baseTotal),
+            'discount_amount' => $discountAmount,
+            'total_paid' => max(0, $totalPaid),
+            'bonus_days' => $bonusDays,
+            'charged_at' => $chargedAt,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     * @param  array<string, mixed>  $billingEvent
+     */
+    private function resolveChargeEventPlanTemplateId(
+        Subscription $subscription,
+        ?array $planTemplate,
+        array $billingEvent
+    ): ?int {
+        $resolvedPlanTemplate = is_array($planTemplate) ? $planTemplate : [];
+
+        foreach ([
+            $billingEvent['plan_template_id'] ?? null,
+            $billingEvent['template_id'] ?? null,
+            $resolvedPlanTemplate['plan_template_id'] ?? null,
+            $resolvedPlanTemplate['template_id'] ?? null,
+            $resolvedPlanTemplate['id'] ?? null,
+            $subscription->plan_template_id,
+        ] as $candidate) {
+            if (! is_numeric($candidate)) {
+                continue;
+            }
+
+            $value = (int) $candidate;
+            if ($value > 0) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     * @param  array<string, mixed>  $billingEvent
+     */
+    private function resolveChargeEventPlanKey(
+        Subscription $subscription,
+        ?array $planTemplate,
+        array $billingEvent
+    ): ?string {
+        $resolvedPlanTemplate = is_array($planTemplate) ? $planTemplate : [];
+
+        foreach ([
+            $billingEvent['plan_key'] ?? null,
+            $resolvedPlanTemplate['plan_key'] ?? null,
+            $subscription->plan_key,
+        ] as $candidate) {
+            $resolved = trim((string) ($candidate ?? ''));
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     * @param  array<string, mixed>  $billingEvent
+     */
+    private function resolveChargeEventPlanName(
+        Subscription $subscription,
+        ?array $planTemplate,
+        array $billingEvent
+    ): string {
+        $resolvedPlanTemplate = is_array($planTemplate) ? $planTemplate : [];
+
+        foreach ([
+            $billingEvent['plan_name'] ?? null,
+            $billingEvent['name'] ?? null,
+            $resolvedPlanTemplate['name'] ?? null,
+            $subscription->plan_name,
+        ] as $candidate) {
+            $resolved = trim((string) ($candidate ?? ''));
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return 'Plan comercial';
+    }
+
+    /**
+     * @param  array<string, mixed>  $billingEvent
+     */
+    private function resolveChargeEventPromotionId(array $billingEvent): ?int
+    {
+        foreach ([
+            $billingEvent['promotion_template_id'] ?? null,
+            $billingEvent['promotion_id'] ?? null,
+        ] as $candidate) {
+            if (! is_numeric($candidate)) {
+                continue;
+            }
+
+            $value = (int) $candidate;
+            if ($value > 0) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $billingEvent
+     */
+    private function resolveChargeEventPaymentMethod(
+        Subscription $subscription,
+        ?string $paymentMethod,
+        array $billingEvent
+    ): ?string {
+        foreach ([
+            $billingEvent['payment_method'] ?? null,
+            $paymentMethod,
+            $subscription->last_payment_method,
+        ] as $candidate) {
+            $resolved = trim((string) ($candidate ?? ''));
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $planTemplate
+     */
+    private function resolveBaseMonthlyChargePrice(
+        Subscription $subscription,
+        ?array $planTemplate,
+        float $effectiveMonthlyPrice
+    ): float {
+        $resolvedPlanTemplate = is_array($planTemplate) ? $planTemplate : [];
+        $resolvedPlanKey = strtolower(trim((string) ($resolvedPlanTemplate['plan_key'] ?? $subscription->plan_key ?? '')));
+
+        if ($resolvedPlanKey === 'sucursales') {
+            $templateBasePrice = $resolvedPlanTemplate['sucursales_base_price'] ?? null;
+            if (is_numeric($templateBasePrice) && (float) $templateBasePrice > 0) {
+                return round((float) $templateBasePrice, 2);
+            }
+
+            if ($subscription->sucursales_base_price !== null && (float) $subscription->sucursales_base_price > 0) {
+                return round((float) $subscription->sucursales_base_price, 2);
+            }
+        }
+
+        return round($effectiveMonthlyPrice, 2);
+    }
+
+    private function resolveChargeEventDate(mixed $value): Carbon
+    {
+        try {
+            if ($value instanceof Carbon) {
+                return $value->copy();
+            }
+
+            if ($value !== null && trim((string) $value) !== '') {
+                return Carbon::parse((string) $value);
+            }
+        } catch (\Throwable) {
+            // Fallback handled below.
+        }
+
+        return Carbon::now();
+    }
+
+    /**
+     * @param  array<string, float|int|string|null|Carbon>  $payload
+     */
+    private function persistChargeEvent(Subscription $subscription, array $payload): void
+    {
+        if (! $this->supportsChargeEventsTable()) {
+            return;
+        }
+
+        SubscriptionChargeEvent::query()->create([
+            'gym_id' => (int) $subscription->gym_id,
+            'subscription_id' => (int) $subscription->id,
+            'plan_template_id' => $payload['plan_template_id'],
+            'promotion_template_id' => $payload['promotion_template_id'],
+            'plan_key' => $payload['plan_key'],
+            'plan_name' => (string) $payload['plan_name'],
+            'event_type' => (string) $payload['event_type'],
+            'payment_method' => $payload['payment_method'],
+            'billing_cycles' => (int) $payload['billing_cycles'],
+            'base_monthly_price' => (float) $payload['base_monthly_price'],
+            'effective_monthly_price' => (float) $payload['effective_monthly_price'],
+            'base_total' => (float) $payload['base_total'],
+            'discount_amount' => (float) $payload['discount_amount'],
+            'total_paid' => (float) $payload['total_paid'],
+            'bonus_days' => (int) $payload['bonus_days'],
+            'charged_at' => $payload['charged_at'],
+        ]);
+    }
+
+    private function supportsChargeEventsTable(): bool
+    {
+        return Schema::hasTable('subscription_charge_events')
+            && Schema::hasColumns('subscription_charge_events', [
+                'gym_id',
+                'subscription_id',
+                'plan_template_id',
+                'promotion_template_id',
+                'plan_key',
+                'plan_name',
+                'event_type',
+                'payment_method',
+                'billing_cycles',
+                'base_monthly_price',
+                'effective_monthly_price',
+                'base_total',
+                'discount_amount',
+                'total_paid',
+                'bonus_days',
+                'charged_at',
+            ]);
+    }
+
+    /**
      * @param  array<string, mixed>  $planTemplate
      * @return array{plan_name:string,price:float,ends_at:Carbon}
      */
@@ -505,12 +862,17 @@ class SubscriptionService
 
         $price = isset($planTemplate['price']) ? (float) $planTemplate['price'] : $price;
         $durationUnit = strtolower(trim((string) ($planTemplate['duration_unit'] ?? 'days')));
-        $durationMonths = max(1, (int) ($planTemplate['duration_months'] ?? 1));
-        $durationDays = max(1, (int) ($planTemplate['duration_days'] ?? 30));
+        $billingCycles = max(1, (int) ($planTemplate['billing_cycles'] ?? 1));
+        $durationMonths = max(1, (int) ($planTemplate['duration_months'] ?? 1)) * $billingCycles;
+        $durationDays = max(1, (int) ($planTemplate['duration_days'] ?? 30)) * $billingCycles;
+        $bonusDays = max(0, (int) ($planTemplate['bonus_days'] ?? 0));
 
         $endsAt = $durationUnit === 'months'
             ? $startsAt->copy()->addMonthsNoOverflow($durationMonths)->subDay()
             : $startsAt->copy()->addDays($durationDays)->subDay();
+        if ($bonusDays > 0) {
+            $endsAt = $endsAt->copy()->addDays($bonusDays);
+        }
 
         return [
             'plan_name' => $planName,

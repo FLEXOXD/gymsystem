@@ -26,8 +26,6 @@ class SupportChatLifecycleService
         $query = SupportChatConversation::query()
             ->whereIn('status', [
                 SupportChatConversation::STATUS_BOT,
-                SupportChatConversation::STATUS_WAITING_AGENT,
-                SupportChatConversation::STATUS_ACTIVE,
             ])
             ->orderBy('id');
 
@@ -208,6 +206,17 @@ class SupportChatLifecycleService
         ));
         if ($message === '') {
             return null;
+        }
+
+        $recentReminder = SupportChatMessage::query()
+            ->where('conversation_id', (int) $conversation->id)
+            ->where('sender_type', SupportChatMessage::SENDER_SYSTEM)
+            ->where('message', $message)
+            ->where('created_at', '>=', now()->subMinutes(2))
+            ->latest('id')
+            ->first(['id', 'sender_type', 'created_at']);
+        if ($recentReminder instanceof SupportChatMessage) {
+            return $recentReminder;
         }
 
         $attributes = [

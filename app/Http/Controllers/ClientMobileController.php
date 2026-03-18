@@ -74,7 +74,7 @@ class ClientMobileController extends Controller
             'id' => $baseScope.'app',
             'name' => 'FlexGym',
             'short_name' => 'FlexGym',
-            'description' => 'Registro de asistencia y progreso fisico del cliente.',
+            'description' => 'Registro de asistencia y progreso físico del cliente.',
             'start_url' => $startUrl,
             'scope' => $baseScope,
             'display' => 'standalone',
@@ -190,22 +190,28 @@ class ClientMobileController extends Controller
         }
 
         $screen = mb_strtolower(trim((string) $request->query('screen', 'home')));
-        if (! in_array($screen, ['home', 'checkin', 'progress', 'profile', 'physical'], true)) {
+        if (! in_array($screen, ['home', 'checkin', 'progress', 'profile', 'physical', 'nutrition'], true)) {
             $screen = 'home';
         }
 
         $fitnessProfile = $this->resolveFitnessProfile((int) $gym->id, (int) $client->id);
         $fitnessProfileCompleted = $this->isFitnessProfileCompleted($fitnessProfile);
         $openFitnessModal = false;
+        $openFitnessModalNextScreen = 'progress';
 
-        if ($screen === 'progress' && ! $fitnessProfileCompleted) {
-            // Progress screen requires initial physical profile to be completed first.
+        if (in_array($screen, ['progress', 'nutrition'], true) && ! $fitnessProfileCompleted) {
+            // Progress and nutrition screens require initial physical profile to be completed first.
+            $openFitnessModalNextScreen = $screen === 'nutrition' ? 'nutrition' : 'progress';
             $screen = 'home';
             $openFitnessModal = true;
         }
 
         if (! $fitnessProfileCompleted) {
             $oldFitnessModal = (string) $request->session()->getOldInput('_fitness_modal', '');
+            $oldNextScreen = mb_strtolower(trim((string) $request->session()->getOldInput('next_screen', '')));
+            if (in_array($oldNextScreen, ['home', 'progress', 'physical', 'nutrition'], true)) {
+                $openFitnessModalNextScreen = $oldNextScreen;
+            }
             if ($request->boolean('open_fitness_modal') || $oldFitnessModal === '1') {
                 $openFitnessModal = true;
             }
@@ -219,6 +225,7 @@ class ClientMobileController extends Controller
             'fitnessProfile' => $fitnessProfile,
             'fitnessProfileCompleted' => $fitnessProfileCompleted,
             'openFitnessModal' => $openFitnessModal,
+            'openFitnessModalNextScreen' => $openFitnessModalNextScreen,
             'webPushPublicKey' => trim((string) config('services.webpush.vapid.public_key', '')),
         ]);
     }
@@ -596,7 +603,12 @@ class ClientMobileController extends Controller
         }
 
         $data = $request->validate([
-            'age' => ['required', 'integer', 'min:12', 'max:90'],
+            'birth_date' => [
+                'required',
+                'date',
+                'before_or_equal:'.now()->subYears(12)->toDateString(),
+                'after_or_equal:'.now()->subYears(90)->toDateString(),
+            ],
             'sex' => ['required', 'string', 'in:masculino,femenino,otro'],
             'height_cm' => ['nullable', 'numeric', 'min:120', 'max:250'],
             'weight_kg' => ['nullable', 'numeric', 'min:30', 'max:400'],
@@ -607,23 +619,23 @@ class ClientMobileController extends Controller
             'session_minutes' => ['required', 'integer', 'in:45,60,90,120'],
             'limitations' => ['nullable', 'array', 'max:5'],
             'limitations.*' => ['string', 'in:ninguna,rodilla,espalda,hombro,codo,cuello,tobillo'],
-            'next_screen' => ['nullable', 'string', 'in:home,progress,physical'],
+            'next_screen' => ['nullable', 'string', 'in:home,progress,physical,nutrition'],
         ], [
-            'age.required' => 'Ingresa tu edad.',
-            'age.integer' => 'La edad debe ser un número entero.',
-            'age.min' => 'Edad mínima permitida: 12.',
-            'age.max' => 'Edad máxima permitida: 90.',
+            'birth_date.required' => 'Ingresa tu fecha de nacimiento.',
+            'birth_date.date' => 'Selecciona una fecha de nacimiento válida.',
+            'birth_date.before_or_equal' => 'Debes tener al menos 12 años para usar la app.',
+            'birth_date.after_or_equal' => 'La edad máxima permitida es 90 años.',
             'sex.required' => 'Selecciona tu sexo.',
             'sex.in' => 'Selecciona una opción válida de sexo.',
-            'height_cm.numeric' => 'La altura debe ser numerica.',
+            'height_cm.numeric' => 'La altura debe ser numérica.',
             'height_cm.min' => 'La altura mínima es 120 cm.',
             'height_cm.max' => 'La altura máxima es 250 cm.',
-            'weight_kg.numeric' => 'El peso debe ser numerico.',
+            'weight_kg.numeric' => 'El peso debe ser numérico.',
             'weight_kg.min' => 'El peso mínimo es 30 kg.',
             'weight_kg.max' => 'El peso máximo es 400 kg.',
             'goal.required' => 'Selecciona tu objetivo del gimnasio.',
             'goal.in' => 'Selecciona un objetivo válido.',
-            'secondary_goal.in' => 'Selecciona un objetivo secundario valido.',
+            'secondary_goal.in' => 'Selecciona un objetivo secundario válido.',
             'experience_level.required' => 'Selecciona tu nivel.',
             'experience_level.in' => 'Selecciona un nivel válido.',
             'days_per_week.required' => 'Selecciona tus días por semana.',
@@ -632,9 +644,18 @@ class ClientMobileController extends Controller
             'session_minutes.in' => 'Selecciona 45, 60, 90 o 120 minutos.',
             'limitations.array' => 'Las limitaciones deben enviarse como lista.',
             'limitations.max' => 'Puedes seleccionar máximo 5 limitaciones.',
-            'limitations.*.in' => 'Hay una limitacion no válida.',
+            'limitations.*.in' => 'Hay una limitación no válida.',
             'next_screen.in' => 'Pantalla de retorno no válida.',
         ]);
+
+        $birthDateValue = trim((string) ($data['birth_date'] ?? ''));
+        $birthDate = Carbon::parse($birthDateValue)->startOfDay();
+        $resolvedAge = $this->resolveAgeFromBirthDate($birthDate, (string) ($gym->timezone ?? ''));
+        if (! is_int($resolvedAge) || $resolvedAge < 12 || $resolvedAge > 90) {
+            return back()
+                ->withErrors(['birth_date' => 'La fecha de nacimiento no entra en el rango permitido (12 a 90 años).'])
+                ->withInput();
+        }
 
         $limitations = collect($data['limitations'] ?? [])
             ->map(static fn ($value): string => mb_strtolower(trim((string) $value)))
@@ -656,7 +677,7 @@ class ClientMobileController extends Controller
 
         if ($primaryGoal === null) {
             return back()
-                ->withErrors(['goal' => 'Selecciona un objetivo valido.'])
+                ->withErrors(['goal' => 'Selecciona un objetivo válido.'])
                 ->withInput();
         }
 
@@ -667,7 +688,7 @@ class ClientMobileController extends Controller
         }
 
         $bodyMetrics = $this->buildBodyMetrics(
-            age: (int) $data['age'],
+            age: $resolvedAge,
             sex: (string) $data['sex'],
             heightCm: $heightCm,
             weightKg: $weightKg,
@@ -677,31 +698,36 @@ class ClientMobileController extends Controller
             sessionMinutes: (int) $data['session_minutes'],
         );
 
+        $profilePayload = [
+            'age' => $resolvedAge,
+            'sex' => (string) $data['sex'],
+            'height_cm' => $heightCm,
+            'weight_kg' => $weightKg,
+            'goal' => $primaryGoal,
+            'secondary_goal' => $secondaryGoal,
+            'experience_level' => (string) $data['experience_level'],
+            'days_per_week' => (int) $data['days_per_week'],
+            'session_minutes' => (int) $data['session_minutes'],
+            'limitations' => $limitations->all(),
+            'body_metrics' => $bodyMetrics,
+            'onboarding_completed_at' => now(),
+        ];
+        if ($this->supportsFitnessBirthDateColumn()) {
+            $profilePayload['birth_date'] = $birthDate->toDateString();
+        }
+
         $fitnessProfile = ClientFitnessProfile::query()->updateOrCreate(
             [
                 'gym_id' => (int) $gym->id,
                 'client_id' => (int) $sessionClient->id,
             ],
-            [
-                'age' => (int) $data['age'],
-                'sex' => (string) $data['sex'],
-                'height_cm' => $heightCm,
-                'weight_kg' => $weightKg,
-                'goal' => $primaryGoal,
-                'secondary_goal' => $secondaryGoal,
-                'experience_level' => (string) $data['experience_level'],
-                'days_per_week' => (int) $data['days_per_week'],
-                'session_minutes' => (int) $data['session_minutes'],
-                'limitations' => $limitations->all(),
-                'body_metrics' => $bodyMetrics,
-                'onboarding_completed_at' => now(),
-            ]
+            $profilePayload
         );
 
         $this->forgetProgressSnapshot((int) $gym->id, (int) $fitnessProfile->client_id);
 
         $nextScreen = mb_strtolower(trim((string) ($data['next_screen'] ?? 'progress')));
-        if (! in_array($nextScreen, ['home', 'progress', 'physical'], true)) {
+        if (! in_array($nextScreen, ['home', 'progress', 'physical', 'nutrition'], true)) {
             $nextScreen = 'progress';
         }
 
@@ -724,7 +750,7 @@ class ClientMobileController extends Controller
             'weekly_goal' => ['required', 'integer', 'in:3,4,5,6,7'],
         ], [
             'weekly_goal.required' => 'Selecciona una meta semanal.',
-            'weekly_goal.integer' => 'La meta semanal debe ser numerica.',
+            'weekly_goal.integer' => 'La meta semanal debe ser numérica.',
             'weekly_goal.in' => 'Selecciona entre 3 y 7 días por semana.',
         ]);
 
@@ -740,8 +766,12 @@ class ClientMobileController extends Controller
 
         $weeklyGoal = (int) $data['weekly_goal'];
         $currentBodyMetrics = is_array($fitnessProfile->body_metrics ?? null) ? $fitnessProfile->body_metrics : [];
+        $ageForMetrics = $this->resolveAgeFromBirthDate($fitnessProfile->birth_date, (string) ($gym->timezone ?? ''));
+        if (! is_int($ageForMetrics) || $ageForMetrics <= 0) {
+            $ageForMetrics = max(12, min(90, (int) $fitnessProfile->age));
+        }
         $recalculatedBodyMetrics = $this->buildBodyMetrics(
-            age: (int) $fitnessProfile->age,
+            age: $ageForMetrics,
             sex: (string) $fitnessProfile->sex,
             heightCm: $this->normalizeNumericInput($fitnessProfile->height_cm),
             weightKg: $this->normalizeNumericInput($fitnessProfile->weight_kg),
@@ -945,27 +975,78 @@ class ClientMobileController extends Controller
 
     private function resolveFitnessProfile(int $gymId, int $clientId): ?ClientFitnessProfile
     {
+        $columns = [
+            'id',
+            'gym_id',
+            'client_id',
+            'age',
+            'sex',
+            'height_cm',
+            'weight_kg',
+            'goal',
+            'secondary_goal',
+            'experience_level',
+            'days_per_week',
+            'session_minutes',
+            'limitations',
+            'body_metrics',
+            'onboarding_completed_at',
+            'updated_at',
+        ];
+        if ($this->supportsFitnessBirthDateColumn()) {
+            $columns[] = 'birth_date';
+        }
+
         return ClientFitnessProfile::query()
             ->forGym($gymId)
             ->where('client_id', $clientId)
-            ->first([
-                'id',
-                'gym_id',
-                'client_id',
-                'age',
-                'sex',
-                'height_cm',
-                'weight_kg',
-                'goal',
-                'secondary_goal',
-                'experience_level',
-                'days_per_week',
-                'session_minutes',
-                'limitations',
-                'body_metrics',
-                'onboarding_completed_at',
-                'updated_at',
-            ]);
+            ->first($columns);
+    }
+
+    private function supportsFitnessBirthDateColumn(): bool
+    {
+        static $supports = null;
+        if ($supports === null) {
+            $supports = Schema::hasTable('client_fitness_profiles')
+                && Schema::hasColumn('client_fitness_profiles', 'birth_date');
+        }
+
+        return (bool) $supports;
+    }
+
+    private function resolveAgeFromBirthDate(mixed $birthDate, string $timezone = ''): ?int
+    {
+        if ($birthDate === null) {
+            return null;
+        }
+
+        $birthAt = null;
+        $timezoneName = $this->resolveTimezone($timezone);
+
+        try {
+            if ($birthDate instanceof Carbon) {
+                $birthAt = $birthDate->copy()->setTimezone($timezoneName)->startOfDay();
+            } elseif ($birthDate instanceof \DateTimeInterface) {
+                $birthAt = Carbon::instance(\DateTime::createFromInterface($birthDate))
+                    ->setTimezone($timezoneName)
+                    ->startOfDay();
+            } else {
+                $raw = trim((string) $birthDate);
+                if ($raw === '') {
+                    return null;
+                }
+                $birthAt = Carbon::parse($raw, $timezoneName)->startOfDay();
+            }
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $todayAtGym = Carbon::now($timezoneName)->startOfDay();
+        if ($birthAt->greaterThan($todayAtGym)) {
+            return null;
+        }
+
+        return max(0, (int) $birthAt->diffInYears($todayAtGym));
     }
 
     private function normalizeNumericInput(mixed $value): ?float
@@ -1056,6 +1137,160 @@ class ClientMobileController extends Controller
             'goal_summary_label' => FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'General'),
             'goal_track' => $this->resolveGoalTrack($primaryGoal, $secondaryGoal),
             'calculated_at' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildNutritionPlan(?ClientFitnessProfile $fitnessProfile, array $bodyState = [], array $progressPrediction = []): array
+    {
+        $basePayload = [
+            'is_ready' => false,
+            'title' => 'Nutrición personalizada',
+            'subtitle' => 'Esto debes comer hoy según tus datos.',
+            'summary_line' => 'Completa tus datos físicos para activar recomendaciones de comida.',
+            'impact_line' => 'Tu guía se calcula en base a tu objetivo del gimnasio.',
+            'target_kcal' => null,
+            'maintenance_kcal' => null,
+            'goal_label' => 'General',
+            'items' => [],
+            'footnote' => 'Guía informativa. Si tienes condiciones médicas, consulta a un nutricionista.',
+        ];
+
+        if (! $fitnessProfile || $fitnessProfile->onboarding_completed_at === null) {
+            return $basePayload;
+        }
+
+        [$primaryGoal, $secondaryGoal] = FitnessGoalSupport::pair(
+            (string) ($fitnessProfile->goal ?? ''),
+            isset($fitnessProfile->secondary_goal) ? (string) $fitnessProfile->secondary_goal : null
+        );
+        $primaryGoal ??= 'mantener_forma';
+        $goalLabel = FitnessGoalSupport::summaryLabel($primaryGoal, $secondaryGoal, 'General');
+
+        $bodyMetrics = is_array($fitnessProfile->body_metrics ?? null) ? $fitnessProfile->body_metrics : [];
+        $fallbackTargetByGoal = [
+            'ganar_musculo' => 2600,
+            'perder_grasa' => 1850,
+            'mantener_forma' => 2200,
+            'definir' => 2000,
+            'aumentar_fuerza' => 2450,
+            'mejorar_resistencia' => 2350,
+        ];
+
+        $targetKcal = is_numeric($bodyMetrics['target_kcal'] ?? null)
+            ? (int) round((float) $bodyMetrics['target_kcal'])
+            : (int) ($fallbackTargetByGoal[$primaryGoal] ?? 2200);
+        $targetKcal = max(1200, min(4500, $targetKcal));
+
+        $maintenanceKcal = is_numeric($bodyMetrics['maintenance_kcal'] ?? null)
+            ? (int) round((float) $bodyMetrics['maintenance_kcal'])
+            : null;
+        $deltaKcal = $maintenanceKcal !== null ? ($targetKcal - $maintenanceKcal) : null;
+
+        [$proteinRatio, $carbRatio, $fatRatio] = match ($primaryGoal) {
+            'ganar_musculo', 'aumentar_fuerza' => [0.30, 0.45, 0.25],
+            'perder_grasa', 'definir' => [0.35, 0.35, 0.30],
+            'mejorar_resistencia' => [0.25, 0.50, 0.25],
+            default => [0.30, 0.40, 0.30],
+        };
+
+        $mealTemplates = match ($primaryGoal) {
+            'ganar_musculo' => [
+                ['slot' => 'Desayuno', 'dish' => 'Avena con proteina, banano y crema de mani', 'portion' => '80 g avena + 1 scoop + 1 banano', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Arroz integral, pechuga y aguacate', 'portion' => '180 g arroz + 180 g pollo + ensalada', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Yogur griego con granola y frutos secos', 'portion' => '250 g yogur + 40 g granola', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Salmon, papa y vegetales al vapor', 'portion' => '170 g salmon + 250 g papa', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+            'perder_grasa' => [
+                ['slot' => 'Desayuno', 'dish' => 'Tortilla de claras con avena y berries', 'portion' => '4 claras + 60 g avena + fruta', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Bowl de quinoa, atun y verduras', 'portion' => '130 g quinoa + 160 g atun', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Batido verde con yogur natural', 'portion' => '1 porción fruta + 200 g yogur', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Pavo a la plancha con ensalada grande', 'portion' => '170 g pavo + mix de vegetales', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+            'definir' => [
+                ['slot' => 'Desayuno', 'dish' => 'Pan integral, huevos y fruta fresca', 'portion' => '2 huevos + 2 rebanadas + fruta', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Pollo al horno con camote y ensalada', 'portion' => '170 g pollo + 200 g camote', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Requeson con almendras y canela', 'portion' => '180 g requeson + 20 g almendras', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Merluza con verduras salteadas', 'portion' => '170 g merluza + 250 g verduras', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+            'aumentar_fuerza' => [
+                ['slot' => 'Desayuno', 'dish' => 'Avena proteica con huevos revueltos', 'portion' => '70 g avena + 3 huevos', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Carne magra con arroz y legumbres', 'portion' => '180 g carne + 170 g arroz', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Yogur con banana y cacao', 'portion' => '250 g yogur + 1 banana', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Pollo, pasta integral y vegetales', 'portion' => '170 g pollo + 140 g pasta', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+            'mejorar_resistencia' => [
+                ['slot' => 'Desayuno', 'dish' => 'Avena, fruta y yogur natural', 'portion' => '75 g avena + fruta + yogur', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Pasta integral con pollo y tomate', 'portion' => '160 g pasta + 150 g pollo', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Sandwich integral de pavo', 'portion' => '2 rebanadas + 90 g pavo', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Arroz, pescado blanco y verduras', 'portion' => '150 g arroz + 170 g pescado', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+            default => [
+                ['slot' => 'Desayuno', 'dish' => 'Yogur, avena y fruta picada', 'portion' => '250 g yogur + 60 g avena', 'image' => 'images/nutrition/nutri-breakfast.svg'],
+                ['slot' => 'Almuerzo', 'dish' => 'Plato balanceado con pollo y arroz', 'portion' => '160 g pollo + 150 g arroz + ensalada', 'image' => 'images/nutrition/nutri-lunch.svg'],
+                ['slot' => 'Snack', 'dish' => 'Fruta con frutos secos', 'portion' => '1 fruta + 20 g frutos secos', 'image' => 'images/nutrition/nutri-snack.svg'],
+                ['slot' => 'Cena', 'dish' => 'Tortilla de vegetales con queso fresco', 'portion' => '3 huevos + vegetales mixtos', 'image' => 'images/nutrition/nutri-dinner.svg'],
+            ],
+        };
+
+        $mealDistribution = [0.28, 0.34, 0.14, 0.24];
+        $allocatedKcal = 0;
+        $lastMealIndex = max(0, count($mealTemplates) - 1);
+        $items = [];
+
+        foreach ($mealTemplates as $index => $meal) {
+            $kcal = (int) round($targetKcal * (float) ($mealDistribution[$index] ?? 0.24));
+            if ($index === $lastMealIndex) {
+                $kcal = max(120, $targetKcal - $allocatedKcal);
+            }
+            $allocatedKcal += $kcal;
+
+            $items[] = [
+                'slot' => (string) ($meal['slot'] ?? 'Comida'),
+                'dish' => (string) ($meal['dish'] ?? 'Plato sugerido'),
+                'portion' => (string) ($meal['portion'] ?? 'Porción sugerida'),
+                'image_path' => (string) ($meal['image'] ?? ''),
+                'kcal' => $kcal,
+                'protein_g' => max(8, (int) round(($kcal * $proteinRatio) / 4)),
+                'carbs_g' => max(8, (int) round(($kcal * $carbRatio) / 4)),
+                'fat_g' => max(4, (int) round(($kcal * $fatRatio) / 9)),
+            ];
+        }
+
+        $impactLine = 'Con constancia, este plan alimenta tu objetivo de forma progresiva.';
+        if (is_int($deltaKcal)) {
+            $weeklyKcalDelta = abs($deltaKcal) * 7;
+            $weeklyKgEstimate = round($weeklyKcalDelta / 7700, 2);
+            if ($deltaKcal < 0) {
+                $impactLine = 'Déficit estimado: '.abs($deltaKcal).' kcal/día. Podrías bajar aprox. '.number_format($weeklyKgEstimate, 2).' kg por semana.';
+            } elseif ($deltaKcal > 0) {
+                $impactLine = 'Superávit estimado: '.$deltaKcal.' kcal/día. Podrías subir aprox. '.number_format($weeklyKgEstimate, 2).' kg por semana.';
+            } else {
+                $impactLine = 'Calorías en equilibrio. Enfocado en mantener peso y mejorar rendimiento.';
+            }
+        }
+
+        $rhythmLabel = trim((string) ($progressPrediction['rhythm_label'] ?? ''));
+        $disciplineScore = max(0, min(100, (int) ($bodyState['discipline'] ?? 0)));
+        $summaryLine = 'Objetivo: '.$goalLabel.'. Meta diaria aproximada: '.$targetKcal.' kcal.';
+        if ($rhythmLabel !== '') {
+            $summaryLine .= ' Ritmo actual: '.$rhythmLabel.'.';
+        }
+        $summaryLine .= ' Disciplina estimada: '.$disciplineScore.'/100.';
+
+        return [
+            'is_ready' => true,
+            'title' => 'Nutrición personalizada',
+            'subtitle' => 'Esto debes comer de acuerdo a tus datos.',
+            'summary_line' => $summaryLine,
+            'impact_line' => $impactLine,
+            'target_kcal' => $targetKcal,
+            'maintenance_kcal' => $maintenanceKcal,
+            'goal_label' => $goalLabel,
+            'items' => $items,
+            'footnote' => 'Plan estimado automáticamente. No reemplaza una evaluación clínica individual.',
         ];
     }
 
@@ -1553,6 +1788,11 @@ class ClientMobileController extends Controller
             daysPerWeek: $daysPerWeek,
             visibleFromDate: $membershipStartDate,
         );
+        $nutritionPlan = $this->buildNutritionPlan(
+            fitnessProfile: $fitnessProfile,
+            bodyState: $bodyState,
+            progressPrediction: $progressPrediction,
+        );
 
         $trainingStatus = $this->resolveTrainingStatusPayload(
             gymId: $gymId,
@@ -1584,6 +1824,7 @@ class ClientMobileController extends Controller
             'prediction' => $progressPrediction,
             'body_state' => $bodyState,
             'training_plan' => $trainingPlan,
+            'nutrition_plan' => $nutritionPlan,
             'personal_message' => $personalMessage,
             'weekly_goal' => $weeklyGoalSummary,
             'last30_timeline' => $last30Timeline,
@@ -1620,7 +1861,7 @@ class ClientMobileController extends Controller
         return [
             'title' => 'Top 5 del mes',
             'window_label' => 'Mes actual: '.$monthStartAt->translatedFormat('d M').' - '.$monthEndAt->translatedFormat('d M'),
-            'helper' => 'La asistencia pesa mas y el tiempo solo suma como bono segun tu objetivo personal durante el mes.',
+            'helper' => 'La asistencia pesa más y el tiempo solo suma como bono según tu objetivo personal durante el mes.',
             'entries' => $entries,
             'current_client' => $currentEntry,
             'current_client_in_top' => is_array($currentEntry)
@@ -3336,4 +3577,3 @@ class ClientMobileController extends Controller
         Storage::disk('public')->delete(ltrim($assetPath, '/'));
     }
 }
-

@@ -220,6 +220,10 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
         })->name('panel.legacy');
 
         Route::middleware('superadmin')->prefix('superadmin')->name('superadmin.')->group(function (): void {
+            Route::get('/', function () {
+                return redirect()->route('superadmin.dashboard');
+            })->name('index');
+
             Route::get('/dashboard', [SuperAdminDashboardController::class, 'dashboard'])
                 ->name('dashboard');
             Route::get('/quotations', [SuperAdminQuotationController::class, 'index'])
@@ -264,6 +268,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
             Route::get('/support-chat/unread-count', [SuperAdminSupportChatController::class, 'unreadCountJson'])
                 ->middleware('throttle:120,1')
                 ->name('support-chat.unread-count');
+            Route::get('/support-chat/{conversation}/state', [SuperAdminSupportChatController::class, 'state'])
+                ->middleware('throttle:120,1')
+                ->name('support-chat.state');
             Route::post('/support-chat/{conversation}/reply', [SuperAdminSupportChatController::class, 'reply'])
                 ->middleware('throttle:80,1')
                 ->name('support-chat.reply');

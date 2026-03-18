@@ -128,6 +128,14 @@ class Gym extends Model
     }
 
     /**
+     * Charge events generated for the SaaS subscription of this gym.
+     */
+    public function subscriptionChargeEvents(): HasMany
+    {
+        return $this->hasMany(SubscriptionChargeEvent::class);
+    }
+
+    /**
      * Subscriptions billed under this gym as owner.
      */
     public function billedSubscriptions(): HasMany

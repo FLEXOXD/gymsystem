@@ -77,6 +77,7 @@
             ->take(4)
             ->values();
         $portfolioHealth = $totalGyms > 0 ? (int) round(($activeGyms / $totalGyms) * 100) : 0;
+        $planPromotionRules = is_array($planPromotionRules ?? null) ? $planPromotionRules : [];
     @endphp
 
     <div class="sa-shell">
@@ -347,16 +348,41 @@
                                                 <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">
                                                     Abre este panel solo cuando necesites renovar o migrar de plan. Así evitamos una tabla saturada.
                                                 </p>
-                                                <form method="POST" action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}" class="grid gap-3">
+                                                @php
+                                                    $currentPlanTemplate = collect($planTemplates ?? collect())->first(function ($template) use ($gym) {
+                                                        $templatePlanKey = strtolower(trim((string) ($template->plan_key ?? '')));
+                                                        $gymPlanKey = strtolower(trim((string) ($gym->plan_key ?? '')));
+
+                                                        if ($gym->plan_template_id !== null && (int) $gym->plan_template_id > 0) {
+                                                            return (int) $template->id === (int) $gym->plan_template_id;
+                                                        }
+
+                                                        return $gymPlanKey !== '' && $templatePlanKey === $gymPlanKey;
+                                                    });
+                                                @endphp
+                                                <form method="POST"
+                                                      action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}"
+                                                      class="grid gap-3"
+                                                      data-current-plan-template-id="{{ (int) ($currentPlanTemplate->id ?? 0) }}"
+                                                      data-current-plan-name="{{ (string) ($currentPlanTemplate->name ?? $gym->plan_name ?? 'Plan actual') }}"
+                                                      data-current-plan-key="{{ strtolower(trim((string) ($currentPlanTemplate->plan_key ?? $gym->plan_key ?? ''))) }}"
+                                                      data-current-plan-price="{{ number_format((float) ($currentPlanTemplate->price ?? $gym->price ?? 0), 2, '.', '') }}">
                                                     @csrf
                                                     <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                                                         Plantilla de plan
                                                         <select name="plan_template_id" class="ui-input js-plan-template-select">
                                                             <option value="">Mantener plan actual</option>
                                                             @foreach (($planTemplates ?? collect()) as $template)
+                                                                @php
+                                                                    $templateFeaturePlanKey = method_exists($template, 'resolvedFeaturePlanKey')
+                                                                        ? (string) $template->resolvedFeaturePlanKey()
+                                                                        : (string) ($template->feature_plan_key ?? $template->plan_key ?? 'basico');
+                                                                @endphp
                                                                 <option value="{{ $template->id }}"
-                                                                        data-plan-key="{{ (string) ($template->plan_key ?? '') }}"
-                                                                        data-intro-percent="{{ ($template->discount_price !== null && (float) $template->price > 0 && (float) $template->discount_price < (float) $template->price) ? (int) round((((float) $template->price - (float) $template->discount_price) / (float) $template->price) * 100) : 0 }}">
+                                                                        data-plan-template-id="{{ (int) $template->id }}"
+                                                                        data-plan-name="{{ $template->name }}"
+                                                                        data-feature-plan-key="{{ $templateFeaturePlanKey }}"
+                                                                        data-plan-price="{{ number_format((float) $template->price, 2, '.', '') }}">
                                                                     {{ $template->name }} ({{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}) - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode) }}{{ $template->discount_price !== null ? ' | Desc. '.\App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode) : '' }}
                                                                 </option>
                                                             @endforeach
@@ -388,27 +414,17 @@
 
                                                     <div class="grid gap-3 md:grid-cols-2 md:items-end">
                                                         <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                                                            Duracion
+                                                            Cobertura prepaga
                                                             <select name="months" class="ui-input js-months-select" required>
-                                                                <option value="1">1 mes</option>
-                                                                <option value="3">3 meses</option>
-                                                                <option value="6">6 meses</option>
-                                                                <option value="12">12 meses</option>
+                                                                @for ($monthOption = 1; $monthOption <= 12; $monthOption++)
+                                                                    <option value="{{ $monthOption }}">{{ $monthOption }} {{ $monthOption === 1 ? 'mes' : 'meses' }}</option>
+                                                                @endfor
                                                             </select>
                                                         </label>
-                                                        <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                                                            Descuento primer mes (%)
-                                                            <input type="number"
-                                                                   name="intro_discount_percent"
-                                                                   min="0"
-                                                                   max="100"
-                                                                   step="1"
-                                                                   value="0"
-                                                                   class="ui-input js-intro-discount-input"
-                                                                   title="0 sin descuento | 100 primer mes gratis."
-                                                                   disabled>
-                                                        </label>
+
                                                     </div>
+
+                                                    <p class="text-xs leading-5 text-slate-600 dark:text-slate-300 js-renew-plan-feedback" role="status" aria-live="polite"></p>
 
                                                     <div class="flex justify-end">
                                                         <x-ui.button type="submit" size="sm">Aplicar renovación</x-ui.button>
@@ -635,64 +651,155 @@
         });
         applyFilter();
 
+        const promotionRules = @json($planPromotionRules);
+        const formatUsd = function (value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) return '$0.00';
+            return '$' + numeric.toFixed(2);
+        };
+        const resolvePromotion = function (templateId, billingCycles) {
+            const rules = promotionRules[String(templateId)] || [];
+            if (!Array.isArray(rules)) {
+                return null;
+            }
+
+            let fallbackRule = null;
+            for (const rule of rules) {
+                const duration = Number(rule?.duration_months || 0);
+                if (Number.isFinite(duration) && duration > 0 && duration === billingCycles) {
+                    return rule;
+                }
+                if (!fallbackRule && !rule?.duration_months) {
+                    fallbackRule = rule;
+                }
+            }
+
+            return fallbackRule;
+        };
+        const resolvePromotionPricing = function (baseMonthlyPrice, billingCycles, promotion) {
+            const safeMonthlyPrice = Number.isFinite(baseMonthlyPrice) ? Math.max(0, baseMonthlyPrice) : 0;
+            const safeBillingCycles = Math.max(1, Math.round(Number(billingCycles) || 1));
+            const baseTotal = Number((safeMonthlyPrice * safeBillingCycles).toFixed(2));
+
+            if (!promotion) {
+                return {
+                    baseTotal: baseTotal,
+                    finalTotal: baseTotal,
+                    discountAmount: 0,
+                    effectiveMonthlyPrice: Number((baseTotal / safeBillingCycles).toFixed(2)),
+                    bonusDays: 0,
+                };
+            }
+
+            const type = String(promotion.type || '').trim().toLowerCase();
+            const value = Number(promotion.value || 0);
+            let finalTotal = baseTotal;
+            let discountAmount = 0;
+            let bonusDays = 0;
+
+            if (type === 'percentage') {
+                const percent = Math.max(0, Math.min(100, value));
+                discountAmount = Number((baseTotal * (percent / 100)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            } else if (type === 'fixed') {
+                discountAmount = Number(Math.max(0, Math.min(baseTotal, value)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            } else if (type === 'final_price') {
+                finalTotal = Number(Math.max(0, value).toFixed(2));
+                discountAmount = Number(Math.max(0, baseTotal - finalTotal).toFixed(2));
+            } else if (type === 'bonus_days') {
+                bonusDays = Math.max(0, Math.round(value));
+            } else if (type === 'two_for_one' || type === 'bring_friend') {
+                const percent = value > 0 ? Math.max(0, Math.min(100, value)) : 50;
+                discountAmount = Number((baseTotal * (percent / 100)).toFixed(2));
+                finalTotal = Number(Math.max(0, baseTotal - discountAmount).toFixed(2));
+            }
+
+            return {
+                baseTotal: baseTotal,
+                finalTotal: finalTotal,
+                discountAmount: discountAmount,
+                effectiveMonthlyPrice: Number((finalTotal / safeBillingCycles).toFixed(2)),
+                bonusDays: bonusDays,
+            };
+        };
+
         document.querySelectorAll('form[action*="/subscriptions/"]').forEach(function (form) {
             const planSelect = form.querySelector('.js-plan-template-select');
             const monthsSelect = form.querySelector('.js-months-select');
             const customPriceInput = form.querySelector('.js-custom-price-input');
-            const introDiscountInput = form.querySelector('.js-intro-discount-input');
+            const feedback = form.querySelector('.js-renew-plan-feedback');
             if (!planSelect || !monthsSelect) {
                 return;
             }
 
             const syncMode = function () {
-                const hasTemplate = String(planSelect.value || '').trim() !== '';
-                monthsSelect.disabled = hasTemplate;
-                monthsSelect.classList.toggle('opacity-60', hasTemplate);
-                monthsSelect.classList.toggle('cursor-not-allowed', hasTemplate);
-                monthsSelect.title = hasTemplate ? 'Se ignora cuando eliges un plan base.' : '';
-
-                if (!customPriceInput) {
-                    return;
-                }
-
                 const selectedOption = planSelect.options[planSelect.selectedIndex] || null;
-                const selectedPlanKey = String(selectedOption?.getAttribute('data-plan-key') || '').toLowerCase();
-                const canUseCustomPrice = hasTemplate && selectedPlanKey === 'sucursales';
-                customPriceInput.disabled = !canUseCustomPrice;
-                customPriceInput.required = false;
-                customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
-                customPriceInput.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
-                customPriceInput.title = canUseCustomPrice
-                    ? 'Precio personalizado para este cliente con plan sucursales.'
-                    : 'Disponible cuando eliges plan sucursales.';
+                const hasTemplate = String(planSelect.value || '').trim() !== '';
+                const currentTemplateId = String(form.getAttribute('data-current-plan-template-id') || '').trim();
+                const currentPlanName = String(form.getAttribute('data-current-plan-name') || 'Plan actual').trim();
+                const currentPlanKey = String(form.getAttribute('data-current-plan-key') || '').trim().toLowerCase();
+                const currentPlanPrice = Number(form.getAttribute('data-current-plan-price') || '0');
+                const selectedPlanKey = String(selectedOption?.getAttribute('data-feature-plan-key') || currentPlanKey).toLowerCase();
+                const selectedTemplateId = String(selectedOption?.getAttribute('data-plan-template-id') || planSelect.value || currentTemplateId).trim();
+                const selectedPlanName = hasTemplate
+                    ? String(selectedOption?.getAttribute('data-plan-name') || selectedOption?.textContent || 'Plan seleccionado').trim()
+                    : currentPlanName;
+                const selectedPlanPrice = hasTemplate
+                    ? Number(selectedOption?.getAttribute('data-plan-price') || '0')
+                    : currentPlanPrice;
+                const selectedMonths = Math.max(1, Math.round(Number(monthsSelect.value || '1')));
+                const canUseCustomPrice = selectedPlanKey === 'sucursales';
 
-                if (introDiscountInput) {
-                    const defaultIntroPercent = Number(selectedOption?.getAttribute('data-intro-percent') || '0');
-                    const clampedDefaultIntroPercent = Number.isFinite(defaultIntroPercent)
-                        ? Math.max(0, Math.min(100, Math.round(defaultIntroPercent)))
-                        : 0;
+                monthsSelect.disabled = false;
+                monthsSelect.classList.remove('opacity-60', 'cursor-not-allowed');
+                monthsSelect.title = hasTemplate
+                    ? 'Multiplica la cobertura del plan elegido y busca la promo de ese plazo.'
+                    : 'Extiende la cobertura del plan actual y busca la promo de ese plazo.';
 
-                    introDiscountInput.disabled = !hasTemplate;
-                    introDiscountInput.required = false;
-                    introDiscountInput.classList.toggle('opacity-60', !hasTemplate);
-                    introDiscountInput.classList.toggle('cursor-not-allowed', !hasTemplate);
-                    introDiscountInput.title = hasTemplate
-                        ? '0 sin descuento | 100 primer mes gratis.'
-                        : 'Disponible cuando eliges una plantilla de plan.';
+                if (customPriceInput) {
+                    customPriceInput.disabled = !canUseCustomPrice;
+                    customPriceInput.required = false;
+                    customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
+                    customPriceInput.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
+                    customPriceInput.title = canUseCustomPrice
+                        ? 'Precio personalizado para este cliente con plan sucursales.'
+                        : 'Disponible cuando eliges plan sucursales.';
 
-                    if (!hasTemplate) {
-                        introDiscountInput.value = '0';
-                    } else {
-                        introDiscountInput.value = String(clampedDefaultIntroPercent);
+                    if (!canUseCustomPrice) {
+                        customPriceInput.value = '';
                     }
                 }
 
-                if (!canUseCustomPrice) {
-                    customPriceInput.value = '';
+                const selectedCustomPrice = Number(customPriceInput?.value || '0');
+                const baseMonthlyPrice = canUseCustomPrice && Number.isFinite(selectedCustomPrice) && selectedCustomPrice > 0
+                    ? selectedCustomPrice
+                    : selectedPlanPrice;
+                const selectedPromotion = resolvePromotion(selectedTemplateId, selectedMonths);
+                const pricing = resolvePromotionPricing(baseMonthlyPrice, selectedMonths, selectedPromotion);
+
+                if (!feedback) {
+                    return;
                 }
+
+                if (selectedTemplateId === '' && currentTemplateId === '') {
+                    feedback.textContent = 'Selecciona uno de los 4 planes base si quieres aplicar una promocion por plazo.';
+                    return;
+                }
+
+                if (selectedPromotion) {
+                    const promotionName = String(selectedPromotion.name || 'Promocion activa').trim();
+                    const bonusDaysSuffix = pricing.bonusDays > 0 ? ' +' + pricing.bonusDays + ' dias.' : '.';
+                    feedback.textContent = selectedPlanName + ': promo "' + promotionName + '" aplicada. Normal ' + formatUsd(pricing.baseTotal) + ', total ' + formatUsd(pricing.finalTotal) + ' (' + formatUsd(pricing.effectiveMonthlyPrice) + '/mes promedio)' + bonusDaysSuffix;
+                    return;
+                }
+
+                feedback.textContent = selectedPlanName + ': sin promocion activa para ' + selectedMonths + ' mes(es). Total ' + formatUsd(pricing.baseTotal) + '.';
             };
 
             planSelect.addEventListener('change', syncMode);
+            monthsSelect.addEventListener('change', syncMode);
+            customPriceInput?.addEventListener('input', syncMode);
             syncMode();
         });
     })();

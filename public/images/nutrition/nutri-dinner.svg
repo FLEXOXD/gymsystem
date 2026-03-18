@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480" viewBox="0 0 720 480" role="img" aria-labelledby="title desc">
+  <title id="title">Cena de recuperacion</title>
+  <desc id="desc">Cena ligera rica en proteina para cierre de dia.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="480" fill="url(#bg)"/>
+  <ellipse cx="360" cy="252" rx="176" ry="132" fill="#ecfeff" opacity="0.95"/>
+  <ellipse cx="360" cy="258" rx="142" ry="104" fill="#0f172a" opacity="0.16"/>
+  <path d="M280 264c38-60 128-60 168 0" fill="none" stroke="#f59e0b" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="302" cy="230" r="15" fill="#22c55e"/>
+  <circle cx="346" cy="218" r="13" fill="#84cc16"/>
+  <circle cx="392" cy="224" r="14" fill="#16a34a"/>
+  <circle cx="432" cy="240" r="13" fill="#65a30d"/>
+  <text x="52" y="74" fill="#ccfbf1" font-size="34" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Cena</text>
+  <text x="52" y="112" fill="#99f6e4" font-size="24" font-family="Segoe UI, Arial, sans-serif">recuperacion nocturna</text>
+</svg>
