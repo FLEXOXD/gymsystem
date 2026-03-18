@@ -2002,6 +2002,7 @@
             <x-support-chat.widget
                 context="gym_panel"
                 :state-url="route('support-chat.gym.state', $gymRouteParams)"
+                :restart-url="route('support-chat.gym.restart', $gymRouteParams)"
                 :quick-reply-url="route('support-chat.gym.quick-reply', $gymRouteParams)"
                 :message-url="route('support-chat.gym.message', $gymRouteParams)"
                 :csrf-token="csrf_token()"

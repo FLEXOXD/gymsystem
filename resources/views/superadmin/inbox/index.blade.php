@@ -274,7 +274,7 @@
                         </a>
                     @empty
                         <div class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-300">
-                            Aún no hay conversaciones de soporte.
+                            A&uacute;n no hay conversaciones de soporte.
                         </div>
                     @endforelse
                 </div>
@@ -331,7 +331,7 @@
                             </div>
                         @empty
                             <div class="py-10 text-center text-sm text-slate-500 dark:text-slate-300">
-                                Aún no hay mensajes en esta conversación.
+                                A&uacute;n no hay mensajes en esta conversaci&oacute;n.
                             </div>
                         @endforelse
                     </div>
@@ -350,7 +350,7 @@
                             <form method="POST" action="{{ route('superadmin.support-chat.status', $selectedSupportConversation->id) }}" class="space-y-2">
                                 @csrf
                                 <label class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                    Estado de la conversación
+                                    Estado de la conversaci&oacute;n
                                     <select name="status" class="ui-input mt-1">
                                         <option value="bot" @selected($selectedSupportConversation->status === 'bot')>Bot</option>
                                         <option value="waiting_agent" @selected($selectedSupportConversation->status === 'waiting_agent')>Esperando agente</option>
@@ -363,7 +363,7 @@
 
                             <form method="POST"
                                   action="{{ route('superadmin.support-chat.finalize', $selectedSupportConversation->id) }}"
-                                  onsubmit="return confirm('¿Finalizar y borrar esta conversación definitivamente?');">
+                                  onsubmit="return confirm('Finalizar esta conversacion? El historial se borrara automaticamente en 15 minutos.');">
                                 @csrf
                                 <input type="hidden" name="status" value="{{ $filters['status'] }}">
                                 <input type="hidden" name="q" value="{{ $filters['q'] }}">
@@ -371,13 +371,13 @@
                                 <input type="hidden" name="support_status" value="{{ $supportFilters['status'] ?? 'all' }}">
                                 <input type="hidden" name="support_q" value="{{ $supportFilters['q'] ?? '' }}">
                                 <input type="hidden" name="support_page" value="{{ request()->query('support_page', 1) }}">
-                                <x-ui.button type="submit" variant="danger">Finalizar y borrar</x-ui.button>
+                                <x-ui.button type="submit" variant="danger">Finalizar conversacion</x-ui.button>
                             </form>
                         </div>
                     </div>
                 @else
                     <div class="py-14 text-center text-sm text-slate-500 dark:text-slate-300">
-                        Selecciona una conversación de soporte para ver el detalle.
+                        Selecciona una conversaci&oacute;n de soporte para ver el detalle.
                     </div>
                 @endif
             </section>

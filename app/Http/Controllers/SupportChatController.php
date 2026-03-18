@@ -47,7 +47,18 @@ class SupportChatController extends Controller
         ]);
 
         $conversation = $this->resolveLandingConversation($request, true, $data);
+        if (! $conversation instanceof SupportChatConversation) {
+            return response()->json(
+                $this->buildStatePayload(null, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+            );
+        }
+
         $this->applyLandingLeadData($conversation, $data);
+        if ($this->isConversationClosed($conversation)) {
+            return response()->json(
+                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+            );
+        }
 
         $selectedQuickReply = collect($this->botService->quickReplies(SupportChatConversation::CHANNEL_LANDING))
             ->firstWhere('key', trim((string) $data['action_key']));
@@ -83,7 +94,18 @@ class SupportChatController extends Controller
         ]);
 
         $conversation = $this->resolveLandingConversation($request, true, $data);
+        if (! $conversation instanceof SupportChatConversation) {
+            return response()->json(
+                $this->buildStatePayload(null, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+            );
+        }
+
         $this->applyLandingLeadData($conversation, $data);
+        if ($this->isConversationClosed($conversation)) {
+            return response()->json(
+                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+            );
+        }
 
         $this->appendUserMessage(
             $conversation,
@@ -95,6 +117,30 @@ class SupportChatController extends Controller
         );
 
         $this->handleBotForFreeMessage($conversation, SupportChatConversation::CHANNEL_LANDING, trim((string) $data['message']));
+
+        return response()->json(
+            $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+        );
+    }
+
+    public function landingRestart(Request $request): JsonResponse
+    {
+        $this->lifecycleService->runInactivitySweep();
+
+        $data = $request->validate([
+            'contact_name' => ['nullable', 'string', 'max:120'],
+            'contact_email' => ['nullable', 'email', 'max:150'],
+            'gym_name' => ['nullable', 'string', 'max:150'],
+        ]);
+
+        $existingConversation = $this->resolveLandingConversation($request, false, []);
+        if ($existingConversation instanceof SupportChatConversation && ! $this->isConversationClosed($existingConversation)) {
+            return response()->json(
+                $this->buildStatePayload($existingConversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
+            );
+        }
+
+        $conversation = $this->createLandingConversation($request, $data, $existingConversation);
 
         return response()->json(
             $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_LANDING, SupportChatMessage::SENDER_VISITOR)
@@ -123,6 +169,11 @@ class SupportChatController extends Controller
         $conversation = $this->resolveGymConversation($request, true);
         if (! $conversation instanceof SupportChatConversation) {
             abort(404);
+        }
+        if ($this->isConversationClosed($conversation)) {
+            return response()->json(
+                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
+            );
         }
         $actor = $request->user();
 
@@ -160,6 +211,11 @@ class SupportChatController extends Controller
         if (! $conversation instanceof SupportChatConversation) {
             abort(404);
         }
+        if ($this->isConversationClosed($conversation)) {
+            return response()->json(
+                $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
+            );
+        }
         $actor = $request->user();
         $message = trim((string) $data['message']);
 
@@ -173,6 +229,27 @@ class SupportChatController extends Controller
         );
 
         $this->handleBotForFreeMessage($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, $message);
+
+        return response()->json(
+            $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
+        );
+    }
+
+    public function gymRestart(Request $request, string $contextGym): JsonResponse
+    {
+        $this->lifecycleService->runInactivitySweep();
+
+        $existingConversation = $this->resolveGymConversation($request, false);
+        if ($existingConversation instanceof SupportChatConversation && ! $this->isConversationClosed($existingConversation)) {
+            return response()->json(
+                $this->buildStatePayload($existingConversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
+            );
+        }
+
+        $conversation = $this->createGymConversation($request);
+        if (! $conversation instanceof SupportChatConversation) {
+            abort(404);
+        }
 
         return response()->json(
             $this->buildStatePayload($conversation, SupportChatConversation::CHANNEL_GYM_PANEL, SupportChatMessage::SENDER_GYM)
@@ -197,20 +274,7 @@ class SupportChatController extends Controller
             return $conversation;
         }
 
-        $conversation = SupportChatConversation::query()->create([
-            'channel' => SupportChatConversation::CHANNEL_LANDING,
-            'requester_type' => SupportChatConversation::REQUESTER_VISITOR,
-            'visitor_name' => $this->safeLeadName($leadData['contact_name'] ?? null),
-            'visitor_email' => $this->safeLeadEmail($leadData['contact_email'] ?? null),
-            'visitor_gym_name' => $this->safeLeadGymName($leadData['gym_name'] ?? null),
-            'status' => SupportChatConversation::STATUS_BOT,
-            'last_message_at' => now(),
-        ]);
-
-        $request->session()->put(self::LANDING_SESSION_KEY, (int) $conversation->id);
-        $this->seedWelcomeMessage($conversation, SupportChatConversation::CHANNEL_LANDING);
-
-        return $conversation;
+        return $this->createLandingConversation($request, $leadData, null);
     }
 
     private function resolveGymConversation(Request $request, bool $createIfMissing): ?SupportChatConversation
@@ -220,20 +284,63 @@ class SupportChatController extends Controller
             return null;
         }
 
-        $conversation = SupportChatConversation::query()
+        $baseQuery = SupportChatConversation::query()
             ->where('channel', SupportChatConversation::CHANNEL_GYM_PANEL)
             ->where('gym_id', (int) $activeGym->id)
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id');
+
+        $conversation = (clone $baseQuery)
             ->whereIn('status', [
                 SupportChatConversation::STATUS_BOT,
                 SupportChatConversation::STATUS_WAITING_AGENT,
                 SupportChatConversation::STATUS_ACTIVE,
             ])
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('id')
             ->first();
-
-        if ($conversation instanceof SupportChatConversation || ! $createIfMissing) {
+        if ($conversation instanceof SupportChatConversation) {
             return $conversation;
+        }
+
+        $closedConversation = (clone $baseQuery)
+            ->where('status', SupportChatConversation::STATUS_CLOSED)
+            ->first();
+        if ($closedConversation instanceof SupportChatConversation || ! $createIfMissing) {
+            return $closedConversation;
+        }
+
+        return $this->createGymConversation($request);
+    }
+
+    /**
+     * @param  array<string, mixed>  $leadData
+     */
+    private function createLandingConversation(
+        Request $request,
+        array $leadData,
+        ?SupportChatConversation $previousConversation = null
+    ): SupportChatConversation {
+        $conversation = SupportChatConversation::query()->create([
+            'channel' => SupportChatConversation::CHANNEL_LANDING,
+            'requester_type' => SupportChatConversation::REQUESTER_VISITOR,
+            'visitor_name' => $this->safeLeadName($leadData['contact_name'] ?? $previousConversation?->visitor_name),
+            'visitor_email' => $this->safeLeadEmail($leadData['contact_email'] ?? $previousConversation?->visitor_email),
+            'visitor_gym_name' => $this->safeLeadGymName($leadData['gym_name'] ?? $previousConversation?->visitor_gym_name),
+            'status' => SupportChatConversation::STATUS_BOT,
+            'closed_at' => null,
+            'last_message_at' => now(),
+        ]);
+
+        $request->session()->put(self::LANDING_SESSION_KEY, (int) $conversation->id);
+        $this->seedWelcomeMessage($conversation, SupportChatConversation::CHANNEL_LANDING);
+
+        return $conversation;
+    }
+
+    private function createGymConversation(Request $request): ?SupportChatConversation
+    {
+        $activeGym = $request->attributes->get('active_gym');
+        if (! $activeGym instanceof Gym) {
+            return null;
         }
 
         $user = $request->user();
@@ -243,6 +350,7 @@ class SupportChatController extends Controller
             'gym_id' => (int) $activeGym->id,
             'initiated_by_user_id' => $user instanceof User ? (int) $user->id : null,
             'status' => SupportChatConversation::STATUS_BOT,
+            'closed_at' => null,
             'last_message_at' => now(),
         ]);
 
@@ -398,13 +506,6 @@ class SupportChatController extends Controller
             'read_by_superadmin_at' => null,
         ]);
 
-        if ((string) $conversation->status === SupportChatConversation::STATUS_CLOSED) {
-            $conversation->forceFill([
-                'status' => SupportChatConversation::STATUS_BOT,
-                'closed_at' => null,
-            ])->save();
-        }
-
         $conversation->forceFill(['last_message_at' => now()])->save();
     }
 
@@ -438,12 +539,14 @@ class SupportChatController extends Controller
 
         /** @var Collection<int, SupportChatMessage> $messages */
         $messages = $conversation->messages;
+        $isClosedConversation = $this->isConversationClosed($conversation);
+        $minutesUntilPurge = $this->minutesUntilPurge($conversation);
 
         return [
             'ok' => true,
             'context' => $context,
             'assistant' => $assistantProfile,
-            'quick_replies' => $quickReplies,
+            'quick_replies' => $isClosedConversation ? [] : $quickReplies,
             'representative_online' => $representativeOnline,
             'representative_name' => trim((string) ($activeRepresentative['name'] ?? 'SuperAdmin')),
             'conversation' => [
@@ -456,6 +559,8 @@ class SupportChatController extends Controller
                 'gym_name' => $conversation->gym?->name ?: $conversation->visitor_gym_name,
                 'contact_name' => $conversation->visitor_name,
                 'contact_email' => $conversation->visitor_email,
+                'can_restart' => $isClosedConversation,
+                'minutes_until_purge' => $minutesUntilPurge,
             ],
             'messages' => $messages->map(static function (SupportChatMessage $message) use ($mineSenderType): array {
                 return [
@@ -469,6 +574,23 @@ class SupportChatController extends Controller
                 ];
             })->values()->all(),
         ];
+    }
+
+    private function isConversationClosed(?SupportChatConversation $conversation): bool
+    {
+        return $conversation instanceof SupportChatConversation
+            && (string) $conversation->status === SupportChatConversation::STATUS_CLOSED;
+    }
+
+    private function minutesUntilPurge(SupportChatConversation $conversation): ?int
+    {
+        if (! $this->isConversationClosed($conversation) || ! $conversation->closed_at) {
+            return null;
+        }
+
+        $purgeAfterMinutes = max(1, (int) config('support_chat.inactivity.close_after_minutes', 15));
+
+        return max(0, now()->diffInMinutes($conversation->closed_at->copy()->addMinutes($purgeAfterMinutes), false));
     }
 
     private function safeLeadName(mixed $value): string

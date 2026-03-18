@@ -3633,6 +3633,7 @@
         <x-support-chat.widget
             context="landing"
             :state-url="route('support-chat.landing.state')"
+            :restart-url="route('support-chat.landing.restart')"
             :quick-reply-url="route('support-chat.landing.quick-reply')"
             :message-url="route('support-chat.landing.message')"
             :csrf-token="csrf_token()"

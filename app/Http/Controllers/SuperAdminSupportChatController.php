@@ -138,11 +138,11 @@ class SuperAdminSupportChatController extends Controller
         $this->lifecycleService->finalizeAndDelete($conversation, 'manual_superadmin');
 
         $query = $request->only(['status', 'q', 'page', 'support_status', 'support_q', 'support_page']);
-        unset($query['support']);
+        $query['support'] = (int) $conversation->id;
 
         return redirect()
             ->route('superadmin.inbox.index', $query)
-            ->with('status', 'Conversacion finalizada y eliminada.');
+            ->with('status', 'Conversacion finalizada. El historial se eliminara automaticamente en 15 minutos.');
     }
 
     public function unreadCount(): int
@@ -187,4 +187,3 @@ class SuperAdminSupportChatController extends Controller
             ->update(['read_by_superadmin_at' => now()]);
     }
 }
-

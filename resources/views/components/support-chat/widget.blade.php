@@ -1,6 +1,7 @@
-﻿@props([
+@props([
     'context' => 'landing',
     'stateUrl' => '#',
+    'restartUrl' => '#',
     'quickReplyUrl' => '#',
     'messageUrl' => '#',
     'csrfToken' => '',
@@ -38,6 +39,7 @@
      data-context-type="{{ $isGymPanelContext ? 'gym_panel' : 'landing' }}"
      data-context="{{ $contextKey }}"
      data-state-url="{{ $stateUrl }}"
+     data-restart-url="{{ $restartUrl }}"
      data-quick-url="{{ $quickReplyUrl }}"
      data-message-url="{{ $messageUrl }}"
      data-csrf-token="{{ $csrfToken !== '' ? $csrfToken : csrf_token() }}"
@@ -103,6 +105,7 @@
         <footer class="gs-support-chat-footer">
             <input type="text" data-chat-input maxlength="1400" placeholder="Escribe tu mensaje..." autocomplete="off">
             <button type="button" data-chat-send>Enviar</button>
+            <button type="button" class="gs-support-chat-restart" data-chat-restart hidden>Iniciar nueva conversación</button>
         </footer>
     </section>
 </div>
@@ -422,6 +425,15 @@
         opacity: 0.62;
         cursor: not-allowed;
     }
+    .gs-support-chat-footer.is-closed {
+        grid-template-columns: 1fr;
+    }
+    .gs-support-chat-restart {
+        grid-column: 1 / -1;
+        border: 1px solid #0f4bc6;
+        background: #e8f1ff;
+        color: #0f4bc6;
+    }
     @media (max-width: 1023px) {
         .gs-support-chat-root {
             right: 12px;
@@ -474,6 +486,8 @@
         const helper = root.querySelector('[data-chat-helper]');
         const input = root.querySelector('[data-chat-input]');
         const sendButton = root.querySelector('[data-chat-send]');
+        const restartButton = root.querySelector('[data-chat-restart]');
+        const footerEl = root.querySelector('.gs-support-chat-footer');
         const presenceEl = root.querySelector('[data-chat-presence]');
 
         const leadNameInput = root.querySelector('[data-lead-name]');
@@ -482,6 +496,7 @@
 
         const context = String(root.getAttribute('data-context') || 'landing').trim();
         const stateUrl = String(root.getAttribute('data-state-url') || '').trim();
+        const restartUrl = String(root.getAttribute('data-restart-url') || '').trim();
         const quickUrl = String(root.getAttribute('data-quick-url') || '').trim();
         const messageUrl = String(root.getAttribute('data-message-url') || '').trim();
         const csrfToken = String(root.getAttribute('data-csrf-token') || '').trim();
@@ -496,6 +511,7 @@
         let panelOpen = false;
         let loading = false;
         let stateLoading = false;
+        let conversationLocked = false;
         let messageCountRendered = 0;
         let stackSyncTimer = null;
 
@@ -551,17 +567,32 @@
             }, 30);
         }
 
+        function setConversationLocked(isLocked) {
+            conversationLocked = Boolean(isLocked);
+            setBusy(loading || stateLoading);
+        }
+
         function setBusy(isBusy) {
             const busy = Boolean(isBusy);
             if (sendButton) {
-                sendButton.disabled = busy;
+                sendButton.disabled = busy || conversationLocked;
+                sendButton.style.display = conversationLocked ? 'none' : '';
             }
             if (input) {
-                input.disabled = busy;
+                input.disabled = busy || conversationLocked;
+                input.style.display = conversationLocked ? 'none' : '';
+            }
+            if (restartButton) {
+                restartButton.hidden = !conversationLocked;
+                restartButton.disabled = busy;
+                restartButton.style.display = conversationLocked ? '' : 'none';
+            }
+            if (footerEl) {
+                footerEl.classList.toggle('is-closed', conversationLocked);
             }
             if (quickWrap) {
                 quickWrap.querySelectorAll('button[data-action-key]').forEach(function (button) {
-                    button.disabled = busy;
+                    button.disabled = busy || conversationLocked;
                 });
             }
         }
@@ -619,7 +650,7 @@
         function renderQuickButtons(items) {
             if (!quickWrap) return;
 
-            const list = Array.isArray(items) && items.length > 0 ? items : initialQuick;
+            const list = Array.isArray(items) ? items : initialQuick;
             quickWrap.innerHTML = '';
 
             list.forEach(function (item) {
@@ -681,18 +712,35 @@
         function applyPayload(payload) {
             const data = payload && typeof payload === 'object' ? payload : {};
             const representativeOnline = Boolean(data.representative_online);
+            const quickReplies = Array.isArray(data.quick_replies) ? data.quick_replies : initialQuick;
+
             updatePresence(representativeOnline, data.representative_name || '');
             renderMessages(data.messages || []);
-            renderQuickButtons(data.quick_replies || initialQuick);
 
             const conversation = data.conversation || null;
             if (!conversation) {
+                setConversationLocked(false);
+                renderQuickButtons(quickReplies);
                 setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opci\u00f3n o escribe un mensaje.', false);
                 return;
             }
 
             const status = String(conversation.status || '').trim();
             const statusLabel = String(conversation.status_label || '').trim();
+            const canRestart = Boolean(conversation.can_restart) || status === 'closed';
+            const minutesUntilPurge = Number(conversation.minutes_until_purge);
+
+            setConversationLocked(canRestart);
+            renderQuickButtons(canRestart ? [] : quickReplies);
+
+            if (canRestart) {
+                const purgeLabel = Number.isFinite(minutesUntilPurge)
+                    ? ' El historial se eliminar\u00e1 en ' + Math.max(0, Math.round(minutesUntilPurge)) + ' min.'
+                    : '';
+                setHelper('Estado: conversaci\u00f3n finalizada. Pulsa "Iniciar nueva conversaci\u00f3n" para continuar.' + purgeLabel, false);
+                return;
+            }
+
             if (status === 'active') {
                 setHelper('Estado: conversaci\u00f3n activa con soporte.', false);
                 return;
@@ -748,7 +796,7 @@
 
         async function sendQuickReply(actionKey) {
             const key = String(actionKey || '').trim();
-            if (key === '' || loading) return;
+            if (key === '' || loading || conversationLocked) return;
 
             if (leadCaptureEnabled && key === 'contact_representative') {
                 const leadPayload = collectLeadPayload();
@@ -780,7 +828,7 @@
         }
 
         async function sendTextMessage() {
-            if (loading || !input) return;
+            if (loading || conversationLocked || !input) return;
 
             const text = String(input.value || '').trim();
             if (text === '') {
@@ -806,6 +854,34 @@
                 applyPayload(payload);
             } catch (error) {
                 setHelper('No se pudo enviar. Verifica conexi\u00f3n.', true);
+            } finally {
+                loading = false;
+                setBusy(false);
+            }
+        }
+
+        async function restartConversation() {
+            if (loading || stateLoading || !conversationLocked) {
+                return;
+            }
+            if (restartUrl === '') {
+                setHelper('No se pudo iniciar una nueva conversación.', true);
+                return;
+            }
+
+            loading = true;
+            setBusy(true);
+            setHelper('Iniciando nueva conversación...', false);
+            try {
+                const payload = await requestJson(restartUrl, 'POST', collectLeadPayload());
+                if (!payload) {
+                    setHelper('No se pudo iniciar una nueva conversación.', true);
+                    return;
+                }
+
+                applyPayload(payload);
+            } catch (error) {
+                setHelper('No se pudo iniciar una nueva conversación. Intenta otra vez.', true);
             } finally {
                 loading = false;
                 setBusy(false);
@@ -864,6 +940,10 @@
             sendButton.addEventListener('click', sendTextMessage);
         }
 
+        if (restartButton) {
+            restartButton.addEventListener('click', restartConversation);
+        }
+
         if (input) {
             input.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {
@@ -909,6 +989,4 @@
         loadState();
     })();
 </script>
-
-
 

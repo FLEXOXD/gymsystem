@@ -16,6 +16,8 @@ class SupportChatLifecycleService
             return;
         }
 
+        $this->purgeExpiredClosedConversations($conversationId);
+
         $conversationSelect = ['id', 'status', 'last_message_at'];
         if (Schema::hasColumn('support_chat_conversations', 'meta')) {
             $conversationSelect[] = 'meta';
@@ -49,15 +51,20 @@ class SupportChatLifecycleService
             return;
         }
 
-        DB::transaction(function () use ($conversation): void {
-            SupportChatMessage::query()
-                ->where('conversation_id', (int) $conversation->id)
-                ->delete();
+        $meta = $this->normalizedMeta($conversation);
+        unset($meta['idle']);
+        $meta['finalization'] = [
+            'reason' => trim($reason) !== '' ? trim($reason) : 'manual',
+            'finalized_at' => now()->toIso8601String(),
+            'purge_after_minutes' => $this->closeAfterMinutes(),
+        ];
 
-            SupportChatConversation::query()
-                ->whereKey((int) $conversation->id)
-                ->delete();
-        });
+        $conversation->forceFill([
+            'status' => SupportChatConversation::STATUS_CLOSED,
+            'closed_at' => now(),
+        ])->save();
+
+        $this->saveConversationMeta($conversation, $meta);
     }
 
     private function processConversation(SupportChatConversation $conversation): void
@@ -160,6 +167,37 @@ class SupportChatLifecycleService
         if (($reminderSentAt !== '' || $reminderMessageId > 0) && $minutesSinceAnchor >= $closeAfterMinutes) {
             $this->finalizeAndDelete($conversation, 'inactivity_timeout');
         }
+    }
+
+    private function purgeExpiredClosedConversations(?int $conversationId = null): void
+    {
+        $query = SupportChatConversation::query()
+            ->where('status', SupportChatConversation::STATUS_CLOSED)
+            ->whereNotNull('closed_at')
+            ->where('closed_at', '<=', now()->subMinutes($this->closeAfterMinutes()))
+            ->orderBy('id');
+
+        if (($conversationId ?? 0) > 0) {
+            $query->whereKey((int) $conversationId);
+        }
+
+        $expiredConversations = $query->get(['id']);
+        foreach ($expiredConversations as $conversation) {
+            $this->deleteConversationNow($conversation);
+        }
+    }
+
+    private function deleteConversationNow(SupportChatConversation $conversation): void
+    {
+        DB::transaction(function () use ($conversation): void {
+            SupportChatMessage::query()
+                ->where('conversation_id', (int) $conversation->id)
+                ->delete();
+
+            SupportChatConversation::query()
+                ->whereKey((int) $conversation->id)
+                ->delete();
+        });
     }
 
     private function appendReminderMessage(SupportChatConversation $conversation): ?SupportChatMessage

@@ -49,6 +49,9 @@ Route::prefix('support-chat')->name('support-chat.landing.')->group(function ():
     Route::get('/state', [SupportChatController::class, 'landingState'])
         ->middleware(['throttle:120,1'])
         ->name('state');
+    Route::post('/restart', [SupportChatController::class, 'landingRestart'])
+        ->middleware(['throttle:40,1'])
+        ->name('restart');
     Route::post('/quick-reply', [SupportChatController::class, 'landingQuickReply'])
         ->middleware(['throttle:60,1'])
         ->name('quick-reply');
@@ -334,6 +337,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                         Route::get('/state', [SupportChatController::class, 'gymState'])
                             ->middleware('throttle:120,1')
                             ->name('state');
+                        Route::post('/restart', [SupportChatController::class, 'gymRestart'])
+                            ->middleware('throttle:40,1')
+                            ->name('restart');
                         Route::post('/quick-reply', [SupportChatController::class, 'gymQuickReply'])
                             ->middleware('throttle:60,1')
                             ->name('quick-reply');
