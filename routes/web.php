@@ -270,6 +270,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
             Route::post('/support-chat/{conversation}/read', [SuperAdminSupportChatController::class, 'markRead'])
                 ->middleware('throttle:80,1')
                 ->name('support-chat.read');
+            Route::post('/support-chat/{conversation}/finalize', [SuperAdminSupportChatController::class, 'finalize'])
+                ->middleware('throttle:80,1')
+                ->name('support-chat.finalize');
             Route::get('/plans', [SuperAdminPlanTemplateController::class, 'index'])
                 ->name('plan-templates.index');
             Route::post('/plans', [SuperAdminPlanTemplateController::class, 'storePlan'])

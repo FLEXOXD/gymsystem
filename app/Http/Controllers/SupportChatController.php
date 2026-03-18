@@ -7,6 +7,7 @@ use App\Models\SupportChatConversation;
 use App\Models\SupportChatMessage;
 use App\Models\User;
 use App\Services\SupportChatBotService;
+use App\Services\SupportChatLifecycleService;
 use App\Services\SupportChatPresenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,11 +20,14 @@ class SupportChatController extends Controller
     public function __construct(
         private readonly SupportChatBotService $botService,
         private readonly SupportChatPresenceService $presenceService,
+        private readonly SupportChatLifecycleService $lifecycleService,
     ) {
     }
 
     public function landingState(Request $request): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $conversation = $this->resolveLandingConversation($request, false, []);
 
         return response()->json(
@@ -33,6 +37,8 @@ class SupportChatController extends Controller
 
     public function landingQuickReply(Request $request): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $data = $request->validate([
             'action_key' => ['required', 'string', 'max:80'],
             'contact_name' => ['nullable', 'string', 'max:120'],
@@ -67,6 +73,8 @@ class SupportChatController extends Controller
 
     public function landingSendMessage(Request $request): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1400'],
             'contact_name' => ['nullable', 'string', 'max:120'],
@@ -95,6 +103,8 @@ class SupportChatController extends Controller
 
     public function gymState(Request $request, string $contextGym): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $conversation = $this->resolveGymConversation($request, false);
 
         return response()->json(
@@ -104,6 +114,8 @@ class SupportChatController extends Controller
 
     public function gymQuickReply(Request $request, string $contextGym): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $data = $request->validate([
             'action_key' => ['required', 'string', 'max:80'],
         ]);
@@ -138,6 +150,8 @@ class SupportChatController extends Controller
 
     public function gymSendMessage(Request $request, string $contextGym): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1400'],
         ]);

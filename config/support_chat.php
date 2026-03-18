@@ -4,6 +4,12 @@ return [
     'agent_presence_ttl_seconds' => 45,
     'polling_interval_seconds' => 7,
     'max_messages_per_minute' => 35,
+    'inactivity' => [
+        'enabled' => true,
+        'reminder_after_minutes' => 10,
+        'close_after_minutes' => 15,
+        'reminder_message' => '¿Estás ahí? Responde por favor para continuar con soporte.',
+    ],
     'contexts' => [
         'landing' => [
             'assistant_name' => 'Asistente GymSystem',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SupportChatConversation;
 use App\Models\SupportChatMessage;
 use App\Models\User;
+use App\Services\SupportChatLifecycleService;
 use App\Services\SupportChatPresenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,11 +17,14 @@ class SuperAdminSupportChatController extends Controller
 {
     public function __construct(
         private readonly SupportChatPresenceService $presenceService,
+        private readonly SupportChatLifecycleService $lifecycleService,
     ) {
     }
 
     public function heartbeat(Request $request): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $user = $request->user();
         if (! $user instanceof User || ! $user->hasRole(User::ROLE_SUPERADMIN)) {
             abort(403);
@@ -36,6 +40,8 @@ class SuperAdminSupportChatController extends Controller
 
     public function unreadCountJson(Request $request): JsonResponse
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $user = $request->user();
         if (! $user instanceof User || ! $user->hasRole(User::ROLE_SUPERADMIN)) {
             abort(403);
@@ -49,6 +55,8 @@ class SuperAdminSupportChatController extends Controller
 
     public function reply(Request $request, SupportChatConversation $conversation): RedirectResponse
     {
+        $this->lifecycleService->runInactivitySweep((int) $conversation->id);
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1400'],
         ]);
@@ -58,15 +66,24 @@ class SuperAdminSupportChatController extends Controller
             abort(403);
         }
 
-        SupportChatMessage::query()->create([
+        $attributes = [
             'conversation_id' => (int) $conversation->id,
             'sender_type' => SupportChatMessage::SENDER_SUPERADMIN,
             'sender_user_id' => (int) $user->id,
-            'sender_label' => trim((string) $user->name),
             'message' => trim((string) $data['message']),
-            'message_type' => 'text',
-            'read_by_superadmin_at' => now(),
-        ]);
+        ];
+
+        if (Schema::hasColumn('support_chat_messages', 'sender_label')) {
+            $attributes['sender_label'] = trim((string) $user->name);
+        }
+        if (Schema::hasColumn('support_chat_messages', 'message_type')) {
+            $attributes['message_type'] = 'text';
+        }
+        if (Schema::hasColumn('support_chat_messages', 'read_by_superadmin_at')) {
+            $attributes['read_by_superadmin_at'] = now();
+        }
+
+        SupportChatMessage::query()->create($attributes);
 
         $conversation->forceFill([
             'status' => SupportChatConversation::STATUS_ACTIVE,
@@ -84,6 +101,8 @@ class SuperAdminSupportChatController extends Controller
 
     public function updateStatus(Request $request, SupportChatConversation $conversation): RedirectResponse
     {
+        $this->lifecycleService->runInactivitySweep((int) $conversation->id);
+
         $data = $request->validate([
             'status' => ['required', 'in:bot,waiting_agent,active,closed'],
         ]);
@@ -103,14 +122,27 @@ class SuperAdminSupportChatController extends Controller
 
         $conversation->forceFill($forceFill)->save();
 
-        return back()->with('status', 'Estado de conversación actualizado.');
+        return back()->with('status', 'Estado de conversacion actualizado.');
     }
 
     public function markRead(Request $request, SupportChatConversation $conversation): RedirectResponse
     {
+        $this->lifecycleService->runInactivitySweep((int) $conversation->id);
         $this->markConversationAsRead($conversation);
 
-        return back()->with('status', 'Conversación marcada como leída.');
+        return back()->with('status', 'Conversacion marcada como leida.');
+    }
+
+    public function finalize(Request $request, SupportChatConversation $conversation): RedirectResponse
+    {
+        $this->lifecycleService->finalizeAndDelete($conversation, 'manual_superadmin');
+
+        $query = $request->only(['status', 'q', 'page', 'support_status', 'support_q', 'support_page']);
+        unset($query['support']);
+
+        return redirect()
+            ->route('superadmin.inbox.index', $query)
+            ->with('status', 'Conversacion finalizada y eliminada.');
     }
 
     public function unreadCount(): int
@@ -145,9 +177,14 @@ class SuperAdminSupportChatController extends Controller
 
     private function markConversationAsRead(SupportChatConversation $conversation): void
     {
+        if (! Schema::hasColumn('support_chat_messages', 'read_by_superadmin_at')) {
+            return;
+        }
+
         $conversation->messages()
             ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
             ->whereNull('read_by_superadmin_at')
             ->update(['read_by_superadmin_at' => now()]);
     }
 }
+

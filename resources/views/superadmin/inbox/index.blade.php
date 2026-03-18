@@ -168,7 +168,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Bandeja de chat de soporte" subtitle="Conversaciones del botón flotante (página principal y panel de gimnasios)." class="mt-6">
+    <x-ui.card id="support-chat-inbox" title="Bandeja de chat de soporte" subtitle="Conversaciones del botón flotante (página principal y panel de gimnasios)." class="mt-6">
         @if (! ($supportSchemaReady ?? false))
             <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
                 <p class="font-bold">El módulo de chat de soporte aún no está instalado completamente.</p>
@@ -180,6 +180,10 @@
                 <p class="mt-1">Revisa logs del servidor y vuelve a cargar. Los datos pueden estar desincronizados temporalmente.</p>
             </div>
         @endif
+
+        <div class="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-900 dark:border-sky-500/40 dark:bg-sky-900/20 dark:text-sky-100">
+            Si no hay respuesta del cliente, el sistema enviará un recordatorio automático y cerrará la conversación a los 15 minutos de inactividad.
+        </div>
 
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide">
@@ -299,7 +303,7 @@
                         </span>
                     </div>
 
-                    <div class="mt-4 max-h-[46vh] space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+                    <div data-support-thread class="mt-4 max-h-[46vh] space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                         @forelse ($selectedSupportMessages as $chatMessage)
                             @php
                                 $senderType = (string) ($chatMessage->sender_type ?? '');
@@ -342,19 +346,34 @@
                             <x-ui.button type="submit" variant="secondary">Enviar respuesta</x-ui.button>
                         </form>
 
-                        <form method="POST" action="{{ route('superadmin.support-chat.status', $selectedSupportConversation->id) }}" class="space-y-2">
-                            @csrf
-                            <label class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Estado de la conversación
-                                <select name="status" class="ui-input mt-1">
-                                    <option value="bot" @selected($selectedSupportConversation->status === 'bot')>Bot</option>
-                                    <option value="waiting_agent" @selected($selectedSupportConversation->status === 'waiting_agent')>Esperando agente</option>
-                                    <option value="active" @selected($selectedSupportConversation->status === 'active')>Activa</option>
-                                    <option value="closed" @selected($selectedSupportConversation->status === 'closed')>Cerrada</option>
-                                </select>
-                            </label>
-                            <x-ui.button type="submit" variant="ghost">Actualizar estado</x-ui.button>
-                        </form>
+                        <div class="space-y-2">
+                            <form method="POST" action="{{ route('superadmin.support-chat.status', $selectedSupportConversation->id) }}" class="space-y-2">
+                                @csrf
+                                <label class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    Estado de la conversación
+                                    <select name="status" class="ui-input mt-1">
+                                        <option value="bot" @selected($selectedSupportConversation->status === 'bot')>Bot</option>
+                                        <option value="waiting_agent" @selected($selectedSupportConversation->status === 'waiting_agent')>Esperando agente</option>
+                                        <option value="active" @selected($selectedSupportConversation->status === 'active')>Activa</option>
+                                        <option value="closed" @selected($selectedSupportConversation->status === 'closed')>Cerrada</option>
+                                    </select>
+                                </label>
+                                <x-ui.button type="submit" variant="ghost">Actualizar estado</x-ui.button>
+                            </form>
+
+                            <form method="POST"
+                                  action="{{ route('superadmin.support-chat.finalize', $selectedSupportConversation->id) }}"
+                                  onsubmit="return confirm('¿Finalizar y borrar esta conversación definitivamente?');">
+                                @csrf
+                                <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                                <input type="hidden" name="support" value="{{ $selectedSupportConversation->id }}">
+                                <input type="hidden" name="support_status" value="{{ $supportFilters['status'] ?? 'all' }}">
+                                <input type="hidden" name="support_q" value="{{ $supportFilters['q'] ?? '' }}">
+                                <input type="hidden" name="support_page" value="{{ request()->query('support_page', 1) }}">
+                                <x-ui.button type="submit" variant="danger">Finalizar y borrar</x-ui.button>
+                            </form>
+                        </div>
                     </div>
                 @else
                     <div class="py-14 text-center text-sm text-slate-500 dark:text-slate-300">
@@ -369,3 +388,26 @@
         </div>
     </x-ui.card>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('support')) {
+                return;
+            }
+
+            const section = document.getElementById('support-chat-inbox');
+            if (!(section instanceof HTMLElement)) {
+                return;
+            }
+
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            const thread = section.querySelector('[data-support-thread]');
+            if (thread instanceof HTMLElement) {
+                thread.scrollTop = thread.scrollHeight;
+            }
+        })();
+    </script>
+@endpush

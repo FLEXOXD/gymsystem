@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LandingContactMessage;
 use App\Models\SupportChatConversation;
 use App\Models\SupportChatMessage;
+use App\Services\SupportChatLifecycleService;
 use App\Services\SupportChatPresenceService;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
@@ -19,6 +20,7 @@ class SuperAdminInboxController extends Controller
 {
     public function __construct(
         private readonly SupportChatPresenceService $presenceService,
+        private readonly SupportChatLifecycleService $lifecycleService,
     ) {
     }
 
@@ -46,6 +48,8 @@ class SuperAdminInboxController extends Controller
 
     private function renderInbox(Request $request, ?int $selectedId): View
     {
+        $this->lifecycleService->runInactivitySweep();
+
         $filters = $request->validate([
             'status' => ['nullable', 'in:all,unread,read'],
             'q' => ['nullable', 'string', 'max:120'],
@@ -205,9 +209,11 @@ class SuperAdminInboxController extends Controller
                 }
 
                 if ($selectedSupportConversation instanceof SupportChatConversation) {
-                    $selectedSupportConversation->load([
-                        'messages' => static fn (Builder $builder) => $builder->orderBy('id')->with('senderUser:id,name'),
-                    ]);
+                    $selectedSupportMessages = SupportChatMessage::query()
+                        ->where('conversation_id', (int) $selectedSupportConversation->id)
+                        ->orderBy('id')
+                        ->with('senderUser:id,name')
+                        ->get();
 
                     if ($supportReadTrackingReady) {
                         $selectedSupportConversation->messages()
@@ -215,8 +221,6 @@ class SuperAdminInboxController extends Controller
                             ->whereNull('read_by_superadmin_at')
                             ->update(['read_by_superadmin_at' => now()]);
                     }
-
-                    $selectedSupportMessages = $selectedSupportConversation->messages;
                 }
             } catch (Throwable $exception) {
                 report($exception);
