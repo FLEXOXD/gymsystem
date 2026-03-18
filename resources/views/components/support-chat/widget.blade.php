@@ -1,4 +1,4 @@
-@props([
+﻿@props([
     'context' => 'landing',
     'stateUrl' => '#',
     'quickReplyUrl' => '#',
@@ -687,14 +687,14 @@
 
             const conversation = data.conversation || null;
             if (!conversation) {
-                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opciÃƒÂ³n o escribe un mensaje.', false);
+                setHelper(root.getAttribute('data-welcome-message') || 'Selecciona una opci\u00f3n o escribe un mensaje.', false);
                 return;
             }
 
             const status = String(conversation.status || '').trim();
             const statusLabel = String(conversation.status_label || '').trim();
             if (status === 'active') {
-                setHelper('Estado: conversaciÃƒÂ³n activa con soporte.', false);
+                setHelper('Estado: conversaci\u00f3n activa con soporte.', false);
                 return;
             }
             if (status === 'waiting_agent') {
@@ -740,7 +740,7 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('Error de conexiÃ³n. Reintentando...', true);
+                setHelper('Error de conexi\u00f3n. Reintentando...', true);
             } finally {
                 stateLoading = false;
             }
@@ -767,12 +767,12 @@
             try {
                 const payload = await requestJson(quickUrl, 'POST', Object.assign({ action_key: key }, collectLeadPayload()));
                 if (!payload) {
-                    setHelper('No se pudo enviar la opciÃƒÂ³n seleccionada.', true);
+                    setHelper('No se pudo enviar la opci\u00f3n seleccionada.', true);
                     return;
                 }
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar la opciÃƒÂ³n. Intenta otra vez.', true);
+                setHelper('No se pudo enviar la opci\u00f3n. Intenta otra vez.', true);
             } finally {
                 loading = false;
                 setBusy(false);
@@ -805,7 +805,7 @@
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo enviar. Verifica conexiÃƒÂ³n.', true);
+                setHelper('No se pudo enviar. Verifica conexi\u00f3n.', true);
             } finally {
                 loading = false;
                 setBusy(false);
@@ -909,3 +909,6 @@
         loadState();
     })();
 </script>
+
+
+
