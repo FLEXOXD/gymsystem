@@ -137,7 +137,15 @@ class SuperAdminInboxController extends Controller
                     ->with([
                         'gym:id,name,logo_path',
                         'initiatedBy:id,name,email',
-                        'latestMessage:id,conversation_id,message,created_at,sender_type',
+                        'latestMessage' => static function (Builder $builder): void {
+                            $builder->select([
+                                'support_chat_messages.id',
+                                'support_chat_messages.conversation_id',
+                                'support_chat_messages.message',
+                                'support_chat_messages.created_at',
+                                'support_chat_messages.sender_type',
+                            ]);
+                        },
                     ])
                     ->withCount([
                         'messages as unread_for_superadmin_count' => static function (Builder $builder): void {
