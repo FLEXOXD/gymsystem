@@ -37,6 +37,9 @@
             position: relative;
             overflow: hidden;
         }
+        .mobile-shell.has-training-fab #progress-view {
+            padding-bottom: calc(210px + env(safe-area-inset-bottom));
+        }
         .mobile-shell::before {
             content: '';
             position: absolute;
@@ -607,21 +610,151 @@
             background: rgba(2,6,23,.56);
             padding: 9px 10px;
             display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: space-between;
             gap: 8px;
+        }
+        .training-item-left {
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+        .training-item-toggle {
+            border: 1px solid rgba(56,189,248,.34);
+            background: rgba(2,6,23,.72);
+            color: #bae6fd;
+            width: 22px;
+            height: 22px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+        .training-item-toggle[aria-pressed="true"] {
+            border-color: rgba(34,197,94,.72);
+            background: rgba(22,163,74,.24);
+            color: #bbf7d0;
+        }
+        .training-item.is-done {
+            border-color: rgba(34,197,94,.38);
+            background: rgba(5,46,22,.58);
+        }
+        .training-item.is-done .training-item-name {
+            color: #bbf7d0;
+        }
+        .training-item.is-done .training-item-dose {
+            color: #4ade80;
         }
         .training-item-name {
             color: #f8fafc;
             font-size: 13px;
             font-weight: 700;
             line-height: 1.3;
+            min-width: 0;
         }
         .training-item-dose {
             color: #86efac;
             font-size: 12px;
             font-weight: 800;
             white-space: nowrap;
+        }
+        .training-completion-box {
+            margin-top: 10px;
+            border: 1px solid rgba(56,189,248,.22);
+            border-radius: 12px;
+            background: rgba(2,6,23,.52);
+            padding: 10px;
+        }
+        .training-completion-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .training-completion-title {
+            color: #bae6fd;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .training-completion-value {
+            color: #f8fafc;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .training-completion-track {
+            margin-top: 7px;
+            width: 100%;
+            height: 8px;
+            border-radius: 9999px;
+            background: rgba(148,163,184,.28);
+            overflow: hidden;
+        }
+        .training-completion-fill {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #22d3ee, #22c55e);
+            transition: width .25s ease;
+        }
+        .training-completion-hint {
+            margin-top: 7px;
+            color: #bfdbfe;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .training-rest-box {
+            margin-top: 10px;
+            border: 1px solid rgba(56,189,248,.22);
+            border-radius: 12px;
+            background: rgba(2,6,23,.52);
+            padding: 10px;
+        }
+        .training-rest-title {
+            color: #a5f3fc;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
+        .training-rest-row {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .training-rest-timer {
+            color: #f8fafc;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: .03em;
+        }
+        .training-rest-btn {
+            border: 1px solid rgba(56,189,248,.34);
+            background: rgba(8,47,73,.66);
+            color: #bae6fd;
+            border-radius: 9999px;
+            padding: 7px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .training-rest-btn:active {
+            transform: translateY(1px);
+        }
+        .training-rest-hint {
+            margin-top: 7px;
+            color: #bae6fd;
+            font-size: 11px;
+            line-height: 1.35;
         }
         .training-context {
             margin-top: 8px;
@@ -653,6 +786,11 @@
             display: grid;
             gap: 8px;
         }
+        .training-session-actions .training-idle-btn {
+            border: 1px solid rgba(148,163,184,.35);
+            background: rgba(30,41,59,.72);
+            color: #cbd5e1;
+        }
         .training-session-hint {
             color: #bae6fd;
             font-size: 11px;
@@ -666,6 +804,258 @@
         }
         .training-session-feedback.is-error {
             color: #fecaca;
+        }
+        .today-summary-card {
+            border: 1px solid rgba(34,211,238,.28);
+            background: linear-gradient(145deg, rgba(2,6,23,.94), rgba(8,47,73,.42));
+            border-radius: 18px;
+            padding: 13px;
+            box-shadow: 0 16px 34px rgba(0,0,0,.32);
+        }
+        .today-summary-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .today-summary-title {
+            color: #cffafe;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+        .today-summary-chip {
+            border: 1px solid rgba(56,189,248,.34);
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: #bae6fd;
+            background: rgba(2,6,23,.66);
+            white-space: nowrap;
+        }
+        .today-summary-chip.is-ready {
+            border-color: rgba(34,197,94,.48);
+            color: #bbf7d0;
+            background: rgba(20,83,45,.45);
+        }
+        .today-summary-chip.is-active {
+            border-color: rgba(34,211,238,.54);
+            color: #a5f3fc;
+            background: rgba(14,116,144,.42);
+        }
+        .today-summary-chip.is-done {
+            border-color: rgba(16,185,129,.58);
+            color: #d1fae5;
+            background: rgba(6,95,70,.42);
+        }
+        .today-summary-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .today-summary-item {
+            border: 1px solid rgba(56,189,248,.2);
+            border-radius: 11px;
+            background: rgba(2,6,23,.52);
+            padding: 8px;
+            min-height: 66px;
+        }
+        .today-summary-label {
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .today-summary-value {
+            margin-top: 5px;
+            color: #f8fafc;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .today-summary-tip {
+            margin-top: 9px;
+            color: #bfdbfe;
+            font-size: 11px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        .training-fab-dock {
+            position: fixed;
+            left: 50%;
+            bottom: calc(11px + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            width: min(432px, calc(100vw - 20px));
+            z-index: 66;
+            transition: opacity .2s ease, transform .2s ease;
+            pointer-events: none;
+        }
+        .training-fab-shell {
+            border: 1px solid rgba(56,189,248,.34);
+            background:
+                linear-gradient(145deg, rgba(2,6,23,.95), rgba(8,47,73,.7)),
+                radial-gradient(circle at top right, rgba(34,197,94,.18), transparent 45%);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.48);
+            backdrop-filter: blur(7px);
+            padding: 10px;
+            display: grid;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .training-fab-shell.is-ready {
+            border-color: rgba(34,197,94,.52);
+            box-shadow: 0 20px 40px rgba(0,0,0,.48), 0 0 0 1px rgba(34,197,94,.22), 0 0 22px rgba(34,197,94,.26);
+            animation: fabReadyPulse 2.1s ease-in-out infinite;
+        }
+        .training-fab-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .training-fab-status {
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.35;
+            flex: 1;
+            min-width: 0;
+        }
+        .training-fab-timer {
+            color: #67e8f9;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+        .training-win-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 68;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+        }
+        .training-win-modal.hidden {
+            display: none;
+        }
+        .training-win-backdrop {
+            position: absolute;
+            inset: 0;
+            border: 0;
+            background: rgba(2,6,23,.8);
+            backdrop-filter: blur(3px);
+        }
+        .training-win-panel {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 372px);
+            border: 1px solid rgba(34,211,238,.42);
+            border-radius: 22px;
+            padding: 16px 14px 14px;
+            background:
+                radial-gradient(circle at top right, rgba(34,197,94,.2), transparent 42%),
+                linear-gradient(145deg, rgba(2,6,23,.97), rgba(8,47,73,.88));
+            box-shadow: 0 24px 54px rgba(0,0,0,.52);
+            overflow: hidden;
+            animation: winPanelPop .34s ease-out;
+        }
+        .training-win-confetti {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+        }
+        .training-win-confetti-piece {
+            position: absolute;
+            top: -14%;
+            width: 7px;
+            height: 15px;
+            border-radius: 9999px;
+            opacity: .86;
+            animation: winConfettiFall 1.5s linear forwards;
+        }
+        .training-win-confetti-piece:nth-child(1) { left: 7%; background: #22d3ee; animation-delay: .03s; }
+        .training-win-confetti-piece:nth-child(2) { left: 15%; background: #facc15; animation-delay: .1s; }
+        .training-win-confetti-piece:nth-child(3) { left: 24%; background: #4ade80; animation-delay: .18s; }
+        .training-win-confetti-piece:nth-child(4) { left: 34%; background: #38bdf8; animation-delay: .07s; }
+        .training-win-confetti-piece:nth-child(5) { left: 43%; background: #a3e635; animation-delay: .16s; }
+        .training-win-confetti-piece:nth-child(6) { left: 53%; background: #f472b6; animation-delay: .09s; }
+        .training-win-confetti-piece:nth-child(7) { left: 62%; background: #22c55e; animation-delay: .05s; }
+        .training-win-confetti-piece:nth-child(8) { left: 72%; background: #eab308; animation-delay: .13s; }
+        .training-win-confetti-piece:nth-child(9) { left: 82%; background: #06b6d4; animation-delay: .2s; }
+        .training-win-confetti-piece:nth-child(10) { left: 91%; background: #84cc16; animation-delay: .12s; }
+        .training-win-badge {
+            position: relative;
+            z-index: 1;
+            color: #bbf7d0;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+        .training-win-title {
+            position: relative;
+            z-index: 1;
+            margin-top: 5px;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.06;
+        }
+        .training-win-text {
+            position: relative;
+            z-index: 1;
+            margin-top: 7px;
+            color: #dbeafe;
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+        .training-win-grid {
+            position: relative;
+            z-index: 1;
+            margin-top: 11px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .training-win-stat {
+            border: 1px solid rgba(56,189,248,.24);
+            border-radius: 12px;
+            background: rgba(2,6,23,.6);
+            padding: 8px 7px;
+            min-height: 72px;
+        }
+        .training-win-stat-label {
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .training-win-stat-value {
+            margin-top: 6px;
+            color: #f8fafc;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .training-win-actions {
+            position: relative;
+            z-index: 1;
+            margin-top: 12px;
+            display: grid;
+            gap: 8px;
+        }
+        .training-win-actions .training-win-secondary {
+            border: 1px solid rgba(56,189,248,.34);
+            background: rgba(2,6,23,.72);
+            color: #cbd5e1;
         }
         .weekly-goal-card {
             border: 1px solid rgba(56,189,248,.3);
@@ -931,8 +1321,8 @@
             transition: opacity .2s ease, filter .2s ease;
         }
         .progress-lock-card.is-locked .progress-lock-content {
-            opacity: .34;
-            filter: saturate(.45) blur(1px);
+            opacity: .54;
+            filter: saturate(.62) blur(.55px);
             pointer-events: none;
             user-select: none;
         }
@@ -1738,6 +2128,20 @@
             0% { transform: scale(.86); }
             100% { transform: scale(1); }
         }
+        @keyframes fabReadyPulse {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-1px); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes winPanelPop {
+            0% { transform: translateY(8px) scale(.96); opacity: .08; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes winConfettiFall {
+            0% { transform: translateY(-4px) rotate(0deg); opacity: 0; }
+            8% { opacity: .9; }
+            100% { transform: translateY(260px) rotate(520deg); opacity: 0; }
+        }
         @keyframes moduleSpin { to { transform: rotate(360deg); } }
         @media (min-width: 900px) and (pointer:fine) {
             .mobile-shell { display: none; }
@@ -1795,8 +2199,47 @@
     </article>
 </div>
 
+<div id="training-win-modal" class="training-win-modal hidden" aria-hidden="true">
+    <button type="button" class="training-win-backdrop" data-training-win-close aria-label="Cerrar resumen"></button>
+    <article class="training-win-panel" role="dialog" aria-modal="true" aria-labelledby="training-win-title">
+        <div class="training-win-confetti" aria-hidden="true">
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+            <span class="training-win-confetti-piece"></span>
+        </div>
+        <p class="training-win-badge">Sesion completada</p>
+        <h3 id="training-win-title" class="training-win-title">Excelente trabajo</h3>
+        <p id="training-win-text" class="training-win-text">Tu entrenamiento termino correctamente. Tu progreso ya fue actualizado.</p>
+        <div class="training-win-grid">
+            <div class="training-win-stat">
+                <p class="training-win-stat-label">Ejercicios</p>
+                <p id="training-win-exercises" class="training-win-stat-value">0/0</p>
+            </div>
+            <div class="training-win-stat">
+                <p class="training-win-stat-label">Meta semana</p>
+                <p id="training-win-weekly" class="training-win-stat-value">0/0</p>
+            </div>
+            <div class="training-win-stat">
+                <p class="training-win-stat-label">Constancia</p>
+                <p id="training-win-consistency" class="training-win-stat-value">0%</p>
+            </div>
+        </div>
+        <div class="training-win-actions">
+            <button id="training-win-close-btn" type="button" class="module-action module-action-primary">Seguir avanzando</button>
+            <button id="training-win-close-secondary" type="button" class="module-action training-win-secondary">Cerrar</button>
+        </div>
+    </article>
+</div>
+
 <main
-    class="mobile-shell px-4 pt-6 pb-6"
+    class="mobile-shell px-4 pt-6 pb-6 {{ $screen === 'progress' ? 'has-training-fab' : '' }}"
     data-screen="{{ $screen }}"
     data-action-guide-key="{{ $gym->slug }}:{{ (string) ($client->id ?? 'guest') }}"
     data-app-url="{{ route('client-mobile.app', ['gymSlug' => $gym->slug]) }}"
@@ -2024,6 +2467,26 @@
             || $errors->has('weekly_goal')
             || $errors->has('weekly_goal_profile');
         $weeklyGoalSelectedValue = (string) old('weekly_goal', $weeklyGoalConfiguredTarget);
+        $trainingHasAttendanceToday = (bool) ($trainingStatus['has_attendance_today'] ?? false);
+        $trainingCompletedToday = (bool) ($trainingStatus['completed_today'] ?? false);
+        $todaySummaryStateLabel = 'En espera';
+        $todaySummaryChipClass = '';
+        if ($trainingIsActive) {
+            $todaySummaryStateLabel = 'Activo';
+            $todaySummaryChipClass = 'is-active';
+        } elseif ($trainingCompletedToday) {
+            $todaySummaryStateLabel = 'Completado';
+            $todaySummaryChipClass = 'is-done';
+        } elseif ($trainingCanStart || $trainingCanFinish) {
+            $todaySummaryStateLabel = 'Listo';
+            $todaySummaryChipClass = 'is-ready';
+        }
+        $todaySummaryAttendanceLabel = $trainingHasAttendanceToday ? 'Registrada' : 'Pendiente';
+        $todaySummaryWeeklyLabel = $weeklyGoalVisits.'/'.$weeklyGoalTarget;
+        $todaySummaryTimer = $trainingIsActive ? $trainingTimerLabel : '--:--';
+        $todaySummaryTip = $trainingHintLine !== ''
+            ? $trainingHintLine
+            : 'Inicia tu entrenamiento para desbloquear todo el panel.';
     @endphp
     <section class="mx-auto max-w-md space-y-4 relative z-10">
         <div class="top-user-menu">
@@ -2272,6 +2735,28 @@
                     <p class="mt-2 text-[11px] text-emerald-100/80" id="live-clients-window">Conteo de {{ (string) ($progress['live_window_label'] ?? 'En vivo') }}. Actualiza automático.</p>
                 </article>
 
+                <article class="today-summary-card">
+                    <div class="today-summary-head">
+                        <p class="today-summary-title">Resumen de hoy</p>
+                        <span id="today-summary-state-chip" class="today-summary-chip {{ $todaySummaryChipClass }}">{{ $todaySummaryStateLabel }}</span>
+                    </div>
+                    <div class="today-summary-grid">
+                        <div class="today-summary-item">
+                            <p class="today-summary-label">Asistencia</p>
+                            <p id="today-summary-attendance" class="today-summary-value">{{ $todaySummaryAttendanceLabel }}</p>
+                        </div>
+                        <div class="today-summary-item">
+                            <p class="today-summary-label">Meta semanal</p>
+                            <p id="today-summary-weekly" class="today-summary-value">{{ $todaySummaryWeeklyLabel }}</p>
+                        </div>
+                        <div class="today-summary-item">
+                            <p class="today-summary-label">Tiempo activo</p>
+                            <p id="today-summary-timer" class="today-summary-value">{{ $todaySummaryTimer }}</p>
+                        </div>
+                    </div>
+                    <p id="today-summary-tip" class="today-summary-tip">{{ $todaySummaryTip }}</p>
+                </article>
+
                 @if (session('goal_status'))
                     <p class="profile-message profile-message-success">{{ (string) session('goal_status') }}</p>
                 @endif
@@ -2482,13 +2967,22 @@
                             <p id="training-rhythm" class="training-line">{{ $trainingRhythmLine }}</p>
                             <ul id="training-plan-list" class="training-list">
                                 @if ($trainingExercises !== [])
-                                    @foreach ($trainingExercises as $exercise)
+                                    @foreach ($trainingExercises as $exerciseIndex => $exercise)
                                         @php
                                             $exerciseName = trim((string) ($exercise['name'] ?? 'Ejercicio'));
                                             $exerciseDose = trim((string) ($exercise['prescription'] ?? '3 x 10'));
                                         @endphp
                                         <li class="training-item">
-                                            <span class="training-item-name">{{ $exerciseName }}</span>
+                                            <span class="training-item-left">
+                                                <button
+                                                    type="button"
+                                                    class="training-item-toggle"
+                                                    data-training-check="exercise-{{ $exerciseIndex }}"
+                                                    aria-pressed="false"
+                                                    aria-label="Marcar ejercicio completado"
+                                                >○</button>
+                                                <span class="training-item-name">{{ $exerciseName }}</span>
+                                            </span>
                                             <span class="training-item-dose">{{ $exerciseDose }}</span>
                                         </li>
                                     @endforeach
@@ -2501,6 +2995,24 @@
                             </ul>
                             <p id="training-adaptation" class="training-line">{{ $trainingAdaptationLine }}</p>
                             <p id="training-context" class="training-context">{{ $trainingContextLine }}</p>
+                            <div class="training-completion-box">
+                                <div class="training-completion-head">
+                                    <p class="training-completion-title">Avance de la sesión</p>
+                                    <p id="training-completion-value" class="training-completion-value">0/{{ min(6, count($trainingExercises)) }} ejercicios</p>
+                                </div>
+                                <div class="training-completion-track">
+                                    <span id="training-completion-fill" class="training-completion-fill" style="width: 0%;"></span>
+                                </div>
+                                <p id="training-completion-hint" class="training-completion-hint">Marca cada ejercicio completado para mantener tu foco.</p>
+                            </div>
+                            <div class="training-rest-box">
+                                <p class="training-rest-title">Descanso guiado</p>
+                                <div class="training-rest-row">
+                                    <p id="training-rest-timer" class="training-rest-timer">01:00</p>
+                                    <button id="training-rest-toggle-btn" type="button" class="training-rest-btn">Iniciar 60s</button>
+                                </div>
+                                <p id="training-rest-hint" class="training-rest-hint">Usa este contador entre series para sostener intensidad.</p>
+                            </div>
                         </div>
                         <div class="progress-lock-overlay" aria-hidden="{{ $progressUnlocked ? 'true' : 'false' }}">
                             <div class="progress-lock-overlay-content">
@@ -2509,33 +3021,45 @@
                             </div>
                         </div>
                     </div>
-                    <div class="training-session-box">
-                        <p id="training-session-status" class="training-session-status">{{ $trainingStatusLabel }}</p>
-                        <p id="training-session-timer" class="training-session-timer {{ $trainingIsActive ? '' : 'hidden' }}">
-                            Tiempo restante: <span id="training-session-timer-value">{{ $trainingTimerLabel }}</span>
-                        </p>
-                        <div class="training-session-actions">
-                            <button
-                                id="training-start-btn"
-                                type="button"
-                                class="module-action module-action-primary {{ $trainingCanStart ? '' : 'hidden' }}"
-                            >
-                                Comenzar entrenamiento
-                            </button>
-                            <button
-                                id="training-finish-btn"
-                                type="button"
-                                class="module-action module-action-secondary {{ $trainingCanFinish ? '' : 'hidden' }}"
-                            >
-                                Finalizar entrenamiento
-                            </button>
-                        </div>
-                        <p id="training-session-hint" class="training-session-hint">{{ $trainingHintLine }}</p>
-                        <p id="training-session-feedback" class="training-session-feedback hidden"></p>
-                    </div>
                     </div>
                 </article>
             </section>
+            <div id="training-fab-dock" class="training-fab-dock">
+                <div class="training-fab-shell">
+                    <div class="training-fab-status-row">
+                        <p id="training-session-status" class="training-fab-status">{{ $trainingStatusLabel }}</p>
+                        <p id="training-session-timer" class="training-fab-timer {{ $trainingIsActive ? '' : 'hidden' }}">
+                            <span id="training-session-timer-value">{{ $trainingTimerLabel }}</span>
+                        </p>
+                    </div>
+                    <div class="training-session-actions">
+                        <button
+                            id="training-start-btn"
+                            type="button"
+                            class="module-action module-action-primary {{ $trainingCanStart ? '' : 'hidden' }}"
+                        >
+                            Comenzar entrenamiento
+                        </button>
+                        <button
+                            id="training-finish-btn"
+                            type="button"
+                            class="module-action module-action-secondary {{ $trainingCanFinish ? '' : 'hidden' }}"
+                        >
+                            Finalizar entrenamiento
+                        </button>
+                        <button
+                            id="training-idle-btn"
+                            type="button"
+                            class="module-action training-idle-btn {{ ($trainingCanStart || $trainingCanFinish) ? 'hidden' : '' }}"
+                            disabled
+                        >
+                            {{ $trainingHasAttendanceToday ? 'Entrenamiento completado' : 'Registra asistencia para iniciar' }}
+                        </button>
+                    </div>
+                    <p id="training-session-hint" class="training-session-hint">{{ $trainingHintLine }}</p>
+                    <p id="training-session-feedback" class="training-session-feedback hidden"></p>
+                </div>
+            </div>
         @endif
         @if ($screen === 'profile')
             <section id="profile-view" class="space-y-4">
@@ -2856,6 +3380,14 @@
     const actionGuideCtaBtn = document.getElementById('action-guide-cta');
     const actionGuideDismissBtn = document.getElementById('action-guide-dismiss');
     const actionGuideDismissEls = Array.from(document.querySelectorAll('[data-action-guide-dismiss]'));
+    const trainingWinModal = document.getElementById('training-win-modal');
+    const trainingWinTextEl = document.getElementById('training-win-text');
+    const trainingWinExercisesEl = document.getElementById('training-win-exercises');
+    const trainingWinWeeklyEl = document.getElementById('training-win-weekly');
+    const trainingWinConsistencyEl = document.getElementById('training-win-consistency');
+    const trainingWinCloseBtn = document.getElementById('training-win-close-btn');
+    const trainingWinCloseSecondaryBtn = document.getElementById('training-win-close-secondary');
+    const trainingWinCloseEls = Array.from(document.querySelectorAll('[data-training-win-close]'));
 
     const userMenuToggle = document.getElementById('user-menu-toggle');
     const userMenuPanel = document.getElementById('user-menu-panel');
@@ -2922,8 +3454,21 @@
     const trainingSessionTimerEl = document.getElementById('training-session-timer');
     const trainingSessionTimerValueEl = document.getElementById('training-session-timer-value');
     const trainingSessionFeedbackEl = document.getElementById('training-session-feedback');
+    const trainingFabShellEl = document.querySelector('.training-fab-shell');
     const trainingStartBtn = document.getElementById('training-start-btn');
     const trainingFinishBtn = document.getElementById('training-finish-btn');
+    const trainingIdleBtn = document.getElementById('training-idle-btn');
+    const todaySummaryStateChipEl = document.getElementById('today-summary-state-chip');
+    const todaySummaryAttendanceEl = document.getElementById('today-summary-attendance');
+    const todaySummaryWeeklyEl = document.getElementById('today-summary-weekly');
+    const todaySummaryTimerEl = document.getElementById('today-summary-timer');
+    const todaySummaryTipEl = document.getElementById('today-summary-tip');
+    const trainingCompletionValueEl = document.getElementById('training-completion-value');
+    const trainingCompletionFillEl = document.getElementById('training-completion-fill');
+    const trainingCompletionHintEl = document.getElementById('training-completion-hint');
+    const trainingRestToggleBtn = document.getElementById('training-rest-toggle-btn');
+    const trainingRestTimerEl = document.getElementById('training-rest-timer');
+    const trainingRestHintEl = document.getElementById('training-rest-hint');
     const openWeeklyGoalEditBtn = document.getElementById('open-weekly-goal-edit');
     const closeWeeklyGoalEditBtn = document.getElementById('close-weekly-goal-edit');
     const weeklyGoalEditPanel = document.getElementById('weekly-goal-edit-panel');
@@ -2967,6 +3512,13 @@
     let clientPushState = 'idle';
     let trainingActionBusy = false;
     let trainingCountdownTimer = null;
+    let trainingRestTimer = null;
+    let trainingRestRemainingSeconds = 60;
+    let trainingRestRunning = false;
+    let previousTrainingIsActive = false;
+    let previousTrainingCompleted = false;
+    let trainingChecklist = {};
+    let trainingChecklistDate = '';
     let moduleLoaderFailSafeTimer = null;
     let moduleLoaderLocked = false;
     let actionGuideMode = '';
@@ -2979,6 +3531,10 @@
     const actionGuideSeenStorageBase = 'client-mobile:action-guide-seen:v1';
     const actionGuideIdentity = String(shell.dataset.actionGuideKey || '').trim();
     const actionGuideSeenStorageKey = actionGuideSeenStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    const trainingChecklistStorageBase = 'client-mobile:training-checklist:v1';
+    const trainingChecklistStorageKey = trainingChecklistStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
+    const trainingWinSeenStorageBase = 'client-mobile:training-win-seen:v1';
+    const trainingWinSeenStorageKey = trainingWinSeenStorageBase + ':' + (actionGuideIdentity !== '' ? actionGuideIdentity : 'global');
     let actionGuideAlreadySeen = false;
     let sectionCollapseState = {};
     let scannerFallbackLibraryPromise = null;
@@ -3570,6 +4126,123 @@
         setActionGuideOpen(true);
     }
 
+    function readTrainingWinSeenKey() {
+        try {
+            return String(window.sessionStorage.getItem(trainingWinSeenStorageKey) || '').trim();
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function markTrainingWinSeenKey(key) {
+        try {
+            window.sessionStorage.setItem(trainingWinSeenStorageKey, String(key || '').trim());
+        } catch (error) {
+            // ignore storage errors
+        }
+    }
+
+    function setTrainingWinOpen(isOpen) {
+        if (!trainingWinModal) return;
+
+        if (!isOpen && document.activeElement instanceof HTMLElement && trainingWinModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+
+        trainingWinModal.classList.toggle('hidden', !isOpen);
+        trainingWinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        if ('inert' in trainingWinModal) {
+            trainingWinModal.inert = !isOpen;
+        }
+
+        if (isOpen) {
+            const confettiEls = Array.from(trainingWinModal.querySelectorAll('.training-win-confetti-piece'));
+            confettiEls.forEach((pieceEl) => {
+                if (!(pieceEl instanceof HTMLElement)) return;
+                pieceEl.style.animation = 'none';
+            });
+            void trainingWinModal.offsetWidth;
+            confettiEls.forEach((pieceEl) => {
+                if (!(pieceEl instanceof HTMLElement)) return;
+                pieceEl.style.animation = '';
+            });
+            if (trainingWinCloseBtn instanceof HTMLElement) {
+                window.setTimeout(() => trainingWinCloseBtn.focus(), 20);
+            }
+        }
+    }
+
+    function closeTrainingWin() {
+        setTrainingWinOpen(false);
+    }
+
+    function getTrainingCompletionSnapshot() {
+        const toggleButtons = getTrainingChecklistButtons();
+        const total = toggleButtons.length;
+        const done = toggleButtons.reduce((count, buttonEl) => (
+            buttonEl.getAttribute('aria-pressed') === 'true' ? count + 1 : count
+        ), 0);
+
+        return { done, total };
+    }
+
+    function openTrainingWin(progressPayload, message, force = false) {
+        if (!trainingWinModal || currentScreen !== 'progress') return;
+
+        const payload = progressPayload && typeof progressPayload === 'object' ? progressPayload : {};
+        const trainingStatus = payload.training_status && typeof payload.training_status === 'object'
+            ? payload.training_status
+            : {};
+        const weeklyGoal = payload.weekly_goal && typeof payload.weekly_goal === 'object'
+            ? payload.weekly_goal
+            : {};
+        const prediction = payload.prediction && typeof payload.prediction === 'object'
+            ? payload.prediction
+            : {};
+
+        const todayToken = String(payload.today || '').trim();
+        const completedToday = Boolean(trainingStatus.completed_today);
+        const displayKey = todayToken + ':' + (completedToday ? 'done' : 'active');
+        if (!force && displayKey !== '' && readTrainingWinSeenKey() === displayKey) {
+            return;
+        }
+        if (displayKey !== '') {
+            markTrainingWinSeenKey(displayKey);
+        }
+
+        const completion = getTrainingCompletionSnapshot();
+        const weeklyTarget = Number.isFinite(Number(weeklyGoal.target))
+            ? Math.max(0, Math.round(Number(weeklyGoal.target)))
+            : 0;
+        const weeklyVisits = Number.isFinite(Number(weeklyGoal.visits))
+            ? Math.max(0, Math.round(Number(weeklyGoal.visits)))
+            : 0;
+        const consistencyPct = Number.isFinite(Number(prediction.consistency_percent))
+            ? Math.max(0, Math.min(100, Math.round(Number(prediction.consistency_percent))))
+            : 0;
+
+        if (trainingWinTextEl) {
+            const summary = String(message || trainingStatus.status_label || '').trim();
+            trainingWinTextEl.textContent = summary !== ''
+                ? summary
+                : 'Tu entrenamiento termino correctamente. Tu progreso ya fue actualizado.';
+        }
+        if (trainingWinExercisesEl) {
+            trainingWinExercisesEl.textContent = String(completion.done) + '/' + String(completion.total);
+        }
+        if (trainingWinWeeklyEl) {
+            trainingWinWeeklyEl.textContent = String(weeklyVisits) + '/' + String(weeklyTarget);
+        }
+        if (trainingWinConsistencyEl) {
+            trainingWinConsistencyEl.textContent = String(consistencyPct) + '%';
+        }
+
+        setTrainingWinOpen(true);
+        if (typeof navigator.vibrate === 'function') {
+            navigator.vibrate([40, 35, 60, 35, 90]);
+        }
+    }
+
     function buildAppScreenUrl(screen, extraParams) {
         let target;
         try {
@@ -3601,17 +4274,21 @@
 
         setSectionCollapsed('training', false, true);
         const targetBtn = preferFinish
-            ? (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden') ? trainingFinishBtn : null)
+            ? (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden')
+                ? trainingFinishBtn
+                : (trainingStartBtn && !trainingStartBtn.classList.contains('hidden') ? trainingStartBtn : null))
             : (trainingStartBtn && !trainingStartBtn.classList.contains('hidden')
                 ? trainingStartBtn
                 : (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden') ? trainingFinishBtn : null));
+        const fallbackBtn = trainingIdleBtn && !trainingIdleBtn.classList.contains('hidden') ? trainingIdleBtn : null;
+        const resolvedTarget = targetBtn || fallbackBtn;
 
-        if (!targetBtn) return false;
-        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        targetBtn.classList.remove('guide-focus-target');
-        void targetBtn.offsetWidth;
-        targetBtn.classList.add('guide-focus-target');
-        window.setTimeout(() => targetBtn.classList.remove('guide-focus-target'), 2800);
+        if (!resolvedTarget) return false;
+        resolvedTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        resolvedTarget.classList.remove('guide-focus-target');
+        void resolvedTarget.offsetWidth;
+        resolvedTarget.classList.add('guide-focus-target');
+        window.setTimeout(() => resolvedTarget.classList.remove('guide-focus-target'), 2800);
         return true;
     }
 
@@ -3717,8 +4394,8 @@
             openActionGuide(
                 mode,
                 'Pulsa comenzar entrenamiento',
-                'Desliza hacia abajo y pulsa "Comenzar entrenamiento" para activar el progreso de hoy.',
-                'Bajar al botón',
+                'Pulsa "Comenzar entrenamiento" en el botón flotante para activar el progreso de hoy.',
+                'Ir al botón flotante',
                 () => {
                     focusTrainingActionButton(false);
                     closeActionGuide(true);
@@ -3731,7 +4408,7 @@
             openActionGuide(
                 mode,
                 'Sesión en curso',
-                'Tu entrenamiento está activo. Ve a la sección de entrenamiento para finalizar cuando termines.',
+                'Tu entrenamiento está activo. Usa el botón flotante para finalizar cuando termines.',
                 'Ir a finalizar entrenamiento',
                 () => navigateToAppScreen('progress', { focus_training_finish: '1' })
             );
@@ -3742,8 +4419,8 @@
             openActionGuide(
                 mode,
                 'Finaliza tu entrenamiento',
-                'Ya tienes una sesión activa. Baja y pulsa "Finalizar entrenamiento" al terminar.',
-                'Bajar al botón',
+                'Ya tienes una sesión activa. Pulsa "Finalizar entrenamiento" en el botón flotante al terminar.',
+                'Ir al botón flotante',
                 () => {
                     focusTrainingActionButton(true);
                     closeActionGuide(true);
@@ -4258,15 +4935,29 @@
 
             emptyItemEl.append(emptyNameEl, emptyDoseEl);
             trainingPlanListEl.appendChild(emptyItemEl);
+            renderTrainingChecklistProgress();
             return;
         }
 
-        exercises.slice(0, 6).forEach((exercise) => {
+        exercises.slice(0, 6).forEach((exercise, index) => {
             const name = String(exercise && exercise.name ? exercise.name : 'Ejercicio');
             const prescription = String(exercise && exercise.prescription ? exercise.prescription : '3 x 10');
+            const checkKey = 'exercise-' + String(index);
 
             const itemEl = document.createElement('li');
             itemEl.className = 'training-item';
+            itemEl.dataset.trainingKey = checkKey;
+
+            const leftEl = document.createElement('span');
+            leftEl.className = 'training-item-left';
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'training-item-toggle';
+            toggleBtn.dataset.trainingCheck = checkKey;
+            toggleBtn.setAttribute('aria-pressed', 'false');
+            toggleBtn.setAttribute('aria-label', 'Marcar ejercicio completado');
+            toggleBtn.textContent = '○';
 
             const nameEl = document.createElement('span');
             nameEl.className = 'training-item-name';
@@ -4276,9 +4967,258 @@
             doseEl.className = 'training-item-dose';
             doseEl.textContent = prescription;
 
-            itemEl.append(nameEl, doseEl);
+            leftEl.append(toggleBtn, nameEl);
+            itemEl.append(leftEl, doseEl);
             trainingPlanListEl.appendChild(itemEl);
         });
+
+        syncTrainingChecklistUi();
+    }
+
+    function readTrainingChecklistState() {
+        try {
+            const raw = window.localStorage.getItem(trainingChecklistStorageKey);
+            if (!raw) {
+                return { date: '', done: {} };
+            }
+
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') {
+                return { date: '', done: {} };
+            }
+
+            const date = typeof parsed.date === 'string' ? parsed.date : '';
+            const doneRaw = parsed.done && typeof parsed.done === 'object' ? parsed.done : {};
+            const done = {};
+            Object.keys(doneRaw).forEach((key) => {
+                if (!key || !doneRaw[key]) return;
+                done[String(key)] = 1;
+            });
+
+            return { date, done };
+        } catch (error) {
+            return { date: '', done: {} };
+        }
+    }
+
+    function persistTrainingChecklistState() {
+        try {
+            window.localStorage.setItem(trainingChecklistStorageKey, JSON.stringify({
+                date: trainingChecklistDate,
+                done: trainingChecklist,
+            }));
+        } catch (error) {
+            // ignore storage errors
+        }
+    }
+
+    function syncTrainingChecklistDate(todayToken) {
+        const nextToken = String(todayToken || '').trim();
+        if (nextToken === '') {
+            trainingChecklistDate = '';
+            trainingChecklist = {};
+            persistTrainingChecklistState();
+            return;
+        }
+
+        const stored = readTrainingChecklistState();
+        if (stored.date === nextToken) {
+            trainingChecklistDate = stored.date;
+            trainingChecklist = stored.done;
+            return;
+        }
+
+        trainingChecklistDate = nextToken;
+        trainingChecklist = {};
+        persistTrainingChecklistState();
+    }
+
+    function getTrainingChecklistButtons() {
+        return Array.from(document.querySelectorAll('[data-training-check]'));
+    }
+
+    function renderTrainingChecklistProgress() {
+        if (!trainingCompletionValueEl && !trainingCompletionFillEl) return;
+
+        const toggleButtons = getTrainingChecklistButtons();
+        const total = toggleButtons.length;
+        const done = toggleButtons.reduce((count, buttonEl) => (
+            buttonEl.getAttribute('aria-pressed') === 'true' ? count + 1 : count
+        ), 0);
+        const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
+
+        if (trainingCompletionValueEl) {
+            trainingCompletionValueEl.textContent = String(done) + '/' + String(total) + ' ejercicios';
+        }
+        if (trainingCompletionFillEl) {
+            trainingCompletionFillEl.style.width = String(percent) + '%';
+        }
+        if (trainingCompletionHintEl) {
+            if (total <= 0) {
+                trainingCompletionHintEl.textContent = 'Se cargará tu avance cuando haya ejercicios disponibles.';
+            } else if (done >= total) {
+                trainingCompletionHintEl.textContent = 'Excelente. Completaste toda la rutina de hoy.';
+            } else {
+                trainingCompletionHintEl.textContent = 'Llevas ' + String(done) + ' de ' + String(total) + '. Sigue con la siguiente serie.';
+            }
+        }
+    }
+
+    function syncTrainingChecklistUi() {
+        const toggleButtons = getTrainingChecklistButtons();
+        toggleButtons.forEach((buttonEl) => {
+            const key = String(buttonEl.dataset.trainingCheck || '').trim();
+            const isDone = key !== '' && Boolean(trainingChecklist[key]);
+            buttonEl.setAttribute('aria-pressed', isDone ? 'true' : 'false');
+            buttonEl.textContent = isDone ? '✓' : '○';
+            const rowEl = buttonEl.closest('.training-item');
+            if (rowEl) {
+                rowEl.classList.toggle('is-done', isDone);
+            }
+        });
+        renderTrainingChecklistProgress();
+    }
+
+    function toggleTrainingChecklist(buttonEl) {
+        const key = String(buttonEl && buttonEl.dataset ? buttonEl.dataset.trainingCheck || '' : '').trim();
+        if (key === '') return;
+        const isDone = buttonEl.getAttribute('aria-pressed') === 'true';
+        if (isDone) {
+            delete trainingChecklist[key];
+        } else {
+            trainingChecklist[key] = 1;
+        }
+        persistTrainingChecklistState();
+        syncTrainingChecklistUi();
+    }
+
+    function resetTrainingChecklist() {
+        trainingChecklist = {};
+        persistTrainingChecklistState();
+        syncTrainingChecklistUi();
+    }
+
+    function clearTrainingRestCountdown() {
+        if (trainingRestTimer) {
+            window.clearInterval(trainingRestTimer);
+            trainingRestTimer = null;
+        }
+    }
+
+    function renderTrainingRestUi(message) {
+        if (trainingRestTimerEl) {
+            trainingRestTimerEl.textContent = formatSecondsAsClock(trainingRestRemainingSeconds);
+        }
+        if (trainingRestToggleBtn) {
+            if (trainingRestRunning) {
+                trainingRestToggleBtn.textContent = 'Pausar';
+            } else if (trainingRestRemainingSeconds < 60 && trainingRestRemainingSeconds > 0) {
+                trainingRestToggleBtn.textContent = 'Reanudar';
+            } else {
+                trainingRestToggleBtn.textContent = 'Iniciar 60s';
+            }
+        }
+        if (trainingRestHintEl) {
+            const fallback = trainingRestRunning
+                ? 'Descanso en curso. Respira y prepárate para la siguiente serie.'
+                : 'Usa este contador entre series para sostener intensidad.';
+            trainingRestHintEl.textContent = String(message || fallback);
+        }
+    }
+
+    function resetTrainingRestCountdown(message) {
+        clearTrainingRestCountdown();
+        trainingRestRunning = false;
+        trainingRestRemainingSeconds = 60;
+        renderTrainingRestUi(message);
+    }
+
+    function toggleTrainingRestCountdown() {
+        if (trainingRestRunning) {
+            trainingRestRunning = false;
+            clearTrainingRestCountdown();
+            renderTrainingRestUi('Descanso pausado. Puedes reanudar cuando quieras.');
+            return;
+        }
+
+        if (trainingRestRemainingSeconds <= 0 || trainingRestRemainingSeconds > 60) {
+            trainingRestRemainingSeconds = 60;
+        }
+
+        trainingRestRunning = true;
+        renderTrainingRestUi('Descanso en curso. Respira y prepárate para la siguiente serie.');
+        clearTrainingRestCountdown();
+        trainingRestTimer = window.setInterval(() => {
+            trainingRestRemainingSeconds = Math.max(0, trainingRestRemainingSeconds - 1);
+            renderTrainingRestUi();
+            if (trainingRestRemainingSeconds > 0) return;
+
+            clearTrainingRestCountdown();
+            trainingRestRunning = false;
+            renderTrainingRestUi('Descanso completado. Continúa con tu siguiente ejercicio.');
+            if (typeof navigator.vibrate === 'function') {
+                navigator.vibrate([80, 50, 80]);
+            }
+        }, 1000);
+    }
+
+    function renderTodaySummary(progressPayload, statusHint) {
+        if (!todaySummaryStateChipEl && !todaySummaryAttendanceEl && !todaySummaryWeeklyEl && !todaySummaryTimerEl) return;
+
+        const payload = progressPayload && typeof progressPayload === 'object' ? progressPayload : {};
+        const trainingStatus = payload.training_status && typeof payload.training_status === 'object'
+            ? payload.training_status
+            : {};
+        const weeklyGoal = payload.weekly_goal && typeof payload.weekly_goal === 'object'
+            ? payload.weekly_goal
+            : {};
+
+        const isActive = Boolean(trainingStatus.is_active);
+        const canStart = Boolean(trainingStatus.can_start);
+        const canFinish = Boolean(trainingStatus.can_finish);
+        const completedToday = Boolean(trainingStatus.completed_today);
+        const hasAttendanceToday = Boolean(trainingStatus.has_attendance_today);
+        const target = Number.isFinite(Number(weeklyGoal.target)) ? Math.max(0, Math.round(Number(weeklyGoal.target))) : 0;
+        const visits = Number.isFinite(Number(weeklyGoal.visits)) ? Math.max(0, Math.round(Number(weeklyGoal.visits))) : 0;
+        const remainingSeconds = Number.isFinite(Number(trainingStatus.remaining_seconds))
+            ? Math.max(0, Math.round(Number(trainingStatus.remaining_seconds)))
+            : 0;
+        const hintLine = String(statusHint || trainingStatus.hint_line || '').trim();
+
+        let chipLabel = 'En espera';
+        let chipClass = '';
+        if (isActive) {
+            chipLabel = 'Activo';
+            chipClass = 'is-active';
+        } else if (completedToday) {
+            chipLabel = 'Completado';
+            chipClass = 'is-done';
+        } else if (canStart || canFinish) {
+            chipLabel = 'Listo';
+            chipClass = 'is-ready';
+        }
+
+        if (todaySummaryStateChipEl) {
+            todaySummaryStateChipEl.textContent = chipLabel;
+            todaySummaryStateChipEl.classList.remove('is-ready', 'is-active', 'is-done');
+            if (chipClass !== '') {
+                todaySummaryStateChipEl.classList.add(chipClass);
+            }
+        }
+        if (todaySummaryAttendanceEl) {
+            todaySummaryAttendanceEl.textContent = hasAttendanceToday ? 'Registrada' : 'Pendiente';
+        }
+        if (todaySummaryWeeklyEl) {
+            todaySummaryWeeklyEl.textContent = String(visits) + '/' + String(target > 0 ? target : 0);
+        }
+        if (todaySummaryTimerEl) {
+            todaySummaryTimerEl.textContent = isActive ? formatSecondsAsClock(remainingSeconds) : '--:--';
+        }
+        if (todaySummaryTipEl) {
+            todaySummaryTipEl.textContent = hintLine !== ''
+                ? hintLine
+                : 'Inicia tu entrenamiento para desbloquear todo el panel.';
+        }
     }
 
     function formatSecondsAsClock(totalSeconds) {
@@ -4307,11 +5247,17 @@
     }
 
     function setTrainingButtonsBusy(isBusy) {
+        if (trainingFabShellEl && isBusy) {
+            trainingFabShellEl.classList.remove('is-ready');
+        }
         if (trainingStartBtn && !trainingStartBtn.classList.contains('hidden')) {
             trainingStartBtn.toggleAttribute('disabled', Boolean(isBusy));
         }
         if (trainingFinishBtn && !trainingFinishBtn.classList.contains('hidden')) {
             trainingFinishBtn.toggleAttribute('disabled', Boolean(isBusy));
+        }
+        if (trainingIdleBtn && !trainingIdleBtn.classList.contains('hidden')) {
+            trainingIdleBtn.toggleAttribute('disabled', true);
         }
     }
 
@@ -4339,6 +5285,9 @@
             const remainingSeconds = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
             trainingSessionTimerValueEl.textContent = formatSecondsAsClock(remainingSeconds);
             trainingSessionTimerEl.classList.remove('hidden');
+            if (todaySummaryTimerEl) {
+                todaySummaryTimerEl.textContent = formatSecondsAsClock(remainingSeconds);
+            }
 
             if (remainingSeconds > 0) return;
 
@@ -4391,12 +5340,24 @@
         const canStart = Boolean(trainingStatus.can_start);
         const canFinish = Boolean(trainingStatus.can_finish);
         const isActive = Boolean(trainingStatus.is_active);
+        const completedToday = Boolean(trainingStatus.completed_today);
+        const hasAttendanceToday = Boolean(trainingStatus.has_attendance_today);
         const statusLabel = String(trainingStatus.status_label || 'Registra asistencia para habilitar entrenamiento.');
         const hintLine = String(trainingStatus.hint_line || 'Escanea tu asistencia y luego inicia entrenamiento.');
         const remainingSeconds = Number.isFinite(Number(trainingStatus.remaining_seconds))
             ? Math.max(0, Math.round(Number(trainingStatus.remaining_seconds)))
             : 0;
         const scheduledEndAt = String(trainingStatus.scheduled_end_at || '').trim();
+        const todayToken = String(payload.today || '').trim();
+
+        if (todayToken !== trainingChecklistDate) {
+            syncTrainingChecklistDate(todayToken);
+            syncTrainingChecklistUi();
+        }
+
+        if (canStart && !isActive && !canFinish) {
+            resetTrainingChecklist();
+        }
 
         if (trainingSessionStatusEl) {
             trainingSessionStatusEl.textContent = statusLabel;
@@ -4411,6 +5372,23 @@
         if (trainingFinishBtn) {
             trainingFinishBtn.classList.toggle('hidden', !canFinish);
         }
+        if (trainingIdleBtn) {
+            const showIdle = !canStart && !canFinish;
+            trainingIdleBtn.classList.toggle('hidden', !showIdle);
+            if (showIdle) {
+                if (completedToday) {
+                    trainingIdleBtn.textContent = 'Entrenamiento completado';
+                } else if (hasAttendanceToday) {
+                    trainingIdleBtn.textContent = 'Esperando próxima sesión';
+                } else {
+                    trainingIdleBtn.textContent = 'Registra asistencia para iniciar';
+                }
+            }
+        }
+        if (trainingFabShellEl) {
+            const hasAction = canStart || canFinish;
+            trainingFabShellEl.classList.toggle('is-ready', hasAction && !trainingActionBusy);
+        }
 
         if (isActive) {
             if (scheduledEndAt !== '') {
@@ -4418,14 +5396,32 @@
             } else if (trainingSessionTimerEl && trainingSessionTimerValueEl) {
                 trainingSessionTimerValueEl.textContent = formatSecondsAsClock(remainingSeconds);
                 trainingSessionTimerEl.classList.remove('hidden');
+                if (todaySummaryTimerEl) {
+                    todaySummaryTimerEl.textContent = formatSecondsAsClock(remainingSeconds);
+                }
                 clearTrainingCountdown();
             }
         } else if (trainingSessionTimerEl && trainingSessionTimerValueEl) {
             clearTrainingCountdown();
             trainingSessionTimerValueEl.textContent = '--:--';
             trainingSessionTimerEl.classList.add('hidden');
+            if (todaySummaryTimerEl) {
+                todaySummaryTimerEl.textContent = '--:--';
+            }
         }
 
+        if (!isActive && !canFinish) {
+            resetTrainingRestCountdown();
+        }
+
+        const completedByTransition = previousTrainingIsActive && !isActive && completedToday && !previousTrainingCompleted;
+        previousTrainingIsActive = isActive;
+        previousTrainingCompleted = completedToday;
+        if (completedByTransition) {
+            openTrainingWin(payload, 'Sesion finalizada. Tu progreso se actualizo correctamente.');
+        }
+
+        renderTodaySummary(payload, hintLine);
         if (!trainingActionBusy) {
             setTrainingButtonsBusy(false);
         }
@@ -4514,6 +5510,14 @@
 
             const message = String(payload && payload.message ? payload.message : 'Acción completada.');
             setTrainingFeedback(message, false);
+            if (url === trainingFinishUrl && payload && payload.progress && typeof payload.progress === 'object') {
+                const finishStatus = payload.progress.training_status && typeof payload.progress.training_status === 'object'
+                    ? payload.progress.training_status
+                    : {};
+                if (Boolean(finishStatus.completed_today)) {
+                    openTrainingWin(payload.progress, message, true);
+                }
+            }
         } catch (error) {
             const message = error instanceof Error ? error.message : 'No se pudo completar la acción.';
             setTrainingFeedback(message, true);
@@ -5151,6 +6155,7 @@
         if (event.key !== 'Escape') return;
         setUserMenuOpen(false);
         setLeaderboardOpen(false);
+        closeTrainingWin();
         if (fitnessModal && !fitnessModal.classList.contains('hidden')) {
             dismissFitnessModal();
         }
@@ -5180,6 +6185,18 @@
             return;
         }
         actionGuideCtaHandler();
+    });
+
+    trainingWinCloseEls.forEach((element) => {
+        element.addEventListener('click', () => {
+            closeTrainingWin();
+        });
+    });
+    trainingWinCloseBtn?.addEventListener('click', () => {
+        closeTrainingWin();
+    });
+    trainingWinCloseSecondaryBtn?.addEventListener('click', () => {
+        closeTrainingWin();
     });
 
     openFitnessModalTrigger?.addEventListener('click', () => {
@@ -5243,11 +6260,25 @@
         await subscribeClientPush();
     });
 
+    trainingPlanListEl?.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const checkBtn = target.closest('[data-training-check]');
+        if (!(checkBtn instanceof HTMLButtonElement)) return;
+        toggleTrainingChecklist(checkBtn);
+    });
+
+    trainingRestToggleBtn?.addEventListener('click', () => {
+        toggleTrainingRestCountdown();
+    });
+
     trainingStartBtn?.addEventListener('click', async () => {
         await triggerTrainingAction(trainingStartUrl, 'Iniciando entrenamiento...');
     });
 
     trainingFinishBtn?.addEventListener('click', async () => {
+        const shouldFinish = window.confirm('¿Seguro que deseas finalizar tu entrenamiento ahora?');
+        if (!shouldFinish) return;
         await triggerTrainingAction(trainingFinishUrl, 'Finalizando entrenamiento...');
     });
 
@@ -5267,6 +6298,9 @@
 
     window.addEventListener('pagehide', () => {
         stopScan();
+        clearTrainingCountdown();
+        clearTrainingRestCountdown();
+        closeTrainingWin();
     });
 
     window.addEventListener('popstate', () => {
@@ -5303,7 +6337,14 @@
             focusTrainingActionButton(Boolean(focusFlags.focusFinish));
         }, 380);
     }
-    renderLeaderboard(initialProgressPayload);
+    syncTrainingChecklistDate(String(initialProgressPayload && initialProgressPayload.today ? initialProgressPayload.today : '').trim());
+    syncTrainingChecklistUi();
+    renderTrainingRestUi();
+    if (currentScreen === 'progress') {
+        applyProgressPayload(initialProgressPayload);
+    } else {
+        renderLeaderboard(initialProgressPayload);
+    }
     updateActionGuide(initialProgressPayload, true);
     if (fitnessModal && !fitnessModal.classList.contains('hidden')) {
         setFitnessModalOpen(true);
