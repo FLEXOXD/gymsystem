@@ -10,12 +10,14 @@ use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\PresenceSession;
 use App\Models\ProductSale;
+use App\Services\GymAdminActivityService;
 use App\Support\ActiveGymContext;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 class GymPanelController extends Controller
@@ -409,6 +411,42 @@ class GymPanelController extends Controller
             'count' => (int) $count,
             'today' => $today,
             'updated_at' => now()->format('H:i:s'),
+        ]);
+    }
+
+    public function ownerActivityHeartbeat(Request $request, GymAdminActivityService $activityService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! $user->isOwner()) {
+            return response()->json([
+                'ok' => true,
+                'tracked' => false,
+            ]);
+        }
+
+        $data = $request->validate([
+            'signal' => ['nullable', 'string', 'max:40'],
+            'channel' => ['nullable', 'string', 'max:20'],
+            'route_name' => ['nullable', 'string', 'max:120'],
+            'path' => ['nullable', 'string', 'max:255'],
+            'remembered' => ['nullable', 'boolean'],
+        ]);
+
+        $activityService->touch($request, $user, [
+            'signal' => (string) ($data['signal'] ?? 'heartbeat'),
+            'channel' => isset($data['channel']) ? (string) $data['channel'] : null,
+            'route_name' => (string) ($data['route_name'] ?? ($request->route()?->getName() ?? '')),
+            'path' => (string) ($data['path'] ?? $request->getRequestUri()),
+            'via_remember' => array_key_exists('remembered', $data)
+                ? (bool) $data['remembered']
+                : Auth::viaRemember(),
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'tracked' => true,
+            'online_window_seconds' => GymAdminActivityService::ONLINE_WINDOW_SECONDS,
+            'server_time' => now('UTC')->toIso8601String(),
         ]);
     }
 }

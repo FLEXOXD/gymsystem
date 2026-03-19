@@ -2352,6 +2352,83 @@
     </script>
 @endif
 
+@if (! $isSuperAdmin && ! $isCashierMode && $user?->isOwner() && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('panel.owner-activity.heartbeat'))
+    <script>
+        (function () {
+            const activityUrl = @json(route('panel.owner-activity.heartbeat', $gymRouteParams));
+            const currentRouteName = @json((string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? ''));
+            const ownerAccessRemembered = @json((bool) \Illuminate\Support\Facades\Auth::viaRemember());
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrf ? String(csrf.getAttribute('content') || '').trim() : '';
+            if (activityUrl === '' || csrfToken === '') {
+                return;
+            }
+
+            const resolveChannel = function () {
+                const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                    || (window.navigator && window.navigator.standalone === true);
+
+                return isStandalone ? 'app_instalada' : 'web';
+            };
+
+            let inFlight = false;
+            const beat = async function (signal) {
+                const resolvedSignal = String(signal || 'heartbeat').trim() || 'heartbeat';
+                if (inFlight) {
+                    return;
+                }
+                if (document.hidden && resolvedSignal === 'heartbeat') {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    await fetch(activityUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            signal: resolvedSignal,
+                            channel: resolveChannel(),
+                            route_name: currentRouteName,
+                            path: [window.location.pathname, window.location.search].join(''),
+                            remembered: ownerAccessRemembered,
+                        }),
+                    });
+                } catch (_error) {
+                    // Ignore transient failures.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            beat('page_open');
+            const timer = window.setInterval(function () {
+                beat('heartbeat');
+            }, 75000);
+
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    beat('visibility_resume');
+                }
+            });
+
+            window.addEventListener('focus', function () {
+                beat('window_focus');
+            });
+
+            window.addEventListener('beforeunload', function () {
+                clearInterval(timer);
+            });
+        })();
+    </script>
+@endif
+
 @if ($isSuperAdmin && $supportChatUnreadCountUrl)
     <script>
         (function () {

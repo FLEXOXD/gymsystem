@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Gym;
+use App\Models\GymAdminActivityState;
 use App\Models\Subscription;
 use App\Models\SubscriptionChargeEvent;
+use App\Services\GymAdminActivityService;
 use App\Support\SuperAdminPlanCatalog;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -176,6 +178,7 @@ class SuperAdminDashboardService
                 ->all(),
             'reports' => [
                 'monthly_rows' => $this->buildMonthlyRevenueRows($today, $hasChargeEventsTable),
+                'owner_activity_rows' => $this->buildOwnerActivityRows(),
             ],
         ];
     }
@@ -279,6 +282,47 @@ class SuperAdminDashboardService
         }
 
         return $rows;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildOwnerActivityRows(int $limit = 18): array
+    {
+        if (! Schema::hasTable('gym_admin_activity_states')) {
+            return [];
+        }
+
+        $activityService = app(GymAdminActivityService::class);
+
+        return GymAdminActivityState::query()
+            ->whereHas('gym', fn ($query) => $query->withoutDemoSessions())
+            ->with([
+                'gym:id,name,slug',
+                'user:id,name,email',
+            ])
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->limit(max(1, $limit))
+            ->get()
+            ->map(function (GymAdminActivityState $state) use ($activityService): array {
+                return [
+                    'gym_name' => trim((string) ($state->gym_name ?: $state->gym?->name ?: 'Gym sin nombre')),
+                    'gym_slug' => trim((string) ($state->gym?->slug ?? '')),
+                    'user_name' => trim((string) ($state->user_name ?: $state->user?->name ?: 'Admin principal')),
+                    'user_email' => trim((string) ($state->user_email ?: $state->user?->email ?: '-')),
+                    'ip_address' => trim((string) ($state->last_ip_address ?? '')) ?: '-',
+                    'last_login_at' => $state->last_login_at,
+                    'last_activity_at' => $state->last_activity_at,
+                    'channel_label' => $activityService->channelLabel($state->last_channel),
+                    'status_key' => $activityService->isOnline($state->last_activity_at) ? 'online' : 'offline',
+                    'status_label' => $activityService->isOnline($state->last_activity_at) ? 'Activo ahora' : 'Inactivo',
+                    'signal' => trim((string) ($state->last_activity_signal ?? '')) ?: 'activity',
+                    'via_remember' => (bool) ($state->last_via_remember ?? false),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function resolveCurrentCycleTotal(Subscription $subscription): float

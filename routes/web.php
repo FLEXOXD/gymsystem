@@ -328,7 +328,7 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
 
         Route::prefix('{contextGym}')
             ->where(['contextGym' => '(?!superadmin$)[A-Za-z0-9\-]+'])
-            ->middleware(['gym.route', 'pwa.standalone.access'])
+            ->middleware(['gym.route', 'pwa.standalone.access', 'owner.activity'])
             ->group(function (): void {
                 Route::get('/panel', [GymPanelController::class, 'index'])
                     ->middleware('role:owner,cashier')
@@ -336,6 +336,9 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/panel/live-clients', [GymPanelController::class, 'liveClients'])
                     ->middleware('role:owner,cashier')
                     ->name('panel.live-clients');
+                Route::post('/panel/owner-activity', [GymPanelController::class, 'ownerActivityHeartbeat'])
+                    ->middleware('role:owner,cashier')
+                    ->name('panel.owner-activity.heartbeat');
 
                 Route::prefix('support-chat')
                     ->middleware('role:owner,cashier')

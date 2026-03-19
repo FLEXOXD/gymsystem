@@ -28,6 +28,12 @@
         $healthRate = $totalGyms > 0 ? (int) round(($activeGyms / $totalGyms) * 100) : 0;
         $planMix = collect($planMix ?? []);
         $monthlyRows = collect($reports['monthly_rows'] ?? []);
+        $ownerActivityRows = collect($reports['owner_activity_rows'] ?? []);
+        $ownersOnlineNow = $ownerActivityRows->where('status_key', 'online')->count();
+        $dashboardTimezone = trim((string) (auth()->user()?->timezone ?? config('app.timezone', 'UTC')));
+        if ($dashboardTimezone === '' || ! in_array($dashboardTimezone, timezone_identifiers_list(), true)) {
+            $dashboardTimezone = 'America/Guayaquil';
+        }
     @endphp
 
     <div class="sa-shell">
@@ -187,6 +193,85 @@
                 </div>
             </x-ui.card>
         </div>
+
+        <x-ui.card title="Actividad de admins principales" subtitle="Solo se muestran los duenos/admins de cada gimnasio. No incluye SuperAdmin ni cajeros.">
+            <div class="mb-4 sa-mini-grid">
+                <article class="sa-mini-card">
+                    <strong>{{ $ownersOnlineNow }} activos ahora mismo</strong>
+                    <span>Se consideran activos si registraron actividad dentro de los ultimos 5 minutos.</span>
+                </article>
+                <article class="sa-mini-card">
+                    <strong>{{ $ownerActivityRows->count() }} gimnasios monitoreados</strong>
+                    <span>La tabla mezcla login real y uso del panel para cubrir web, Recuerdame y app instalada.</span>
+                </article>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="ui-table min-w-[1240px]">
+                    <thead>
+                        <tr>
+                            <th>Gimnasio</th>
+                            <th>Admin principal</th>
+                            <th>Estado</th>
+                            <th>Ultima actividad</th>
+                            <th>Ultimo login</th>
+                            <th>Canal</th>
+                            <th>IP</th>
+                            <th>Correo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($ownerActivityRows as $row)
+                            @php
+                                $lastActivityAt = $row['last_activity_at'] ?? null;
+                                $lastActivityAtLocal = $lastActivityAt instanceof \Illuminate\Support\Carbon
+                                    ? $lastActivityAt->copy()->timezone($dashboardTimezone)
+                                    : null;
+                                $lastLoginAt = $row['last_login_at'] ?? null;
+                                $lastLoginAtLocal = $lastLoginAt instanceof \Illuminate\Support\Carbon
+                                    ? $lastLoginAt->copy()->timezone($dashboardTimezone)
+                                    : null;
+                                $statusIsOnline = ($row['status_key'] ?? '') === 'online';
+                            @endphp
+                            <tr>
+                                <td class="font-semibold text-slate-800 dark:text-slate-100">{{ $row['gym_name'] ?? 'Gym' }}</td>
+                                <td>{{ $row['user_name'] ?? 'Admin principal' }}</td>
+                                <td>
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusIsOnline ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
+                                        {{ $row['status_label'] ?? 'Inactivo' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">{{ $lastActivityAtLocal?->format('d/m/Y H:i') ?? '-' }}</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-300">
+                                        @if (($row['signal'] ?? 'activity') === 'login_manual')
+                                            Login manual
+                                        @elseif (($row['signal'] ?? 'activity') === 'sesion_recordada')
+                                            Sesion recordada
+                                        @else
+                                            Uso del panel
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>{{ $lastLoginAtLocal?->format('d/m/Y H:i') ?? '-' }}</td>
+                                <td>
+                                    <div>{{ $row['channel_label'] ?? 'Web' }}</div>
+                                    @if ((bool) ($row['via_remember'] ?? false))
+                                        <div class="text-xs text-slate-500 dark:text-slate-300">via Recuerdame</div>
+                                    @endif
+                                </td>
+                                <td>{{ $row['ip_address'] ?? '-' }}</td>
+                                <td>{{ $row['user_email'] ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="sa-empty-row">Todavia no hay actividad registrada de admins principales.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-ui.card>
 
         <x-ui.card title="Conteo por plan" subtitle="Cuantos gimnasios hay hoy en cada uno de tus 4 planes comerciales.">
             <div class="sa-mini-grid">

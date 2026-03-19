@@ -56,6 +56,22 @@ class Gym extends Model
     }
 
     /**
+     * Login events recorded for the main gym admin accounts.
+     */
+    public function adminLoginEvents(): HasMany
+    {
+        return $this->hasMany(GymAdminLoginEvent::class);
+    }
+
+    /**
+     * Last-known activity snapshot for the principal gym admin.
+     */
+    public function adminActivityState(): HasOne
+    {
+        return $this->hasOne(GymAdminActivityState::class);
+    }
+
+    /**
      * Get clients that belong to the gym.
      */
     public function clients(): HasMany

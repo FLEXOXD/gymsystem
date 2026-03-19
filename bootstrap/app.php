@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'gym.timezone' => \App\Http\Middleware\SetGymTimezoneMiddleware::class,
             'gym.route' => \App\Http\Middleware\EnsureGymRouteContextMiddleware::class,
             'pwa.standalone.access' => \App\Http\Middleware\EnsurePwaStandaloneAccessMiddleware::class,
+            'owner.activity' => \App\Http\Middleware\TrackGymOwnerActivityMiddleware::class,
             'client.mobile.session' => \App\Http\Middleware\EnsureClientMobileSessionMiddleware::class,
             'no.history' => \App\Http\Middleware\PreventBackHistoryMiddleware::class,
         ]);

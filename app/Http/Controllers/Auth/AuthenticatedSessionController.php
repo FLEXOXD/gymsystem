@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\DemoSession;
+use App\Models\GymAdminLoginEvent;
 use App\Models\GymBranchLink;
 use App\Models\User;
 use App\Services\DemoSessionService;
+use App\Services\GymAdminActivityService;
 use App\Services\PlanAccessService;
 use App\Services\SupportChatPresenceService;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +28,7 @@ class AuthenticatedSessionController extends Controller
     public function __construct(
         private readonly PlanAccessService $planAccessService,
         private readonly SupportChatPresenceService $supportChatPresenceService,
+        private readonly GymAdminActivityService $gymAdminActivityService,
     ) {
     }
 
@@ -67,6 +70,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         $this->touchLastLoginAt($user);
+        $this->recordGymAdminLoginEvent($request, $user);
 
         if ($user?->gym_id === null) {
             if (Route::has('superadmin.dashboard')) {
@@ -235,6 +239,52 @@ class AuthenticatedSessionController extends Controller
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Keep an audit trail of successful owner logins for SuperAdmin.
+     */
+    private function recordGymAdminLoginEvent(Request $request, ?User $user): void
+    {
+        if (! $user || (int) ($user->gym_id ?? 0) <= 0 || ! $user->isOwner()) {
+            return;
+        }
+
+        static $supportsLoginAuditTable = null;
+        if ($supportsLoginAuditTable === null) {
+            $supportsLoginAuditTable = Schema::hasTable('gym_admin_login_events');
+        }
+
+        if (! $supportsLoginAuditTable) {
+            return;
+        }
+
+        try {
+            GymAdminLoginEvent::query()->create([
+                'gym_id' => (int) $user->gym_id,
+                'user_id' => (int) $user->id,
+                'gym_name' => trim((string) ($user->gym?->name ?? '')) ?: null,
+                'user_name' => trim((string) ($user->name ?? '')) ?: null,
+                'user_email' => trim((string) ($user->email ?? '')) ?: null,
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) ($request->userAgent() ?? ''), 0, 1024),
+                'logged_in_at' => now('UTC'),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo guardar gym_admin_login_events durante login.', [
+                'user_id' => $user->id,
+                'gym_id' => $user->gym_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        $this->gymAdminActivityService->touch($request, $user, [
+            'signal' => 'login_manual',
+            'mark_login' => true,
+            'route_name' => 'login',
+            'path' => '/login',
+            'via_remember' => false,
+        ]);
     }
 
     private function resolveDemoSessionForUser(int $userId): ?DemoSession

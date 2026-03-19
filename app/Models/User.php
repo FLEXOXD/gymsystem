@@ -150,6 +150,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Login events recorded for this gym admin account.
+     */
+    public function gymAdminLoginEvents(): HasMany
+    {
+        return $this->hasMany(GymAdminLoginEvent::class);
+    }
+
+    /**
+     * Activity snapshots where this user is the current main gym admin.
+     */
+    public function gymAdminActivityStates(): HasMany
+    {
+        return $this->hasMany(GymAdminActivityState::class);
+    }
+
+    /**
      * Get contact suggestions reviewed by this user.
      */
     public function reviewedContactSuggestions(): HasMany
