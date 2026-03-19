@@ -19,10 +19,26 @@
         $defaultAdminPhoneCountryDial = old('admin_phone_country_dial', '+593');
         $defaultAdminPhoneNumber = old('admin_phone_number', '');
         $planTemplates = $planTemplates ?? collect();
+        $promotionTemplates = $promotionTemplates ?? collect();
         $planPromotionRules = is_array($planPromotionRules ?? null) ? $planPromotionRules : [];
         $defaultPlanTemplateId = old('subscription_plan_template_id', (string) optional($planTemplates->first())->id);
+        $defaultPromotionTemplateId = old('subscription_promotion_template_id', '');
         $defaultSubscriptionBillingCycles = old('subscription_billing_cycles', '1');
         $defaultSubscriptionCustomPrice = old('subscription_custom_price', '');
+        $commercialBillingCycleLabels = [
+            1 => 'Plan mensual · 1 mes',
+            2 => 'Plan bimestral · 2 meses',
+            3 => 'Plan trimestral · 3 meses',
+            4 => 'Plan cuatrimestral · 4 meses',
+            5 => 'Plan de 5 meses',
+            6 => 'Plan semestral · 6 meses',
+            7 => 'Plan de 7 meses',
+            8 => 'Plan de 8 meses',
+            9 => 'Plan de 9 meses',
+            10 => 'Plan de 10 meses',
+            11 => 'Plan de 11 meses',
+            12 => 'Plan anual · 12 meses',
+        ];
         $statesForCountry = $locationCatalog[$addressCountry]['states'] ?? [];
         $citiesForState = $statesForCountry[$addressState] ?? [];
     @endphp
@@ -197,7 +213,7 @@
                         </div>
                     </div>
                 </x-ui.card>
-                <x-ui.card title="3. Plan inicial" subtitle="Selecciona el paquete con el que inicia la cuenta.">
+                <x-ui.card title="3. Oferta inicial" subtitle="Define el paquete comercial y la oferta con la que nacerá la cuenta.">
                     <div class="space-y-4">
                         <div class="grid gap-3 md:grid-cols-2">
                             @forelse ($planTemplates as $template)
@@ -285,15 +301,29 @@
                             <p class="text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                         @enderror
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
-                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Meses pagados por adelantado</label>
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Oferta comercial inicial</label>
+                            <select id="subscription-promotion-template-id" name="subscription_promotion_template_id" class="ui-input">
+                                <option value="">Precio regular del plan</option>
+                            </select>
+                            <p id="subscription-offer-hint" class="ui-muted mt-1 text-[11px]">
+                                Elige la oferta que vas a vender en esta alta. Si no seleccionas una, se usará el precio regular del plan.
+                            </p>
+                            @error('subscription_promotion_template_id')
+                                <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div id="subscription-billing-cycles-wrap" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                            <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Cobertura inicial de la oferta</label>
                             <select id="subscription-billing-cycles" name="subscription_billing_cycles" class="ui-input">
                                 @for ($billingCycleOption = 1; $billingCycleOption <= 12; $billingCycleOption++)
                                     <option value="{{ $billingCycleOption }}" @selected((string) $defaultSubscriptionBillingCycles === (string) $billingCycleOption)>
-                                        {{ $billingCycleOption }} {{ $billingCycleOption === 1 ? 'mes' : 'meses' }}
+                                        {{ $commercialBillingCycleLabels[$billingCycleOption] ?? ($billingCycleOption.' '.($billingCycleOption === 1 ? 'mes' : 'meses')) }}
                                     </option>
                                 @endfor
                             </select>
-                            <p class="ui-muted mt-1 text-[11px]">Si el plan tiene precio con oferta, ese valor se usa automaticamente al cobrar.</p>
+                            <p id="subscription-billing-cycles-hint" class="ui-muted mt-1 text-[11px]">
+                                Define cuánto tiempo cubre la oferta inicial cuando la promoción no trae una duración cerrada.
+                            </p>
                             @error('subscription_billing_cycles')
                                 <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                             @enderror
@@ -432,7 +462,7 @@
                 <x-ui.card title="Resumen operativo" subtitle="Puntos a revisar antes de confirmar la creacion.">
                     <ul class="sa-check-list">
                         <li>Verifica país, ciudad y zona horaria antes de crear el slug y la operación inicial.</li>
-                        <li>Revisa si el plan elegido tiene precio con oferta o un mensaje comercial activo.</li>
+                        <li>Confirma la oferta comercial inicial y el total que se cobrará en el alta.</li>
                         <li>Confirma correo y teléfono del admin para evitar bloqueos en el primer acceso.</li>
                         <li>La cuenta nace lista para operar panel, recepción y cobros según el plan elegido.</li>
                     </ul>
@@ -526,47 +556,147 @@
         syncStates(selectedStateValue, selectedCityValue);
 
         const planTemplateRadios = Array.from(document.querySelectorAll('input[data-plan-template-radio="1"]'));
+        const promotionSelect = document.getElementById('subscription-promotion-template-id');
         const billingCyclesSelect = document.getElementById('subscription-billing-cycles');
+        const billingCyclesWrap = document.getElementById('subscription-billing-cycles-wrap');
+        const billingCyclesHint = document.getElementById('subscription-billing-cycles-hint');
         const customPriceInput = document.getElementById('subscription-custom-price');
-        const promotionRules = @json($planPromotionRules);
+        const subscriptionOfferHint = document.getElementById('subscription-offer-hint');
         const subscriptionPlanFeedback = document.getElementById('subscription-plan-feedback');
+        const promotionTemplates = @json(
+            $promotionTemplates->map(static function ($promotion): array {
+                return [
+                    'id' => (int) $promotion->id,
+                    'plan_template_id' => $promotion->plan_template_id !== null ? (int) $promotion->plan_template_id : null,
+                    'name' => (string) $promotion->name,
+                    'description' => trim((string) ($promotion->description ?? '')),
+                    'type' => (string) $promotion->type,
+                    'value' => $promotion->value !== null ? (float) $promotion->value : null,
+                    'duration_unit' => (string) ($promotion->duration_unit ?? 'months'),
+                    'duration_months' => $promotion->duration_months !== null ? (int) $promotion->duration_months : null,
+                    'duration_days' => $promotion->duration_days !== null ? (int) $promotion->duration_days : null,
+                ];
+            })->values()->all()
+        );
+        const billingCycleLabels = @json($commercialBillingCycleLabels);
+        const defaultPromotionTemplateId = @json((string) $defaultPromotionTemplateId);
+        let initialPromotionSelection = defaultPromotionTemplateId;
         const formatUsd = function (value) {
             const numeric = Number(value);
             if (!Number.isFinite(numeric)) return '$0.00';
             return '$' + numeric.toFixed(2);
         };
-        const resolvePromotion = function (templateId, billingCycles) {
-            const rules = promotionRules[String(templateId)] || [];
-            if (!Array.isArray(rules)) {
+        const resolvePromotionCoverage = function (promotion) {
+            const durationUnit = String(promotion?.duration_unit || 'months').toLowerCase() === 'days' ? 'days' : 'months';
+            const durationMonths = Number(promotion?.duration_months || 0);
+            const durationDays = Number(promotion?.duration_days || 0);
+            if (durationUnit === 'days' && Number.isFinite(durationDays) && durationDays > 0) {
+                return {
+                    unit: 'days',
+                    months: null,
+                    days: Math.round(durationDays),
+                };
+            }
+
+            if (Number.isFinite(durationMonths) && durationMonths > 0) {
+                return {
+                    unit: 'months',
+                    months: Math.round(durationMonths),
+                    days: null,
+                };
+            }
+
+            return {
+                unit: 'months',
+                months: null,
+                days: null,
+            };
+        };
+        const resolvePromotionValueLabel = function (promotion) {
+            const value = Number(promotion?.value || 0);
+            const type = String(promotion?.type || '').trim().toLowerCase();
+            if (type === 'percentage') {
+                return (Number.isFinite(value) ? value : 0) + '%';
+            }
+            if (type === 'fixed') {
+                return '-' + formatUsd(Number.isFinite(value) ? value : 0);
+            }
+            if (type === 'final_price') {
+                return 'Total ' + formatUsd(Number.isFinite(value) ? value : 0);
+            }
+            if (type === 'bonus_days') {
+                return '+' + Math.max(0, Math.round(Number.isFinite(value) ? value : 0)) + ' días';
+            }
+            if (type === 'two_for_one') {
+                return '2x1';
+            }
+            if (type === 'bring_friend') {
+                return 'Trae a un amigo';
+            }
+
+            return 'Oferta';
+        };
+        const buildPromotionOptionLabel = function (promotion) {
+            const coverage = resolvePromotionCoverage(promotion);
+            const coverageLabel = coverage.unit === 'days' && coverage.days
+                ? coverage.days + ' día' + (coverage.days === 1 ? '' : 's')
+                : (coverage.months
+                    ? (billingCycleLabels[String(coverage.months)] || (coverage.months + ' mes(es)'))
+                    : 'Cobertura flexible');
+            return String(promotion.name || 'Oferta comercial').trim() + ' · ' + coverageLabel + ' · ' + resolvePromotionValueLabel(promotion);
+        };
+        const getApplicablePromotions = function (templateId) {
+            const numericTemplateId = Math.max(0, Math.round(Number(templateId) || 0));
+            if (numericTemplateId <= 0) {
+                return [];
+            }
+
+            return promotionTemplates.filter(function (promotion) {
+                const promotionTemplateId = promotion.plan_template_id !== null ? Number(promotion.plan_template_id) : null;
+                return promotionTemplateId === null || promotionTemplateId === numericTemplateId;
+            });
+        };
+        const syncPromotionOptions = function () {
+            if (!promotionSelect) {
+                return;
+            }
+
+            const selectedRadio = planTemplateRadios.find(function (radio) {
+                return radio.checked;
+            }) || null;
+            const selectedTemplateId = String(selectedRadio?.getAttribute('data-plan-template-id') || selectedRadio?.value || '').trim();
+            const allowedPromotions = getApplicablePromotions(selectedTemplateId);
+            const currentValue = String(initialPromotionSelection || promotionSelect.value || '').trim();
+
+            promotionSelect.innerHTML = '';
+
+            const regularOption = document.createElement('option');
+            regularOption.value = '';
+            regularOption.textContent = 'Precio regular del plan';
+            promotionSelect.appendChild(regularOption);
+
+            allowedPromotions.forEach(function (promotion) {
+                const option = document.createElement('option');
+                option.value = String(promotion.id);
+                option.textContent = buildPromotionOptionLabel(promotion);
+                promotionSelect.appendChild(option);
+            });
+
+            const hasCurrentValue = currentValue !== '' && allowedPromotions.some(function (promotion) {
+                return String(promotion.id) === currentValue;
+            });
+            promotionSelect.value = hasCurrentValue ? currentValue : '';
+            initialPromotionSelection = '';
+        };
+        const getSelectedPromotion = function () {
+            const selectedPromotionId = String(promotionSelect?.value || '').trim();
+            if (selectedPromotionId === '') {
                 return null;
             }
 
-            let fallbackRule = null;
-            let dayRule = null;
-            for (const rule of rules) {
-                const durationUnit = String(rule?.duration_unit || 'months').toLowerCase();
-                if (durationUnit === 'days') {
-                    const durationDays = Number(rule?.duration_days || 0);
-                    if (!dayRule && Number.isFinite(durationDays) && durationDays > 0) {
-                        dayRule = rule;
-                    }
-                    continue;
-                }
-
-                const durationMonths = Number(rule?.duration_months || 0);
-                if (Number.isFinite(durationMonths) && durationMonths > 0 && durationMonths === billingCycles) {
-                    return rule;
-                }
-                if (!fallbackRule && !rule?.duration_months) {
-                    fallbackRule = rule;
-                }
-            }
-
-            if (dayRule) {
-                return dayRule;
-            }
-
-            return fallbackRule;
+            return promotionTemplates.find(function (promotion) {
+                return String(promotion.id) === selectedPromotionId;
+            }) || null;
         };
         const resolvePromotionPricing = function (baseMonthlyPrice, billingCycles, promotion) {
             const safeMonthlyPrice = Number.isFinite(baseMonthlyPrice) ? Math.max(0, baseMonthlyPrice) : 0;
@@ -620,6 +750,7 @@
             const selectedRadio = planTemplateRadios.find(function (radio) {
                 return radio.checked;
             }) || null;
+            syncPromotionOptions();
             const selectedPlanKey = String(selectedRadio?.getAttribute('data-feature-plan-key') || '').toLowerCase();
             const selectedPlanPrice = Number(selectedRadio?.getAttribute('data-plan-price') || '0');
             const selectedTemplateId = String(selectedRadio?.getAttribute('data-plan-template-id') || selectedRadio?.value || '').trim();
@@ -630,7 +761,52 @@
             selectedBillingCycles = Math.max(1, Math.min(12, Math.round(selectedBillingCycles)));
             const selectedPlanLabel = selectedRadio
                 ? String(selectedRadio.getAttribute('data-plan-name') || selectedRadio.closest('label')?.querySelector('.text-sm.font-black')?.textContent || 'Plan seleccionado').trim()
-                : 'Selecciona un plan base para continuar.';
+                : 'Selecciona un paquete comercial para continuar.';
+            const selectedPromotion = getSelectedPromotion();
+            const promotionCoverage = resolvePromotionCoverage(selectedPromotion);
+            if (selectedPromotion) {
+                if (promotionCoverage.unit === 'days' && promotionCoverage.days) {
+                    selectedBillingCycles = 1;
+                    if (billingCyclesSelect) {
+                        billingCyclesSelect.value = '1';
+                    }
+                    billingCyclesWrap?.classList.add('hidden');
+                    if (billingCyclesHint) {
+                        billingCyclesHint.textContent = 'La oferta seleccionada fija una duración cerrada de ' + promotionCoverage.days + ' día' + (promotionCoverage.days === 1 ? '' : 's') + '.';
+                    }
+                    if (subscriptionOfferHint) {
+                        subscriptionOfferHint.textContent = 'Oferta fija: la duración y el descuento ya vienen definidos por la promoción seleccionada.';
+                    }
+                } else if (promotionCoverage.months) {
+                    selectedBillingCycles = promotionCoverage.months;
+                    if (billingCyclesSelect) {
+                        billingCyclesSelect.value = String(promotionCoverage.months);
+                    }
+                    billingCyclesWrap?.classList.add('hidden');
+                    if (billingCyclesHint) {
+                        billingCyclesHint.textContent = 'La oferta seleccionada fija una cobertura cerrada de ' + (billingCycleLabels[String(promotionCoverage.months)] || (promotionCoverage.months + ' mes(es)')) + '.';
+                    }
+                    if (subscriptionOfferHint) {
+                        subscriptionOfferHint.textContent = 'Oferta fija: la duración y el descuento ya vienen definidos por la promoción seleccionada.';
+                    }
+                } else {
+                    billingCyclesWrap?.classList.remove('hidden');
+                    if (billingCyclesHint) {
+                        billingCyclesHint.textContent = 'Esta oferta es flexible. Define abajo cuánto tiempo cubrirá el alta inicial.';
+                    }
+                    if (subscriptionOfferHint) {
+                        subscriptionOfferHint.textContent = 'Oferta flexible: puedes mantener esta promoción y decidir la cobertura inicial.';
+                    }
+                }
+            } else {
+                billingCyclesWrap?.classList.remove('hidden');
+                if (billingCyclesHint) {
+                    billingCyclesHint.textContent = 'Define cuánto tiempo cubre la oferta inicial cuando la promoción no trae una duración cerrada.';
+                }
+                if (subscriptionOfferHint) {
+                    subscriptionOfferHint.textContent = 'Elige la oferta que vas a vender en esta alta. Si no seleccionas una, se usará el precio regular del plan.';
+                }
+            }
             const canUseCustomPrice = selectedPlanKey === 'sucursales';
             const selectedCustomPrice = Number(customPriceInput.value || '0');
             const effectivePlanPrice = canUseCustomPrice && Number.isFinite(selectedCustomPrice) && selectedCustomPrice > 0
@@ -641,30 +817,37 @@
             customPriceInput.classList.toggle('opacity-60', !canUseCustomPrice);
             customPriceInput.classList.toggle('cursor-not-allowed', !canUseCustomPrice);
             customPriceInput.title = canUseCustomPrice
-                ? 'Precio personalizado para este cliente con plan sucursales.'
+                ? 'Precio personalizado para esta alta con plan sucursales.'
                 : 'Se habilita solo cuando eliges plan sucursales.';
             if (!canUseCustomPrice) {
                 customPriceInput.value = '';
             }
 
-            const selectedPromotion = resolvePromotion(selectedTemplateId, selectedBillingCycles);
             const pricing = resolvePromotionPricing(effectivePlanPrice, selectedBillingCycles, selectedPromotion);
             if (subscriptionPlanFeedback) {
                 if (!selectedRadio) {
                     subscriptionPlanFeedback.textContent = selectedPlanLabel;
                 } else {
-                    const promotionDurationUnit = String(selectedPromotion?.duration_unit || 'months').toLowerCase();
-                    const promotionDurationDays = Number(selectedPromotion?.duration_days || 0);
-                    const coverageLabel = promotionDurationUnit === 'days' && Number.isFinite(promotionDurationDays) && promotionDurationDays > 0
-                        ? Math.round(promotionDurationDays) + ' dia(s)'
-                        : selectedBillingCycles + ' mes(es)';
-                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': cobra ' + formatUsd(effectivePlanPrice) + '/mes. Total a cobrar ' + formatUsd(pricing.baseTotal) + ' por ' + coverageLabel + '.';
+                    const coverageLabel = selectedPromotion && promotionCoverage.unit === 'days' && promotionCoverage.days
+                        ? promotionCoverage.days + ' día' + (promotionCoverage.days === 1 ? '' : 's')
+                        : (billingCycleLabels[String(selectedBillingCycles)] || (selectedBillingCycles + ' mes(es)'));
+                    const offerLabel = selectedPromotion
+                        ? String(selectedPromotion.name || 'Oferta comercial').trim()
+                        : 'Precio regular';
+                    const chargeLabel = pricing.discountAmount > 0
+                        ? 'Total con oferta ' + formatUsd(pricing.finalTotal) + ' (antes ' + formatUsd(pricing.baseTotal) + ')'
+                        : 'Total a cobrar ' + formatUsd(pricing.baseTotal);
+                    const bonusLabel = pricing.bonusDays > 0
+                        ? ' Incluye ' + pricing.bonusDays + ' día' + (pricing.bonusDays === 1 ? '' : 's') + ' extra.'
+                        : '';
+                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ' · ' + offerLabel + ' · ' + coverageLabel + '. ' + chargeLabel + '.' + bonusLabel;
                 }
             }
         };
         planTemplateRadios.forEach(function (radio) {
             radio.addEventListener('change', syncCustomSubscriptionPriceState);
         });
+        promotionSelect?.addEventListener('change', syncCustomSubscriptionPriceState);
         customPriceInput?.addEventListener('input', syncCustomSubscriptionPriceState);
         billingCyclesSelect?.addEventListener('change', syncCustomSubscriptionPriceState);
         syncCustomSubscriptionPriceState();

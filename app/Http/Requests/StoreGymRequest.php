@@ -18,6 +18,8 @@ class StoreGymRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $hasPromotionSelectionField = array_key_exists('subscription_promotion_template_id', $this->all());
+
         $this->merge([
             'gym_name' => $this->normalizeText($this->input('gym_name')),
             'gym_phone' => $this->normalizeText($this->input('gym_phone')),
@@ -37,6 +39,8 @@ class StoreGymRequest extends FormRequest
             'admin_phone_country_dial' => ($dial = trim((string) $this->input('admin_phone_country_dial'))) !== '' ? $dial : null,
             'admin_phone_number' => ($phone = preg_replace('/\D+/', '', (string) $this->input('admin_phone_number'))) !== '' ? $phone : null,
             'subscription_plan_template_id' => ($templateId = trim((string) $this->input('subscription_plan_template_id'))) !== '' ? (int) $templateId : null,
+            'subscription_promotion_template_id' => ($promotionId = trim((string) $this->input('subscription_promotion_template_id'))) !== '' ? (int) $promotionId : null,
+            'subscription_offer_selection_mode' => $hasPromotionSelectionField ? 'explicit' : 'auto',
             'subscription_billing_cycles' => ($billingCycles = trim((string) $this->input('subscription_billing_cycles'))) !== '' ? (int) $billingCycles : 1,
             'subscription_custom_price' => ($customPrice = trim((string) $this->input('subscription_custom_price'))) !== '' ? (float) $customPrice : null,
         ]);
@@ -58,8 +62,15 @@ class StoreGymRequest extends FormRequest
             });
         } else {
             $subscriptionPlanTemplateRules[] = function (string $attribute, mixed $value, \Closure $fail): void {
-                $fail('El catalogo comercial aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.');
+                    $fail('El catalogo comercial aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.');
             };
+        }
+
+        $subscriptionPromotionRules = ['nullable', 'integer'];
+        if (Schema::hasTable('superadmin_promotion_templates') && Schema::hasColumns('superadmin_promotion_templates', ['id', 'status'])) {
+            $subscriptionPromotionRules[] = Rule::exists('superadmin_promotion_templates', 'id')->where(function ($query): void {
+                $query->where('status', 'active');
+            });
         }
 
         return [
@@ -105,6 +116,8 @@ class StoreGymRequest extends FormRequest
             'admin_profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'admin_password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
             'subscription_plan_template_id' => $subscriptionPlanTemplateRules,
+            'subscription_promotion_template_id' => $subscriptionPromotionRules,
+            'subscription_offer_selection_mode' => ['required', 'string', Rule::in(['auto', 'explicit'])],
             'subscription_billing_cycles' => ['required', 'integer', 'min:1', 'max:12'],
             'subscription_custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
         ];
@@ -137,12 +150,13 @@ class StoreGymRequest extends FormRequest
             'admin_profile_photo.max' => 'La foto del admin no puede superar 15MB.',
             'admin_password.confirmed' => 'La confirmación de contraseña no coincide.',
             'admin_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
-            'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
+            'subscription_plan_template_id.required' => 'Selecciona el paquete principal para el nuevo gimnasio.',
             'subscription_plan_template_id.exists' => 'El plan base seleccionado no está disponible.',
-            'subscription_billing_cycles.required' => 'Indica cuántos meses cubrirá el prepago.',
-            'subscription_billing_cycles.integer' => 'La cobertura prepaga debe ser un número entero.',
-            'subscription_billing_cycles.min' => 'La cobertura prepaga no puede ser menor a 1 mes.',
-            'subscription_billing_cycles.max' => 'La cobertura prepaga no puede superar 12 meses.',
+            'subscription_promotion_template_id.exists' => 'La oferta comercial seleccionada ya no está disponible.',
+            'subscription_billing_cycles.required' => 'Indica cuánto tiempo cubrirá la oferta inicial.',
+            'subscription_billing_cycles.integer' => 'La cobertura inicial debe ser un número entero.',
+            'subscription_billing_cycles.min' => 'La cobertura inicial no puede ser menor a 1 mes.',
+            'subscription_billing_cycles.max' => 'La cobertura inicial no puede superar 12 meses.',
             'subscription_custom_price.numeric' => 'El precio personalizado debe ser numérico.',
             'subscription_custom_price.min' => 'El precio personalizado no puede ser negativo.',
             'subscription_custom_price.max' => 'El precio personalizado supera el límite permitido.',

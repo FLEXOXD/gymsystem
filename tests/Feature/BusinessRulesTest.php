@@ -1372,6 +1372,164 @@ it('creates gyms with base plan promotions and prepaid coverage cycles', functio
     }
 });
 
+it('creates gyms with an explicitly selected initial commercial offer', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Oferta Inicial',
+            'email' => 'superadmin-oferta-inicial@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $promotion = \App\Models\SuperAdminPromotionTemplate::query()->create([
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'name' => 'Elite trimestre 25 explícita',
+            'description' => '25% si la oferta inicial es trimestral.',
+            'type' => 'percentage',
+            'value' => 25,
+            'status' => 'active',
+            'duration_months' => 3,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.gyms.store'), [
+                'gym_name' => 'Gym Oferta Inicial Explícita',
+                'gym_phone' => '+593 999 999 998',
+                'gym_address_country' => 'ec',
+                'gym_address_state' => 'Pichincha',
+                'gym_address_city' => 'Quito',
+                'gym_address_line' => 'Av. Oferta 123',
+                'gym_timezone' => 'America/Guayaquil',
+                'gym_currency_code' => 'USD',
+                'gym_language_code' => 'es',
+                'subscription_plan_template_id' => (int) $premiumTemplate->id,
+                'subscription_promotion_template_id' => (int) $promotion->id,
+                'subscription_billing_cycles' => 1,
+                'admin_name' => 'Admin Oferta',
+                'admin_email' => 'admin-oferta-inicial@example.test',
+                'admin_password' => 'Password#2026',
+                'admin_password_confirmation' => 'Password#2026',
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $gym = Gym::query()
+            ->where('name', 'Gym Oferta Inicial Explícita')
+            ->firstOrFail();
+
+        $subscription = Subscription::query()
+            ->where('gym_id', $gym->id)
+            ->firstOrFail();
+
+        expect((string) $subscription->plan_key)->toBe('premium');
+        expect((float) $subscription->price)->toBe(37.5);
+        expect($subscription->starts_at?->toDateString())->toBe('2026-03-18');
+        expect($subscription->ends_at?->toDateString())
+            ->toBe(Carbon::parse('2026-03-18')->addDays(90)->subDay()->toDateString());
+
+        $this->assertDatabaseHas('subscription_charge_events', [
+            'gym_id' => $gym->id,
+            'subscription_id' => $subscription->id,
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'promotion_template_id' => (int) $promotion->id,
+            'event_type' => 'signup',
+            'billing_cycles' => 3,
+            'base_total' => 150.00,
+            'discount_amount' => 37.50,
+            'total_paid' => 112.50,
+        ]);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('creates gyms with explicit regular pricing without auto-applying hidden promotions', function () {
+    Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
+
+    try {
+        SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin Precio Regular',
+            'email' => 'superadmin-precio-regular@example.test',
+            'password' => 'password',
+            'gym_id' => null,
+        ]);
+
+        $premiumTemplate = SuperAdminPlanTemplate::query()
+            ->where('plan_key', 'premium')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        \App\Models\SuperAdminPromotionTemplate::query()->create([
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'name' => 'Elite trimestre 25 oculta',
+            'description' => 'No debe entrar si se elige precio regular.',
+            'type' => 'percentage',
+            'value' => 25,
+            'status' => 'active',
+            'duration_months' => 3,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('superadmin.gyms.store'), [
+                'gym_name' => 'Gym Precio Regular Explícito',
+                'gym_phone' => '+593 999 999 997',
+                'gym_address_country' => 'ec',
+                'gym_address_state' => 'Pichincha',
+                'gym_address_city' => 'Quito',
+                'gym_address_line' => 'Av. Regular 456',
+                'gym_timezone' => 'America/Guayaquil',
+                'gym_currency_code' => 'USD',
+                'gym_language_code' => 'es',
+                'subscription_plan_template_id' => (int) $premiumTemplate->id,
+                'subscription_promotion_template_id' => '',
+                'subscription_billing_cycles' => 3,
+                'admin_name' => 'Admin Regular',
+                'admin_email' => 'admin-precio-regular@example.test',
+                'admin_password' => 'Password#2026',
+                'admin_password_confirmation' => 'Password#2026',
+            ])
+            ->assertRedirect(route('superadmin.gyms.index'));
+
+        $gym = Gym::query()
+            ->where('name', 'Gym Precio Regular Explícito')
+            ->firstOrFail();
+
+        $subscription = Subscription::query()
+            ->where('gym_id', $gym->id)
+            ->firstOrFail();
+
+        expect((string) $subscription->plan_key)->toBe('premium');
+        expect((float) $subscription->price)->toBe(50.0);
+        expect($subscription->starts_at?->toDateString())->toBe('2026-03-18');
+        expect($subscription->ends_at?->toDateString())
+            ->toBe(Carbon::parse('2026-03-18')->addDays(90)->subDay()->toDateString());
+
+        $this->assertDatabaseHas('subscription_charge_events', [
+            'gym_id' => $gym->id,
+            'subscription_id' => $subscription->id,
+            'plan_template_id' => (int) $premiumTemplate->id,
+            'promotion_template_id' => null,
+            'event_type' => 'signup',
+            'billing_cycles' => 3,
+            'base_total' => 150.00,
+            'discount_amount' => 0.00,
+            'total_paid' => 150.00,
+        ]);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
 it('creates gyms from superadmin even when charge events history table is unavailable', function () {
     Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
 

@@ -112,16 +112,57 @@ class SuperAdminDashboardController extends Controller
 
         $selectedFeaturePlanKey = $selectedPlanTemplate->resolvedFeaturePlanKey();
         $selectedBillingCycles = max(1, (int) ($data['subscription_billing_cycles'] ?? 1));
+        $offerSelectionMode = (string) ($data['subscription_offer_selection_mode'] ?? 'auto');
+        try {
+            $selectedPromotionTemplate = $this->resolveInitialPromotionTemplate(
+                isset($data['subscription_promotion_template_id']) ? (int) $data['subscription_promotion_template_id'] : null,
+                $selectedPlanTemplate
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return back()
+                ->withInput()
+                ->withErrors(['subscription_promotion_template_id' => $exception->getMessage()]);
+        }
+        if ($selectedPromotionTemplate instanceof SuperAdminPromotionTemplate) {
+            $promotionCoverage = $this->resolvePromotionCoverage($selectedPromotionTemplate);
+            if ($promotionCoverage['unit'] === 'days' && $promotionCoverage['days'] !== null) {
+                $selectedBillingCycles = 1;
+            } elseif ($promotionCoverage['months'] !== null) {
+                $selectedBillingCycles = (int) $promotionCoverage['months'];
+            }
+        }
         $customPrice = array_key_exists('subscription_custom_price', $data) && $data['subscription_custom_price'] !== null
             ? (float) $data['subscription_custom_price']
             : null;
-        $pricing = $this->planPricingService->resolveSelection(
-            planTemplate: $selectedPlanTemplate,
-            billingCycles: $selectedBillingCycles,
-            customMonthlyPrice: $customPrice,
-            applyPromotions: true
-        );
-        $promotionTemplateId = $pricing['promotion']?->id;
+        if ($selectedPromotionTemplate instanceof SuperAdminPromotionTemplate) {
+            $pricing = $this->planPricingService->resolveSelectionWithPromotion(
+                planTemplate: $selectedPlanTemplate,
+                promotionTemplate: $selectedPromotionTemplate,
+                billingCycles: $selectedBillingCycles,
+                customMonthlyPrice: $customPrice
+            );
+        } else {
+            $pricing = $this->planPricingService->resolveSelection(
+                planTemplate: $selectedPlanTemplate,
+                billingCycles: $selectedBillingCycles,
+                customMonthlyPrice: $customPrice,
+                applyPromotions: $offerSelectionMode !== 'explicit'
+            );
+        }
+        $promotionTemplateId = $selectedPromotionTemplate?->id ?? $pricing['promotion']?->id;
+        $templateDurationUnit = (string) ($selectedPlanTemplate->duration_unit ?? 'days');
+        $templateDurationDays = (int) $selectedPlanTemplate->duration_days;
+        $templateDurationMonths = $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null;
+        $templateBillingCycles = $selectedBillingCycles;
+        if ($selectedPromotionTemplate instanceof SuperAdminPromotionTemplate) {
+            $promotionCoverage = $this->resolvePromotionCoverage($selectedPromotionTemplate);
+            if ($promotionCoverage['unit'] === 'days' && $promotionCoverage['days'] !== null) {
+                $templateDurationUnit = 'days';
+                $templateDurationDays = max(1, (int) $promotionCoverage['days']);
+                $templateDurationMonths = null;
+                $templateBillingCycles = 1;
+            }
+        }
         $profilePhotoPath = $request->hasFile('admin_profile_photo')
             ? $request->file('admin_profile_photo')->store('users/profiles', 'public')
             : null;
@@ -182,10 +223,10 @@ class SuperAdminDashboardController extends Controller
                 'feature_version' => (string) config('plan_features.default_feature_version', 'v1'),
                 'name' => (string) $selectedPlanTemplate->name,
                 'price' => (float) $pricing['effective_monthly_price'],
-                'duration_unit' => (string) ($selectedPlanTemplate->duration_unit ?? 'days'),
-                'duration_days' => (int) $selectedPlanTemplate->duration_days,
-                'duration_months' => $selectedPlanTemplate->duration_months !== null ? (int) $selectedPlanTemplate->duration_months : null,
-                'billing_cycles' => $selectedBillingCycles,
+                'duration_unit' => $templateDurationUnit,
+                'duration_days' => $templateDurationDays,
+                'duration_months' => $templateDurationMonths,
+                'billing_cycles' => $templateBillingCycles,
                 'bonus_days' => (int) ($pricing['bonus_days'] ?? 0),
                 'billing_event' => [
                     'plan_template_id' => (int) $selectedPlanTemplate->id,
@@ -394,6 +435,7 @@ class SuperAdminDashboardController extends Controller
             'locationCatalog' => GymLocationCatalog::catalog(),
             'defaultTimezone' => 'America/Guayaquil',
             'planTemplates' => $planTemplates,
+            'promotionTemplates' => $this->selectablePromotionTemplates(),
             'planPromotionRules' => $this->planPricingService->promotionRulesForPlanTemplates($planTemplates),
         ];
     }
@@ -439,6 +481,80 @@ class SuperAdminDashboardController extends Controller
             })
             ->orderByDesc('id')
             ->get($columns);
+    }
+
+    private function resolveInitialPromotionTemplate(?int $promotionId, SuperAdminPlanTemplate $planTemplate): ?SuperAdminPromotionTemplate
+    {
+        if ($promotionId === null || $promotionId <= 0) {
+            return null;
+        }
+
+        $promotion = SuperAdminPromotionTemplate::query()
+            ->where('status', 'active')
+            ->find($promotionId);
+
+        if (! $promotion) {
+            throw new \InvalidArgumentException('La oferta comercial seleccionada ya no está disponible.');
+        }
+
+        $today = now()->toDateString();
+        if ($promotion->starts_at && $promotion->starts_at->toDateString() > $today) {
+            throw new \InvalidArgumentException('La oferta comercial seleccionada aún no inicia.');
+        }
+
+        if ($promotion->ends_at && $promotion->ends_at->toDateString() < $today) {
+            throw new \InvalidArgumentException('La oferta comercial seleccionada ya venció.');
+        }
+
+        $promotionPlanTemplateId = $promotion->plan_template_id !== null ? (int) $promotion->plan_template_id : null;
+        if ($promotionPlanTemplateId !== null && $promotionPlanTemplateId > 0 && $promotionPlanTemplateId !== (int) $planTemplate->id) {
+            throw new \InvalidArgumentException('La oferta comercial seleccionada no aplica para ese plan.');
+        }
+
+        return $promotion;
+    }
+
+    /**
+     * @return array{unit:string,months:?int,days:?int}
+     */
+    private function resolvePromotionCoverage(SuperAdminPromotionTemplate $promotion): array
+    {
+        $supportsDurationUnit = $this->supportsPromotionDurationUnitColumns();
+        $durationUnit = 'months';
+        if ($supportsDurationUnit) {
+            $candidateUnit = strtolower(trim((string) ($promotion->duration_unit ?? '')));
+            if (in_array($candidateUnit, ['days', 'months'], true)) {
+                $durationUnit = $candidateUnit;
+            } elseif ($promotion->duration_days !== null && (int) $promotion->duration_days > 0) {
+                $durationUnit = 'days';
+            }
+        }
+
+        if ($durationUnit === 'days') {
+            $durationDays = $promotion->duration_days !== null ? (int) $promotion->duration_days : null;
+            if ($durationDays !== null && $durationDays > 0) {
+                return [
+                    'unit' => 'days',
+                    'months' => null,
+                    'days' => $durationDays,
+                ];
+            }
+        }
+
+        $durationMonths = $promotion->duration_months !== null ? (int) $promotion->duration_months : null;
+        $durationMonths = $durationMonths !== null && $durationMonths > 0 ? $durationMonths : null;
+
+        return [
+            'unit' => 'months',
+            'months' => $durationMonths,
+            'days' => null,
+        ];
+    }
+
+    private function supportsPromotionDurationUnitColumns(): bool
+    {
+        return Schema::hasTable('superadmin_promotion_templates')
+            && Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
     }
 
     private function supportsCommercialPlanCatalog(): bool
