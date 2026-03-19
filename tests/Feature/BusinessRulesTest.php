@@ -1451,6 +1451,24 @@ it('creates gyms with an explicitly selected initial commercial offer', function
     }
 });
 
+it('renders the superadmin create gym page with commercial offer selector', function () {
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    $superAdmin = User::query()->create([
+        'name' => 'Super Admin Gym Form',
+        'email' => 'superadmin-gym-form@example.test',
+        'password' => 'password',
+        'gym_id' => null,
+    ]);
+
+    $this->actingAs($superAdmin)
+        ->get(route('superadmin.gym.index'))
+        ->assertOk()
+        ->assertSee('Oferta inicial')
+        ->assertSee('Oferta comercial inicial')
+        ->assertSee('Cobertura inicial de la oferta');
+});
+
 it('creates gyms with explicit regular pricing without auto-applying hidden promotions', function () {
     Carbon::setTestNow(Carbon::parse('2026-03-18 09:00:00'));
 

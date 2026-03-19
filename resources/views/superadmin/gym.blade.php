@@ -25,6 +25,22 @@
         $defaultPromotionTemplateId = old('subscription_promotion_template_id', '');
         $defaultSubscriptionBillingCycles = old('subscription_billing_cycles', '1');
         $defaultSubscriptionCustomPrice = old('subscription_custom_price', '');
+        $promotionTemplateOptions = $promotionTemplates
+            ->map(static function ($promotion): array {
+                return [
+                    'id' => (int) $promotion->id,
+                    'plan_template_id' => $promotion->plan_template_id !== null ? (int) $promotion->plan_template_id : null,
+                    'name' => (string) $promotion->name,
+                    'description' => trim((string) ($promotion->description ?? '')),
+                    'type' => (string) $promotion->type,
+                    'value' => $promotion->value !== null ? (float) $promotion->value : null,
+                    'duration_unit' => (string) ($promotion->duration_unit ?? 'months'),
+                    'duration_months' => $promotion->duration_months !== null ? (int) $promotion->duration_months : null,
+                    'duration_days' => $promotion->duration_days !== null ? (int) $promotion->duration_days : null,
+                ];
+            })
+            ->values()
+            ->all();
         $commercialBillingCycleLabels = [
             1 => 'Plan mensual · 1 mes',
             2 => 'Plan bimestral · 2 meses',
@@ -563,21 +579,7 @@
         const customPriceInput = document.getElementById('subscription-custom-price');
         const subscriptionOfferHint = document.getElementById('subscription-offer-hint');
         const subscriptionPlanFeedback = document.getElementById('subscription-plan-feedback');
-        const promotionTemplates = @json(
-            $promotionTemplates->map(static function ($promotion): array {
-                return [
-                    'id' => (int) $promotion->id,
-                    'plan_template_id' => $promotion->plan_template_id !== null ? (int) $promotion->plan_template_id : null,
-                    'name' => (string) $promotion->name,
-                    'description' => trim((string) ($promotion->description ?? '')),
-                    'type' => (string) $promotion->type,
-                    'value' => $promotion->value !== null ? (float) $promotion->value : null,
-                    'duration_unit' => (string) ($promotion->duration_unit ?? 'months'),
-                    'duration_months' => $promotion->duration_months !== null ? (int) $promotion->duration_months : null,
-                    'duration_days' => $promotion->duration_days !== null ? (int) $promotion->duration_days : null,
-                ];
-            })->values()->all()
-        );
+        const promotionTemplates = @json($promotionTemplateOptions);
         const billingCycleLabels = @json($commercialBillingCycleLabels);
         const defaultPromotionTemplateId = @json((string) $defaultPromotionTemplateId);
         let initialPromotionSelection = defaultPromotionTemplateId;

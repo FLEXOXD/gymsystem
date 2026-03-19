@@ -457,28 +457,56 @@ class SuperAdminDashboardController extends Controller
             return collect();
         }
 
-        if (! Schema::hasColumns('superadmin_promotion_templates', ['id', 'name', 'type', 'value', 'status', 'duration_months', 'starts_at', 'ends_at'])) {
+        if (! Schema::hasColumns('superadmin_promotion_templates', ['id', 'name', 'type', 'value', 'status'])) {
             return collect();
         }
 
+        $supportsPlanTemplateId = Schema::hasColumn('superadmin_promotion_templates', 'plan_template_id');
+        $supportsDescription = Schema::hasColumn('superadmin_promotion_templates', 'description');
+        $supportsDurationMonths = Schema::hasColumn('superadmin_promotion_templates', 'duration_months');
+        $supportsStartsAt = Schema::hasColumn('superadmin_promotion_templates', 'starts_at');
+        $supportsEndsAt = Schema::hasColumn('superadmin_promotion_templates', 'ends_at');
         $supportsPromotionDurationUnit = Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
         $today = now()->toDateString();
-        $columns = ['id', 'plan_template_id', 'name', 'description', 'type', 'value', 'duration_months', 'starts_at', 'ends_at'];
+        $columns = ['id', 'name', 'type', 'value', 'status'];
+        if ($supportsPlanTemplateId) {
+            $columns[] = 'plan_template_id';
+        }
+        if ($supportsDescription) {
+            $columns[] = 'description';
+        }
+        if ($supportsDurationMonths) {
+            $columns[] = 'duration_months';
+        }
+        if ($supportsStartsAt) {
+            $columns[] = 'starts_at';
+        }
+        if ($supportsEndsAt) {
+            $columns[] = 'ends_at';
+        }
         if ($supportsPromotionDurationUnit) {
             $columns[] = 'duration_unit';
             $columns[] = 'duration_days';
         }
 
-        return SuperAdminPromotionTemplate::query()
-            ->where('status', 'active')
-            ->where(function ($query) use ($today): void {
+        $query = SuperAdminPromotionTemplate::query()
+            ->where('status', 'active');
+
+        if ($supportsStartsAt) {
+            $query->where(function ($query) use ($today): void {
                 $query->whereNull('starts_at')
                     ->orWhereDate('starts_at', '<=', $today);
-            })
-            ->where(function ($query) use ($today): void {
+            });
+        }
+
+        if ($supportsEndsAt) {
+            $query->where(function ($query) use ($today): void {
                 $query->whereNull('ends_at')
                     ->orWhereDate('ends_at', '>=', $today);
-            })
+            });
+        }
+
+        return $query
             ->orderByDesc('id')
             ->get($columns);
     }
