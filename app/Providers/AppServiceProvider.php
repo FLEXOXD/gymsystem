@@ -2,14 +2,14 @@
 
 namespace App\Providers;
 
-use App\Support\TestingFilesystem;
 use App\Support\Currency;
+use App\Support\TestingFilesystem;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,13 +29,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (!app()->runningInConsole()) {
+        if (! app()->runningInConsole()) {
             $request = request();
             $host = strtolower((string) $request->getHost());
-            $localHosts = ['127.0.0.1', 'localhost', '::1', '[::1]'];
+            $originIsLocal = $this->isLocalOrPrivateHost($host);
 
             $forwardedHostRaw = (string) $request->headers->get('x-forwarded-host', '');
-            $forwardedHost = strtolower(trim(explode(',', $forwardedHostRaw)[0] ?? ''));
+            $forwardedHost = $this->normalizeForwardedHost($forwardedHostRaw);
             $forwardedProtoRaw = (string) $request->headers->get('x-forwarded-proto', '');
             $forwardedProto = strtolower(trim(explode(',', $forwardedProtoRaw)[0] ?? ''));
             $cfVisitor = strtolower((string) $request->headers->get('cf-visitor', ''));
@@ -43,14 +43,15 @@ class AppServiceProvider extends ServiceProvider
             if ($forwardedProto === 'https' || str_contains($cfVisitor, 'https')) {
                 URL::forceScheme('https');
             }
-            if ($forwardedHost !== '') {
+
+            if ($originIsLocal && $forwardedHost !== '') {
                 $scheme = ($forwardedProto === 'https' || str_contains($cfVisitor, 'https')) ? 'https' : 'http';
                 URL::forceRootUrl($scheme.'://'.$forwardedHost);
             }
 
             $hasCloudflareHeaders = $request->headers->has('cf-ray') || $request->headers->has('cf-visitor');
-            $isForwardedExternal = $forwardedHost !== '' && !in_array($forwardedHost, $localHosts, true);
-            $isDirectExternal = !in_array($host, $localHosts, true);
+            $isForwardedExternal = $forwardedHost !== '' && ! $this->isLocalOrPrivateHost($forwardedHost);
+            $isDirectExternal = ! $originIsLocal;
             $isHttpsClient = $request->isSecure()
                 || $forwardedProto === 'https'
                 || str_contains($cfVisitor, 'https');
@@ -115,5 +116,91 @@ class AppServiceProvider extends ServiceProvider
             $view->with('appCurrencyCode', $currencyCode);
             $view->with('appCurrencySymbol', Currency::symbol($currencyCode));
         });
+    }
+
+    private function normalizeForwardedHost(string $headerValue): string
+    {
+        $candidate = strtolower(trim(explode(',', $headerValue)[0] ?? ''));
+        if ($candidate === '') {
+            return '';
+        }
+
+        if (
+            str_contains($candidate, '://')
+            || str_contains($candidate, '/')
+            || str_contains($candidate, '\\')
+            || str_contains($candidate, '@')
+            || preg_match('/\s/u', $candidate) === 1
+        ) {
+            return '';
+        }
+
+        $hostPart = $candidate;
+        if (str_starts_with($hostPart, '[')) {
+            $end = strpos($hostPart, ']');
+            if ($end === false) {
+                return '';
+            }
+
+            $portPart = substr($hostPart, $end + 1);
+            if ($portPart !== '' && preg_match('/^:\d{1,5}$/', $portPart) !== 1) {
+                return '';
+            }
+
+            $hostPart = substr($hostPart, 1, $end - 1);
+        } else {
+            $segments = explode(':', $hostPart);
+            if (count($segments) > 2) {
+                return '';
+            }
+
+            if (count($segments) === 2) {
+                [$hostPart, $port] = $segments;
+                if ($hostPart === '' || preg_match('/^\d{1,5}$/', $port) !== 1) {
+                    return '';
+                }
+            }
+        }
+
+        if ($hostPart === '') {
+            return '';
+        }
+
+        if (
+            preg_match('/^[a-z0-9.-]+$/', $hostPart) !== 1
+            && filter_var($hostPart, FILTER_VALIDATE_IP) === false
+        ) {
+            return '';
+        }
+
+        return $candidate;
+    }
+
+    private function isLocalOrPrivateHost(string $host): bool
+    {
+        $normalized = strtolower(trim($host));
+        if ($normalized === '') {
+            return false;
+        }
+
+        if (str_starts_with($normalized, '[') && str_contains($normalized, ']')) {
+            $normalized = trim((string) strstr($normalized, ']', true), '[]');
+        } elseif (substr_count($normalized, ':') === 1) {
+            $normalized = (string) strstr($normalized, ':', true);
+        }
+
+        if (in_array($normalized, ['127.0.0.1', 'localhost', '::1'], true)) {
+            return true;
+        }
+
+        if (filter_var($normalized, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+
+        return ! filter_var(
+            $normalized,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        );
     }
 }

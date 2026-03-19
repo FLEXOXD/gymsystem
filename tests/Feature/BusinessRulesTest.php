@@ -1200,7 +1200,7 @@ it('allows superadmin to reset gym admin password', function () {
             'reset_password_confirmation' => 'NuevaClave123!',
         ])
         ->assertRedirect(route('superadmin.gym.index'))
-        ->assertSessionHas('status', 'Contrasena del admin actualizada correctamente.');
+        ->assertSessionHas('status', 'Contraseña del admin actualizada correctamente.');
 
     $gymAdmin->refresh();
     expect(Hash::check('NuevaClave123!', (string) $gymAdmin->password))->toBeTrue();

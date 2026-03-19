@@ -430,7 +430,17 @@
                                                     {{ $currencyFormatter::format($rowDifference, $currencyCode) }}
                                                 </td>
                                                 <td>{{ $recentSession->difference_reason ?: 'Sin novedad' }}</td>
-                                                <td>{{ \Illuminate\Support\Str::limit($recentSession->closeMessage(), 52) }}</td>
+                                                <td>
+                                                    <div class="space-y-1">
+                                                        <p>{{ \Illuminate\Support\Str::limit($recentSession->closeMessage(), 52) }}</p>
+                                                        @if (filled($recentSession->closing_notes))
+                                                            <p class="text-xs text-slate-500 dark:text-slate-300">{{ \Illuminate\Support\Str::limit((string) $recentSession->closing_notes, 72) }}</p>
+                                                        @endif
+                                                        <p class="text-xs text-slate-400 dark:text-slate-500">
+                                                            {{ $recentSession->wasAutoClosedAtMidnight() ? 'Sistema' : ($recentSession->closedBy?->name ?? '-') }}
+                                                        </p>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>

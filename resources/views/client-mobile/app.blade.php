@@ -6260,7 +6260,7 @@
             .filter((text) => text !== '');
 
         if (!pieces.length) {
-            return 'PorciÃ³n sugerida';
+            return 'Porción sugerida';
         }
 
         return pieces.join(' + ');
@@ -6282,7 +6282,7 @@
             .filter((text) => text !== '');
 
         if (!pieces.length) {
-            return 'Porcion sugerida';
+            return 'Porción sugerida';
         }
 
         return pieces.join(' + ');

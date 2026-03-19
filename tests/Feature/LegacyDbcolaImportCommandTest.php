@@ -70,3 +70,38 @@ SQL;
         }
     }
 });
+
+it('supports accented legacy column names during dbcola import', function () {
+    $sql = <<<'SQL'
+INSERT INTO `usuarios` (`id`, `nombre`, `correo`, `teléfono`, `contraseña`, `tipo`, `foto`, `cédula`, `qr_path`) VALUES
+(43, 'Ashley Vargas', 'ashleyvargas4321@gmail.com', '0963274047', '$2y$10$abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijab', 'cliente', NULL, '1727907774', 'qr/qr_usuario_43.png');
+INSERT INTO `mensualidades` (`id`, `cliente_id`, `fecha_pago`, `monto`, `fecha_fin`, `estado`, `renovada`, `archivado`, `avisado`, `meses_acumulados`) VALUES
+(5, 43, '2026-02-18 17:51:17', 30.00, '2026-03-17 17:51:17', 'vigente', 0, 0, 0, 2);
+SQL;
+
+    $tempPath = tempnam(sys_get_temp_dir(), 'dbcola-import-');
+    file_put_contents($tempPath, $sql);
+
+    try {
+        $this->artisan('legacy:import-dbcola-users', [
+            'path' => $tempPath,
+            '--basic-owner-email' => 'owner.basic.accent@test.local',
+            '--basic-owner-password' => 'BasicPass#2026',
+            '--premium-owner-email' => 'owner.premium.accent@test.local',
+            '--premium-owner-password' => 'PremiumPass#2026',
+        ])->assertSuccessful();
+
+        $premiumGym = Gym::query()->where('slug', 'dbcola-premium')->firstOrFail();
+        $premiumClient = Client::query()
+            ->where('gym_id', (int) $premiumGym->id)
+            ->where('document_number', '1727907774')
+            ->firstOrFail();
+
+        expect($premiumClient->app_username)->toBe('ashleyvargas4321.gmail.com')
+            ->and($premiumClient->app_password)->toStartWith('$2y$');
+    } finally {
+        if (is_string($tempPath) && $tempPath !== '' && file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+    }
+});

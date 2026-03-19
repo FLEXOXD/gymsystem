@@ -204,7 +204,7 @@ it('shows stored quote requests in superadmin panel', function () {
     $this->actingAs($superAdmin)
         ->get(route('superadmin.quotations.index'))
         ->assertOk()
-        ->assertSee('Solicitudes de cotizacion')
+        ->assertSee('Solicitudes de cotización')
         ->assertSee('Cliente Lead')
         ->assertSee('lead@example.com')
         ->assertSee('Selecciona una solicitud para ver el detalle.');

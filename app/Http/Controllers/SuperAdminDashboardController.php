@@ -119,7 +119,7 @@ class SuperAdminDashboardController extends Controller
             planTemplate: $selectedPlanTemplate,
             billingCycles: $selectedBillingCycles,
             customMonthlyPrice: $customPrice,
-            applyPromotions: false
+            applyPromotions: true
         );
         $promotionTemplateId = $pricing['promotion']?->id;
         $profilePhotoPath = $request->hasFile('admin_profile_photo')

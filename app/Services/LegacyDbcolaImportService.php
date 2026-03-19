@@ -464,6 +464,9 @@ class LegacyDbcolaImportService
         $reservedUsernames = [];
 
         foreach ($legacyClients as $legacyClient) {
+            $legacyClient['cÃ©dula'] ??= $this->legacyValue($legacyClient, 'cedula', 'cédula', 'cÃ©dula');
+            $legacyClient['telÃ©fono'] ??= $this->legacyValue($legacyClient, 'telefono', 'teléfono', 'telÃ©fono');
+            $legacyClient['contraseÃ±a'] ??= $this->legacyValue($legacyClient, 'contrasena', 'contraseña', 'contraseÃ±a');
             $documentNumber = $this->normalizeDocumentNumber(
                 $legacyClient['cÃ©dula'] ?? null,
                 (int) ($legacyClient['id'] ?? 0)
@@ -626,6 +629,7 @@ class LegacyDbcolaImportService
             }
 
             $legacyUser = $legacyUsersById[$legacyClientId];
+            $legacyUser['cÃ©dula'] ??= $this->legacyValue($legacyUser, 'cedula', 'cédula', 'cÃ©dula');
             $documentNumber = $this->normalizeDocumentNumber($legacyUser['cÃ©dula'] ?? null, $legacyClientId);
             $client = Client::query()
                 ->where('gym_id', (int) $gym->id)
@@ -805,6 +809,27 @@ class LegacyDbcolaImportService
         $phone = trim((string) $value);
 
         return $phone !== '' ? $phone : null;
+    }
+
+    /**
+     * @param  array<string, string|null>  $row
+     */
+    private function legacyValue(array $row, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (! array_key_exists($key, $row)) {
+                continue;
+            }
+
+            $value = $row[$key];
+            if ($value === null) {
+                continue;
+            }
+
+            return (string) $value;
+        }
+
+        return null;
     }
 
     /**

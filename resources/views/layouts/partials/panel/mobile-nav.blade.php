@@ -310,7 +310,7 @@
     </section>
 @endif
 
-<nav id="mnav-root" class="mnav-shell lg:hidden">
+<nav id="mnav-root" class="mnav-shell theme-mobile-nav lg:hidden" data-mobile-nav="1">
     <div class="mnav-grid" style="grid-template-columns: repeat({{ $mobileHasOverflow ? 5 : max(1, $mobilePrimaryItems->count()) }}, minmax(0, 1fr));">
         @foreach ($mobilePrimaryItems as $item)
             @php

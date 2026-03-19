@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+$defaultStore = env('CACHE_STORE', 'redis');
+
 return [
 
     /*
@@ -15,7 +17,19 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'redis'),
+    'default' => $defaultStore,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate Limiter Store
+    |--------------------------------------------------------------------------
+    |
+    | Database-backed throttling can deadlock under concurrent traffic.
+    | Keep the rate limiter on files unless a specific store is configured.
+    |
+    */
+
+    'limiter' => env('CACHE_LIMITER', $defaultStore === 'database' ? 'file' : $defaultStore),
 
     /*
     |--------------------------------------------------------------------------

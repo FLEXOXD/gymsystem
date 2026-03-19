@@ -8,8 +8,7 @@ class LegalTerms
 
     // Compatibilidad temporal con referencias antiguas.
     public const VERSION_COMPAT = self::VERSION;
-    public const Versión = self::VERSION;
-    public const VersiÃ³n = self::VERSION;
+    public const VERSION_LEGACY = self::VERSION;
 
     /**
      * @return array<string, array{label:string,summary:string,points:list<string>}>
@@ -55,11 +54,13 @@ class LegalTerms
         $orderedKeys = ['privacy_policy', 'service_terms', 'commercial_terms'];
         $catalog = self::documents();
         $rows = [];
+
         foreach ($orderedKeys as $key) {
             $item = $catalog[$key] ?? null;
             if (! is_array($item)) {
                 continue;
             }
+
             $rows[] = [
                 'key' => $key,
                 'label' => (string) ($item['label'] ?? $key),

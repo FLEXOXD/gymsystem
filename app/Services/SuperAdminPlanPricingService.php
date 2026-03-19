@@ -244,11 +244,10 @@ class SuperAdminPlanPricingService
         }
 
         if (! $supportsDurationUnit) {
-            return $promotions
-                ->first(function (SuperAdminPromotionTemplate $promotion) use ($billingCycles): bool {
-                    return $promotion->duration_months === null
-                        || (int) $promotion->duration_months === $billingCycles;
-                }) ?? $promotions->first();
+            return $promotions->first(function (SuperAdminPromotionTemplate $promotion) use ($billingCycles): bool {
+                return $promotion->duration_months === null
+                    || (int) $promotion->duration_months === $billingCycles;
+            });
         }
 
         $exactMonthPromotion = $promotions->first(function (SuperAdminPromotionTemplate $promotion) use ($billingCycles): bool {
@@ -291,7 +290,7 @@ class SuperAdminPlanPricingService
             return $genericMonthPromotion;
         }
 
-        return $promotions->first();
+        return null;
     }
 
     private function resolveBaseMonthlyPrice(SuperAdminPlanTemplate $planTemplate, ?float $customMonthlyPrice = null): float

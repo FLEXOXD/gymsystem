@@ -189,7 +189,7 @@ class SubscriptionAdminController extends Controller
                         planTemplate: $planTemplate,
                         billingCycles: $pricingBillingCycles,
                         customMonthlyPrice: $pricingCustomPrice,
-                        applyPromotions: false
+                        applyPromotions: true
                     );
                 $appliedPromotionTemplateId = $pricing['promotion']?->id;
                 $templateDurationUnit = (string) ($planTemplate->duration_unit ?? 'days');

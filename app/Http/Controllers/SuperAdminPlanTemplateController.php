@@ -193,6 +193,7 @@ class SuperAdminPlanTemplateController extends Controller
         }
 
         $supportsDurationUnit = $this->supportsPromotionDurationUnitColumns();
+        $fallbackDurationUnit = $this->inferRequestedPromotionDurationUnit($request);
 
         $rules = [
             'name' => ['required', 'string', 'max:120'],
@@ -221,16 +222,16 @@ class SuperAdminPlanTemplateController extends Controller
         ];
 
         if ($supportsDurationUnit) {
-            $rules['duration_unit'] = ['required', Rule::in(['days', 'months'])];
+            $rules['duration_unit'] = ['nullable', Rule::in(['days', 'months'])];
             $rules['duration_months'] = [
-                Rule::requiredIf(fn () => strtolower(trim((string) $request->input('duration_unit', 'months'))) === 'months'),
+                Rule::requiredIf(fn () => $fallbackDurationUnit === 'months'),
                 'nullable',
                 'integer',
                 'min:1',
                 'max:60',
             ];
             $rules['duration_days'] = [
-                Rule::requiredIf(fn () => strtolower(trim((string) $request->input('duration_unit', 'months'))) === 'days'),
+                Rule::requiredIf(fn () => $fallbackDurationUnit === 'days'),
                 'nullable',
                 'integer',
                 'min:1',
@@ -261,7 +262,7 @@ class SuperAdminPlanTemplateController extends Controller
         ];
 
         if ($supportsDurationUnit) {
-            $durationUnit = strtolower(trim((string) ($data['duration_unit'] ?? 'months')));
+            $durationUnit = $this->inferValidatedPromotionDurationUnit($data, $fallbackDurationUnit);
             if ($durationUnit === 'days') {
                 $payload['duration_unit'] = 'days';
                 $payload['duration_days'] = max(1, (int) ($data['duration_days'] ?? 1));
@@ -367,5 +368,41 @@ class SuperAdminPlanTemplateController extends Controller
     {
         return Schema::hasTable('superadmin_promotion_templates')
             && Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
+    }
+
+    private function inferRequestedPromotionDurationUnit(Request $request): string
+    {
+        $durationUnit = strtolower(trim((string) $request->input('duration_unit', '')));
+        if (in_array($durationUnit, ['days', 'months'], true)) {
+            return $durationUnit;
+        }
+
+        $durationDays = $request->input('duration_days');
+        if (is_numeric($durationDays) && (int) $durationDays > 0) {
+            return 'days';
+        }
+
+        return 'months';
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function inferValidatedPromotionDurationUnit(array $data, string $fallbackDurationUnit): string
+    {
+        $durationUnit = strtolower(trim((string) ($data['duration_unit'] ?? '')));
+        if (in_array($durationUnit, ['days', 'months'], true)) {
+            return $durationUnit;
+        }
+
+        if (array_key_exists('duration_days', $data) && $data['duration_days'] !== null) {
+            return 'days';
+        }
+
+        if (array_key_exists('duration_months', $data) && $data['duration_months'] !== null) {
+            return 'months';
+        }
+
+        return $fallbackDurationUnit;
     }
 }

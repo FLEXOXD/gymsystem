@@ -89,11 +89,6 @@ class EnsureGymRouteContextMiddleware
                     'path' => $request->path(),
                     'ip' => $request->ip(),
                 ]);
-                $safeRedirect = $this->safeGymPanelRedirect($request, $currentGymSlug);
-                if ($safeRedirect instanceof Response) {
-                    return $safeRedirect;
-                }
-
                 abort(403, 'No autorizado para acceder a otro gimnasio.');
             }
 
@@ -111,11 +106,6 @@ class EnsureGymRouteContextMiddleware
                     'path' => $request->path(),
                     'ip' => $request->ip(),
                 ]);
-                $safeRedirect = $this->safeGymPanelRedirect($request, $currentGymSlug);
-                if ($safeRedirect instanceof Response) {
-                    return $safeRedirect;
-                }
-
                 abort(403, 'No autorizado para acceder a otro gimnasio.');
             }
         }
@@ -181,24 +171,5 @@ class EnsureGymRouteContextMiddleware
         $request->attributes->set('gym_context_can_use_multibranch', $canUseMultiBranch);
 
         return $next($request);
-    }
-
-    private function safeGymPanelRedirect(Request $request, string $currentGymSlug): ?Response
-    {
-        if (trim($currentGymSlug) === '') {
-            return null;
-        }
-
-        if (strtoupper($request->method()) !== 'GET' || $request->expectsJson() || $request->ajax()) {
-            return null;
-        }
-
-        $targetUrl = '/'.trim($currentGymSlug).'/panel';
-        $query = $request->query();
-        if (is_array($query) && $query !== []) {
-            $targetUrl .= '?'.http_build_query($query);
-        }
-
-        return redirect($targetUrl);
     }
 }

@@ -112,7 +112,7 @@ it('blocks cashier legal modal acceptance because only principal owner can accep
             'location_permission' => 'skipped',
         ])
         ->assertRedirect(route('panel.legacy'))
-        ->assertSessionHas('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
+        ->assertSessionHas('error', 'Solo el dueño principal de la sede principal puede aceptar condiciones legales.');
 
     expect(LegalAcceptance::query()->count())->toBe(0);
 });
@@ -161,7 +161,7 @@ it('blocks branch owner legal acceptance because only principal gym can accept',
             'location_permission' => 'skipped',
         ])
         ->assertRedirect(route('panel.legacy'))
-        ->assertSessionHas('error', 'Solo el dueno principal de la sede principal puede aceptar condiciones legales.');
+        ->assertSessionHas('error', 'Solo el dueño principal de la sede principal puede aceptar condiciones legales.');
 
     expect(LegalAcceptance::query()->count())->toBe(0);
 });

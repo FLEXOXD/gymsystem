@@ -604,11 +604,13 @@ class ClientMobileController extends Controller
 
         $data = $request->validate([
             'birth_date' => [
-                'required',
+                'required_without:age',
+                'nullable',
                 'date',
                 'before_or_equal:'.now()->subYears(12)->toDateString(),
                 'after_or_equal:'.now()->subYears(90)->toDateString(),
             ],
+            'age' => ['nullable', 'integer', 'min:12', 'max:90'],
             'sex' => ['required', 'string', 'in:masculino,femenino,otro'],
             'height_cm' => ['nullable', 'numeric', 'min:120', 'max:250'],
             'weight_kg' => ['nullable', 'numeric', 'min:30', 'max:400'],
@@ -621,10 +623,13 @@ class ClientMobileController extends Controller
             'limitations.*' => ['string', 'in:ninguna,rodilla,espalda,hombro,codo,cuello,tobillo'],
             'next_screen' => ['nullable', 'string', 'in:home,progress,physical,nutrition'],
         ], [
-            'birth_date.required' => 'Ingresa tu fecha de nacimiento.',
+            'birth_date.required_without' => 'Ingresa tu fecha de nacimiento.',
             'birth_date.date' => 'Selecciona una fecha de nacimiento válida.',
             'birth_date.before_or_equal' => 'Debes tener al menos 12 años para usar la app.',
             'birth_date.after_or_equal' => 'La edad máxima permitida es 90 años.',
+            'age.integer' => 'La edad debe ser un número entero.',
+            'age.min' => 'Debes tener al menos 12 años para usar la app.',
+            'age.max' => 'La edad máxima permitida es 90 años.',
             'sex.required' => 'Selecciona tu sexo.',
             'sex.in' => 'Selecciona una opción válida de sexo.',
             'height_cm.numeric' => 'La altura debe ser numérica.',
@@ -648,8 +653,17 @@ class ClientMobileController extends Controller
             'next_screen.in' => 'Pantalla de retorno no válida.',
         ]);
 
-        $birthDateValue = trim((string) ($data['birth_date'] ?? ''));
-        $birthDate = Carbon::parse($birthDateValue)->startOfDay();
+        $birthDate = $this->resolveSubmittedBirthDate(
+            $data['birth_date'] ?? null,
+            $data['age'] ?? null,
+            (string) ($gym->timezone ?? '')
+        );
+        if (! $birthDate instanceof Carbon) {
+            return back()
+                ->withErrors(['birth_date' => 'Ingresa tu fecha de nacimiento.'])
+                ->withInput();
+        }
+
         $resolvedAge = $this->resolveAgeFromBirthDate($birthDate, (string) ($gym->timezone ?? ''));
         if (! is_int($resolvedAge) || $resolvedAge < 12 || $resolvedAge > 90) {
             return back()
@@ -1047,6 +1061,31 @@ class ClientMobileController extends Controller
         }
 
         return max(0, (int) $birthAt->diffInYears($todayAtGym));
+    }
+
+    private function resolveSubmittedBirthDate(mixed $birthDate, mixed $age, string $timezone = ''): ?Carbon
+    {
+        $timezoneName = $this->resolveTimezone($timezone);
+        $rawBirthDate = trim((string) ($birthDate ?? ''));
+
+        if ($rawBirthDate !== '') {
+            try {
+                return Carbon::parse($rawBirthDate, $timezoneName)->startOfDay();
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        if (! is_numeric($age)) {
+            return null;
+        }
+
+        $resolvedAge = (int) $age;
+        if ($resolvedAge < 12 || $resolvedAge > 90) {
+            return null;
+        }
+
+        return Carbon::now($timezoneName)->startOfDay()->subYears($resolvedAge);
     }
 
     private function normalizeNumericInput(mixed $value): ?float
