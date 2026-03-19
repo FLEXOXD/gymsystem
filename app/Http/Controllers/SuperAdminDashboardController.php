@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateGymAdminPasswordRequest;
 use App\Http\Requests\UpdateGymAdminUserRequest;
 use App\Models\Gym;
 use App\Models\SuperAdminPlanTemplate;
+use App\Models\SuperAdminPromotionTemplate;
+use App\Services\SuperAdminCommercialPlanService;
 use App\Models\User;
 use App\Services\SuperAdminPlanPricingService;
 use App\Services\SubscriptionService;
@@ -29,7 +31,8 @@ class SuperAdminDashboardController extends Controller
     public function __construct(
         private readonly SuperAdminDashboardService $dashboardService,
         private readonly SubscriptionService $subscriptionService,
-        private readonly SuperAdminPlanPricingService $planPricingService
+        private readonly SuperAdminPlanPricingService $planPricingService,
+        private readonly SuperAdminCommercialPlanService $commercialPlanService
     ) {
     }
 
@@ -60,6 +63,7 @@ class SuperAdminDashboardController extends Controller
             'gyms' => $this->dashboardService->getGymsTable(),
             'paymentMethods' => SubscriptionService::PAYMENT_METHODS,
             'planTemplates' => $planTemplates,
+            'promotionTemplates' => $this->selectablePromotionTemplates(),
             'planPromotionRules' => $this->planPricingService->promotionRulesForPlanTemplates($planTemplates),
         ]);
     }
@@ -93,7 +97,7 @@ class SuperAdminDashboardController extends Controller
         if (! $this->supportsCommercialPlanCatalog()) {
             return back()
                 ->withInput()
-                ->withErrors(['subscription_plan_template_id' => 'El catalogo comercial aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.']);
+                ->withErrors(['subscription_plan_template_id' => 'El catalogo de planes base aun no esta listo en la base de datos. Ejecuta las migraciones pendientes antes de crear gimnasios desde SuperAdmin.']);
         }
 
         $selectedPlanTemplate = SuperAdminPlanTemplate::query()
@@ -103,7 +107,7 @@ class SuperAdminDashboardController extends Controller
         if (! $selectedPlanTemplate) {
             return back()
                 ->withInput()
-                ->withErrors(['subscription_plan_template_id' => 'El plan comercial seleccionado ya no esta disponible.']);
+                ->withErrors(['subscription_plan_template_id' => 'El plan base seleccionado ya no esta disponible.']);
         }
 
         $selectedFeaturePlanKey = $selectedPlanTemplate->resolvedFeaturePlanKey();
@@ -114,7 +118,8 @@ class SuperAdminDashboardController extends Controller
         $pricing = $this->planPricingService->resolveSelection(
             planTemplate: $selectedPlanTemplate,
             billingCycles: $selectedBillingCycles,
-            customMonthlyPrice: $customPrice
+            customMonthlyPrice: $customPrice,
+            applyPromotions: false
         );
         $promotionTemplateId = $pricing['promotion']?->id;
         $profilePhotoPath = $request->hasFile('admin_profile_photo')
@@ -399,35 +404,46 @@ class SuperAdminDashboardController extends Controller
             return collect();
         }
 
-        $columns = ['id', 'plan_key', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'discount_price'];
-        if (Schema::hasColumn('superadmin_plan_templates', 'feature_plan_key')) {
-            $columns[] = 'feature_plan_key';
+        return $this->commercialPlanService->basePlans()
+            ->where('status', 'active')
+            ->values();
+    }
+
+    private function selectablePromotionTemplates()
+    {
+        if (! Schema::hasTable('superadmin_promotion_templates')) {
+            return collect();
         }
 
-        return SuperAdminPlanTemplate::query()
+        if (! Schema::hasColumns('superadmin_promotion_templates', ['id', 'name', 'type', 'value', 'status', 'duration_months', 'starts_at', 'ends_at'])) {
+            return collect();
+        }
+
+        $supportsPromotionDurationUnit = Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
+        $today = now()->toDateString();
+        $columns = ['id', 'plan_template_id', 'name', 'description', 'type', 'value', 'duration_months', 'starts_at', 'ends_at'];
+        if ($supportsPromotionDurationUnit) {
+            $columns[] = 'duration_unit';
+            $columns[] = 'duration_days';
+        }
+
+        return SuperAdminPromotionTemplate::query()
             ->where('status', 'active')
-            ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
-            ->select($columns)
-            ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
-            ->orderBy('name')
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('starts_at')
+                    ->orWhereDate('starts_at', '<=', $today);
+            })
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('ends_at')
+                    ->orWhereDate('ends_at', '>=', $today);
+            })
             ->orderByDesc('id')
-            ->get();
+            ->get($columns);
     }
 
     private function supportsCommercialPlanCatalog(): bool
     {
-        return Schema::hasTable('superadmin_plan_templates')
-            && Schema::hasColumns('superadmin_plan_templates', [
-                'id',
-                'plan_key',
-                'name',
-                'duration_days',
-                'duration_unit',
-                'duration_months',
-                'price',
-                'discount_price',
-                'status',
-            ]);
+        return $this->commercialPlanService->supportsCommercialCatalog();
     }
 
     private function deletePublicAssetIfLocal(string $path): void

@@ -2885,7 +2885,9 @@
                         $price = (float) ($planCard['price'] ?? 0);
                         $discountPriceRaw = $planCard['discount_price'] ?? null;
                         $discountPrice = $discountPriceRaw !== null ? (float) $discountPriceRaw : null;
+                        $offerText = trim((string) ($planCard['offer_text'] ?? ''));
                         $discountPercent = isset($planCard['discount_percent']) ? (int) $planCard['discount_percent'] : null;
+                        $hasOffer = $offerText !== '' || ($discountPrice !== null && ($isContactMode || $discountPrice < $price));
                         $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
                         $planCtaLabel = 'SOLICITA TU Cotización';
                     @endphp
@@ -2896,11 +2898,14 @@
                         <h3>{{ $planCard['name'] }}</h3>
                         @if ($isContactMode)
                             <div class="price">Personalizado<small>/Contacto</small></div>
+                            @if ($hasOffer)
                             <div class="plan-discount">
-                                <span class="plan-discount-kicker">Primer mes con</span>
-                                <span class="plan-discount-offer">Oferta</span>
+                                <span class="plan-discount-kicker">Oferta</span>
+                                <span class="plan-discount-offer">Activa</span>
                                 <span class="plan-discount-detail">
-                                    @if ($discountPercent !== null && $discountPercent > 0)
+                                    @if ($offerText !== '')
+                                        <strong>{{ $offerText }}</strong>
+                                    @elseif ($discountPercent !== null && $discountPercent > 0)
                                         <strong>{{ $discountPercent }}% menos</strong> sobre el valor cotizado.
                                     @elseif ($discountPrice !== null && $discountPrice > 0)
                                         <strong>${{ $formatPlanMoney($discountPrice) }}</strong> de referencia.
@@ -2909,13 +2914,17 @@
                                     @endif
                                 </span>
                             </div>
+                            @endif
                         @else
                             <div class="price">${{ $formatPlanMoney($price) }}<small>/Mes</small></div>
+                            @if ($hasOffer)
                             <div class="plan-discount">
-                                <span class="plan-discount-kicker">Primer mes con</span>
-                                <span class="plan-discount-offer">Oferta</span>
+                                <span class="plan-discount-kicker">Oferta</span>
+                                <span class="plan-discount-offer">Activa</span>
                                 <span class="plan-discount-detail">
-                                    @if ($discountPrice !== null && $discountPrice < $price)
+                                    @if ($offerText !== '')
+                                        <strong>{{ $offerText }}</strong>
+                                    @elseif ($discountPrice !== null && $discountPrice < $price)
                                         <span class="price-old">${{ $formatPlanMoney($price) }}</span>
                                         <strong>${{ $formatPlanMoney($discountPrice) }}</strong>
                                     @else
@@ -2923,6 +2932,7 @@
                                     @endif
                                 </span>
                             </div>
+                            @endif
                         @endif
                         <p>{{ $planCard['summary'] }}</p>
                         <div class="plan-meta-grid">

@@ -48,7 +48,7 @@ class StoreGymRequest extends FormRequest
     public function rules(): array
     {
         $supportsCommercialPlanCatalog = Schema::hasTable('superadmin_plan_templates')
-            && Schema::hasColumns('superadmin_plan_templates', ['id', 'plan_key', 'status']);
+            && Schema::hasColumns('superadmin_plan_templates', ['id', 'plan_key', 'feature_plan_key', 'assigned_plan_template_id', 'offer_text', 'status']);
         $subscriptionPlanTemplateRules = ['required', 'integer'];
         if ($supportsCommercialPlanCatalog) {
             $subscriptionPlanTemplateRules[] = Rule::exists('superadmin_plan_templates', 'id')->where(function ($query): void {
@@ -137,8 +137,8 @@ class StoreGymRequest extends FormRequest
             'admin_profile_photo.max' => 'La foto del admin no puede superar 15MB.',
             'admin_password.confirmed' => 'La confirmación de contraseña no coincide.',
             'admin_password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
-            'subscription_plan_template_id.required' => 'Selecciona un plan comercial para el nuevo gimnasio.',
-            'subscription_plan_template_id.exists' => 'El plan comercial seleccionado no está disponible.',
+            'subscription_plan_template_id.required' => 'Selecciona un plan base para el nuevo gimnasio.',
+            'subscription_plan_template_id.exists' => 'El plan base seleccionado no está disponible.',
             'subscription_billing_cycles.required' => 'Indica cuántos meses cubrirá el prepago.',
             'subscription_billing_cycles.integer' => 'La cobertura prepaga debe ser un número entero.',
             'subscription_billing_cycles.min' => 'La cobertura prepaga no puede ser menor a 1 mes.',

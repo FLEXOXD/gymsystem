@@ -1,21 +1,32 @@
 @extends('layouts.panel')
 
 @section('title', 'SuperAdmin Planes')
-@section('page-title', 'Planes comerciales y promociones')
+@section('page-title', 'Planes base y promociones')
 
 @section('content')
     @php
         $planPresentation = is_array($planPresentation ?? null) ? $planPresentation : [];
         $plans = $plans ?? collect();
         $basePlans = $basePlans ?? $plans->filter(fn ($plan) => in_array((string) ($plan->plan_key ?? ''), \App\Support\SuperAdminPlanCatalog::keys(), true))->values();
+        $internalPlans = $internalPlans ?? collect();
+        $promotionPlans = ($promotionPlans ?? collect())->values();
+        if ($promotionPlans->isEmpty()) {
+            $promotionPlans = $basePlans->where('status', 'active')->values();
+        }
         $basePlansById = $basePlans->keyBy(fn ($plan) => (int) $plan->id);
+        $promotionPlanLookup = $basePlans->concat($internalPlans)->keyBy(fn ($plan) => (int) $plan->id);
         $schemaReady = (bool) ($schemaReady ?? true);
         $activeBasePlans = $basePlans->where('status', 'active')->count();
-        $discountPlans = $basePlans->filter(fn ($plan) => $plan->discount_price !== null && (float) $plan->discount_price < (float) $plan->price)->count();
         $activePromotions = $promotions->where('status', 'active')->count();
+        $plansWithPromotions = $promotions->where('status', 'active')->pluck('plan_template_id')->filter()->unique()->count();
+        $inactivePromotions = $promotions->where('status', 'inactive')->count();
         $durationPromotions = $promotions->filter(fn ($promotion) => $promotion->duration_months !== null)->count();
-        $planSpecificPromotions = $promotions->filter(fn ($promotion) => $promotion->planTemplate !== null)->count();
-        $promotionPreviewPlans = $basePlans
+        $activePromotionsByPlanId = $promotions
+            ->where('status', 'active')
+            ->sortByDesc('id')
+            ->groupBy(fn ($promotion) => (int) ($promotion->plan_template_id ?? 0))
+            ->map(fn ($group) => $group->first());
+        $promotionPreviewPlans = $promotionPlans
             ->mapWithKeys(function ($plan): array {
                 return [
                     (int) $plan->id => [
@@ -23,6 +34,7 @@
                         'name' => (string) $plan->name,
                         'price' => (float) $plan->price,
                         'discount_price' => $plan->discount_price !== null ? (float) $plan->discount_price : null,
+                        'offer_text' => trim((string) ($plan->offer_text ?? '')) !== '' ? (string) $plan->offer_text : null,
                         'duration_label' => \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months),
                     ],
                 ];
@@ -35,10 +47,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Catalogo comercial</span>
-                    <h2 class="sa-title">Cuatro planes base y promociones por plazo.</h2>
+                    <h2 class="sa-title">Mantén tus planes base y asigna promociones solo cuando quieras.</h2>
                     <p class="sa-subtitle">
-                        Aqui no creas planes nuevos. Mantienes tus 4 planes base y defines promociones por tiempo de pago,
-                        por ejemplo 3 meses con 25% o 12 meses con precio final especial.
+                        Los 4 planes base se mantienen fijos. Puedes poner texto de oferta directo en cada plan base o crear una promocion abajo para que la landing y el cobro se recalculen automaticamente.
                     </p>
 
                     <div class="sa-actions">
@@ -52,15 +63,15 @@
                     <div class="sa-note-list">
                         <div class="sa-note-item">
                             <strong>Base</strong>
-                            <span>{{ $basePlans->count() }} planes conectados con la landing.</span>
+                            <span>{{ $basePlans->count() }} slots funcionales conectados con la landing.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>Plazos</strong>
-                            <span>Las promos se aplican por plan y por cantidad de meses elegidos.</span>
+                            <strong>Planes base</strong>
+                            <span>{{ $activeBasePlans }} activos con precio base editable.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>Promociones</strong>
-                            <span>{{ $activePromotions }} activas dentro del catalogo comercial.</span>
+                            <strong>Oferta</strong>
+                            <span>La landing prioriza una promocion activa; si no hay, usa el texto de oferta que pongas en el plan base.</span>
                         </div>
                     </div>
                 </aside>
@@ -71,36 +82,46 @@
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Planes base</p>
                 <p class="sa-stat-value">{{ $basePlans->count() }}</p>
-                <p class="sa-stat-meta">Catalogo publico de la landing.</p>
+                <p class="sa-stat-meta">Slots fijos de funciones para la landing.</p>
             </article>
             <article class="sa-stat-card is-success">
-                <p class="sa-stat-label">Base activos</p>
-                <p class="sa-stat-value">{{ $activeBasePlans }}</p>
-                <p class="sa-stat-meta">Disponibles para nuevas suscripciones.</p>
+                <p class="sa-stat-label">Con promo</p>
+                <p class="sa-stat-value">{{ $plansWithPromotions }}</p>
+                <p class="sa-stat-meta">Planes base con promoción activa.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Promos activas</p>
                 <p class="sa-stat-value">{{ $activePromotions }}</p>
-                <p class="sa-stat-meta">Reglas comerciales listas para aplicar.</p>
+                <p class="sa-stat-meta">Promociones aplicándose hoy.</p>
             </article>
             <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Base activos</p>
+                <p class="sa-stat-value">{{ $activeBasePlans }}</p>
+                <p class="sa-stat-meta">Slots base disponibles para vender.</p>
+            </article>
+            <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Por plazo</p>
                 <p class="sa-stat-value">{{ $durationPromotions }}</p>
                 <p class="sa-stat-meta">Promociones con meses definidos.</p>
             </article>
-            <article class="sa-stat-card is-info">
-                <p class="sa-stat-label">Con descuento</p>
-                <p class="sa-stat-value">{{ $discountPlans }}</p>
-                <p class="sa-stat-meta">Planes con narrativa comercial activa.</p>
+            <article class="sa-stat-card is-warning">
+                <p class="sa-stat-label">Sin promo</p>
+                <p class="sa-stat-value">{{ max(0, $basePlans->count() - $plansWithPromotions) }}</p>
+                <p class="sa-stat-meta">Planes base sin oferta asignada.</p>
+            </article>
+            <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Inactivas</p>
+                <p class="sa-stat-value">{{ $inactivePromotions }}</p>
+                <p class="sa-stat-meta">Promociones guardadas pero apagadas.</p>
             </article>
             <article class="sa-stat-card is-warning">
-                <p class="sa-stat-label">Por plan</p>
-                <p class="sa-stat-value">{{ $planSpecificPromotions }}</p>
-                <p class="sa-stat-meta">Ligadas a uno de tus 4 planes base.</p>
+                <p class="sa-stat-label">Total promos</p>
+                <p class="sa-stat-value">{{ $promotions->count() }}</p>
+                <p class="sa-stat-meta">Historial de promociones base.</p>
             </article>
         </section>
 
-        <x-ui.card title="Planes base conectados con la landing" subtitle="Aqui solo ajustas pricing, descuento y estado del catalogo publico.">
+        <x-ui.card title="Planes base conectados con la landing" subtitle="Aqui mantienes el precio base de cada plan y ves si tiene una promoción activa.">
             @if (! $schemaReady)
                 <div class="ui-alert ui-alert-danger mb-4 text-sm font-semibold">
                     Falta la migracion del catalogo comercial. Ejecuta <code>php artisan migrate</code> antes de editar esta seccion.
@@ -113,11 +134,12 @@
                         $planKey = (string) ($plan->plan_key ?? '');
                         $meta = (array) ($planPresentation[$planKey] ?? []);
                         $isActive = (string) ($plan->status ?? '') === 'active';
+                        $activePromotion = $activePromotionsByPlanId->get((int) $plan->id);
                     @endphp
                     <article class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="sa-pill {{ $isActive ? 'is-success' : 'is-neutral' }}">{{ $isActive ? 'Activo' : 'Inactivo' }}</span>
-                            <span class="sa-pill is-info">Landing</span>
+                            <span class="sa-pill is-info">Base funcional</span>
                         </div>
 
                         <h3 class="mt-4 text-xl font-black text-slate-900 dark:text-slate-100">{{ $plan->name }}</h3>
@@ -129,8 +151,8 @@
                                 <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ \App\Support\PlanDuration::label($plan->duration_unit, (int) $plan->duration_days, $plan->duration_months) }}</p>
                             </div>
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/50">
-                                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Precio actual</p>
-                                <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">${{ number_format((float) $plan->price, 2, '.', ',') }}</p>
+                                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Precio base</p>
+                                <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ \App\Support\Currency::format((float) $plan->price, $appCurrencyCode ?? 'USD') }}</p>
                             </div>
                         </div>
 
@@ -138,21 +160,32 @@
                             @csrf
                             @method('PATCH')
 
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                                    Precio base
-                                    <input type="number" step="0.01" min="0" name="price" class="ui-input" value="{{ number_format((float) $plan->price, 2, '.', '') }}" required>
-                                </label>
-                                <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                                    Precio con descuento
-                                    <input type="number" step="0.01" min="0" name="discount_price" class="ui-input" value="{{ $plan->discount_price !== null ? number_format((float) $plan->discount_price, 2, '.', '') : '' }}">
-                                </label>
+                            <div class="rounded-[1.2rem] border border-dashed border-slate-300/80 bg-slate-50/70 p-4 text-xs leading-6 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                                @if ($activePromotion)
+                                    Promocion activa: <strong>{{ $activePromotion->name }}</strong>.
+                                    {{ trim((string) ($activePromotion->description ?? '')) !== '' ? $activePromotion->description : 'La landing y el cobro mostraran esta oferta automaticamente cuando aplique.' }}
+                                @elseif (trim((string) ($plan->offer_text ?? '')) !== '')
+                                    Oferta manual activa: <strong>{{ $plan->offer_text }}</strong>.
+                                    Este texto se mostrara en la landing hasta que actives una promocion para este plan.
+                                @else
+                                    Este plan base no tiene promocion asignada. La landing mostrara solo el precio base normal.
+                                @endif
                             </div>
 
-                            <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                El precio con descuento tambien sirve como referencia comercial para ofertas compuestas,
-                                por ejemplo: "mes 1 gratis" o "mes 2 con precio promocional".
-                            </p>
+                            <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Precio base mensual
+                                <input type="number" step="0.01" min="0" name="price" class="ui-input" value="{{ number_format((float) $plan->price, 2, '.', '') }}" required>
+                            </label>
+
+                            <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Texto oferta (landing)
+                                <input type="text"
+                                       name="offer_text"
+                                       maxlength="255"
+                                       class="ui-input"
+                                       value="{{ trim((string) ($plan->offer_text ?? '')) }}"
+                                       placeholder="Ej: 30% de descuento por lanzamiento">
+                            </label>
 
                             <div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
                                 <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
@@ -170,6 +203,173 @@
             </div>
         </x-ui.card>
 
+        <x-ui.card title="Promociones comerciales" subtitle="Aqui solo creas promociones. Luego las aplicas donde quieras al renovar.">
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                    <div class="flex flex-col gap-1">
+                        <p class="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">Crear promocion</p>
+                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-50">Nueva promocion comercial</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Crea la promocion una sola vez. En renovaciones la combinas con cualquier plan base.</p>
+                    </div>
+
+                    <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.promotions.store') : '#' }}" class="mt-4 grid gap-3">
+                        @csrf
+                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                            Nombre promocion
+                            <input type="text" name="name" class="ui-input" placeholder="Ej: Promo Control 30%" required>
+                        </label>
+
+                        <div class="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)] md:items-end">
+                            <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Unidad duracion
+                                <select name="duration_unit" id="promotion-duration-unit" class="ui-input">
+                                    <option value="months" @selected((string) old('duration_unit', 'months') === 'months')>Meses</option>
+                                    <option value="days" @selected((string) old('duration_unit') === 'days')>Dias</option>
+                                </select>
+                            </label>
+                            <label id="promotion-duration-months-wrap" class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Duracion (meses)
+                                <input type="number"
+                                       min="1"
+                                       max="60"
+                                       name="duration_months"
+                                       id="promotion-duration-months"
+                                       class="ui-input"
+                                       value="{{ old('duration_months', 1) }}">
+                            </label>
+                            <label id="promotion-duration-days-wrap" class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Duracion (dias)
+                                <input type="number"
+                                       min="1"
+                                       max="365"
+                                       name="duration_days"
+                                       id="promotion-duration-days"
+                                       class="ui-input"
+                                       value="{{ old('duration_days', 5) }}">
+                            </label>
+                        </div>
+
+                        <div class="rounded-[1rem] border border-dashed border-slate-300/70 bg-slate-50/70 p-3 text-xs leading-5 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                            Si quieres una prueba de 5 dias, elige <strong>Dias</strong> + <strong>5</strong>.
+                            Esta promocion queda disponible para combinarla con cualquier plan base desde "Gimnasios y Suscripciones".
+                        </div>
+
+                        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)]">
+                            <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Tipo
+                                <select name="type" class="ui-input">
+                                    <option value="percentage">Porcentaje</option>
+                                    <option value="fixed">Monto fijo</option>
+                                    <option value="final_price">Precio final</option>
+                                </select>
+                            </label>
+                            <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Valor
+                                <input type="number" step="0.01" min="0" name="value" class="ui-input" placeholder="Ej: 30 o 19" required>
+                            </label>
+                        </div>
+
+                        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                            <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Texto visible de oferta
+                                <input type="text" name="description" class="ui-input" placeholder="Ej: Primer mes gratis o 30% de descuento">
+                            </label>
+                            <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                Estado
+                                <select name="status" class="ui-input">
+                                    <option value="active">Activa</option>
+                                    <option value="inactive">Inactiva</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="rounded-[1.2rem] border border-dashed border-slate-300/80 bg-slate-50/70 p-4 text-xs leading-6 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                            Ejemplos:
+                            "30% de descuento" = tipo <strong>Porcentaje</strong> + valor <strong>30</strong>.
+                            "Prueba 5 dias sin costo" = unidad <strong>Dias</strong> + duracion <strong>5</strong> + tipo <strong>Precio final</strong> + valor <strong>0</strong>.
+                        </div>
+
+                        <div class="flex justify-end">
+                            <x-ui.button type="submit" :disabled="! $schemaReady">Crear promoción</x-ui.button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="space-y-4">
+                    @forelse ($promotions as $promotion)
+                        @php
+                            $promotionStatus = (string) ($promotion->status ?? '') === 'active';
+                            $linkedBasePlan = $basePlansById->get((int) ($promotion->plan_template_id ?? 0));
+                            $typeLabel = match ((string) $promotion->type) {
+                                'percentage' => 'Porcentaje',
+                                'fixed' => 'Monto fijo',
+                                'final_price' => 'Precio final',
+                                'bonus_days' => 'Dias extra',
+                                default => (string) $promotion->type,
+                            };
+                            $valueLabel = match ((string) $promotion->type) {
+                                'percentage' => ($promotion->value !== null ? rtrim(rtrim(number_format((float) $promotion->value, 2, '.', ''), '0'), '.') : '0').'%',
+                                'fixed', 'final_price' => $promotion->value !== null ? \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode ?? 'USD') : '-',
+                                default => $promotion->value !== null ? (string) $promotion->value : '-',
+                            };
+                            $promotionDurationLabel = method_exists($promotion, 'durationLabel')
+                                ? $promotion->durationLabel()
+                                : (((int) ($promotion->duration_months ?? 1)).' '.(((int) ($promotion->duration_months ?? 1)) === 1 ? 'mes' : 'meses'));
+                        @endphp
+                        <article class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="sa-pill {{ $promotionStatus ? 'is-success' : 'is-neutral' }}">{{ $promotionStatus ? 'Activa' : 'Inactiva' }}</span>
+                                <span class="sa-pill is-info">{{ $linkedBasePlan?->name ?? 'Global' }}</span>
+                            </div>
+
+                            <h3 class="mt-4 text-lg font-black text-slate-900 dark:text-slate-50">{{ $promotion->name }}</h3>
+                            <div class="mt-3 grid gap-3 md:grid-cols-3">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/50">
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Tipo</p>
+                                    <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ $typeLabel }}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/50">
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Valor</p>
+                                    <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ $valueLabel }}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/50">
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Duracion</p>
+                                    <p class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ $promotionDurationLabel }}</p>
+                                </div>
+                            </div>
+
+                            <p class="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                {{ trim((string) ($promotion->description ?? '')) !== '' ? $promotion->description : 'Sin texto visible configurado.' }}
+                            </p>
+
+                            <div class="mt-5 ui-action-grid">
+                                <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.promotions.toggle', $promotion->id) : '#' }}" class="w-full">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="{{ $promotionStatus ? 'inactive' : 'active' }}">
+                                    <x-ui.button type="submit" size="sm" :variant="$promotionStatus ? 'muted' : 'success'" class="ui-action-button" :disabled="! $schemaReady">
+                                        <span class="ui-action-button-label">{{ $promotionStatus ? 'Desactivar' : 'Activar' }}</span>
+                                    </x-ui.button>
+                                </form>
+                                <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.promotions.destroy', $promotion->id) : '#' }}" onsubmit="return confirm('Esta accion eliminara la promocion. Deseas continuar?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-ui.button type="submit" size="sm" variant="danger" class="ui-action-button" :disabled="! $schemaReady">
+                                        <span class="ui-action-button-label">Eliminar</span>
+                                    </x-ui.button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="sa-empty-row rounded-[1.5rem] border border-dashed border-slate-300/80 bg-white/70 p-6 text-sm dark:border-slate-700 dark:bg-slate-950/40">
+                            Aun no has creado promociones. Crea la primera aqui y luego aplicala al plan base que quieras en renovaciones.
+                        </div>
+                    @endforelse
+                </section>
+            </div>
+        </x-ui.card>
+
+        @if (false)
         <x-ui.card title="Motor comercial de promociones" subtitle="Organiza promociones directas y tambien ofertas mas compuestas, como mes gratis o cierres de 10 dias.">
             <div class="mb-5 rounded-[1.75rem] border border-amber-200/70 bg-amber-50/60 p-5 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/5">
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -214,7 +414,7 @@
                         <div class="flex flex-col gap-1">
                             <p class="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">1. Identidad y alcance</p>
                             <h3 class="text-lg font-black text-slate-900 dark:text-slate-50">Que oferta vera el cliente</h3>
-                            <p class="text-sm text-slate-600 dark:text-slate-300">Ponle nombre comercial a la promo y ligala a uno de tus 4 planes base.</p>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">Ponle nombre comercial a la promo y ligala al plan comercial que la va a vender.</p>
                         </div>
 
                         <div class="mt-4 grid gap-3 md:grid-cols-2">
@@ -225,8 +425,8 @@
                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                                 Plan asociado
                                 <select name="plan_template_id" class="ui-input js-promotion-plan-select" required>
-                                    <option value="">Selecciona uno de los 4 planes</option>
-                                    @foreach ($basePlans as $plan)
+                                    <option value="">Selecciona un plan comercial</option>
+                                    @foreach ($promotionPlans as $plan)
                                         <option value="{{ $plan->id }}">{{ $plan->name }}</option>
                                     @endforeach
                                 </select>
@@ -434,7 +634,7 @@
                         @forelse ($promotions as $promotion)
                             @php
                                 $isActive = (string) ($promotion->status ?? '') === 'active';
-                                $linkedPlan = $basePlansById->get((int) ($promotion->plan_template_id ?? 0));
+                                $linkedPlan = $promotionPlanLookup->get((int) ($promotion->plan_template_id ?? 0));
                                 $valueLabel = match ((string) $promotion->type) {
                                     'percentage' => $promotion->value !== null ? rtrim(rtrim(number_format((float) $promotion->value, 2, '.', ''), '0'), '.').'%' : '-',
                                     'fixed', 'final_price' => $promotion->value !== null ? \App\Support\Currency::format((float) $promotion->value, $appCurrencyCode ?? 'USD') : '-',
@@ -526,6 +726,7 @@
                 </table>
             </div>
         </x-ui.card>
+        @endif
     </div>
 @endsection
 
@@ -836,7 +1037,7 @@
                 if (previewFinalTotal) previewFinalTotal.textContent = '$0.00';
                 if (previewEffectiveMonthly) previewEffectiveMonthly.textContent = '$0.00';
                 if (previewWindow) previewWindow.textContent = windowLabel;
-                if (previewNote) previewNote.textContent = 'Elige primero uno de los 4 planes base para calcular el cobro final.';
+                if (previewNote) previewNote.textContent = 'Elige primero un plan comercial para calcular el cobro final.';
                 return;
             }
 
@@ -966,3 +1167,33 @@
     })();
 </script>
 @endpush
+
+@push('scripts')
+<script>
+    (() => {
+        const unitSelect = document.getElementById('promotion-duration-unit');
+        const monthsWrap = document.getElementById('promotion-duration-months-wrap');
+        const daysWrap = document.getElementById('promotion-duration-days-wrap');
+        const monthsInput = document.getElementById('promotion-duration-months');
+        const daysInput = document.getElementById('promotion-duration-days');
+
+        if (!unitSelect || !monthsWrap || !daysWrap || !monthsInput || !daysInput) {
+            return;
+        }
+
+        const syncDurationInputs = () => {
+            const unit = String(unitSelect.value || 'months').toLowerCase();
+            const useDays = unit === 'days';
+
+            monthsWrap.classList.toggle('hidden', useDays);
+            daysWrap.classList.toggle('hidden', !useDays);
+            monthsInput.required = !useDays;
+            daysInput.required = useDays;
+        };
+
+        unitSelect.addEventListener('change', syncDurationInputs);
+        syncDurationInputs();
+    })();
+</script>
+@endpush
+

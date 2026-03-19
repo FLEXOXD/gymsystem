@@ -78,6 +78,7 @@
             ->values();
         $portfolioHealth = $totalGyms > 0 ? (int) round(($activeGyms / $totalGyms) * 100) : 0;
         $planPromotionRules = is_array($planPromotionRules ?? null) ? $planPromotionRules : [];
+        $promotionTemplates = ($promotionTemplates ?? collect())->values();
     @endphp
 
     <div class="sa-shell">
@@ -350,26 +351,33 @@
                                                 </p>
                                                 @php
                                                     $currentPlanTemplate = collect($planTemplates ?? collect())->first(function ($template) use ($gym) {
-                                                        $templatePlanKey = strtolower(trim((string) ($template->plan_key ?? '')));
+                                                        $templatePlanKey = strtolower(trim((string) ($template->slot_plan_key ?? $template->plan_key ?? '')));
+                                                        $templateFeaturePlanKey = method_exists($template, 'resolvedFeaturePlanKey')
+                                                            ? strtolower(trim((string) $template->resolvedFeaturePlanKey()))
+                                                            : strtolower(trim((string) ($template->feature_plan_key ?? $template->plan_key ?? '')));
                                                         $gymPlanKey = strtolower(trim((string) ($gym->plan_key ?? '')));
 
                                                         if ($gym->plan_template_id !== null && (int) $gym->plan_template_id > 0) {
                                                             return (int) $template->id === (int) $gym->plan_template_id;
                                                         }
 
-                                                        return $gymPlanKey !== '' && $templatePlanKey === $gymPlanKey;
+                                                        return $gymPlanKey !== '' && ($templatePlanKey === $gymPlanKey || $templateFeaturePlanKey === $gymPlanKey);
                                                     });
+                                                    $currentPlanFeatureKey = strtolower(trim((string) (($currentPlanTemplate && method_exists($currentPlanTemplate, 'resolvedFeaturePlanKey'))
+                                                        ? $currentPlanTemplate->resolvedFeaturePlanKey()
+                                                        : ($currentPlanTemplate->feature_plan_key ?? $currentPlanTemplate->slot_plan_key ?? $currentPlanTemplate->plan_key ?? $gym->plan_key ?? ''))));
+                                                    $currentPlanDisplayPrice = (float) ($currentPlanTemplate->price ?? $gym->price ?? 0);
                                                 @endphp
                                                 <form method="POST"
                                                       action="{{ route('superadmin.subscriptions.renew', $gym->gym_id) }}"
                                                       class="grid gap-3"
                                                       data-current-plan-template-id="{{ (int) ($currentPlanTemplate->id ?? 0) }}"
                                                       data-current-plan-name="{{ (string) ($currentPlanTemplate->name ?? $gym->plan_name ?? 'Plan actual') }}"
-                                                      data-current-plan-key="{{ strtolower(trim((string) ($currentPlanTemplate->plan_key ?? $gym->plan_key ?? ''))) }}"
-                                                      data-current-plan-price="{{ number_format((float) ($currentPlanTemplate->price ?? $gym->price ?? 0), 2, '.', '') }}">
+                                                      data-current-plan-key="{{ $currentPlanFeatureKey }}"
+                                                      data-current-plan-price="{{ number_format($currentPlanDisplayPrice, 2, '.', '') }}">
                                                     @csrf
                                                     <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                                                        Plantilla de plan
+                                                        Plan base
                                                         <select name="plan_template_id" class="ui-input js-plan-template-select">
                                                             <option value="">Mantener plan actual</option>
                                                             @foreach (($planTemplates ?? collect()) as $template)
@@ -383,7 +391,51 @@
                                                                         data-plan-name="{{ $template->name }}"
                                                                         data-feature-plan-key="{{ $templateFeaturePlanKey }}"
                                                                         data-plan-price="{{ number_format((float) $template->price, 2, '.', '') }}">
-                                                                    {{ $template->name }} ({{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}) - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode) }}{{ $template->discount_price !== null ? ' | Desc. '.\App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode) : '' }}
+                                                                    {{ $template->name }} ({{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}) - {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode) }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </label>
+
+                                                    <label class="space-y-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                                                        Promocion (opcional)
+                                                        <select name="promotion_template_id" class="ui-input js-promotion-template-select">
+                                                            <option value="">Sin promocion</option>
+                                                            @foreach ($promotionTemplates as $promotionTemplate)
+                                                                @php
+                                                                    $promotionType = (string) ($promotionTemplate->type ?? '');
+                                                                    $promotionValue = $promotionTemplate->value !== null ? (float) $promotionTemplate->value : null;
+                                                                    $promotionDurationUnit = method_exists($promotionTemplate, 'resolvedDurationUnit')
+                                                                        ? (string) $promotionTemplate->resolvedDurationUnit()
+                                                                        : 'months';
+                                                                    $promotionDurationMonths = $promotionDurationUnit === 'months' && $promotionTemplate->duration_months !== null
+                                                                        ? (int) $promotionTemplate->duration_months
+                                                                        : null;
+                                                                    $promotionDurationDays = $promotionDurationUnit === 'days' && $promotionTemplate->duration_days !== null
+                                                                        ? (int) $promotionTemplate->duration_days
+                                                                        : null;
+                                                                    $promotionDurationLabel = $promotionDurationUnit === 'days'
+                                                                        ? ($promotionDurationDays !== null ? $promotionDurationDays.' '.($promotionDurationDays === 1 ? 'dia' : 'dias') : null)
+                                                                        : ($promotionDurationMonths !== null ? $promotionDurationMonths.' '.($promotionDurationMonths === 1 ? 'mes' : 'meses') : null);
+                                                                    $promotionSummary = match ($promotionType) {
+                                                                        'percentage' => ($promotionValue !== null ? rtrim(rtrim(number_format($promotionValue, 2, '.', ''), '0'), '.') : '0').'%',
+                                                                        'fixed' => '-'.\App\Support\Currency::format((float) ($promotionValue ?? 0), $appCurrencyCode),
+                                                                        'final_price' => 'Total '.\App\Support\Currency::format((float) ($promotionValue ?? 0), $appCurrencyCode),
+                                                                        'bonus_days' => '+'.(int) round((float) ($promotionValue ?? 0)).' dias',
+                                                                        'two_for_one' => '2x1',
+                                                                        'bring_friend' => 'Trae un amigo',
+                                                                        default => 'Promo',
+                                                                    };
+                                                                @endphp
+                                                                <option value="{{ (int) $promotionTemplate->id }}"
+                                                                        data-promotion-id="{{ (int) $promotionTemplate->id }}"
+                                                                        data-promotion-name="{{ (string) $promotionTemplate->name }}"
+                                                                        data-promotion-type="{{ $promotionType }}"
+                                                                        data-promotion-value="{{ $promotionValue !== null ? number_format($promotionValue, 2, '.', '') : '' }}"
+                                                                        data-promotion-duration-unit="{{ $promotionDurationUnit }}"
+                                                                        data-promotion-duration-months="{{ $promotionDurationMonths !== null ? $promotionDurationMonths : '' }}"
+                                                                        data-promotion-duration-days="{{ $promotionDurationDays !== null ? $promotionDurationDays : '' }}">
+                                                                    {{ (string) $promotionTemplate->name }}{{ $promotionDurationLabel !== null ? ' ('.$promotionDurationLabel.')' : '' }} - {{ $promotionSummary }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
@@ -651,30 +703,10 @@
         });
         applyFilter();
 
-        const promotionRules = @json($planPromotionRules);
         const formatUsd = function (value) {
             const numeric = Number(value);
             if (!Number.isFinite(numeric)) return '$0.00';
             return '$' + numeric.toFixed(2);
-        };
-        const resolvePromotion = function (templateId, billingCycles) {
-            const rules = promotionRules[String(templateId)] || [];
-            if (!Array.isArray(rules)) {
-                return null;
-            }
-
-            let fallbackRule = null;
-            for (const rule of rules) {
-                const duration = Number(rule?.duration_months || 0);
-                if (Number.isFinite(duration) && duration > 0 && duration === billingCycles) {
-                    return rule;
-                }
-                if (!fallbackRule && !rule?.duration_months) {
-                    fallbackRule = rule;
-                }
-            }
-
-            return fallbackRule;
         };
         const resolvePromotionPricing = function (baseMonthlyPrice, billingCycles, promotion) {
             const safeMonthlyPrice = Number.isFinite(baseMonthlyPrice) ? Math.max(0, baseMonthlyPrice) : 0;
@@ -726,6 +758,7 @@
 
         document.querySelectorAll('form[action*="/subscriptions/"]').forEach(function (form) {
             const planSelect = form.querySelector('.js-plan-template-select');
+            const promotionSelect = form.querySelector('.js-promotion-template-select');
             const monthsSelect = form.querySelector('.js-months-select');
             const customPriceInput = form.querySelector('.js-custom-price-input');
             const feedback = form.querySelector('.js-renew-plan-feedback');
@@ -748,14 +781,37 @@
                 const selectedPlanPrice = hasTemplate
                     ? Number(selectedOption?.getAttribute('data-plan-price') || '0')
                     : currentPlanPrice;
-                const selectedMonths = Math.max(1, Math.round(Number(monthsSelect.value || '1')));
                 const canUseCustomPrice = selectedPlanKey === 'sucursales';
+                const promotionOption = promotionSelect ? promotionSelect.options[promotionSelect.selectedIndex] || null : null;
+                const promotionSelected = promotionSelect ? String(promotionSelect.value || '').trim() !== '' : false;
+                const promotionDurationUnit = String(promotionOption?.getAttribute('data-promotion-duration-unit') || 'months').toLowerCase();
+                const promotionDurationMonths = Number(promotionOption?.getAttribute('data-promotion-duration-months') || '0');
+                const promotionDurationDays = Number(promotionOption?.getAttribute('data-promotion-duration-days') || '0');
+                const hasFixedMonthDuration = promotionSelected
+                    && promotionDurationUnit === 'months'
+                    && Number.isFinite(promotionDurationMonths)
+                    && promotionDurationMonths > 0;
+                const hasFixedDayDuration = promotionSelected
+                    && promotionDurationUnit === 'days'
+                    && Number.isFinite(promotionDurationDays)
+                    && promotionDurationDays > 0;
+                if (hasFixedMonthDuration) {
+                    monthsSelect.value = String(Math.round(promotionDurationMonths));
+                } else if (hasFixedDayDuration) {
+                    monthsSelect.value = '1';
+                }
+                const selectedMonths = Math.max(1, Math.round(Number(monthsSelect.value || '1')));
 
-                monthsSelect.disabled = false;
-                monthsSelect.classList.remove('opacity-60', 'cursor-not-allowed');
-                monthsSelect.title = hasTemplate
-                    ? 'Multiplica la cobertura del plan elegido y busca la promo de ese plazo.'
-                    : 'Extiende la cobertura del plan actual y busca la promo de ese plazo.';
+                monthsSelect.disabled = hasFixedDayDuration;
+                monthsSelect.classList.toggle('opacity-60', hasFixedDayDuration);
+                monthsSelect.classList.toggle('cursor-not-allowed', hasFixedDayDuration);
+                monthsSelect.title = hasFixedDayDuration
+                    ? 'Esta promocion usa un plazo fijo de ' + Math.round(promotionDurationDays) + ' dia(s).'
+                    : (hasFixedMonthDuration
+                        ? 'Esta promocion usa un plazo fijo de ' + selectedMonths + ' mes(es).'
+                        : (hasTemplate
+                            ? 'Multiplica la cobertura del plan elegido.'
+                            : 'Extiende la cobertura del plan actual.'));
 
                 if (customPriceInput) {
                     customPriceInput.disabled = !canUseCustomPrice;
@@ -775,7 +831,17 @@
                 const baseMonthlyPrice = canUseCustomPrice && Number.isFinite(selectedCustomPrice) && selectedCustomPrice > 0
                     ? selectedCustomPrice
                     : selectedPlanPrice;
-                const selectedPromotion = resolvePromotion(selectedTemplateId, selectedMonths);
+                const selectedPromotion = promotionSelected
+                    ? {
+                        id: Number(promotionOption?.getAttribute('data-promotion-id') || '0'),
+                        name: String(promotionOption?.getAttribute('data-promotion-name') || promotionOption?.textContent || 'Promocion'),
+                        type: String(promotionOption?.getAttribute('data-promotion-type') || ''),
+                        value: Number(promotionOption?.getAttribute('data-promotion-value') || '0'),
+                        duration_unit: promotionDurationUnit,
+                        duration_months: hasFixedMonthDuration ? Math.round(promotionDurationMonths) : null,
+                        duration_days: hasFixedDayDuration ? Math.round(promotionDurationDays) : null,
+                    }
+                    : null;
                 const pricing = resolvePromotionPricing(baseMonthlyPrice, selectedMonths, selectedPromotion);
 
                 if (!feedback) {
@@ -783,21 +849,27 @@
                 }
 
                 if (selectedTemplateId === '' && currentTemplateId === '') {
-                    feedback.textContent = 'Selecciona uno de los 4 planes base si quieres aplicar una promocion por plazo.';
+                    feedback.textContent = 'Selecciona un plan base para continuar.';
                     return;
                 }
 
-                if (selectedPromotion) {
-                    const promotionName = String(selectedPromotion.name || 'Promocion activa').trim();
-                    const bonusDaysSuffix = pricing.bonusDays > 0 ? ' +' + pricing.bonusDays + ' dias.' : '.';
-                    feedback.textContent = selectedPlanName + ': promo "' + promotionName + '" aplicada. Normal ' + formatUsd(pricing.baseTotal) + ', total ' + formatUsd(pricing.finalTotal) + ' (' + formatUsd(pricing.effectiveMonthlyPrice) + '/mes promedio)' + bonusDaysSuffix;
+                if (!selectedPromotion) {
+                    feedback.textContent = selectedPlanName + ': cobra ' + formatUsd(baseMonthlyPrice) + '/mes. Total ' + formatUsd(pricing.baseTotal) + ' por ' + selectedMonths + ' mes(es).';
                     return;
                 }
 
-                feedback.textContent = selectedPlanName + ': sin promocion activa para ' + selectedMonths + ' mes(es). Total ' + formatUsd(pricing.baseTotal) + '.';
+                const promoName = String(selectedPromotion.name || 'Promocion');
+                const discountText = pricing.discountAmount > 0
+                    ? ' Descuento aplicado: ' + formatUsd(pricing.discountAmount) + '.'
+                    : '';
+                const coverageLabel = selectedPromotion.duration_unit === 'days' && Number.isFinite(selectedPromotion.duration_days) && selectedPromotion.duration_days > 0
+                    ? (Math.round(selectedPromotion.duration_days) + ' dia(s)')
+                    : (selectedMonths + ' mes(es)');
+                feedback.textContent = selectedPlanName + ' + ' + promoName + ': total final ' + formatUsd(pricing.finalTotal) + ' por ' + coverageLabel + '.' + discountText;
             };
 
             planSelect.addEventListener('change', syncMode);
+            promotionSelect?.addEventListener('change', syncMode);
             monthsSelect.addEventListener('change', syncMode);
             customPriceInput?.addEventListener('input', syncMode);
             syncMode();

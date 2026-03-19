@@ -6,6 +6,7 @@ use App\Support\PlanDuration;
 use App\Support\SuperAdminPlanCatalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,12 +22,14 @@ class SuperAdminPlanTemplate extends Model
     protected $fillable = [
         'plan_key',
         'feature_plan_key',
+        'assigned_plan_template_id',
         'name',
         'duration_days',
         'duration_unit',
         'duration_months',
         'price',
         'discount_price',
+        'offer_text',
         'status',
     ];
 
@@ -38,10 +41,12 @@ class SuperAdminPlanTemplate extends Model
         return [
             'plan_key' => 'string',
             'feature_plan_key' => 'string',
+            'assigned_plan_template_id' => 'integer',
             'duration_days' => 'integer',
             'duration_months' => 'integer',
             'price' => 'decimal:2',
             'discount_price' => 'decimal:2',
+            'offer_text' => 'string',
         ];
     }
 
@@ -86,6 +91,16 @@ class SuperAdminPlanTemplate extends Model
         return $this->hasMany(SuperAdminPromotionTemplate::class, 'plan_template_id');
     }
 
+    public function assignedPlanTemplate(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'assigned_plan_template_id');
+    }
+
+    public function assignedBasePlans(): HasMany
+    {
+        return $this->hasMany(self::class, 'assigned_plan_template_id');
+    }
+
     public function durationLabel(): string
     {
         return PlanDuration::label($this->duration_unit, (int) $this->duration_days, $this->duration_months);
@@ -109,5 +124,19 @@ class SuperAdminPlanTemplate extends Model
         }
 
         return 'basico';
+    }
+
+    public function resolvedPublicTemplate(): self
+    {
+        if (! $this->isBaseCatalog()) {
+            return $this;
+        }
+
+        $assignedTemplate = $this->getRelationValue('assignedPlanTemplate');
+        if ($assignedTemplate instanceof self && (string) ($assignedTemplate->status ?? '') === 'active') {
+            return $assignedTemplate;
+        }
+
+        return $this;
     }
 }

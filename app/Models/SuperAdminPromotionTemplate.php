@@ -26,6 +26,8 @@ class SuperAdminPromotionTemplate extends Model
         'status',
         'max_uses',
         'duration_months',
+        'duration_unit',
+        'duration_days',
     ];
 
     /**
@@ -39,11 +41,43 @@ class SuperAdminPromotionTemplate extends Model
             'ends_at' => 'date',
             'max_uses' => 'integer',
             'duration_months' => 'integer',
+            'duration_unit' => 'string',
+            'duration_days' => 'integer',
         ];
     }
 
     public function planTemplate(): BelongsTo
     {
         return $this->belongsTo(SuperAdminPlanTemplate::class, 'plan_template_id');
+    }
+
+    public function resolvedDurationUnit(): string
+    {
+        $unit = strtolower(trim((string) ($this->duration_unit ?? '')));
+        if (in_array($unit, ['days', 'months'], true)) {
+            return $unit;
+        }
+
+        return $this->duration_days !== null && (int) $this->duration_days > 0
+            ? 'days'
+            : 'months';
+    }
+
+    public function resolvedDurationValue(): int
+    {
+        if ($this->resolvedDurationUnit() === 'days') {
+            return max(1, (int) ($this->duration_days ?? 1));
+        }
+
+        return max(1, (int) ($this->duration_months ?? 1));
+    }
+
+    public function durationLabel(): string
+    {
+        $value = $this->resolvedDurationValue();
+
+        return $this->resolvedDurationUnit() === 'days'
+            ? $value.' '.($value === 1 ? 'dia' : 'dias')
+            : $value.' '.($value === 1 ? 'mes' : 'meses');
     }
 }

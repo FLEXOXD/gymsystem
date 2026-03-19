@@ -10,8 +10,10 @@ use App\Models\LandingContactMessage;
 use App\Models\LandingQuoteRequest;
 use App\Models\Subscription;
 use App\Models\SuperAdminPlanTemplate;
+use App\Models\SuperAdminPromotionTemplate;
 use App\Models\User;
 use App\Services\DemoSessionService;
+use App\Services\SuperAdminCommercialPlanService;
 use App\Support\LegalTerms;
 use App\Support\MarketingContent;
 use App\Support\SuperAdminPlanCatalog;
@@ -27,6 +29,11 @@ use Throwable;
 
 class MarketingController extends Controller
 {
+    public function __construct(
+        private readonly SuperAdminCommercialPlanService $commercialPlanService
+    ) {
+    }
+
     public function index(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         return $this->renderLandingPage($request, 'home');
@@ -381,28 +388,26 @@ class MarketingController extends Controller
         $cards = [];
 
         try {
-            $schemaReady = Schema::hasTable('superadmin_plan_templates')
-                && Schema::hasColumns('superadmin_plan_templates', ['plan_key', 'discount_price', 'status']);
-
-            if ($schemaReady) {
-                SuperAdminPlanTemplate::ensureDefaultCatalog();
-
-                $templates = SuperAdminPlanTemplate::query()
-                    ->whereIn('plan_key', SuperAdminPlanCatalog::keys())
-                    ->where('status', 'active')
-                    ->orderByRaw(SuperAdminPlanCatalog::orderCaseSql('plan_key'))
-                    ->get(['plan_key', 'name', 'price', 'discount_price']);
-
-                foreach ($templates as $template) {
-                    $planKey = trim((string) ($template->plan_key ?? ''));
+            if ($this->commercialPlanService->supportsCommercialCatalog()) {
+                foreach ($this->commercialPlanService->basePlans() as $basePlan) {
+                    $planKey = trim((string) ($basePlan->plan_key ?? ''));
                     if ($planKey === '') {
                         continue;
                     }
+
+                    $promotion = $this->resolveLandingPromotionTemplate($basePlan);
+                    $promotionSnapshot = $this->resolveLandingPromotionSnapshot($basePlan, $promotion);
+                    $manualOfferText = trim((string) ($basePlan->offer_text ?? ''));
+                    $resolvedOfferText = trim((string) ($promotionSnapshot['offer_text'] ?? '')) !== ''
+                        ? trim((string) $promotionSnapshot['offer_text'])
+                        : ($manualOfferText !== '' ? $manualOfferText : null);
+
                     $cards[] = $this->makePublicPlanCard(
                         $planKey,
-                        (string) $template->name,
-                        (float) $template->price,
-                        $template->discount_price !== null ? (float) $template->discount_price : null
+                        (string) ($basePlan->name ?? SuperAdminPlanPresentation::for($planKey)['title']),
+                        (float) ($basePlan->price ?? 0),
+                        $promotionSnapshot['discount_price'],
+                        $resolvedOfferText
                     );
                 }
             }
@@ -422,7 +427,8 @@ class MarketingController extends Controller
                 $planKey,
                 (string) ($default['name'] ?? SuperAdminPlanPresentation::for($planKey)['title']),
                 (float) ($default['price'] ?? 0),
-                array_key_exists('discount_price', $default) ? (float) $default['discount_price'] : null
+                null,
+                null
             );
         }
 
@@ -550,7 +556,7 @@ class MarketingController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function makePublicPlanCard(string $planKey, string $name, float $price, ?float $discountPrice): array
+    private function makePublicPlanCard(string $planKey, string $name, float $price, ?float $discountPrice, ?string $offerText = null): array
     {
         $meta = SuperAdminPlanPresentation::for($planKey);
         $discountPercent = null;
@@ -563,6 +569,7 @@ class MarketingController extends Controller
             'name' => trim($name) !== '' ? $name : (string) $meta['title'],
             'price' => $price,
             'discount_price' => $discountPrice,
+            'offer_text' => trim((string) ($offerText ?? '')) !== '' ? trim((string) $offerText) : null,
             'discount_percent' => $discountPercent,
             'summary' => (string) ($meta['summary'] ?? ''),
             'features' => array_values((array) ($meta['features'] ?? [])),
@@ -573,6 +580,117 @@ class MarketingController extends Controller
             'contact_mode' => (bool) ($meta['contact_mode'] ?? false),
             'cta' => (string) ($meta['cta'] ?? 'Demo gratis'),
         ];
+    }
+
+    /**
+     * @return array{discount_price:?float,offer_text:?string}
+     */
+    private function resolveLandingPromotionSnapshot(SuperAdminPlanTemplate $planTemplate, ?SuperAdminPromotionTemplate $promotion): array
+    {
+        if (! $promotion) {
+            return [
+                'discount_price' => null,
+                'offer_text' => null,
+            ];
+        }
+
+        $basePrice = round((float) ($planTemplate->price ?? 0), 2);
+        $offerText = trim((string) ($promotion->description ?? $promotion->name ?? ''));
+        $discountPrice = null;
+        $value = $promotion->value !== null ? (float) $promotion->value : null;
+        $durationUnit = method_exists($promotion, 'resolvedDurationUnit')
+            ? (string) $promotion->resolvedDurationUnit()
+            : 'months';
+
+        switch ((string) $promotion->type) {
+            case 'percentage':
+                if ($value !== null) {
+                    $percent = min(max($value, 0), 100);
+                    $discountPrice = round(max(0, $basePrice - ($basePrice * ($percent / 100))), 2);
+                }
+                break;
+
+            case 'fixed':
+                if ($value !== null) {
+                    $discountPrice = round(max(0, $basePrice - min($basePrice, max(0, $value))), 2);
+                }
+                break;
+
+            case 'final_price':
+                if ($value !== null) {
+                    if ($durationUnit === 'months') {
+                        $durationMonths = max(1, (int) ($promotion->duration_months ?? 1));
+                        $discountPrice = $durationMonths > 1
+                            ? round(max(0, $value / $durationMonths), 2)
+                            : round(max(0, $value), 2);
+                    }
+                }
+                break;
+        }
+
+        return [
+            'discount_price' => $discountPrice !== null && $discountPrice < $basePrice ? $discountPrice : null,
+            'offer_text' => $offerText !== '' ? $offerText : null,
+        ];
+    }
+
+    private function resolveLandingPromotionTemplate(SuperAdminPlanTemplate $planTemplate): ?SuperAdminPromotionTemplate
+    {
+        if (! Schema::hasTable('superadmin_promotion_templates')) {
+            return null;
+        }
+
+        $today = now()->toDateString();
+        $supportsDurationUnit = $this->supportsPromotionDurationUnitColumns();
+        $query = SuperAdminPromotionTemplate::query()
+            ->where('plan_template_id', (int) $planTemplate->id)
+            ->where('status', 'active')
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('starts_at')
+                    ->orWhereDate('starts_at', '<=', $today);
+            })
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('ends_at')
+                    ->orWhereDate('ends_at', '>=', $today);
+            });
+
+        if ($supportsDurationUnit) {
+            $query
+                ->where(function ($query): void {
+                    $query
+                        ->where(function ($monthQuery): void {
+                            $monthQuery->where(function ($unitQuery): void {
+                                $unitQuery->whereNull('duration_unit')
+                                    ->orWhere('duration_unit', 'months');
+                            })->where(function ($durationQuery): void {
+                                $durationQuery->whereNull('duration_months')
+                                    ->orWhere('duration_months', 1);
+                            });
+                        })
+                        ->orWhere(function ($dayQuery): void {
+                            $dayQuery->where('duration_unit', 'days')
+                                ->whereNotNull('duration_days');
+                        });
+                })
+                ->orderByRaw("CASE WHEN duration_unit = 'days' THEN 0 WHEN duration_months = 1 THEN 1 ELSE 2 END")
+                ->orderByDesc('id');
+        } else {
+            $query
+                ->where(function ($query): void {
+                    $query->whereNull('duration_months')
+                        ->orWhere('duration_months', 1);
+                })
+                ->orderByRaw('CASE WHEN duration_months = 1 THEN 0 ELSE 1 END')
+                ->orderByDesc('id');
+        }
+
+        return $query->first();
+    }
+
+    private function supportsPromotionDurationUnitColumns(): bool
+    {
+        return Schema::hasTable('superadmin_promotion_templates')
+            && Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
     }
 
     /**

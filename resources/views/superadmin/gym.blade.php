@@ -203,6 +203,8 @@
                             @forelse ($planTemplates as $template)
                                 @php
                                     $templateId = (int) $template->id;
+                                    $templateSlotName = (string) ($template->slot_base_name ?? $template->name);
+                                    $templateOfferText = trim((string) ($template->offer_text ?? ''));
                                     $templateFeaturePlanKey = method_exists($template, 'resolvedFeaturePlanKey')
                                         ? (string) $template->resolvedFeaturePlanKey()
                                         : (string) ($template->feature_plan_key ?? $template->plan_key ?? 'basico');
@@ -224,15 +226,18 @@
                                         <span class="block text-sm font-black text-slate-900 dark:text-slate-100">
                                             {{ $template->name }}
                                         </span>
+                                        <span class="mt-1 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
+                                            Slot {{ $templateSlotName }}
+                                        </span>
                                         <span class="mt-1 block text-xs text-slate-600 dark:text-slate-300">
                                             {{ \App\Support\PlanDuration::label($template->duration_unit, (int) $template->duration_days, $template->duration_months) }}
                                         </span>
                                         <span class="mt-2 inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                                             {{ \App\Support\Currency::format((float) $template->price, $appCurrencyCode ?? 'USD') }}
                                         </span>
-                                        @if ($template->discount_price !== null)
-                                            <span class="mt-2 ml-2 inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-                                                Desc. {{ \App\Support\Currency::format((float) $template->discount_price, $appCurrencyCode ?? 'USD') }}
+                                        @if ($templateOfferText !== '')
+                                            <span class="mt-2 block text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+                                                {{ $templateOfferText }}
                                             </span>
                                         @endif
                                         @if ($planPromotions->isNotEmpty())
@@ -241,9 +246,16 @@
                                                 <span class="flex flex-wrap gap-2">
                                                     @foreach ($planPromotions as $promotionRule)
                                                         @php
-                                                            $promotionDuration = isset($promotionRule['duration_months']) && $promotionRule['duration_months'] !== null
+                                                            $promotionDurationUnit = strtolower(trim((string) ($promotionRule['duration_unit'] ?? 'months')));
+                                                            $promotionDurationMonths = isset($promotionRule['duration_months']) && $promotionRule['duration_months'] !== null
                                                                 ? (int) $promotionRule['duration_months']
                                                                 : null;
+                                                            $promotionDurationDays = isset($promotionRule['duration_days']) && $promotionRule['duration_days'] !== null
+                                                                ? (int) $promotionRule['duration_days']
+                                                                : null;
+                                                            $promotionDurationLabel = $promotionDurationUnit === 'days'
+                                                                ? ($promotionDurationDays ? $promotionDurationDays.' '.($promotionDurationDays === 1 ? 'dia' : 'dias') : 'General')
+                                                                : ($promotionDurationMonths ? $promotionDurationMonths.' '.($promotionDurationMonths === 1 ? 'mes' : 'meses') : 'General');
                                                             $promotionType = (string) ($promotionRule['type'] ?? '');
                                                             $promotionValue = isset($promotionRule['value']) && $promotionRule['value'] !== null
                                                                 ? (float) $promotionRule['value']
@@ -257,7 +269,7 @@
                                                             };
                                                         @endphp
                                                         <span class="inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
-                                                            {{ $promotionDuration ? $promotionDuration.' meses' : 'General' }} · {{ $promotionLabel }}
+                                                            {{ $promotionDurationLabel }} · {{ $promotionLabel }}
                                                         </span>
                                                     @endforeach
                                                 </span>
@@ -281,7 +293,7 @@
                                     </option>
                                 @endfor
                             </select>
-                            <p class="ui-muted mt-1 text-[11px]">Si existe una promocion activa para ese plan y ese plazo, se aplica automaticamente.</p>
+                            <p class="ui-muted mt-1 text-[11px]">Si el plan tiene precio con oferta, ese valor se usa automaticamente al cobrar.</p>
                             @error('subscription_billing_cycles')
                                 <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ $message }}</p>
                             @enderror
@@ -420,7 +432,7 @@
                 <x-ui.card title="Resumen operativo" subtitle="Puntos a revisar antes de confirmar la creacion.">
                     <ul class="sa-check-list">
                         <li>Verifica país, ciudad y zona horaria antes de crear el slug y la operación inicial.</li>
-                        <li>Revisa si el plan tiene una promocion activa para el plazo que elijas entre 1 y 12 meses.</li>
+                        <li>Revisa si el plan elegido tiene precio con oferta o un mensaje comercial activo.</li>
                         <li>Confirma correo y teléfono del admin para evitar bloqueos en el primer acceso.</li>
                         <li>La cuenta nace lista para operar panel, recepción y cobros según el plan elegido.</li>
                     </ul>
@@ -530,14 +542,28 @@
             }
 
             let fallbackRule = null;
+            let dayRule = null;
             for (const rule of rules) {
-                const duration = Number(rule?.duration_months || 0);
-                if (Number.isFinite(duration) && duration > 0 && duration === billingCycles) {
+                const durationUnit = String(rule?.duration_unit || 'months').toLowerCase();
+                if (durationUnit === 'days') {
+                    const durationDays = Number(rule?.duration_days || 0);
+                    if (!dayRule && Number.isFinite(durationDays) && durationDays > 0) {
+                        dayRule = rule;
+                    }
+                    continue;
+                }
+
+                const durationMonths = Number(rule?.duration_months || 0);
+                if (Number.isFinite(durationMonths) && durationMonths > 0 && durationMonths === billingCycles) {
                     return rule;
                 }
                 if (!fallbackRule && !rule?.duration_months) {
                     fallbackRule = rule;
                 }
+            }
+
+            if (dayRule) {
+                return dayRule;
             }
 
             return fallbackRule;
@@ -626,12 +652,13 @@
             if (subscriptionPlanFeedback) {
                 if (!selectedRadio) {
                     subscriptionPlanFeedback.textContent = selectedPlanLabel;
-                } else if (selectedPromotion) {
-                    const promotionName = String(selectedPromotion.name || 'Promocion activa').trim();
-                    const bonusDaysSuffix = pricing.bonusDays > 0 ? ' +' + pricing.bonusDays + ' dias.' : '.';
-                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': normal ' + formatUsd(pricing.baseTotal) + ', promo "' + promotionName + '" aplicada. Total a cobrar ' + formatUsd(pricing.finalTotal) + ' (' + formatUsd(pricing.effectiveMonthlyPrice) + '/mes promedio)' + bonusDaysSuffix;
                 } else {
-                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': sin promocion activa para ' + selectedBillingCycles + ' mes(es). Total a cobrar ' + formatUsd(pricing.baseTotal) + '.';
+                    const promotionDurationUnit = String(selectedPromotion?.duration_unit || 'months').toLowerCase();
+                    const promotionDurationDays = Number(selectedPromotion?.duration_days || 0);
+                    const coverageLabel = promotionDurationUnit === 'days' && Number.isFinite(promotionDurationDays) && promotionDurationDays > 0
+                        ? Math.round(promotionDurationDays) + ' dia(s)'
+                        : selectedBillingCycles + ' mes(es)';
+                    subscriptionPlanFeedback.textContent = selectedPlanLabel + ': cobra ' + formatUsd(effectivePlanPrice) + '/mes. Total a cobrar ' + formatUsd(pricing.baseTotal) + ' por ' + coverageLabel + '.';
                 }
             }
         };

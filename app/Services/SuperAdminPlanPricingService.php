@@ -26,12 +26,48 @@ class SuperAdminPlanPricingService
         SuperAdminPlanTemplate $planTemplate,
         int $billingCycles = 1,
         ?float $customMonthlyPrice = null,
-        Carbon|string|null $date = null
+        Carbon|string|null $date = null,
+        bool $applyPromotions = true
     ): array {
         $resolvedBillingCycles = max(1, min(24, $billingCycles));
         $baseMonthlyPrice = $this->resolveBaseMonthlyPrice($planTemplate, $customMonthlyPrice);
-        $baseTotal = round($baseMonthlyPrice * $resolvedBillingCycles, 2);
-        $promotion = $this->resolveApplicablePromotion($planTemplate, $resolvedBillingCycles, $date);
+        $promotion = $applyPromotions
+            ? $this->resolveApplicablePromotion($planTemplate, $resolvedBillingCycles, $date)
+            : null;
+
+        return $this->buildPricingSnapshot($baseMonthlyPrice, $resolvedBillingCycles, $promotion);
+    }
+
+    /**
+     * @return array{
+     *   promotion:?SuperAdminPromotionTemplate,
+     *   base_monthly_price:float,
+     *   effective_monthly_price:float,
+     *   base_total:float,
+     *   final_total:float,
+     *   discount_amount:float,
+     *   bonus_days:int,
+     *   billing_cycles:int
+     * }
+     */
+    public function resolveSelectionWithPromotion(
+        SuperAdminPlanTemplate $planTemplate,
+        ?SuperAdminPromotionTemplate $promotionTemplate,
+        int $billingCycles = 1,
+        ?float $customMonthlyPrice = null
+    ): array {
+        $resolvedBillingCycles = max(1, min(24, $billingCycles));
+        $baseMonthlyPrice = $this->resolveBaseMonthlyPrice($planTemplate, $customMonthlyPrice);
+
+        return $this->buildPricingSnapshot($baseMonthlyPrice, $resolvedBillingCycles, $promotionTemplate);
+    }
+
+    private function buildPricingSnapshot(
+        float $baseMonthlyPrice,
+        int $billingCycles,
+        ?SuperAdminPromotionTemplate $promotion
+    ): array {
+        $baseTotal = round($baseMonthlyPrice * $billingCycles, 2);
 
         if (! $promotion) {
             return [
@@ -42,7 +78,7 @@ class SuperAdminPlanPricingService
                 'final_total' => $baseTotal,
                 'discount_amount' => 0.0,
                 'bonus_days' => 0,
-                'billing_cycles' => $resolvedBillingCycles,
+                'billing_cycles' => $billingCycles,
             ];
         }
 
@@ -80,7 +116,7 @@ class SuperAdminPlanPricingService
                 break;
         }
 
-        $effectiveMonthlyPrice = round($finalTotal / $resolvedBillingCycles, 2);
+        $effectiveMonthlyPrice = round($finalTotal / $billingCycles, 2);
 
         return [
             'promotion' => $promotion,
@@ -90,7 +126,7 @@ class SuperAdminPlanPricingService
             'final_total' => $finalTotal,
             'discount_amount' => $discountAmount,
             'bonus_days' => $bonusDays,
-            'billing_cycles' => $resolvedBillingCycles,
+            'billing_cycles' => $billingCycles,
         ];
     }
 
@@ -115,8 +151,14 @@ class SuperAdminPlanPricingService
         }
 
         $targetDate = $this->resolveTargetDate($date);
+        $supportsDurationUnit = $this->supportsPromotionDurationUnitColumns();
+        $selectColumns = ['id', 'plan_template_id', 'name', 'type', 'value', 'duration_months'];
+        if ($supportsDurationUnit) {
+            $selectColumns[] = 'duration_unit';
+            $selectColumns[] = 'duration_days';
+        }
 
-        return SuperAdminPromotionTemplate::query()
+        $query = SuperAdminPromotionTemplate::query()
             ->where('status', 'active')
             ->whereIn('plan_template_id', $templateIds)
             ->where(function ($query) use ($targetDate): void {
@@ -126,21 +168,38 @@ class SuperAdminPlanPricingService
             ->where(function ($query) use ($targetDate): void {
                 $query->whereNull('ends_at')
                     ->orWhereDate('ends_at', '>=', $targetDate);
-            })
-            ->orderByRaw('CASE WHEN duration_months IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('duration_months')
-            ->orderByDesc('id')
-            ->get(['id', 'plan_template_id', 'name', 'type', 'value', 'duration_months'])
+            });
+
+        if ($supportsDurationUnit) {
+            $query->orderByRaw("CASE WHEN duration_unit = 'days' THEN 0 ELSE 1 END")
+                ->orderByRaw('CASE WHEN duration_months IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('duration_months')
+                ->orderBy('duration_days')
+                ->orderByDesc('id');
+        } else {
+            $query->orderByRaw('CASE WHEN duration_months IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('duration_months')
+                ->orderByDesc('id');
+        }
+
+        return $query
+            ->get($selectColumns)
             ->groupBy(static fn (SuperAdminPromotionTemplate $promotion): int => (int) $promotion->plan_template_id)
-            ->map(function (Collection $group): array {
+            ->map(function (Collection $group) use ($supportsDurationUnit): array {
                 return $group
-                    ->map(function (SuperAdminPromotionTemplate $promotion): array {
+                    ->map(function (SuperAdminPromotionTemplate $promotion) use ($supportsDurationUnit): array {
+                        $durationUnit = $this->normalizePromotionDurationUnit($promotion, $supportsDurationUnit);
+                        $durationMonths = $this->resolvePromotionDurationMonths($promotion, $durationUnit);
+                        $durationDays = $this->resolvePromotionDurationDays($promotion, $durationUnit);
+
                         return [
                             'id' => (int) $promotion->id,
                             'name' => (string) $promotion->name,
                             'type' => (string) $promotion->type,
                             'value' => $promotion->value !== null ? (float) $promotion->value : null,
-                            'duration_months' => $promotion->duration_months !== null ? (int) $promotion->duration_months : null,
+                            'duration_unit' => $durationUnit,
+                            'duration_months' => $durationMonths,
+                            'duration_days' => $durationDays,
                         ];
                     })
                     ->values()
@@ -159,8 +218,14 @@ class SuperAdminPlanPricingService
         }
 
         $targetDate = $this->resolveTargetDate($date);
+        $supportsDurationUnit = $this->supportsPromotionDurationUnitColumns();
+        $selectColumns = ['id', 'plan_template_id', 'name', 'description', 'type', 'value', 'duration_months', 'starts_at', 'ends_at', 'status', 'max_uses', 'created_at', 'updated_at'];
+        if ($supportsDurationUnit) {
+            $selectColumns[] = 'duration_unit';
+            $selectColumns[] = 'duration_days';
+        }
 
-        return SuperAdminPromotionTemplate::query()
+        $promotions = SuperAdminPromotionTemplate::query()
             ->where('status', 'active')
             ->where('plan_template_id', (int) $planTemplate->id)
             ->where(function ($query) use ($targetDate): void {
@@ -171,13 +236,62 @@ class SuperAdminPlanPricingService
                 $query->whereNull('ends_at')
                     ->orWhereDate('ends_at', '>=', $targetDate);
             })
-            ->where(function ($query) use ($billingCycles): void {
-                $query->where('duration_months', $billingCycles)
-                    ->orWhereNull('duration_months');
-            })
-            ->orderByRaw('CASE WHEN duration_months = '.$billingCycles.' THEN 0 ELSE 1 END')
             ->orderByDesc('id')
-            ->first();
+            ->get($selectColumns);
+
+        if ($promotions->isEmpty()) {
+            return null;
+        }
+
+        if (! $supportsDurationUnit) {
+            return $promotions
+                ->first(function (SuperAdminPromotionTemplate $promotion) use ($billingCycles): bool {
+                    return $promotion->duration_months === null
+                        || (int) $promotion->duration_months === $billingCycles;
+                }) ?? $promotions->first();
+        }
+
+        $exactMonthPromotion = $promotions->first(function (SuperAdminPromotionTemplate $promotion) use ($billingCycles): bool {
+            $durationUnit = $this->normalizePromotionDurationUnit($promotion, true);
+            if ($durationUnit !== 'months') {
+                return false;
+            }
+
+            $durationMonths = $this->resolvePromotionDurationMonths($promotion, $durationUnit);
+
+            return $durationMonths !== null && $durationMonths === $billingCycles;
+        });
+        if ($exactMonthPromotion) {
+            return $exactMonthPromotion;
+        }
+
+        $dayPromotion = $promotions->first(function (SuperAdminPromotionTemplate $promotion): bool {
+            $durationUnit = $this->normalizePromotionDurationUnit($promotion, true);
+            if ($durationUnit !== 'days') {
+                return false;
+            }
+
+            $durationDays = $this->resolvePromotionDurationDays($promotion, $durationUnit);
+
+            return $durationDays !== null && $durationDays > 0;
+        });
+        if ($dayPromotion) {
+            return $dayPromotion;
+        }
+
+        $genericMonthPromotion = $promotions->first(function (SuperAdminPromotionTemplate $promotion): bool {
+            $durationUnit = $this->normalizePromotionDurationUnit($promotion, true);
+            if ($durationUnit !== 'months') {
+                return false;
+            }
+
+            return $this->resolvePromotionDurationMonths($promotion, $durationUnit) === null;
+        });
+        if ($genericMonthPromotion) {
+            return $genericMonthPromotion;
+        }
+
+        return $promotions->first();
     }
 
     private function resolveBaseMonthlyPrice(SuperAdminPlanTemplate $planTemplate, ?float $customMonthlyPrice = null): float
@@ -219,5 +333,49 @@ class SuperAdminPlanPricingService
                 'status',
                 'duration_months',
             ]);
+    }
+
+    private function supportsPromotionDurationUnitColumns(): bool
+    {
+        return Schema::hasTable('superadmin_promotion_templates')
+            && Schema::hasColumns('superadmin_promotion_templates', ['duration_unit', 'duration_days']);
+    }
+
+    private function normalizePromotionDurationUnit(SuperAdminPromotionTemplate $promotion, bool $supportsDurationUnit): string
+    {
+        if (! $supportsDurationUnit) {
+            return 'months';
+        }
+
+        $unit = strtolower(trim((string) ($promotion->duration_unit ?? '')));
+        if (in_array($unit, ['days', 'months'], true)) {
+            return $unit;
+        }
+
+        return $promotion->duration_days !== null && (int) $promotion->duration_days > 0
+            ? 'days'
+            : 'months';
+    }
+
+    private function resolvePromotionDurationMonths(SuperAdminPromotionTemplate $promotion, string $durationUnit): ?int
+    {
+        if ($durationUnit !== 'months') {
+            return null;
+        }
+
+        $durationMonths = $promotion->duration_months !== null ? (int) $promotion->duration_months : null;
+
+        return $durationMonths !== null && $durationMonths > 0 ? $durationMonths : null;
+    }
+
+    private function resolvePromotionDurationDays(SuperAdminPromotionTemplate $promotion, string $durationUnit): ?int
+    {
+        if ($durationUnit !== 'days') {
+            return null;
+        }
+
+        $durationDays = $promotion->duration_days !== null ? (int) $promotion->duration_days : null;
+
+        return $durationDays !== null && $durationDays > 0 ? $durationDays : null;
     }
 }
