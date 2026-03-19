@@ -6,6 +6,7 @@ use App\Models\Gym;
 use App\Models\LegalAcceptance;
 use App\Models\LandingQuoteRequest;
 use App\Models\SiteSetting;
+use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -117,6 +118,18 @@ it('renders quote triggers across landing ctas and pricing cards', function () {
         ->assertSee('data-quote-plan="profesional"', false)
         ->assertSee('data-quote-plan="premium"', false)
         ->assertSee('data-quote-plan="sucursales"', false);
+});
+
+it('renders decimal prices from superadmin plans on the landing', function () {
+    SuperAdminPlanTemplate::ensureDefaultCatalog();
+
+    SuperAdminPlanTemplate::query()
+        ->where('plan_key', 'basico')
+        ->update(['price' => 14.99]);
+
+    $this->get(route('landing'))
+        ->assertOk()
+        ->assertSee('$14.99', false);
 });
 
 it('stores quote requests from the landing modal', function () {

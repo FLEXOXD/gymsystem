@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SuperAdminDashboardController extends Controller
 {
@@ -42,11 +43,18 @@ class SuperAdminDashboardController extends Controller
     public function dashboard(): View
     {
         $dashboard = $this->dashboardService->getDashboardData();
+        $scannerPageUrl = 'https://flexjok.duckdns.org/';
+        $scannerPageQrSvg = (string) QrCode::format('svg')
+            ->size(420)
+            ->margin(1)
+            ->generate($scannerPageUrl);
 
         return view('superadmin.dashboard', [
             'kpis' => (array) ($dashboard['kpis'] ?? []),
             'planMix' => $dashboard['plan_mix'] ?? [],
             'reports' => (array) ($dashboard['reports'] ?? []),
+            'scannerPageUrl' => $scannerPageUrl,
+            'scannerPageQrSvg' => $scannerPageQrSvg,
         ]);
     }
 

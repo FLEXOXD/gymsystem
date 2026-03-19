@@ -129,6 +129,19 @@
             border-color: rgb(148 163 184 / 0.18);
         }
 
+        .clients-table-scroll {
+            max-height: 560px;
+            overflow-x: auto;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .clients-table-scroll .ui-table {
+            min-width: 1200px;
+        }
+
         .clients-table-wrap .ui-table thead tr {
             background: rgb(248 250 252 / 0.95);
             border-bottom-color: rgb(226 232 240 / 0.9);
@@ -270,6 +283,58 @@
             height: 0.95rem;
             opacity: 0.78;
             flex: 0 0 auto;
+        }
+
+        .clients-row-menu-backdrop {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .clients-table-scroll {
+                padding-bottom: 0.25rem;
+            }
+
+            .clients-table-scroll .ui-table {
+                min-width: 1120px;
+            }
+
+            .clients-table-scroll.table-mobile-stack {
+                overflow-y: auto;
+                overflow-x: hidden;
+                overscroll-behavior-y: contain;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+                scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+            }
+
+            .clients-row-menu-backdrop {
+                position: fixed;
+                inset: 0;
+                z-index: 84;
+                display: block;
+                background: rgb(15 23 42 / 0.28);
+                backdrop-filter: blur(2px);
+            }
+
+            .clients-row-menu {
+                position: fixed;
+                left: 0.75rem;
+                right: 0.75rem;
+                top: auto;
+                bottom: calc(5.6rem + env(safe-area-inset-bottom));
+                z-index: 90;
+                min-width: 0;
+                max-height: min(18rem, calc(100dvh - 7rem));
+                overflow-y: auto;
+                border-radius: 1rem;
+                padding: 0.45rem;
+            }
+
+            .clients-row-menu-item {
+                min-height: 2.85rem;
+                padding: 0.78rem 0.82rem;
+                font-size: 0.82rem;
+            }
         }
     </style>
 @endpush
@@ -477,8 +542,12 @@
                 </div>
             </div>
 
+            <p class="text-xs ui-muted sm:hidden">
+                Desliza para recorrer el listado de clientes.
+            </p>
+
             <div id="clients-table" class="clients-table-wrap mt-4 overflow-hidden rounded-2xl border border-slate-300/70 dark:border-white/10">
-                <div class="max-h-[560px] overflow-auto">
+                <div class="clients-table-scroll max-h-[560px] overflow-x-auto overflow-y-auto">
                     <table class="ui-table min-w-[1200px]">
                         <thead>
                         <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 text-left text-xs uppercase tracking-wider text-slate-500 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-300">
@@ -582,6 +651,13 @@
                                                 </svg>
                                                 <span class="sr-only">Más acciones</span>
                                             </button>
+
+                                            <div x-cloak
+                                                 x-show="open"
+                                                 x-transition.opacity.duration.120ms
+                                                 class="clients-row-menu-backdrop"
+                                                 aria-hidden="true"
+                                                 x-on:click="open = false"></div>
 
                                             <div x-cloak
                                                  x-show="open"

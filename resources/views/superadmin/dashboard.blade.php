@@ -292,5 +292,197 @@
                 @endforelse
             </div>
         </x-ui.card>
+
+        <x-ui.card title="Scanner pagina" subtitle="QR fijo para abrir tu pagina publica y descargarlo cuando lo necesites.">
+            <div class="sa-page-scanner-grid">
+                <div class="sa-page-scanner-copy">
+                    <p class="sa-page-scanner-label">Enlace fijo</p>
+                    <p id="superadmin-page-qr-url" class="sa-page-scanner-url">{{ $scannerPageUrl }}</p>
+                    <p class="sa-page-scanner-hint">
+                        Este QR se genera siempre desde este mismo enlace dentro del panel, para que no dependas de una imagen vieja
+                        o de un archivo externo que se dañe con el tiempo.
+                    </p>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <x-ui.button :href="$scannerPageUrl" target="_blank" rel="noopener">Abrir pagina</x-ui.button>
+                        <x-ui.button type="button" variant="secondary" id="superadmin-page-qr-download">Descargar QR</x-ui.button>
+                        <x-ui.button type="button" variant="ghost" id="superadmin-page-qr-copy">Copiar enlace</x-ui.button>
+                    </div>
+
+                    <p id="superadmin-page-qr-feedback" class="sa-page-scanner-feedback">
+                        Listo para escanear o descargar.
+                    </p>
+                </div>
+
+                <div class="sa-page-scanner-preview">
+                    <div id="superadmin-page-qr-svg" class="sa-page-scanner-frame">
+                        {!! $scannerPageQrSvg !!}
+                    </div>
+                    <p class="mt-3 text-xs ui-muted">
+                        Escanealo con cualquier celular para abrir <strong>flexjok.duckdns.org</strong>.
+                    </p>
+                </div>
+            </div>
+        </x-ui.card>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        .sa-page-scanner-grid {
+            display: grid;
+            gap: 1rem;
+            align-items: center;
+            grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+        }
+
+        .sa-page-scanner-copy {
+            min-width: 0;
+        }
+
+        .sa-page-scanner-label {
+            margin: 0;
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .dark .sa-page-scanner-label {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .sa-page-scanner-url {
+            margin: 0.55rem 0 0;
+            font-size: clamp(1rem, 0.95rem + 0.22vw, 1.08rem);
+            line-height: 1.45;
+            font-weight: 800;
+            color: rgb(15 23 42 / 0.96);
+            word-break: break-word;
+        }
+
+        .dark .sa-page-scanner-url {
+            color: rgb(241 245 249 / 0.96);
+        }
+
+        .sa-page-scanner-hint {
+            margin: 0.75rem 0 0;
+            max-width: 40rem;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .dark .sa-page-scanner-hint {
+            color: rgb(148 163 184 / 0.92);
+        }
+
+        .sa-page-scanner-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sa-page-scanner-frame {
+            width: min(100%, 320px);
+            border-radius: 1.35rem;
+            border: 1px solid rgb(16 185 129 / 0.34);
+            background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(241 245 249 / 0.95));
+            padding: 1rem;
+            box-shadow: 0 20px 40px -28px rgb(2 8 23 / 0.45);
+        }
+
+        .sa-page-scanner-frame svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .sa-page-scanner-feedback {
+            min-height: 1.4rem;
+            margin: 0.95rem 0 0;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: rgb(5 150 105 / 0.98);
+        }
+
+        @media (max-width: 900px) {
+            .sa-page-scanner-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        (function () {
+            const scannerPageUrl = @json($scannerPageUrl);
+            const qrContainer = document.getElementById('superadmin-page-qr-svg');
+            const downloadButton = document.getElementById('superadmin-page-qr-download');
+            const copyButton = document.getElementById('superadmin-page-qr-copy');
+            const feedback = document.getElementById('superadmin-page-qr-feedback');
+
+            function setFeedback(text, isError) {
+                if (!feedback) {
+                    return;
+                }
+
+                feedback.textContent = text;
+                feedback.style.color = isError ? 'rgb(244 63 94)' : 'rgb(5 150 105)';
+            }
+
+            async function copyText(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return;
+                }
+
+                const helper = document.createElement('textarea');
+                helper.value = text;
+                helper.setAttribute('readonly', 'readonly');
+                helper.style.position = 'fixed';
+                helper.style.opacity = '0';
+                document.body.appendChild(helper);
+                helper.select();
+                document.execCommand('copy');
+                document.body.removeChild(helper);
+            }
+
+            copyButton?.addEventListener('click', async function () {
+                try {
+                    await copyText(scannerPageUrl);
+                    setFeedback('Enlace copiado.', false);
+                } catch (error) {
+                    setFeedback('No se pudo copiar el enlace.', true);
+                }
+            });
+
+            downloadButton?.addEventListener('click', function () {
+                try {
+                    const svg = qrContainer?.querySelector('svg');
+                    if (!svg) {
+                        setFeedback('No se encontro el QR para descargar.', true);
+                        return;
+                    }
+
+                    const serialized = new XMLSerializer().serializeToString(svg);
+                    const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'scanner-pagina-flexjok.svg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    setFeedback('QR descargado.', false);
+                } catch (error) {
+                    setFeedback('No se pudo descargar el QR.', true);
+                }
+            });
+        })();
+    </script>
+@endpush
