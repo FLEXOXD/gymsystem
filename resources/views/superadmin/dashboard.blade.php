@@ -31,7 +31,11 @@
         $ownerActivityRows = collect($reports['owner_activity_rows'] ?? []);
         $ownersOnlineNow = $ownerActivityRows->where('status_key', 'online')->count();
         $dashboardTimezone = trim((string) (auth()->user()?->timezone ?? config('app.timezone', 'UTC')));
-        if ($dashboardTimezone === '' || ! in_array($dashboardTimezone, timezone_identifiers_list(), true)) {
+        if (
+            $dashboardTimezone === ''
+            || $dashboardTimezone === 'UTC'
+            || ! in_array($dashboardTimezone, timezone_identifiers_list(), true)
+        ) {
             $dashboardTimezone = 'America/Guayaquil';
         }
     @endphp
