@@ -67,7 +67,7 @@
                         </div>
                         <div class="sa-note-item">
                             <strong>{{ $newGymsMonth }} gimnasios nuevos este mes</strong>
-                            <span>{{ $newGymsYear }} altas acumuladas en el ano para medir crecimiento comercial.</span>
+                            <span>{{ $newGymsYear }} altas acumuladas en el a&ntilde;o para medir crecimiento comercial.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>{{ $discountedSubscriptions }} suscripciones con descuento vigente</strong>
@@ -110,7 +110,7 @@
                 <p class="sa-stat-meta">Ingreso registrado en el mes actual.</p>
             </article>
             <article class="sa-stat-card is-info">
-                <p class="sa-stat-label">Cobrado este ano</p>
+                <p class="sa-stat-label">Cobrado este a&ntilde;o</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format($currentYearRevenue, $appCurrencyCode) }}</p>
                 <p class="sa-stat-meta">Acumulado anual segun historial de altas y renovaciones.</p>
             </article>
@@ -129,11 +129,11 @@
                         <span>Te muestra cuanto cediste comercialmente en promociones activas durante este mes.</span>
                     </article>
                     <article class="sa-mini-card">
-                        <strong>{{ \App\Support\Currency::format($currentYearDiscount, $appCurrencyCode) }} en descuentos del ano</strong>
+                        <strong>{{ \App\Support\Currency::format($currentYearDiscount, $appCurrencyCode) }} en descuentos del a&ntilde;o</strong>
                         <span>Lectura anual para no perder margen cuando ofreces planes por 3, 6 o 12 meses.</span>
                     </article>
                     <article class="sa-mini-card">
-                        <strong>{{ $chargeCountYear }} cobros registrados este ano</strong>
+                        <strong>{{ $chargeCountYear }} cobros registrados este a&ntilde;o</strong>
                         <span>Incluye altas y renovaciones que quedaron guardadas como eventos comerciales.</span>
                     </article>
                     <article class="sa-mini-card">
@@ -183,7 +183,7 @@
             <x-ui.card title="Alertas y crecimiento" subtitle="Indicadores rapidos para revisar cartera, altas nuevas y margen comercial.">
                 <ul class="sa-check-list">
                     <li>{{ $newGymsMonth }} gimnasios nuevos este mes.</li>
-                    <li>{{ $newGymsYear }} gimnasios nuevos acumulados este ano.</li>
+                    <li>{{ $newGymsYear }} gimnasios nuevos acumulados este a&ntilde;o.</li>
                     <li>{{ $chargeCountMonth }} cobros registrados durante el mes actual.</li>
                     <li>{{ \App\Support\Currency::format($currentCycleDiscount, $appCurrencyCode) }} descontados dentro del ciclo vigente.</li>
                     <li>{{ $discountedSubscriptions }} cuentas activas estan operando con descuento en este momento.</li>
