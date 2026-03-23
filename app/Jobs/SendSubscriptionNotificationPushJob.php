@@ -45,7 +45,7 @@ class SendSubscriptionNotificationPushJob implements ShouldQueue
             $targetUrl = route('app.entry');
         }
 
-        $title = 'Suscripción GymSystem';
+        $title = 'Suscripción FlexGym';
         $planName = trim((string) ($notification->subscription?->plan_name ?? ''));
         if ($planName !== '') {
             $title .= ' - '.$planName;

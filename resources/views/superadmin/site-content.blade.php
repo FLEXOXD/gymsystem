@@ -392,7 +392,7 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Correo de contacto footer
-                            <input type="email" name="footer_contact_email" data-preview-field="footer_contact_email" class="ui-input" value="{{ old('footer_contact_email', $content['footer_contact_email'] ?? 'soporte@gymsystem.local') }}">
+                            <input type="email" name="footer_contact_email" data-preview-field="footer_contact_email" class="ui-input" value="{{ old('footer_contact_email', $content['footer_contact_email'] ?? 'soporte@flexgym.local') }}">
                         </label>
                     </section>
 
@@ -988,7 +988,7 @@
 
                 const footerRaw = textByName('footer_text');
                 const footerResolved = footerRaw.replace('{year}', String(new Date().getFullYear()));
-                const footerContactEmail = textByName('footer_contact_email').trim() || 'soporte@gymsystem.local';
+                const footerContactEmail = textByName('footer_contact_email').trim() || 'soporte@flexgym.local';
                 applyTextAt('.copy', 0, footerResolved);
                 applyTextAt('.footer .footer-lead', 0, footerResolved);
                 forEachPreviewDoc(function (doc) {

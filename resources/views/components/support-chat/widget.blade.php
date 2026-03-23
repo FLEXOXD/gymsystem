@@ -16,7 +16,7 @@
     $contextKey = trim((string) $context) !== '' ? trim((string) $context) : 'landing';
     $isGymPanelContext = $contextKey === 'gym_panel';
     $configContext = (array) config('support_chat.contexts.'.$contextKey, []);
-    $assistantName = trim((string) ($configContext['assistant_name'] ?? 'Asistente GymSystem'));
+    $assistantName = trim((string) ($configContext['assistant_name'] ?? 'Asistente FlexGym'));
     $assistantSubtitle = trim((string) ($configContext['assistant_subtitle'] ?? 'Soporte'));
     $welcomeMessage = trim((string) ($configContext['welcome_message'] ?? 'Hola, te ayudamos enseguida.'));
     $quickReplies = collect((array) ($configContext['quick_replies'] ?? []))
@@ -105,7 +105,7 @@
         <footer class="gs-support-chat-footer">
             <input type="text" data-chat-input maxlength="1400" placeholder="Escribe tu mensaje..." autocomplete="off">
             <button type="button" data-chat-send>Enviar</button>
-            <button type="button" class="gs-support-chat-restart" data-chat-restart hidden>Iniciar nueva conversación</button>
+            <button type="button" class="gs-support-chat-restart" data-chat-restart hidden>Iniciar nueva conversaciÃ³n</button>
         </footer>
     </section>
 </div>
@@ -874,23 +874,23 @@
                 return;
             }
             if (restartUrl === '') {
-                setHelper('No se pudo iniciar una nueva conversación.', true);
+                setHelper('No se pudo iniciar una nueva conversaciÃ³n.', true);
                 return;
             }
 
             loading = true;
             setBusy(true);
-            setHelper('Iniciando nueva conversación...', false);
+            setHelper('Iniciando nueva conversaciÃ³n...', false);
             try {
                 const payload = await requestJson(restartUrl, 'POST', collectLeadPayload());
                 if (!payload) {
-                    setHelper('No se pudo iniciar una nueva conversación.', true);
+                    setHelper('No se pudo iniciar una nueva conversaciÃ³n.', true);
                     return;
                 }
 
                 applyPayload(payload);
             } catch (error) {
-                setHelper('No se pudo iniciar una nueva conversación. Intenta otra vez.', true);
+                setHelper('No se pudo iniciar una nueva conversaciÃ³n. Intenta otra vez.', true);
             } finally {
                 loading = false;
                 setBusy(false);

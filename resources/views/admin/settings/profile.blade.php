@@ -585,7 +585,7 @@
                             <div class="grid gap-3 md:grid-cols-2">
                                 <div>
                                     <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Etiqueta</label>
-                                    <input type="text" name="support_contact_label" value="{{ $supportContactLabel }}" class="ui-input" placeholder="Ej: Soporte GymSystem">
+                                    <input type="text" name="support_contact_label" value="{{ $supportContactLabel }}" class="ui-input" placeholder="Ej: Soporte FlexGym">
                                     @error('support_contact_label')
                                         <p class="mt-1 text-sm font-semibold text-rose-300">{{ $message }}</p>
                                     @enderror

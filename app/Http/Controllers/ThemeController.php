@@ -519,7 +519,7 @@ class ThemeController extends Controller
         ];
 
         $pdf = Pdf::loadView('admin.settings.membership-invoice-pdf', [
-            'gymName' => (string) ($gym?->name ?? 'GymSystem'),
+            'gymName' => (string) ($gym?->name ?? 'FlexGym'),
             'userName' => (string) ($user?->name ?? ''),
             'invoice' => $invoiceData,
             'currencyCode' => (string) ($gym?->currency_code ?? 'USD'),
@@ -789,7 +789,7 @@ class ThemeController extends Controller
             'label' => trim((string) ($contactOwner?->support_contact_label ?? '')) !== ''
                 ? (string) $contactOwner?->support_contact_label
                 : (string) ($contactOwner?->name ?? 'Soporte'),
-            'email' => (string) ($contactOwner?->support_contact_email ?: $contactOwner?->email ?: 'soporte@gymsystem.app'),
+            'email' => (string) ($contactOwner?->support_contact_email ?: $contactOwner?->email ?: 'soporte@flexgym.app'),
             'phone' => (string) ($contactOwner?->support_contact_phone ?: $fallbackPhone),
             'whatsapp' => (string) ($contactOwner?->support_contact_whatsapp ?: $fallbackPhone),
             'link' => (string) ($contactOwner?->support_contact_link ?? ''),

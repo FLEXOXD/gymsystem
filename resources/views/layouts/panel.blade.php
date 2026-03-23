@@ -126,7 +126,7 @@
     if (! $isSuperAdmin && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('gym.contact.index')) {
         $contactUrl = route('gym.contact.index', $gymRouteParams);
     } else {
-        $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
+        $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@flexgym.app?subject=Soporte%20FlexGym';
     }
     $brandHomeUrl = $isSuperAdmin
         ? route('superadmin.dashboard')
@@ -499,7 +499,7 @@
     @if ($canInstallPwa)
         <link rel="apple-touch-icon" href="{{ asset('pwa/fg-favicon-180.png?v=20260317') }}">
     @endif
-    <title>{{ $pageTitle }} - {{ config('app.name', 'GymSystem') }}</title>
+    <title>{{ $pageTitle }} - {{ config('app.name', 'FlexGym') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .smart-list-wrap {
@@ -1538,7 +1538,7 @@
                 @endif
             </div>
             <div class="sidebar-label">
-                <p class="ui-muted text-xs font-bold uppercase tracking-widest">GymSystem</p>
+                <p class="ui-muted text-xs font-bold uppercase tracking-widest">{{ config('app.name', 'FlexGym') }}</p>
                 <p class="ui-heading text-base">{{ $gymName }}</p>
             </div>
         </a>

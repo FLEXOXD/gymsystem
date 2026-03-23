@@ -12,9 +12,9 @@ return [
     ],
     'contexts' => [
         'landing' => [
-            'assistant_name' => 'Asistente GymSystem',
+            'assistant_name' => 'Asistente FlexGym',
             'assistant_subtitle' => 'Soporte comercial para gimnasios',
-            'welcome_message' => 'Hola, soy tu asistente. Te ayudo con dudas de planes, demo, implementación y operación de GymSystem.',
+            'welcome_message' => 'Hola, soy tu asistente. Te ayudo con dudas de planes, demo, implementación y operación de FlexGym.',
             'fallback_message' => 'Te puedo orientar por módulo: recepción, clientes, planes, caja, ventas/inventario, reportes, sucursales y portal cliente.',
             'quick_replies' => [
                 [
@@ -38,7 +38,7 @@ return [
                 [
                     'key' => 'reception_checkin',
                     'label' => 'Recepción y acceso',
-                    'response' => 'Sí, GymSystem incluye recepción con control de accesos y seguimiento de asistencias para operación diaria del gimnasio.',
+                    'response' => 'Sí, FlexGym incluye recepción con control de accesos y seguimiento de asistencias para operación diaria del gimnasio.',
                     'escalate' => false,
                 ],
                 [

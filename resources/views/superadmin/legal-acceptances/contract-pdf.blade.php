@@ -74,7 +74,7 @@
     </section>
 
     <p class="footer-note">
-        Este documento es un comprobante digital emitido por GymSystem con fines de respaldo legal y auditoría interna.
+        Este documento es un comprobante digital emitido por FlexGym con fines de respaldo legal y auditoría interna.
     </p>
 </body>
 </html>

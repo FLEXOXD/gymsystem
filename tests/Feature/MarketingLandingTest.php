@@ -308,7 +308,7 @@ it('requires checkbox acceptance for legal registration', function () {
 it('shows demo and guided demo pages for guests', function () {
     $this->get(route('demo'))
         ->assertOk()
-        ->assertSee('GymSystem Demo');
+        ->assertSee('FlexGym Demo');
 
     $this->get(route('demo.guide'))
         ->assertOk()

@@ -3,12 +3,12 @@
     $demoCtaLabel = 'Demo gratis';
     $loginLabel = trim((string) ($content['login_button_label'] ?? 'Iniciar sesión'));
     $brandKicker = trim((string) ($content['brand_kicker'] ?? 'Sistema Operativo'));
-    $brandName = trim((string) ($content['brand_name'] ?? 'GymSystem'));
+    $brandName = trim((string) ($content['brand_name'] ?? 'FlexGym'));
     $brandLogoUrl = trim((string) ($content['brand_logo_url'] ?? ''));
-    $brandInitials = trim((string) ($content['brand_initials'] ?? 'GS'));
-    $footerText = trim((string) ($content['footer_text_resolved'] ?? ('GymSystem '.now()->year.' | Control operativo para gimnasios')));
-    $footerContactEmail = trim((string) ($content['footer_contact_email'] ?? 'soporte@gymsystem.local'));
-    $footerContactEmail = $footerContactEmail !== '' ? $footerContactEmail : 'soporte@gymsystem.local';
+    $brandInitials = trim((string) ($content['brand_initials'] ?? 'FG'));
+    $footerText = trim((string) ($content['footer_text_resolved'] ?? ('FlexGym '.now()->year.' | Control operativo para gimnasios')));
+    $footerContactEmail = trim((string) ($content['footer_contact_email'] ?? 'soporte@flexgym.local'));
+    $footerContactEmail = $footerContactEmail !== '' ? $footerContactEmail : 'soporte@flexgym.local';
     $demoLimitModal = session('demo_limit_modal');
     $demoLimitSeconds = max(0, (int) data_get($demoLimitModal, 'retry_after_seconds', 0));
     $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rápido'));
@@ -3090,10 +3090,10 @@
 
             <div class="shell about-proof reveal">
                 <p class="about-proof-kicker">Fundador</p>
-                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrolló GymSystem para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
+                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrolló FlexGym para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
                 <div class="about-proof-author">
                     David Israel Quintana Tapia
-                    <span>Fundador de FlexJok y creador de GymSystem</span>
+                    <span>Fundador de FlexJok y creador de FlexGym</span>
                 </div>
             </div>
 
@@ -3114,7 +3114,7 @@
                 <article class="about-story-copy reveal">
                     <h3 class="about-story-title">Misión, visión y compromiso</h3>
                     <p class="about-story-lead">Nuestra misión es optimizar la operación interna de los gimnasios para que el propietario pueda enfocarse en captar más clientes, fidelizar miembros y escalar su negocio.</p>
-                    <p class="about-story-lead">Nuestra visión es convertir GymSystem en la plataforma de gestión más confiable para gimnasios en Latinoamérica.</p>
+                    <p class="about-story-lead">Nuestra visión es convertir FlexGym en la plataforma de gestión más confiable para gimnasios en Latinoamérica.</p>
                     <ul class="about-highlights">
                         <li>Eficiencia operativa.</li>
                         <li>Control financiero claro.</li>
@@ -3166,7 +3166,7 @@
                         </div>
                         <div class="about-team-info">
                             <span class="about-team-role">Tecnología</span>
-                            <h4 class="about-team-name">Desarrollo GymSystem</h4>
+                            <h4 class="about-team-name">Desarrollo FlexGym</h4>
                             <p class="about-team-note">Automatización, reportes e inteligencia operativa para decisiones rápidas.</p>
                         </div>
                     </article>
@@ -3311,14 +3311,14 @@
                 'service' => [
                     'section_id' => 'legal-service',
                     'small' => 'Condiciones de servicio',
-                    'title' => 'Reglas de uso del sistema GymSystem',
+                    'title' => 'Reglas de uso del sistema FlexGym',
                     'lead' => 'Estas condiciones regulan el uso de la plataforma, responsabilidades de cada parte y límites del servicio.',
                     'document_key' => 'service_terms',
                     'document_title' => 'Condiciones de servicio',
                     'blocks' => [
                         [
                             'title' => '1) Alcance del servicio',
-                            'text' => 'GymSystem ofrece herramientas operativas para gimnasios, sujetas a disponibilidad técnica y mantenimiento planificado.',
+                            'text' => 'FlexGym ofrece herramientas operativas para gimnasios, sujetas a disponibilidad técnica y mantenimiento planificado.',
                             'points' => [
                                 'Funcionalidades según el plan contratado.',
                                 'Actualizaciones evolutivas y correctivas.',
@@ -3474,7 +3474,7 @@
                 <div>
                     <p class="quote-modal-kicker">Cotización personalizada</p>
                     <h3 class="quote-modal-title">Cu&eacute;ntanos c&oacute;mo opera tu gimnasio y recibe una propuesta clara.</h3>
-                    <p class="quote-modal-copy">Cuéntanos tu contexto operativo y te ayudamos a elegir el plan correcto para implementar GymSystem sin fricciones.</p>
+                    <p class="quote-modal-copy">Cuéntanos tu contexto operativo y te ayudamos a elegir el plan correcto para implementar FlexGym sin fricciones.</p>
                 </div>
 
                 <div class="quote-modal-visual" aria-hidden="true">

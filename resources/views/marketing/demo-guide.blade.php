@@ -1,12 +1,13 @@
 @php($content = $content ?? \App\Support\MarketingContent::defaults())
 @php($demoCtaLabel = 'Demo gratis')
+@php($brandName = trim((string) ($content['brand_name'] ?? 'FlexGym')))
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b1020">
-    <title>GymSystem | Demo guiada</title>
+    <title>{{ $brandName }} | Demo guiada</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {

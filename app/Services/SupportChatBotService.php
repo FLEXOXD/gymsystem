@@ -115,7 +115,7 @@ class SupportChatBotService
             }
             if ($this->containsTrigger($text, 'clients') || $this->containsTrigger($text, 'memberships')) {
                 return [
-                    'text' => 'GymSystem incluye gestión de clientes y membresías: altas, renovaciones, vencimientos y control de estado.',
+                    'text' => 'FlexGym incluye gestión de clientes y membresías: altas, renovaciones, vencimientos y control de estado.',
                     'escalate' => false,
                 ];
             }

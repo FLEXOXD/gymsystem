@@ -9,6 +9,12 @@ use Normalizer;
 
 class MarketingContent
 {
+    private const BRAND_NAME = 'FlexGym';
+
+    private const LEGACY_BRAND_NAME = 'GymSystem';
+
+    private const DEFAULT_FOOTER_EMAIL = 'soporte@flexgym.local';
+
     /**
      * @return array<string, string>
      */
@@ -16,7 +22,7 @@ class MarketingContent
     {
         return [
             'brand_kicker' => 'Sistema Operativo',
-            'brand_name' => 'GymSystem',
+            'brand_name' => self::BRAND_NAME,
             'brand_logo_path' => '',
             'login_button_label' => 'Iniciar sesión',
             'hero_kicker' => 'Software para gimnasios',
@@ -24,16 +30,16 @@ class MarketingContent
             'hero_subtitle' => 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil. Ideal para gimnasios individuales o multisucursal.',
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => '593991066303',
-            'whatsapp_message' => 'Hola, quiero más información de GymSystem para controlar mi gimnasio.',
-            'whatsapp_message_plan_basico' => 'Hola, quiero información del Plan básico de GymSystem.',
-            'whatsapp_message_plan_profesional' => 'Hola, quiero información del Plan profesional de GymSystem.',
-            'whatsapp_message_plan_premium' => 'Hola, quiero información del Plan premium de GymSystem.',
-            'whatsapp_message_plan_sucursales' => 'Hola, quiero información del Plan sucursales de GymSystem para multi-sede.',
+            'whatsapp_message' => 'Hola, quiero más información de FlexGym para controlar mi gimnasio.',
+            'whatsapp_message_plan_basico' => 'Hola, quiero información del Plan básico de FlexGym.',
+            'whatsapp_message_plan_profesional' => 'Hola, quiero información del Plan profesional de FlexGym.',
+            'whatsapp_message_plan_premium' => 'Hola, quiero información del Plan premium de FlexGym.',
+            'whatsapp_message_plan_sucursales' => 'Hola, quiero información del Plan sucursales de FlexGym para multi-sede.',
             'final_cta_title' => 'Convierte tu operación diaria en un flujo simple y medible.',
             'final_cta_text' => 'Solicita una demo temporal y prueba el sistema real con datos de ejemplo que luego se eliminan.',
             'final_cta_image_path' => '',
-            'footer_text' => 'GymSystem {year} | Control operativo para gimnasios',
-            'footer_contact_email' => 'soporte@gymsystem.local',
+            'footer_text' => 'FlexGym {year} | Control operativo para gimnasios',
+            'footer_contact_email' => self::DEFAULT_FOOTER_EMAIL,
             'hero_panel_left_title' => 'Panel operativo en vivo',
             'hero_panel_right_title' => 'Modo recepción',
             'hero_metric_1_label' => 'Clientes',
@@ -155,6 +161,7 @@ class MarketingContent
             }
         }
 
+        $defaults = self::replaceLegacyBrandingCopy($defaults);
         $defaults = self::replaceLegacySectionOneCopy($defaults);
         $defaults = self::replaceLegacySectionTwoCopy($defaults);
 
@@ -222,7 +229,7 @@ class MarketingContent
             $content['marquee_item_'.$i.'_logo_url'] = self::publicStorageUrl((string) ($content['marquee_item_'.$i.'_logo_path'] ?? ''));
         }
         $content['footer_text_resolved'] = str_replace('{year}', now()->format('Y'), (string) ($content['footer_text'] ?? ''));
-        $content['brand_initials'] = self::initials((string) ($content['brand_name'] ?? 'GymSystem'));
+        $content['brand_initials'] = self::initials((string) ($content['brand_name'] ?? self::BRAND_NAME));
 
         return $content;
     }
@@ -286,7 +293,45 @@ class MarketingContent
 
         $initials = mb_strtoupper($initials);
 
-        return $initials !== '' ? $initials : 'GS';
+        return $initials !== '' ? $initials : 'FG';
+    }
+
+    /**
+     * @param array<string, string> $content
+     * @return array<string, string>
+     */
+    private static function replaceLegacyBrandingCopy(array $content): array
+    {
+        $defaults = self::defaults();
+        $keys = [
+            'brand_name',
+            'whatsapp_message',
+            'whatsapp_message_plan_basico',
+            'whatsapp_message_plan_profesional',
+            'whatsapp_message_plan_premium',
+            'whatsapp_message_plan_sucursales',
+            'footer_text',
+        ];
+
+        foreach ($keys as $key) {
+            $current = trim((string) ($content[$key] ?? ''));
+            $default = trim((string) ($defaults[$key] ?? ''));
+            if ($current === '' || $default === '') {
+                continue;
+            }
+
+            $legacyValue = str_replace(self::BRAND_NAME, self::LEGACY_BRAND_NAME, $default);
+            if (mb_strtolower($current) === mb_strtolower(trim($legacyValue))) {
+                $content[$key] = $default;
+            }
+        }
+
+        $footerContactEmail = trim((string) ($content['footer_contact_email'] ?? ''));
+        if ($footerContactEmail !== '' && mb_strtolower($footerContactEmail) === 'soporte@gymsystem.local') {
+            $content['footer_contact_email'] = self::DEFAULT_FOOTER_EMAIL;
+        }
+
+        return $content;
     }
 
     /**
@@ -340,7 +385,7 @@ class MarketingContent
                 'Datos separados por gimnasio para evitar cruces',
             ],
             'section_2_text' => [
-                'GymSystem trabaja con contexto de gimnasio en cada módulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
+                self::LEGACY_BRAND_NAME.' trabaja con contexto de gimnasio en cada módulo para garantizar aislamiento de datos, seguridad y control operativo para SuperAdmin.',
                 'Aislamiento de datos y seguridad multi-tenant real.',
             ],
             'section_2_item_1' => [

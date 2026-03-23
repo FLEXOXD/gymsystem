@@ -36,7 +36,7 @@ class GenerateWebPushVapidKeys extends Command
         $this->line('');
         $this->info('Copia estas variables en tu .env:');
         $this->line('WEBPUSH_ENABLED=true');
-        $this->line('WEBPUSH_VAPID_SUBJECT=mailto:soporte@gymsystem.app');
+        $this->line('WEBPUSH_VAPID_SUBJECT=mailto:soporte@flexgym.app');
         $this->line('WEBPUSH_VAPID_PUBLIC_KEY='.$keys['publicKey']);
         $this->line('WEBPUSH_VAPID_PRIVATE_KEY='.$keys['privateKey']);
         $this->line('');
@@ -44,4 +44,3 @@ class GenerateWebPushVapidKeys extends Command
         return self::SUCCESS;
     }
 }
-

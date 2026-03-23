@@ -30,7 +30,7 @@
         [
             'value' => number_format((int) ($stats['gyms'] ?? 0)),
             'label' => 'Gimnasios registrados',
-            'text' => 'Operaciones que usan GymSystem para trabajar con mas orden.',
+            'text' => 'Operaciones que usan FlexGym para trabajar con mas orden.',
         ],
         [
             'value' => number_format((int) ($stats['active_sessions'] ?? 0)),
@@ -111,7 +111,7 @@
             'key' => 'pwa',
             'eyebrow' => 'Experiencia movil',
             'title' => 'PWA lista para escritorio, tablet y celular',
-            'text' => 'GymSystem se siente como producto serio: accesible, instalable y listo para acompanar la operacion donde ocurra.',
+            'text' => 'FlexGym se siente como producto serio: accesible, instalable y listo para acompanar la operacion donde ocurra.',
             'items' => [
                 trim((string) ($content['section_3_item_1'] ?? 'Instalable como app para uso diario')),
                 trim((string) ($content['section_3_item_2'] ?? 'Base preparada para recordatorios y notificaciones')),
@@ -584,7 +584,7 @@
             <article class="premium-plan-card reveal {{ $isFeatured ? 'is-featured' : '' }} {{ $isContactMode ? 'is-contact' : '' }}">
                 <div class="premium-plan-top">
                     <div>
-                        <span class="premium-plan-kicker">{{ $planSegments[$planKey] ?? 'Plan GymSystem' }}</span>
+                        <span class="premium-plan-kicker">{{ $planSegments[$planKey] ?? 'Plan FlexGym' }}</span>
                         <h3>{{ $planCard['name'] }}</h3>
                     </div>
 
@@ -701,13 +701,13 @@
     <header class="premium-section-head reveal">
         <span class="premium-eyebrow">Confianza para decidir</span>
         <h2>Una propuesta comercial honesta que transmite seguridad sin inventar historias.</h2>
-        <p>Usamos indicadores reales, beneficios concretos y promesas operativas creibles para que GymSystem se sienta confiable y profesional.</p>
+        <p>Usamos indicadores reales, beneficios concretos y promesas operativas creibles para que FlexGym se sienta confiable y profesional.</p>
     </header>
 
     <div class="premium-confidence-grid">
         <article class="premium-confidence-card premium-confidence-card--lead reveal">
             <span class="premium-chip">Negocio que crece</span>
-            <h3>GymSystem se presenta como software de control y crecimiento, no como pagina informativa generica.</h3>
+            <h3>FlexGym se presenta como software de control y crecimiento, no como pagina informativa generica.</h3>
             <p>El enfoque ahora pone primero lo que el cliente necesita entender rapido: que resuelve, para quien es, por que se ve serio y cual boton debe tocar.</p>
 
             <ul class="premium-confidence-list">

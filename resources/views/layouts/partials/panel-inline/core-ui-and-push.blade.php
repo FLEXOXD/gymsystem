@@ -371,7 +371,7 @@
             const payload = (pushPayload && typeof pushPayload === 'object') ? pushPayload : {};
 
             if (!isDesktopPushToastContext()) {
-                const compactTitle = typeof payload.title === 'string' && payload.title.trim() !== '' ? payload.title.trim() : 'GymSystem';
+                const compactTitle = typeof payload.title === 'string' && payload.title.trim() !== '' ? payload.title.trim() : 'FlexGym';
                 const compactBody = typeof payload.body === 'string' ? payload.body.trim() : '';
                 showPushAccessAlert(compactBody !== '' ? compactTitle + ': ' + compactBody : compactTitle, 'info');
                 return;
@@ -380,7 +380,7 @@
             const rawData = (payload.data && typeof payload.data === 'object') ? payload.data : {};
             const title = typeof payload.title === 'string' && payload.title.trim() !== ''
                 ? payload.title.trim()
-                : 'GymSystem';
+                : 'FlexGym';
             const body = typeof payload.body === 'string' ? payload.body.trim() : '';
             const detailText = typeof rawData.detail_text === 'string' ? rawData.detail_text.trim() : '';
 
@@ -687,7 +687,7 @@
 
             const title = document.createElement('h3');
             title.className = 'text-lg font-black';
-            title.textContent = 'Activa notificaciones de GymSystem';
+            title.textContent = 'Activa notificaciones de FlexGym';
             dialog.appendChild(title);
 
             const subtitle = document.createElement('p');

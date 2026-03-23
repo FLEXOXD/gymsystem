@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Pantalla QR - {{ config('app.name', 'GymSystem') }}</title>
+    <title>Pantalla QR - {{ config('app.name', 'FlexGym') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="theme-body min-h-screen ui-text">

@@ -150,7 +150,7 @@ class PushSubscriptionController extends Controller
         }
 
         $payload = [
-            'title' => 'GymSystem',
+            'title' => 'FlexGym',
             'body' => 'Prueba de notificacion push activada correctamente.',
             'tag' => 'gymsystem-test-user-'.(int) $user->id,
             'url' => $this->resolveDefaultUrl($user),

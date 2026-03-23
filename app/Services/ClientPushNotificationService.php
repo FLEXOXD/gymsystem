@@ -83,7 +83,7 @@ class ClientPushNotificationService
         $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
 
         return [
-            'title' => $title !== '' ? $title : 'GymSystem',
+            'title' => $title !== '' ? $title : 'FlexGym',
             'body' => $body !== '' ? $body : 'Tienes una actualizacion en tu progreso.',
             'icon' => $icon,
             'badge' => $badge,
