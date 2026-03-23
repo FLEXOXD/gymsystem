@@ -1,7 +1,7 @@
 @php
     $content = $content ?? \App\Support\MarketingContent::load();
     $demoCtaLabel = 'Demo gratis';
-    $loginLabel = trim((string) ($content['login_button_label'] ?? 'Iniciar sesión'));
+    $loginLabel = trim((string) ($content['login_button_label'] ?? 'Iniciar sesiÃ³n'));
     $brandKicker = trim((string) ($content['brand_kicker'] ?? 'Sistema Operativo'));
     $brandName = trim((string) ($content['brand_name'] ?? 'FlexGym'));
     $brandLogoUrl = trim((string) ($content['brand_logo_url'] ?? ''));
@@ -11,8 +11,8 @@
     $footerContactEmail = $footerContactEmail !== '' ? $footerContactEmail : 'soporte@flexgym.local';
     $demoLimitModal = session('demo_limit_modal');
     $demoLimitSeconds = max(0, (int) data_get($demoLimitModal, 'retry_after_seconds', 0));
-    $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rápido'));
-    $heroTitleText = trim((string) preg_replace('/\bsin\s+fricción\b\.?/i', '', $heroTitleText));
+    $heroTitleText = trim((string) ($content['hero_title'] ?? 'Administra tu gimnasio en un solo sistema, rÃ¡pido'));
+    $heroTitleText = trim((string) preg_replace('/\bsin\s+fricciÃ³n\b\.?/i', '', $heroTitleText));
     $heroHasClosingPhrase = (bool) preg_match('/\bsin\s+problemas\b/i', $heroTitleText);
     $heroSlides = [];
     for ($slide = 1; $slide <= 4; $slide++) {
@@ -84,10 +84,10 @@
 
     $pageTitleSuffix = match ($pageMode) {
         'about' => 'Sobre nosotros',
-        'contact' => 'Contáctanos',
-        'privacy' => 'Política de privacidad',
+        'contact' => 'ContÃ¡ctanos',
+        'privacy' => 'PolÃ­tica de privacidad',
         'service' => 'Condiciones de servicio',
-        'commercial' => 'Términos comerciales',
+        'commercial' => 'TÃ©rminos comerciales',
         default => 'Software para gimnasios',
     };
     $tabIconUrl = asset('pwa/fg-favicon-32.png?v=20260317');
@@ -98,66 +98,66 @@
     $serviceCards = [
         [
             'index' => '1',
-            'title' => trim((string) ($content['section_1_title'] ?? 'Operación diaria clara para recepción y administración')),
-            'text' => trim((string) ($content['section_1_text'] ?? 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rápida.')),
+            'title' => trim((string) ($content['section_1_title'] ?? 'OperaciÃ³n diaria clara para recepciÃ³n y administraciÃ³n')),
+            'text' => trim((string) ($content['section_1_text'] ?? 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rÃ¡pida.')),
             'items' => [
                 trim((string) ($content['section_1_item_1'] ?? 'Ingreso y check-in con QR, RFID, pulseras y llaveros')),
-                trim((string) ($content['section_1_item_2'] ?? 'Cobros de membresía con control por método de pago')),
+                trim((string) ($content['section_1_item_2'] ?? 'Cobros de membresÃ­a con control por mÃ©todo de pago')),
                 trim((string) ($content['section_1_item_3'] ?? 'Reportes de ingresos y asistencia en tiempo real')),
             ],
         ],
         [
             'index' => '2',
-            'title' => trim((string) ($content['section_2_title'] ?? 'Más control, menos caos operativo')),
-            'text' => trim((string) ($content['section_2_text'] ?? 'Convierte tu operación diaria en procesos claros, medibles y fáciles de ejecutar.')),
+            'title' => trim((string) ($content['section_2_title'] ?? 'MÃ¡s control, menos caos operativo')),
+            'text' => trim((string) ($content['section_2_text'] ?? 'Convierte tu operaciÃ³n diaria en procesos claros, medibles y fÃ¡ciles de ejecutar.')),
             'items' => [
-                trim((string) ($content['section_2_item_1'] ?? 'Flujo de recepción optimizado')),
+                trim((string) ($content['section_2_item_1'] ?? 'Flujo de recepciÃ³n optimizado')),
                 trim((string) ($content['section_2_item_2'] ?? 'Caja por turnos con control real')),
                 trim((string) ($content['section_2_item_3'] ?? 'Panel simple para ver ingresos, vencimientos y clientes activos')),
             ],
         ],
         [
             'index' => '3',
-            'title' => trim((string) ($content['section_3_title'] ?? 'Experiencia móvil tipo app (PWA)')),
+            'title' => trim((string) ($content['section_3_title'] ?? 'Experiencia mÃ³vil tipo app (PWA)')),
             'text' => trim((string) ($content['section_3_text'] ?? 'Instalable en celular y escritorio, lista para operar.')),
             'items' => [
-                trim((string) ($content['section_3_item_1'] ?? 'Pantalla de inicio tipo aplicación')),
-                trim((string) ($content['section_3_item_2'] ?? 'Caché de assets para carga rápida')),
+                trim((string) ($content['section_3_item_1'] ?? 'Pantalla de inicio tipo aplicaciÃ³n')),
+                trim((string) ($content['section_3_item_2'] ?? 'CachÃ© de assets para carga rÃ¡pida')),
                 trim((string) ($content['section_3_item_3'] ?? 'Base lista para notificaciones y recordatorios')),
             ],
         ],
     ];
 
     $faqItems = [
-        ['q' => '¿Qué incluye la demo gratuita?', 'a' => 'La demo crea un gimnasio temporal real para probar recepción, clientes, membresías, caja y reportes sin tocar datos de producción.'],
-        ['q' => '¿La demo afecta mi sistema actual?', 'a' => 'No. La demo trabaja en un entorno temporal aislado y los registros se eliminan automáticamente al expirar la sesión.'],
-        ['q' => '¿Puedo usar el sistema desde celular?', 'a' => 'Sí. La interfaz es responsive y cuenta con base PWA para operación diaria en móvil y escritorio.'],
-        ['q' => '¿Cómo solicitar acompañamiento comercial?', 'a' => 'Puedes escribir por WhatsApp desde esta página y te ayudamos a definir la mejor implementación para tu gimnasio.'],
+        ['q' => 'Â¿QuÃ© incluye la demo gratuita?', 'a' => 'La demo crea un gimnasio temporal real para probar recepciÃ³n, clientes, membresÃ­as, caja y reportes sin tocar datos de producciÃ³n.'],
+        ['q' => 'Â¿La demo afecta mi sistema actual?', 'a' => 'No. La demo trabaja en un entorno temporal aislado y los registros se eliminan automÃ¡ticamente al expirar la sesiÃ³n.'],
+        ['q' => 'Â¿Puedo usar el sistema desde celular?', 'a' => 'SÃ­. La interfaz es responsive y cuenta con base PWA para operaciÃ³n diaria en mÃ³vil y escritorio.'],
+        ['q' => 'Â¿CÃ³mo solicitar acompaÃ±amiento comercial?', 'a' => 'Puedes escribir por WhatsApp desde esta pÃ¡gina y te ayudamos a definir la mejor implementaciÃ³n para tu gimnasio.'],
     ];
 
     $heroProofItems = [
-        ['title' => 'Cobro diario ordenado', 'text' => 'Caja por turnos, membresías y movimientos en una sola operación.'],
-        ['title' => 'Recepción más rápida', 'text' => 'Check-in con flujo claro para escritorio, tablet y móvil.'],
-        ['title' => 'Listo para crecer', 'text' => 'Desde una sede hasta operación multi-gym sin cambiar de sistema.'],
+        ['title' => 'Cobro diario ordenado', 'text' => 'Caja por turnos, membresÃ­as y movimientos en una sola operaciÃ³n.'],
+        ['title' => 'RecepciÃ³n mÃ¡s rÃ¡pida', 'text' => 'Check-in con flujo claro para escritorio, tablet y mÃ³vil.'],
+        ['title' => 'Listo para crecer', 'text' => 'Desde una sede hasta operaciÃ³n multi-gym sin cambiar de sistema.'],
     ];
 
     $outcomeCards = [
         [
-            'eyebrow' => 'Recepción',
-            'title' => 'Tu recepción trabaja más rápido',
-            'text' => 'Check-in, membresías y cobros quedan a mano para atender mejor y perder menos tiempo.',
+            'eyebrow' => 'RecepciÃ³n',
+            'title' => 'Tu recepciÃ³n trabaja mÃ¡s rÃ¡pido',
+            'text' => 'Check-in, membresÃ­as y cobros quedan a mano para atender mejor y perder menos tiempo.',
             'metric' => 'Menos filas',
         ],
         [
             'eyebrow' => 'Control',
             'title' => 'Ves lo importante en un solo lugar',
-            'text' => 'Pagos, vencimientos, ingresos y clientes activos se revisan rápido sin buscar en varias pantallas.',
+            'text' => 'Pagos, vencimientos, ingresos y clientes activos se revisan rÃ¡pido sin buscar en varias pantallas.',
             'metric' => 'Control diario',
         ],
         [
             'eyebrow' => 'Crecimiento',
             'title' => 'Creces sin volver al desorden',
-            'text' => 'Empiezas con una sede y, si abres más, sigues trabajando sobre el mismo sistema.',
+            'text' => 'Empiezas con una sede y, si abres mÃ¡s, sigues trabajando sobre el mismo sistema.',
             'metric' => 'Listo para crecer',
         ],
     ];
@@ -171,12 +171,12 @@
         [
             'step' => '02',
             'title' => 'Tu equipo cobra y atiende mejor',
-            'text' => 'Recepción, membresías y caja quedan conectadas para cometer menos errores y trabajar más rápido.',
+            'text' => 'RecepciÃ³n, membresÃ­as y caja quedan conectadas para cometer menos errores y trabajar mÃ¡s rÃ¡pido.',
         ],
         [
             'step' => '03',
-            'title' => 'Sabes como va el gimnasio cada día',
-            'text' => 'Ves vencimientos, ingresos y movimiento diario para tomar decisiones con más claridad.',
+            'title' => 'Sabes como va el gimnasio cada dÃ­a',
+            'text' => 'Ves vencimientos, ingresos y movimiento diario para tomar decisiones con mÃ¡s claridad.',
         ],
     ];
 
@@ -1270,347 +1270,7 @@
             color: #b4c8bc; line-height: 1.55; padding: 0 1rem;
         }
         .faq-item.is-open .faq-content { max-height: 220px; padding: 0 1rem .9rem; }
-        .about-section {
-            border-top: 0;
-            margin-top: 1.5rem;
-            padding-top: .5rem;
-        }
-        .about-hero-band {
-            position: relative;
-            min-height: clamp(240px, 34vw, 420px);
-            border-radius: 1.15rem;
-            overflow: hidden;
-            background:
-                linear-gradient(112deg, rgba(4, 20, 13, .92), rgba(7, 36, 23, .84) 45%, rgba(4, 20, 13, .56)),
-                var(--about-hero-image, linear-gradient(145deg, #08150f, #103724));
-            background-size: cover;
-            background-position: center;
-            border: 0;
-            box-shadow: 0 26px 48px rgba(2, 12, 8, .42);
-            display: flex;
-            align-items: center;
-        }
-        .about-hero-band::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, rgba(3, 15, 10, .84) 0%, rgba(3, 15, 10, .54) 45%, rgba(3, 15, 10, .18) 100%);
-        }
-        .about-hero-content {
-            position: relative;
-            z-index: 2;
-            padding-top: 1.2rem;
-            padding-bottom: 1.2rem;
-        }
-        .about-hero-kicker {
-            margin: 0;
-            font-size: .82rem;
-            letter-spacing: .12em;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #97ffc0;
-        }
-        .about-hero-title {
-            margin: .4rem 0 0;
-            font-size: clamp(2.15rem, 5.8vw, 4.35rem);
-            line-height: .95;
-            letter-spacing: .02em;
-            text-transform: uppercase;
-            color: #f6fbff;
-        }
-        .about-hero-breadcrumb {
-            margin: .9rem 0 0;
-            display: inline-flex;
-            align-items: center;
-            gap: .55rem;
-            color: #dff7e8;
-            font-size: .86rem;
-            font-weight: 700;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-        .about-hero-breadcrumb::before {
-            content: "";
-            width: 70px;
-            height: 2px;
-            background: #59ff95;
-            opacity: .9;
-        }
-        .about-story {
-            margin-top: 1.9rem;
-            display: grid;
-            grid-template-columns: 1.05fr .95fr;
-            gap: 1rem;
-            align-items: stretch;
-        }
-        .about-story-copy {
-            border: 0;
-            border-radius: 1rem;
-            background: linear-gradient(145deg, #08160f, #0d2a1b);
-            padding: 1.1rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 18px 32px rgba(2, 12, 8, .32);
-        }
-        .about-story-copy::before {
-            content: "NOSOTROS";
-            position: absolute;
-            top: .25rem;
-            left: .85rem;
-            font-size: clamp(2.4rem, 7vw, 5.8rem);
-            line-height: .9;
-            font-weight: 900;
-            letter-spacing: .03em;
-            color: rgba(172, 240, 199, .08);
-            pointer-events: none;
-        }
-        .about-story-title {
-            margin: .3rem 0 0;
-            position: relative;
-            z-index: 1;
-            font-size: clamp(1.6rem, 3.2vw, 2.5rem);
-            text-transform: uppercase;
-            letter-spacing: .02em;
-            color: #f2fff7;
-        }
-        .about-story-lead {
-            margin: .68rem 0 0;
-            position: relative;
-            z-index: 1;
-            color: #c8e9d5;
-            line-height: 1.62;
-            font-size: 1rem;
-        }
-        .about-highlights {
-            margin: .88rem 0 0;
-            padding: 0;
-            list-style: none;
-            display: grid;
-            gap: .48rem;
-        }
-        .about-highlights li {
-            display: flex;
-            align-items: flex-start;
-            gap: .52rem;
-            color: #e7faef;
-            line-height: 1.48;
-        }
-        .about-highlights li::before {
-            content: "";
-            width: .48rem;
-            height: .48rem;
-            border-radius: 999px;
-            margin-top: .34rem;
-            flex: 0 0 .48rem;
-            background: #5bff96;
-            box-shadow: 0 0 10px rgba(91, 255, 150, .76);
-        }
-        .about-highlights.is-checks li::before {
-            content: "?";
-            width: auto;
-            height: auto;
-            margin-top: 0;
-            border-radius: 0;
-            flex: 0 0 auto;
-            background: transparent;
-            box-shadow: none;
-            color: #9dffb6;
-            font-weight: 900;
-            line-height: 1.2;
-        }
-        .about-story-media {
-            border: 0;
-            border-radius: 1rem;
-            overflow: hidden;
-            position: relative;
-            min-height: 380px;
-            background: linear-gradient(145deg, #0a1b12, #123623);
-            box-shadow: 0 18px 34px rgba(4, 10, 7, .34);
-        }
-        .about-story-media img {
-            width: 100%;
-            height: 100%;
-            min-height: 380px;
-            object-fit: cover;
-            display: block;
-            filter: saturate(1.08) contrast(1.02);
-        }
-        .about-story-media-placeholder {
-            min-height: 380px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 1rem;
-            color: #d9f2e3;
-            font-weight: 700;
-        }
-        .about-year-badge {
-            position: absolute;
-            left: 1rem;
-            bottom: 1rem;
-            background: linear-gradient(145deg, #69ff9f, #21cf6d);
-            color: #042312;
-            border-radius: .7rem;
-            padding: .7rem .88rem;
-            min-width: 120px;
-            box-shadow: 0 12px 26px rgba(2, 18, 9, .42);
-        }
-        .about-year-value {
-            display: block;
-            font-size: 1.85rem;
-            line-height: 1;
-            font-weight: 900;
-            letter-spacing: .03em;
-        }
-        .about-year-label {
-            display: block;
-            margin-top: .2rem;
-            font-size: .74rem;
-            font-weight: 700;
-            letter-spacing: .2em;
-            text-transform: uppercase;
-        }
-        .about-proof {
-            margin-top: 1.15rem;
-            border: 0;
-            border-radius: 1rem;
-            background: linear-gradient(145deg, #061f13, #0b3922);
-            padding: 1.15rem 1.2rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 16px 30px rgba(2, 12, 8, .32);
-        }
-        .about-proof::before {
-            content: "TESTIMONIO";
-            position: absolute;
-            right: .8rem;
-            top: .3rem;
-            font-size: clamp(1.9rem, 5vw, 4rem);
-            font-weight: 900;
-            line-height: .9;
-            color: rgba(175, 243, 203, .08);
-            letter-spacing: .02em;
-            pointer-events: none;
-        }
-        .about-proof-kicker {
-            margin: 0;
-            color: #97ffc0;
-            font-size: .8rem;
-            font-weight: 800;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-        }
-        .about-proof-quote {
-            margin: .56rem 0 0;
-            font-size: 1.08rem;
-            line-height: 1.64;
-            color: #dcf6e7;
-            max-width: 80ch;
-        }
-        .about-proof-author {
-            margin-top: .9rem;
-            border-left: 2px solid #5bff96;
-            padding-left: .68rem;
-            color: #f4fff8;
-            font-weight: 700;
-        }
-        .about-proof-author span {
-            display: block;
-            margin-top: .18rem;
-            color: #b7dbc6;
-            font-weight: 600;
-            font-size: .86rem;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
-        .about-team {
-            margin-top: 1.15rem;
-        }
-        .about-team-title {
-            margin: 0;
-            font-size: clamp(1.5rem, 3.3vw, 2.2rem);
-            text-transform: uppercase;
-            letter-spacing: .02em;
-            color: #f3fff8;
-        }
-        .about-team-subtitle {
-            margin: .45rem 0 0;
-            color: #bddfc8;
-            line-height: 1.58;
-            max-width: 66ch;
-        }
-        .about-team-grid {
-            margin-top: .95rem;
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: .82rem;
-        }
-        .about-team-card {
-            border: 0;
-            border-radius: .9rem;
-            background: linear-gradient(145deg, #0a1a11, #0e2c1c);
-            overflow: hidden;
-            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
-            box-shadow: 0 12px 24px rgba(2, 12, 8, .24);
-        }
-        .about-team-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 18px 30px rgba(3, 12, 8, .36);
-        }
-        .about-team-image-wrap {
-            min-height: 220px;
-            background: linear-gradient(145deg, #0b2216, #123726);
-        }
-        .about-team-image-wrap img {
-            width: 100%;
-            height: 100%;
-            min-height: 220px;
-            object-fit: cover;
-            display: block;
-        }
-        .about-team-placeholder {
-            min-height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #dcf3e3;
-            font-weight: 700;
-            padding: 1rem;
-        }
-        .about-team-info {
-            padding: .78rem .82rem .9rem;
-        }
-        .about-team-role {
-            display: inline-flex;
-            align-items: center;
-            gap: .42rem;
-            color: #98ffc0;
-            font-size: .76rem;
-            font-weight: 800;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-        .about-team-role::before {
-            content: "";
-            width: 20px;
-            height: 2px;
-            background: #5bff96;
-        }
-        .about-team-name {
-            margin: .52rem 0 0;
-            color: #f3fff8;
-            font-size: 1.26rem;
-            line-height: 1.22;
-            font-weight: 900;
-        }
-        .about-team-note {
-            margin: .28rem 0 0;
-            color: #bbdfc8;
-            line-height: 1.45;
-            font-size: .9rem;
-        }
+        @include('marketing.partials.about-premium-styles')
         .contact-shell {
             margin-top: 1.1rem;
             border: 1px solid #2b5a40;
@@ -2596,7 +2256,7 @@
                         data-mobile-menu-toggle
                         aria-expanded="false"
                         aria-controls="landing-mobile-nav"
-                        aria-label="Abrir menú">
+                        aria-label="Abrir menÃº">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -2608,7 +2268,7 @@
                     <a href="{{ $pricingHref }}">Precios</a>
                     <a href="{{ $faqHref }}">Preguntas</a>
                     <a href="{{ $aboutHref }}">Nosotros</a>
-                    <a href="{{ $contactHref }}">Contáctanos</a>
+                    <a href="{{ $contactHref }}">ContÃ¡ctanos</a>
                 </div>
 
                 <div class="nav-actions">
@@ -2618,7 +2278,7 @@
                             data-open-quote-modal
                             data-quote-source="nav_desktop"
                             aria-controls="quote-request-modal">
-                        Solicita tu cotización
+                        Solicita tu cotizaciÃ³n
                     </button>
                 </div>
             </nav>
@@ -2630,7 +2290,7 @@
                     <a href="{{ $pricingHref }}">Precios</a>
                     <a href="{{ $faqHref }}">Preguntas</a>
                     <a href="{{ $aboutHref }}">Nosotros</a>
-                    <a href="{{ $contactHref }}">Contáctanos</a>
+                    <a href="{{ $contactHref }}">ContÃ¡ctanos</a>
                 </div>
                 <div class="mobile-nav-actions">
                     <a class="btn btn-outline" href="{{ route('login') }}">{{ $loginLabel }}</a>
@@ -2639,7 +2299,7 @@
                             data-open-quote-modal
                             data-quote-source="nav_mobile"
                             aria-controls="quote-request-modal">
-                        Solicita tu cotización
+                        Solicita tu cotizaciÃ³n
                     </button>
                 </div>
             </div>
@@ -2680,7 +2340,7 @@
                         <span class="neon">sin problemas</span>
                     @endunless
                 </h1>
-                <p>{{ $content['hero_subtitle'] ?? 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil.' }}</p>
+                <p>{{ $content['hero_subtitle'] ?? 'Gestiona recepciÃ³n, clientes, membresÃ­as, caja y reportes desde una plataforma estable para escritorio y mÃ³vil.' }}</p>
 
                 <div class="hero-actions">
                     <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
@@ -2699,7 +2359,7 @@
                                 <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                             </svg>
                         </span>
-                        <span>Solicita tu cotización</span>
+                        <span>Solicita tu cotizaciÃ³n</span>
                     </button>
                 </div>
 
@@ -2753,7 +2413,7 @@
                         <span class="hero-insight-value">{{ number_format((int) ($stats['gyms'] ?? 0)) }}</span>
                     </article>
                     <article class="hero-insight-card">
-                        <span class="hero-insight-label">Con suscripción activa</span>
+                        <span class="hero-insight-label">Con suscripciÃ³n activa</span>
                         <span class="hero-insight-value">{{ number_format((int) ($stats['active_sessions'] ?? 0)) }}</span>
                     </article>
                 </div>
@@ -2800,8 +2460,8 @@
         <section class="shell outcome-band">
             <header class="heading reveal">
                 <small>Lo que ganas</small>
-                <h2>Lo que tu gimnasio mejora desde el primer día</h2>
-                <p>La página ahora explica mejor beneficios concretos: atender más rápido, controlar mejor y crecer sin desorden.</p>
+                <h2>Lo que tu gimnasio mejora desde el primer dÃ­a</h2>
+                <p>La pÃ¡gina ahora explica mejor beneficios concretos: atender mÃ¡s rÃ¡pido, controlar mejor y crecer sin desorden.</p>
             </header>
             <div class="outcome-grid">
                 @foreach ($outcomeCards as $outcome)
@@ -2819,7 +2479,7 @@
             <header class="heading reveal">
                 <small>Servicios</small>
                 <h2>Estructura completa para operar y crecer</h2>
-                <p>Tres capas clave para recepción, control de datos y experiencia móvil de tu gimnasio.</p>
+                <p>Tres capas clave para recepciÃ³n, control de datos y experiencia mÃ³vil de tu gimnasio.</p>
             </header>
             <div class="service-grid">
                 @foreach ($serviceCards as $service)
@@ -2852,7 +2512,7 @@
         <section class="shell section">
             <header class="heading reveal">
                 <small>Como funciona</small>
-                <h2>Así te ayuda en el día a día del gimnasio</h2>
+                <h2>AsÃ­ te ayuda en el dÃ­a a dÃ­a del gimnasio</h2>
                 <p>El recorrido muestra de forma simple como pasas de configurar tu cuenta a cobrar, controlar y crecer con orden.</p>
             </header>
             <div class="workflow-grid">
@@ -2874,16 +2534,16 @@
             </header>
             <div class="pricing-summary-strip reveal">
                 <article class="pricing-summary-item">
-                    <strong>Planes fáciles de comparar</strong>
-                    <span>Ves rápido cuál se ajusta mejor al tamaño y ritmo de tu gimnasio.</span>
+                    <strong>Planes fÃ¡ciles de comparar</strong>
+                    <span>Ves rÃ¡pido cuÃ¡l se ajusta mejor al tamaÃ±o y ritmo de tu gimnasio.</span>
                 </article>
                 <article class="pricing-summary-item">
                     <strong>Precios claros desde el inicio</strong>
-                    <span>Entiendes cuánto pagas y qué incluye cada plan sin leer de más.</span>
+                    <span>Entiendes cuÃ¡nto pagas y quÃ© incluye cada plan sin leer de mÃ¡s.</span>
                 </article>
                 <article class="pricing-summary-item">
                     <strong>Si creces, el sistema crece contigo</strong>
-                    <span>Puedes empezar con una sede y luego pasar a un plan más completo o multi sede.</span>
+                    <span>Puedes empezar con una sede y luego pasar a un plan mÃ¡s completo o multi sede.</span>
                 </article>
             </div>
             <div class="pricing-grid">
@@ -2899,7 +2559,7 @@
                         $discountPercent = isset($planCard['discount_percent']) ? (int) $planCard['discount_percent'] : null;
                         $hasOffer = $offerText !== '' || ($discountPrice !== null && ($isContactMode || $discountPrice < $price));
                         $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
-                        $planCtaLabel = 'SOLICITA TU Cotización';
+                        $planCtaLabel = 'SOLICITA TU CotizaciÃ³n';
                     @endphp
                     <article class="plan reveal {{ $isFeatured ? 'popular' : '' }}">
                         @if ($isFeatured)
@@ -2920,7 +2580,7 @@
                                     @elseif ($discountPrice !== null && $discountPrice > 0)
                                         <strong>${{ $formatPlanMoney($discountPrice) }}</strong> de referencia.
                                     @else
-                                        <strong>según cotización</strong>.
+                                        <strong>segÃºn cotizaciÃ³n</strong>.
                                     @endif
                                 </span>
                             </div>
@@ -2948,15 +2608,15 @@
                         <div class="plan-meta-grid">
                             <article class="plan-meta-item">
                                 <strong>Este plan es para ti si...</strong>
-                                <span>{{ $planCard['ideal_for'] ?? 'Operación en crecimiento.' }}</span>
+                                <span>{{ $planCard['ideal_for'] ?? 'OperaciÃ³n en crecimiento.' }}</span>
                             </article>
                             <article class="plan-meta-item">
-                                <strong>Lo que más te ayuda</strong>
+                                <strong>Lo que mÃ¡s te ayuda</strong>
                                 <span>{{ $planCard['ops_focus'] ?? 'Control operativo.' }}</span>
                             </article>
                             <article class="plan-meta-item">
                                 <strong>Como empiezas</strong>
-                                <span>{{ $planCard['setup_note'] ?? 'Configuración según necesidad.' }}</span>
+                                <span>{{ $planCard['setup_note'] ?? 'ConfiguraciÃ³n segÃºn necesidad.' }}</span>
                             </article>
                         </div>
                         <ul>
@@ -3004,7 +2664,7 @@
             <header class="heading reveal">
                 <small>Preguntas</small>
                 <h2>Preguntas frecuentes antes de arrancar</h2>
-                <p>Respuestas rápidas para probar la demo y evaluar si el flujo encaja con tu operación.</p>
+                <p>Respuestas rÃ¡pidas para probar la demo y evaluar si el flujo encaja con tu operaciÃ³n.</p>
             </header>
             <div class="faq-list">
                 @foreach ($faqItems as $faqIndex => $faq)
@@ -3024,8 +2684,8 @@
         <section class="shell cta-band reveal">
             <div>
                 <small class="kicker">Siguiente paso</small>
-                <h2>Prueba la demo o pide una cotización con contexto operativo real.</h2>
-                <p>La auditoría de UX también simplificó el cierre: menos fricción para probar y un CTA más claro para equipos que necesitan asesoría comercial.</p>
+                <h2>Prueba la demo o pide una cotizaciÃ³n con contexto operativo real.</h2>
+                <p>La auditorÃ­a de UX tambiÃ©n simplificÃ³ el cierre: menos fricciÃ³n para probar y un CTA mÃ¡s claro para equipos que necesitan asesorÃ­a comercial.</p>
             </div>
             <div class="cta-band-actions">
                 <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
@@ -3044,7 +2704,7 @@
                             <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                         </svg>
                     </span>
-                    <span>Solicita tu cotización</span>
+                    <span>Solicita tu cotizaciÃ³n</span>
                 </button>
                 <a href="{{ $contactHref }}" class="btn btn-ghost">Ir a contacto</a>
             </div>
@@ -3052,127 +2712,7 @@
         @endif
 
         @if ($showAboutSection)
-        <section id="nosotros" class="section about-section">
-            <div class="about-hero-band reveal" @if ($aboutHeroImage !== '') style="--about-hero-image: url('{{ $aboutHeroImage }}');" @endif>
-                <div class="shell about-hero-content">
-                    <p class="about-hero-kicker">Sobre nosotros</p>
-                    <h2 class="about-hero-title">FlexJok</h2>
-                    <p class="about-hero-breadcrumb">Inicio / Sobre nosotros</p>
-                </div>
-            </div>
-
-            <div class="shell about-story">
-                <article class="about-story-copy reveal">
-                    <h3 class="about-story-title">Tecnología diseñada para aumentar la rentabilidad de tu gimnasio</h3>
-                    <p class="about-story-lead">En FlexJok desarrollamos soluciones digitales enfocadas en un objetivo claro: ayudar a los gimnasios a aumentar ingresos, reducir pérdidas y operar con mayor eficiencia.</p>
-                    <ul class="about-highlights">
-                        <li>Membresías vencidas que no se renuevan a tiempo.</li>
-                        <li>Falta de control en caja diaria.</li>
-                        <li>Procesos manuales que generan errores.</li>
-                        <li>Dificultad para medir crecimiento real.</li>
-                        <li>Falta de indicadores claros para tomar decisiones.</li>
-                    </ul>
-                    <p class="about-story-lead">Nuestro enfoque no es solo administrativo. Es estratégico.</p>
-                </article>
-
-                <aside class="about-story-media reveal">
-                    @if ($aboutStoryImage !== '')
-                        <img src="{{ $aboutStoryImage }}" alt="Equipo FlexJok">
-                    @else
-                        <div class="about-story-media-placeholder">Sube una imagen principal para la sección Sobre nosotros desde SuperAdmin.</div>
-                    @endif
-                    <div class="about-year-badge">
-                        <span class="about-year-value">2025</span>
-                        <span class="about-year-label">Desde</span>
-                    </div>
-                </aside>
-            </div>
-
-            <div class="shell about-proof reveal">
-                <p class="about-proof-kicker">Fundador</p>
-                <p class="about-proof-quote">"Con una visión orientada a la automatización comercial y el crecimiento empresarial, desarrolló FlexGym para transformar la gestión tradicional de gimnasios en un modelo más rentable, organizado y escalable. Cada función fue diseñada para mejorar el flujo de ingresos y facilitar la toma de decisiones."</p>
-                <div class="about-proof-author">
-                    David Israel Quintana Tapia
-                    <span>Fundador de FlexJok y creador de FlexGym</span>
-                </div>
-            </div>
-
-            <div class="shell about-story">
-                <article class="about-story-copy reveal">
-                    <h3 class="about-story-title">Cómo ayudamos a tu gimnasio a generar más ingresos</h3>
-                    <p class="about-story-lead">Implementamos herramientas que impactan directamente en la rentabilidad:</p>
-                    <ul class="about-highlights is-checks">
-                        <li>Control automatizado de membresías y vencimientos.</li>
-                        <li>Recordatorios estratégicos para renovaciones.</li>
-                        <li>Seguimiento de pagos en tiempo real.</li>
-                        <li>Reportes financieros claros y detallados.</li>
-                        <li>Control de asistencia para medir retención.</li>
-                        <li>Gestión multi-sucursal centralizada.</li>
-                    </ul>
-                    <p class="about-story-lead">Un gimnasio que mide, controla y automatiza es un gimnasio que crece.</p>
-                </article>
-                <article class="about-story-copy reveal">
-                    <h3 class="about-story-title">Misión, visión y compromiso</h3>
-                    <p class="about-story-lead">Nuestra misión es optimizar la operación interna de los gimnasios para que el propietario pueda enfocarse en captar más clientes, fidelizar miembros y escalar su negocio.</p>
-                    <p class="about-story-lead">Nuestra visión es convertir FlexGym en la plataforma de gestión más confiable para gimnasios en Latinoamérica.</p>
-                    <ul class="about-highlights">
-                        <li>Eficiencia operativa.</li>
-                        <li>Control financiero claro.</li>
-                        <li>Crecimiento sostenible.</li>
-                    </ul>
-                    <p class="about-story-lead">Porque un sistema no debe ser un gasto. Debe ser una inversión que genere retorno.</p>
-                </article>
-            </div>
-
-            <div class="shell about-team reveal">
-                <h3 class="about-team-title">Nuestro equipo</h3>
-                <p class="about-team-subtitle">Combinamos visión comercial, operación fitness y desarrollo de software para construir una plataforma que realmente ayuda a crecer a los gimnasios.</p>
-                <div class="about-team-grid">
-                    <article class="about-team-card">
-                        <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage1 !== '')
-                                <img src="{{ $aboutTeamImage1 }}" alt="Equipo FlexJok - Estrategia comercial">
-                            @else
-                                <div class="about-team-placeholder">Imagen de equipo</div>
-                            @endif
-                        </div>
-                        <div class="about-team-info">
-                            <span class="about-team-role">Dirección</span>
-                            <h4 class="about-team-name">David Israel Quintana Tapia</h4>
-                            <p class="about-team-note">Estrategia comercial, visión de producto y crecimiento.</p>
-                        </div>
-                    </article>
-                    <article class="about-team-card">
-                        <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage2 !== '')
-                                <img src="{{ $aboutTeamImage2 }}" alt="Equipo FlexJok - Operaciones">
-                            @else
-                                <div class="about-team-placeholder">Imagen de operaciones</div>
-                            @endif
-                        </div>
-                        <div class="about-team-info">
-                            <span class="about-team-role">Operación</span>
-                            <h4 class="about-team-name">Equipo FlexJok</h4>
-                            <p class="about-team-note">Implementación, acompañamiento y mejora continua para gimnasios.</p>
-                        </div>
-                    </article>
-                    <article class="about-team-card">
-                        <div class="about-team-image-wrap">
-                            @if ($aboutTeamImage3 !== '')
-                                <img src="{{ $aboutTeamImage3 }}" alt="Equipo FlexJok - Tecnología">
-                            @else
-                                <div class="about-team-placeholder">Imagen de tecnología</div>
-                            @endif
-                        </div>
-                        <div class="about-team-info">
-                            <span class="about-team-role">Tecnología</span>
-                            <h4 class="about-team-name">Desarrollo FlexGym</h4>
-                            <p class="about-team-note">Automatización, reportes e inteligencia operativa para decisiones rápidas.</p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
+        @include('marketing.partials.about-premium')
         @endif
 
         @if ($showContactSection)
@@ -3189,9 +2729,9 @@
         @endphp
         <section id="contacto" class="shell section">
             <header class="heading reveal">
-                <small>Contáctanos</small>
+                <small>ContÃ¡ctanos</small>
                 <h2>Hablemos de tu gimnasio</h2>
-                <p>Envíanos tus datos y te respondemos por WhatsApp o correo con una propuesta clara para implementar el sistema.</p>
+                <p>EnvÃ­anos tus datos y te respondemos por WhatsApp o correo con una propuesta clara para implementar el sistema.</p>
             </header>
             <div class="contact-shell reveal">
                 <div class="contact-info-grid">
@@ -3202,7 +2742,7 @@
                                 <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8"/>
                             </svg>
                         </span>
-                        <p>Atención remota para gimnasios en Ecuador y Latam.</p>
+                        <p>AtenciÃ³n remota para gimnasios en Ecuador y Latam.</p>
                     </article>
                     <article class="contact-info-card">
                         <span class="contact-icon contact-icon--mail" aria-hidden="true">
@@ -3238,7 +2778,7 @@
                         <input type="text" class="contact-input" name="last_name" value="{{ old('last_name') }}" required>
                     </label>
                     <label class="full">
-                        Correo electrónico
+                        Correo electrÃ³nico
                         <input type="email" class="contact-input" name="email" value="{{ old('email') }}" required>
                     </label>
                     <label class="full">
@@ -3272,37 +2812,37 @@
             $legalPageConfig = match ($pageMode) {
                 'privacy' => [
                     'section_id' => 'legal-privacy',
-                    'small' => 'Política de privacidad',
-                    'title' => 'Cómo tratamos y protegemos tus datos',
-                    'lead' => 'Este documento explica qué datos usamos, para qué los usamos y cómo puedes solicitar cambios o eliminación.',
+                    'small' => 'PolÃ­tica de privacidad',
+                    'title' => 'CÃ³mo tratamos y protegemos tus datos',
+                    'lead' => 'Este documento explica quÃ© datos usamos, para quÃ© los usamos y cÃ³mo puedes solicitar cambios o eliminaciÃ³n.',
                     'document_key' => 'privacy_policy',
-                    'document_title' => 'Política de privacidad',
+                    'document_title' => 'PolÃ­tica de privacidad',
                     'blocks' => [
                         [
                             'title' => '1) Datos que recopilamos',
-                            'text' => 'Recopilamos datos de contacto y datos operativos estrictamente necesarios para brindar soporte comercial y técnico.',
+                            'text' => 'Recopilamos datos de contacto y datos operativos estrictamente necesarios para brindar soporte comercial y tÃ©cnico.',
                             'points' => [
-                                'Nombre, correo y teléfono cuando nos escribes.',
-                                'Datos técnicos mínimos como IP y navegador para seguridad.',
+                                'Nombre, correo y telÃ©fono cuando nos escribes.',
+                                'Datos tÃ©cnicos mÃ­nimos como IP y navegador para seguridad.',
                                 'No vendemos datos personales a terceros.',
                             ],
                         ],
                         [
-                            'title' => '2) Uso de la información',
-                            'text' => 'Usamos la información para responder solicitudes, mejorar el servicio y mantener trazabilidad legal.',
+                            'title' => '2) Uso de la informaciÃ³n',
+                            'text' => 'Usamos la informaciÃ³n para responder solicitudes, mejorar el servicio y mantener trazabilidad legal.',
                             'points' => [
-                                'Atención comercial y soporte operativo.',
-                                'Prevención de fraude y abuso de la plataforma.',
+                                'AtenciÃ³n comercial y soporte operativo.',
+                                'PrevenciÃ³n de fraude y abuso de la plataforma.',
                                 'Cumplimiento de obligaciones legales aplicables.',
                             ],
                         ],
                         [
                             'title' => '3) Seguridad y derechos',
-                            'text' => 'Mantenemos controles de acceso y registro de eventos. Puedes solicitar acceso, corrección o eliminación de tus datos.',
+                            'text' => 'Mantenemos controles de acceso y registro de eventos. Puedes solicitar acceso, correcciÃ³n o eliminaciÃ³n de tus datos.',
                             'points' => [
                                 'Control de acceso por roles y contexto.',
-                                'Registros de aceptación con fecha y versión legal.',
-                                'La aceptación digital también se solicita en el primer ingreso autenticado al panel.',
+                                'Registros de aceptaciÃ³n con fecha y versiÃ³n legal.',
+                                'La aceptaciÃ³n digital tambiÃ©n se solicita en el primer ingreso autenticado al panel.',
                                 'Solicitudes por correo a '.$footerContactEmail.'.',
                             ],
                         ],
@@ -3312,15 +2852,15 @@
                     'section_id' => 'legal-service',
                     'small' => 'Condiciones de servicio',
                     'title' => 'Reglas de uso del sistema FlexGym',
-                    'lead' => 'Estas condiciones regulan el uso de la plataforma, responsabilidades de cada parte y límites del servicio.',
+                    'lead' => 'Estas condiciones regulan el uso de la plataforma, responsabilidades de cada parte y lÃ­mites del servicio.',
                     'document_key' => 'service_terms',
                     'document_title' => 'Condiciones de servicio',
                     'blocks' => [
                         [
                             'title' => '1) Alcance del servicio',
-                            'text' => 'FlexGym ofrece herramientas operativas para gimnasios, sujetas a disponibilidad técnica y mantenimiento planificado.',
+                            'text' => 'FlexGym ofrece herramientas operativas para gimnasios, sujetas a disponibilidad tÃ©cnica y mantenimiento planificado.',
                             'points' => [
-                                'Funcionalidades según el plan contratado.',
+                                'Funcionalidades segÃºn el plan contratado.',
                                 'Actualizaciones evolutivas y correctivas.',
                                 'Canales de soporte definidos por el proveedor.',
                             ],
@@ -3336,50 +2876,50 @@
                         ],
                         [
                             'title' => '3) Disponibilidad y limitaciones',
-                            'text' => 'Se aplican ventanas de mantenimiento y límites razonables de uso. Eventos de terceros pueden afectar disponibilidad.',
+                            'text' => 'Se aplican ventanas de mantenimiento y lÃ­mites razonables de uso. Eventos de terceros pueden afectar disponibilidad.',
                             'points' => [
                                 'Mantenimientos preventivos programados.',
                                 'No se garantiza continuidad ante fuerza mayor.',
-                                'En el primer inicio de sesión se exige aceptar condiciones legales vigentes.',
-                                'Suspensión temporal en caso de uso indebido grave.',
+                                'En el primer inicio de sesiÃ³n se exige aceptar condiciones legales vigentes.',
+                                'SuspensiÃ³n temporal en caso de uso indebido grave.',
                             ],
                         ],
                     ],
                 ],
                 default => [
                     'section_id' => 'legal-commercial',
-                    'small' => 'Términos comerciales',
+                    'small' => 'TÃ©rminos comerciales',
                     'title' => 'Condiciones de planes, pagos y renovaciones',
-                    'lead' => 'Este documento define precios, renovaciones, suspensiones y lineamientos de facturación del servicio.',
+                    'lead' => 'Este documento define precios, renovaciones, suspensiones y lineamientos de facturaciÃ³n del servicio.',
                     'document_key' => 'commercial_terms',
-                    'document_title' => 'Términos comerciales',
+                    'document_title' => 'TÃ©rminos comerciales',
                     'blocks' => [
                         [
                             'title' => '1) Planes y pagos',
-                            'text' => 'El servicio se activa según el plan vigente y se mantiene activo mientras los pagos se encuentren al día.',
+                            'text' => 'El servicio se activa segÃºn el plan vigente y se mantiene activo mientras los pagos se encuentren al dÃ­a.',
                             'points' => [
-                                'Precios y períodos según plan acordado.',
+                                'Precios y perÃ­odos segÃºn plan acordado.',
                                 'Pagos por los medios habilitados por el proveedor.',
-                                'Cambios de plan sujetos a confirmación comercial.',
+                                'Cambios de plan sujetos a confirmaciÃ³n comercial.',
                             ],
                         ],
                         [
-                            'title' => '2) Renovación, gracia y suspensión',
-                            'text' => 'La renovación puede incluir período de gracia. Si no hay pago confirmado, el servicio puede suspenderse.',
+                            'title' => '2) RenovaciÃ³n, gracia y suspensiÃ³n',
+                            'text' => 'La renovaciÃ³n puede incluir perÃ­odo de gracia. Si no hay pago confirmado, el servicio puede suspenderse.',
                             'points' => [
                                 'Notificaciones previas de vencimiento.',
-                                'Período de gracia configurado por política comercial.',
-                                'Reactivación sujeta a regularización de pago.',
+                                'PerÃ­odo de gracia configurado por polÃ­tica comercial.',
+                                'ReactivaciÃ³n sujeta a regularizaciÃ³n de pago.',
                             ],
                         ],
                         [
-                            'title' => '3) Reembolsos y facturación',
-                            'text' => 'Las condiciones de reembolso y facturación se rigen por el plan contratado y normativa local aplicable.',
+                            'title' => '3) Reembolsos y facturaciÃ³n',
+                            'text' => 'Las condiciones de reembolso y facturaciÃ³n se rigen por el plan contratado y normativa local aplicable.',
                             'points' => [
-                                'Facturación de acuerdo con datos proporcionados.',
+                                'FacturaciÃ³n de acuerdo con datos proporcionados.',
                                 'Reembolsos evaluados caso por caso.',
-                                'Cada aceptación legal genera evidencia digital para respaldo administrativo.',
-                                'Términos pueden actualizarse con aviso previo.',
+                                'Cada aceptaciÃ³n legal genera evidencia digital para respaldo administrativo.',
+                                'TÃ©rminos pueden actualizarse con aviso previo.',
                             ],
                         ],
                     ],
@@ -3427,22 +2967,22 @@
                 <p class="footer-lead">{{ $footerText }}</p>
             </section>
             <section>
-                <h4 class="footer-neon-title">Compañía</h4>
+                <h4 class="footer-neon-title">CompaÃ±Ã­a</h4>
                 <ul>
                     <li><a href="{{ $inicioHref }}">Inicio</a></li>
                     <li><a href="{{ $featuresHref }}">Servicios</a></li>
                     <li><a href="{{ $pricingHref }}">Precios</a></li>
                     <li><a href="{{ $faqHref }}">Preguntas</a></li>
                     <li><a href="{{ $aboutHref }}">Nosotros</a></li>
-                    <li><a href="{{ $contactHref }}">Contáctanos</a></li>
+                    <li><a href="{{ $contactHref }}">ContÃ¡ctanos</a></li>
                 </ul>
             </section>
             <section>
                 <h4 class="footer-neon-title">Legal</h4>
                 <ul>
-                    <li><a href="{{ $privacyHref }}">Política de privacidad</a></li>
+                    <li><a href="{{ $privacyHref }}">PolÃ­tica de privacidad</a></li>
                     <li><a href="{{ $serviceTermsHref }}">Condiciones de servicio</a></li>
-                    <li><a href="{{ $commercialTermsHref }}">Términos comerciales</a></li>
+                    <li><a href="{{ $commercialTermsHref }}">TÃ©rminos comerciales</a></li>
                 </ul>
             </section>
             <section>
@@ -3463,7 +3003,7 @@
          role="dialog"
          aria-modal="true"
          aria-labelledby="quote-request-title">
-        <button id="quote-request-close" type="button" class="quote-modal-close" aria-label="Cerrar formulario de cotización">
+        <button id="quote-request-close" type="button" class="quote-modal-close" aria-label="Cerrar formulario de cotizaciÃ³n">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 5 15 15M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
@@ -3472,14 +3012,14 @@
         <div class="quote-modal-shell">
             <section class="quote-modal-side">
                 <div>
-                    <p class="quote-modal-kicker">Cotización personalizada</p>
+                    <p class="quote-modal-kicker">CotizaciÃ³n personalizada</p>
                     <h3 class="quote-modal-title">Cu&eacute;ntanos c&oacute;mo opera tu gimnasio y recibe una propuesta clara.</h3>
                 </div>
 
                 <div class="quote-modal-visual" aria-hidden="true">
                     <div class="quote-modal-stat">
                         <span>Respuesta comercial</span>
-                        <strong>Te contactamos por correo o teléfono.</strong>
+                        <strong>Te contactamos por correo o telÃ©fono.</strong>
                     </div>
 
                     <div class="quote-modal-bubble is-a">
@@ -3518,9 +3058,9 @@
 
             <section class="quote-modal-form-panel">
                 <header class="quote-form-header">
-                    <p class="quote-modal-kicker">Solicita tu cotización</p>
-                    <h3 id="quote-request-title">Queremos entender tu operación actual</h3>
-                    <p>Comparte tus datos y el tamaño de tu equipo para prepararte una cotización ajustada a tu gimnasio.</p>
+                    <p class="quote-modal-kicker">Solicita tu cotizaciÃ³n</p>
+                    <h3 id="quote-request-title">Queremos entender tu operaciÃ³n actual</h3>
+                    <p>Comparte tus datos y el tamaÃ±o de tu equipo para prepararte una cotizaciÃ³n ajustada a tu gimnasio.</p>
                 </header>
 
                 @if ($quoteModalMessage !== '')
@@ -3557,7 +3097,7 @@
                         </label>
 
                         <label class="quote-form-field">
-                            Teléfono de contacto*
+                            TelÃ©fono de contacto*
                             <span class="quote-form-inline">
                                 <select class="contact-input quote-form-prefix" name="quote_phone_country_code" data-quote-prefix-select required>
                                     @foreach ($quotePhonePrefixes as $prefix)
@@ -3575,7 +3115,7 @@
                         </label>
 
                         <label class="quote-form-field">
-                            Correo electrónico*
+                            Correo electrÃ³nico*
                             <input type="email" class="contact-input" name="quote_email" value="{{ old('quote_email') }}" placeholder="correo@tugym.com" required>
                             @error('quote_email', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
@@ -3583,9 +3123,9 @@
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
-                            País de residencia*
+                            PaÃ­s de residencia*
                             <select class="contact-input" name="quote_country" data-quote-country-select required>
-                                <option value="">Selecciona tu país</option>
+                                <option value="">Selecciona tu paÃ­s</option>
                                 @foreach ($quoteCountryPrefixes as $country => $prefix)
                                     <option value="{{ $country }}"
                                             data-phone-prefix="{{ $prefix ?? '' }}"
@@ -3598,9 +3138,9 @@
                         </label>
 
                         <label class="quote-form-field quote-form-field--full">
-                            ¿Cuántos profesionales atienden en tu gimnasio?*
+                            Â¿CuÃ¡ntos profesionales atienden en tu gimnasio?*
                             <input type="number" class="contact-input" name="quote_professionals_count" value="{{ old('quote_professionals_count') }}" min="1" max="5000" placeholder="Ej: 6" required>
-                            <span class="quote-form-help">Considera recepción, entrenadores, administración y personal operativo.</span>
+                            <span class="quote-form-help">Considera recepciÃ³n, entrenadores, administraciÃ³n y personal operativo.</span>
                             @error('quote_professionals_count', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3608,7 +3148,7 @@
 
                         <label class="quote-form-field quote-form-field--full">
                             Comentarios adicionales
-                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuéntanos si manejas varias sedes, caja, recepción o procesos especiales.">{{ old('quote_notes') }}</textarea>
+                            <textarea class="contact-input" name="quote_notes" placeholder="Opcional: cuÃ©ntanos si manejas varias sedes, caja, recepciÃ³n o procesos especiales.">{{ old('quote_notes') }}</textarea>
                             @error('quote_notes', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3617,9 +3157,9 @@
                         <div class="quote-form-checkbox quote-form-field--full">
                             <label>
                                 <input type="checkbox" name="quote_privacy_accepted" value="1" @checked(old('quote_privacy_accepted'))>
-                                <span>Acepto el tratamiento de mis datos para recibir mi cotización y seguimiento comercial.</span>
+                                <span>Acepto el tratamiento de mis datos para recibir mi cotizaciÃ³n y seguimiento comercial.</span>
                             </label>
-                            <p class="quote-form-legal">Usaremos esta información solo para responder tu solicitud y coordinar una propuesta personalizada.</p>
+                            <p class="quote-form-legal">Usaremos esta informaciÃ³n solo para responder tu solicitud y coordinar una propuesta personalizada.</p>
                             @error('quote_privacy_accepted', 'landingQuote')
                                 <span class="quote-form-error">{{ $message }}</span>
                             @enderror
@@ -3641,7 +3181,7 @@
          aria-labelledby="demo-limit-title"
          data-retry-seconds="{{ $demoLimitSeconds }}">
         <h4 id="demo-limit-title">Limite de demos alcanzado</h4>
-        <p>Alcanzaste el máximo de 3 intentos por hora. Debes esperar antes de volver a solicitar tu demo.</p>
+        <p>Alcanzaste el mÃ¡ximo de 3 intentos por hora. Debes esperar antes de volver a solicitar tu demo.</p>
         <div class="modal-time">Tiempo restante: <span id="demo-limit-countdown">--:--</span></div>
         <div class="modal-actions">
             <button id="demo-limit-close" type="button" class="modal-close">Entendido</button>
