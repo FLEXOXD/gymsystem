@@ -99,7 +99,7 @@ class MarketingController extends Controller
 
         return redirect()
             ->to(route('landing.contact').'#contacto')
-            ->with('contact_status', 'Mensaje enviado. Te responderemos pronto.');
+            ->with('contact_status', 'Recibimos tu mensaje. Nuestro equipo revisará tu caso y te responderá pronto con el siguiente paso recomendado para tu gimnasio.');
     }
 
     public function storeQuoteRequest(Request $request): RedirectResponse
@@ -141,7 +141,7 @@ class MarketingController extends Controller
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        return back()->with('quote_status', 'Solicitud enviada. Te contactaremos con tu cotización.');
+        return back()->with('quote_status', 'Gracias por solicitar tu cotización. En breve te contactaremos para preparar una propuesta ajustada a la operación de tu gimnasio.');
     }
 
     public function privacy(Request $request): View|\Illuminate\Http\RedirectResponse

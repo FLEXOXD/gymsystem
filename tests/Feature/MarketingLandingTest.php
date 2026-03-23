@@ -4,6 +4,7 @@ use App\Http\Controllers\MarketingController;
 use App\Models\DemoSession;
 use App\Models\Gym;
 use App\Models\LegalAcceptance;
+use App\Models\LandingContactMessage;
 use App\Models\LandingQuoteRequest;
 use App\Models\SiteSetting;
 use App\Models\SuperAdminPlanTemplate;
@@ -85,6 +86,17 @@ it('shows dedicated pages for about and contact', function () {
         ->assertDontSee('id="nosotros"', false);
 });
 
+it('renders the premium contact page without mojibake', function () {
+    $this->get(route('landing.contact'))
+        ->assertOk()
+        ->assertSee('Conversemos sobre el crecimiento de tu gimnasio')
+        ->assertSee('Respuesta rápida')
+        ->assertSee('Atención por WhatsApp')
+        ->assertSee('Propuesta personalizada')
+        ->assertDontSee('ContÃ¡ctanos')
+        ->assertDontSee('Â¿Cuántos');
+});
+
 it('shows dedicated legal pages', function () {
     $this->get(route('landing.legal.privacy'))
         ->assertOk()
@@ -162,6 +174,26 @@ it('stores quote requests from the landing modal', function () {
         ->and($quote->professionals_count)->toBe(8)
         ->and($quote->requested_plan)->toBe('sucursales')
         ->and($quote->source)->toBe('hero_secondary');
+});
+
+it('stores contact messages from the public contact page', function () {
+    $this->from(route('landing.contact'))
+        ->post(route('landing.contact.store'), [
+            'first_name' => 'Andrea',
+            'last_name' => 'Morales',
+            'email' => 'andrea@example.com',
+            'message' => 'Necesito ordenar caja, recepción y membresías en mi gimnasio.',
+        ])
+        ->assertRedirect(route('landing.contact').'#contacto')
+        ->assertSessionHas('contact_status');
+
+    $contact = LandingContactMessage::query()->first();
+
+    expect($contact)->not->toBeNull()
+        ->and($contact->first_name)->toBe('Andrea')
+        ->and($contact->last_name)->toBe('Morales')
+        ->and($contact->email)->toBe('andrea@example.com')
+        ->and($contact->message)->toBe('Necesito ordenar caja, recepción y membresías en mi gimnasio.');
 });
 
 it('stores quote request timestamps using superadmin public timezone', function () {
