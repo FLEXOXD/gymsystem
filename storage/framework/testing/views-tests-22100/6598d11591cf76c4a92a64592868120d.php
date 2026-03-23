@@ -2089,3 +2089,4 @@
         }
     }
 </style>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/home-premium-styles.blade.php ENDPATH**/ ?>
