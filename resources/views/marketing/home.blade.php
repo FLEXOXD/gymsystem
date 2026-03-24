@@ -1469,6 +1469,427 @@
         .modal-time { margin-top: .75rem; border: 1px solid #3d5a4e; border-radius: .75rem; background: rgba(14,24,20,.85); padding: .65rem .75rem; color: #dbecff; font-weight: 700; }
         .modal-actions { margin-top: .95rem; display: flex; justify-content: flex-end; }
         .modal-close { border: 1px solid #3a4b57; border-radius: .68rem; background: #16222d; color: #f3f8ff; min-height: 40px; padding: .45rem .85rem; font-weight: 800; cursor: pointer; }
+        body.quote-modal-open { overflow: hidden; }
+        .quote-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1190;
+            background: rgba(3, 5, 6, .78);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .24s ease;
+        }
+        .quote-modal-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .quote-modal {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            z-index: 1200;
+            width: min(1260px, calc(100% - 3.5rem));
+            height: min(980px, calc(100vh - 5rem));
+            max-height: calc(100vh - 5rem);
+            transform: translate(-50%, -48%) scale(.985);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .24s ease, opacity .24s ease;
+            border: 1px solid rgba(92, 154, 81, .26);
+            border-radius: 1.5rem;
+            background:
+                radial-gradient(circle at 86% 10%, rgba(184, 255, 31, .12), transparent 22%),
+                linear-gradient(180deg, rgba(14, 16, 16, .98), rgba(8, 10, 10, .985));
+            box-shadow: 0 36px 90px rgba(0, 0, 0, .5);
+            overflow: hidden;
+        }
+        .quote-modal.is-open {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .quote-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 4;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 999px;
+            background: rgba(11, 13, 13, .84);
+            color: #f3f7f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform .2s ease, background .2s ease, border-color .2s ease;
+        }
+        .quote-modal-close:hover {
+            transform: translateY(-1px);
+            border-color: rgba(184, 255, 31, .26);
+            background: rgba(24, 28, 18, .94);
+        }
+        .quote-modal-close svg {
+            width: 18px;
+            height: 18px;
+        }
+        .quote-modal-shell {
+            display: grid;
+            grid-template-columns: minmax(380px, .98fr) minmax(520px, 1.12fr);
+            height: 100%;
+            min-height: 0;
+        }
+        .quote-modal-side {
+            display: grid;
+            align-content: start;
+            gap: 1.25rem;
+            padding: 1.8rem;
+            border-right: 1px solid rgba(255, 255, 255, .07);
+            background:
+                radial-gradient(circle at 18% 16%, rgba(184, 255, 31, .08), transparent 32%),
+                linear-gradient(180deg, rgba(18, 22, 18, .92), rgba(12, 15, 14, .95));
+            min-height: 0;
+            overflow: hidden;
+        }
+        .quote-modal-brand {
+            display: flex;
+            align-items: center;
+            gap: 1.05rem;
+        }
+        .quote-modal-brand-logo-wrap {
+            width: 88px;
+            height: 88px;
+            flex: 0 0 88px;
+            border-radius: 1.4rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(184, 255, 31, .18), rgba(184, 255, 31, .04) 62%, rgba(255, 255, 255, .02) 100%);
+            border: 1px solid rgba(184, 255, 31, .18);
+            box-shadow:
+                0 18px 34px rgba(0, 0, 0, .24),
+                inset 0 1px 0 rgba(255, 255, 255, .05),
+                0 0 24px rgba(184, 255, 31, .14);
+        }
+        .quote-modal-brand-logo {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px rgba(184, 255, 31, .16));
+        }
+        .quote-modal-brand-mark {
+            width: 3rem;
+            height: 3rem;
+            border-radius: .95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(184, 255, 31, .28), rgba(124, 166, 31, .18));
+            border: 1px solid rgba(184, 255, 31, .34);
+            color: #101404;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+        .quote-modal-brand-name {
+            display: block;
+            color: #f6f7ef;
+            font-size: 1.18rem;
+            font-weight: 900;
+        }
+        .quote-modal-brand-caption {
+            display: block;
+            margin-top: .22rem;
+            color: #b7bfaa;
+            font-size: .86rem;
+            line-height: 1.45;
+        }
+        .quote-modal-kicker {
+            margin: 0;
+            color: #b8ff1f;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+        .quote-modal-title {
+            margin: .7rem 0 0;
+            color: #f6f4ec;
+            font-size: clamp(2rem, 3vw, 2.9rem);
+            line-height: .92;
+            font-weight: 900;
+            letter-spacing: .01em;
+            text-transform: uppercase;
+        }
+        .quote-modal-copy {
+            margin: .75rem 0 0;
+            max-width: 38ch;
+            color: #c8c9be;
+            line-height: 1.75;
+        }
+        .quote-modal-photo-frame {
+            position: relative;
+            min-height: 470px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 1.35rem;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(10, 12, 12, .18), rgba(10, 12, 12, .7)),
+                linear-gradient(135deg, rgba(20, 26, 20, .9), rgba(13, 14, 14, .95));
+            background-size: cover;
+            background-position: center center;
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+        }
+        .quote-modal-photo-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: grid;
+            gap: .18rem;
+            min-width: 160px;
+            padding: .7rem .8rem;
+            border-radius: 1rem;
+            background: rgba(11, 13, 11, .82);
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(8px);
+        }
+        .quote-modal-photo-badge.is-secondary {
+            top: auto;
+            bottom: 1rem;
+            left: 1rem;
+        }
+        .quote-modal-photo-badge span,
+        .quote-modal-plan-caption,
+        .quote-modal-stat-card span {
+            color: #cfd4c1;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        .quote-modal-photo-badge strong,
+        .quote-modal-plan-spotlight strong,
+        .quote-modal-stat-card strong {
+            color: #f5f7ee;
+            font-size: .92rem;
+            line-height: 1.45;
+        }
+        .quote-modal-plan-spotlight {
+            width: min(280px, 100%);
+            margin-left: auto;
+            padding: .95rem 1rem;
+            border-radius: 1.1rem;
+            background: rgba(8, 10, 10, .78);
+            border: 1px solid rgba(184, 255, 31, .14);
+            backdrop-filter: blur(10px);
+        }
+        .quote-modal-plan-spotlight p {
+            margin: .42rem 0 0;
+            color: #c8c9be;
+            font-size: .88rem;
+            line-height: 1.55;
+        }
+        .quote-modal-feature-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: .65rem;
+        }
+        .quote-modal-feature-list li {
+            position: relative;
+            padding-left: 1.15rem;
+            color: #d5d8cd;
+            line-height: 1.58;
+        }
+        .quote-modal-feature-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .6rem;
+            width: .46rem;
+            height: .46rem;
+            border-radius: 999px;
+            background: #b8ff1f;
+            box-shadow: 0 0 0 4px rgba(184, 255, 31, .08);
+        }
+        .quote-modal-stat-grid {
+            display: grid;
+            gap: .75rem;
+        }
+        .quote-modal-stat-card {
+            padding: .95rem 1rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+        }
+        .quote-modal-form-panel {
+            padding: 1.8rem 1.7rem 1.5rem;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+        .quote-modal-form-panel::-webkit-scrollbar {
+            width: 10px;
+        }
+        .quote-modal-form-panel::-webkit-scrollbar-thumb {
+            background: rgba(184, 255, 31, .18);
+            border-radius: 999px;
+        }
+        .quote-form-header h3 {
+            margin: .62rem 0 0;
+            color: #f5f7ee;
+            font-size: clamp(1.7rem, 2.5vw, 2.4rem);
+            line-height: .98;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .quote-form-header > p:last-child {
+            margin: .7rem 0 0;
+            color: #c3c8bc;
+            line-height: 1.7;
+        }
+        .quote-form-hint-grid {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .7rem;
+        }
+        .quote-form-hint {
+            padding: .85rem .9rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, .07);
+            background: rgba(255, 255, 255, .03);
+        }
+        .quote-form-hint strong {
+            display: block;
+            color: #f5f7ef;
+            font-size: .9rem;
+        }
+        .quote-form-hint span {
+            display: block;
+            margin-top: .35rem;
+            color: #b8bdaa;
+            font-size: .82rem;
+            line-height: 1.55;
+        }
+        .quote-form-alert {
+            margin-top: .95rem;
+            display: grid;
+            gap: .22rem;
+            padding: .9rem 1rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(184, 255, 31, .18);
+            background: rgba(184, 255, 31, .08);
+        }
+        .quote-form-alert.is-error {
+            border-color: rgba(239, 68, 68, .28);
+            background: rgba(102, 24, 24, .18);
+        }
+        .quote-form-alert strong {
+            color: #f3f6eb;
+        }
+        .quote-form-alert span {
+            color: #cdd1c5;
+            line-height: 1.55;
+        }
+        .quote-plan-pill {
+            display: none;
+            margin-top: .95rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            padding: .85rem 1rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(184, 255, 31, .18);
+            background: rgba(184, 255, 31, .08);
+        }
+        .quote-plan-pill.is-visible {
+            display: flex;
+        }
+        .quote-plan-pill span {
+            color: #d4dbbe;
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        .quote-plan-pill strong {
+            color: #f5f7ee;
+            font-size: .95rem;
+            text-align: right;
+        }
+        .quote-form-grid {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .9rem;
+        }
+        .quote-form-field {
+            display: grid;
+            gap: .45rem;
+        }
+        .quote-form-field--full {
+            grid-column: 1 / -1;
+        }
+        .quote-form-label {
+            color: #f3f6eb;
+            font-size: .88rem;
+            font-weight: 700;
+        }
+        .quote-form-label em {
+            color: #b8ff1f;
+            font-style: normal;
+        }
+        .quote-form-help,
+        .quote-form-legal {
+            margin: 0;
+            color: #aeb5a2;
+            font-size: .8rem;
+            line-height: 1.55;
+        }
+        .quote-form-error {
+            color: #fecaca;
+            font-size: .8rem;
+            line-height: 1.45;
+        }
+        .quote-form-inline {
+            display: grid;
+            grid-template-columns: 108px minmax(0, 1fr);
+            gap: .65rem;
+        }
+        .quote-form-prefix {
+            text-align: center;
+            font-weight: 700;
+        }
+        .quote-form-checkbox {
+            display: grid;
+            gap: .45rem;
+            padding: .95rem 1rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, .07);
+            background: rgba(255, 255, 255, .03);
+        }
+        .quote-form-checkbox label {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            color: #e4e6dd;
+            line-height: 1.55;
+        }
+        .quote-form-checkbox input[type="checkbox"] {
+            margin-top: .18rem;
+            accent-color: #b8ff1f;
+        }
+        .quote-form-submit {
+            width: 100%;
+            margin-top: 1rem;
+        }
         @media (max-width: 980px) {
             .quote-modal {
                 width: min(760px, calc(100% - 1rem));
@@ -1479,10 +1900,22 @@
             .quote-modal-shell {
                 grid-template-columns: 1fr;
                 height: auto;
+                min-height: auto;
             }
             .quote-modal-side {
                 min-height: 320px;
                 padding-bottom: 1rem;
+                overflow: visible;
+            }
+            .quote-form-hint-grid {
+                grid-template-columns: 1fr;
+            }
+            .quote-plan-pill {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .quote-plan-pill strong {
+                text-align: left;
             }
             .quote-modal-title {
                 max-width: 12ch;
@@ -1717,6 +2150,116 @@
         }
     </style>
     @include('marketing.partials.home-premium-styles')
+    <style>
+        .shell {
+            width: min(1360px, calc(100% - 2rem));
+        }
+
+        .top-wrap .top-nav,
+        .top-wrap.is-compact .top-nav {
+            display: grid;
+            grid-template-columns: minmax(248px, auto) minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 1.1rem;
+            padding: .72rem 0;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .top-wrap .brand {
+            width: 248px;
+            min-width: 248px;
+            padding: 0;
+            margin: 0;
+            justify-self: start;
+        }
+
+        .top-wrap .brand-logo {
+            width: 224px;
+            height: auto;
+            margin: 0;
+            transform: scale(1.08);
+            transform-origin: left center;
+            object-position: left center;
+        }
+
+        .top-wrap .menu-links {
+            display: flex;
+            justify-self: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 640px;
+            margin-inline: 0;
+        }
+
+        .top-wrap .menu-links a {
+            padding-inline: .8rem;
+            white-space: nowrap;
+        }
+
+        .top-wrap .nav-actions {
+            justify-self: end;
+        }
+
+        @media (max-width: 1080px) {
+            .top-wrap .top-nav,
+            .top-wrap.is-compact .top-nav {
+                grid-template-columns: minmax(205px, auto) minmax(0, 1fr) auto;
+                gap: .9rem;
+                padding: .68rem 0;
+            }
+
+            .top-wrap .brand {
+                width: 205px;
+                min-width: 205px;
+            }
+
+            .top-wrap .brand-logo {
+                width: 186px;
+                transform: scale(1.03);
+            }
+
+            .top-wrap .menu-links {
+                max-width: 540px;
+            }
+        }
+
+        @media (max-width: 820px) {
+            .shell {
+                width: min(1240px, calc(100% - 1rem));
+            }
+
+            .top-wrap .top-nav,
+            .top-wrap.is-compact .top-nav {
+                grid-template-columns: minmax(172px, auto) auto;
+                justify-content: space-between;
+                padding: .66rem 0;
+            }
+
+            .top-wrap .brand {
+                width: 172px;
+                min-width: 172px;
+            }
+
+            .top-wrap .brand-logo {
+                width: 166px;
+                transform: none;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .top-wrap .brand {
+                width: 148px;
+                min-width: 148px;
+            }
+
+            .top-wrap .brand-logo {
+                width: 148px;
+            }
+        }
+    </style>
 </head>
 <body class="{{ $showPrimarySections ? 'is-home' : 'is-subpage' }}">
     @if ($showPrimarySections)
@@ -2907,6 +3450,99 @@
                 start();
             }
 
+            const premiumVisualCarousel = document.querySelector('[data-premium-visual-carousel]');
+            if (premiumVisualCarousel) {
+                const slides = Array.from(premiumVisualCarousel.querySelectorAll('[data-premium-visual-slide]'));
+                const navButtons = Array.from(premiumVisualCarousel.querySelectorAll('[data-premium-visual-nav]'));
+                const eyebrowNode = premiumVisualCarousel.querySelector('[data-premium-visual-eyebrow]');
+                const titleNode = premiumVisualCarousel.querySelector('[data-premium-visual-title]');
+                const textNode = premiumVisualCarousel.querySelector('[data-premium-visual-text]');
+                let activeIndex = 0;
+                let timer = null;
+
+                const syncCopy = function (slide) {
+                    if (!slide) {
+                        return;
+                    }
+
+                    if (eyebrowNode) {
+                        eyebrowNode.textContent = slide.getAttribute('data-premium-visual-eyebrow') || '';
+                    }
+
+                    if (titleNode) {
+                        titleNode.textContent = slide.getAttribute('data-premium-visual-title') || '';
+                    }
+
+                    if (textNode) {
+                        textNode.textContent = slide.getAttribute('data-premium-visual-text') || '';
+                    }
+                };
+
+                const activate = function (index) {
+                    if (slides.length === 0) {
+                        return;
+                    }
+
+                    activeIndex = (index + slides.length) % slides.length;
+                    slides.forEach(function (slide, idx) {
+                        const isActive = idx === activeIndex;
+                        slide.classList.toggle('is-active', isActive);
+                        slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                    });
+                    navButtons.forEach(function (button, idx) {
+                        const isActive = idx === activeIndex;
+                        button.classList.toggle('is-active', isActive);
+                        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    });
+
+                    syncCopy(slides[activeIndex]);
+                };
+
+                const start = function () {
+                    if (prefersReducedMotion || slides.length <= 1) {
+                        return;
+                    }
+
+                    if (timer) {
+                        window.clearInterval(timer);
+                    }
+
+                    timer = window.setInterval(function () {
+                        activate(activeIndex + 1);
+                    }, 4200);
+                };
+
+                const stop = function () {
+                    if (timer) {
+                        window.clearInterval(timer);
+                        timer = null;
+                    }
+                };
+
+                navButtons.forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        const nextIndex = parseInt(button.getAttribute('data-premium-visual-nav') || '0', 10);
+                        activate(nextIndex);
+                        start();
+                    });
+                });
+
+                premiumVisualCarousel.addEventListener('mouseenter', stop);
+                premiumVisualCarousel.addEventListener('mouseleave', start);
+                premiumVisualCarousel.addEventListener('focusin', stop);
+                premiumVisualCarousel.addEventListener('focusout', start);
+                document.addEventListener('visibilitychange', function () {
+                    if (document.hidden) {
+                        stop();
+                    } else {
+                        start();
+                    }
+                });
+
+                activate(0);
+                start();
+            }
+
             const faqItems = Array.from(document.querySelectorAll('[data-faq-item]'));
             faqItems.forEach(function (item) {
                 const button = item.querySelector('[data-faq-button]');
@@ -3289,4 +3925,3 @@
     </script>
 </body>
 </html>
-

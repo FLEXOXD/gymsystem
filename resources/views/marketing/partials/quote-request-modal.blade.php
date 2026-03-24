@@ -35,14 +35,18 @@
     $quoteSubmitLabelText = $quoteSelectedPlanKey !== ''
         ? 'Solicitar cotización de '.$quoteCurrentPlanLabel
         : $quoteDefaultSubmitLabel;
+    $quoteModalBrandLogoUrl = asset('pwa/flexgymlogo.png');
     $quoteVisualImage = '';
 
     foreach ([
+        trim((string) ($homePageBackgroundUrls[0] ?? '')),
+        trim((string) ($homePageBackgroundUrls[1] ?? '')),
+        trim((string) ($homePageBackgroundUrls[2] ?? '')),
+        trim((string) ($content['hero_slide_1_url'] ?? '')),
         trim((string) ($content['section_1_image_url'] ?? '')),
         trim((string) ($content['section_2_image_url'] ?? '')),
         trim((string) ($content['section_3_image_url'] ?? '')),
-        trim((string) ($content['hero_slide_1_url'] ?? '')),
-        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1400&q=80',
     ] as $quoteImageCandidate) {
         if ($quoteImageCandidate !== '') {
             $quoteVisualImage = $quoteImageCandidate;
@@ -66,8 +70,10 @@
     <div class="quote-modal-shell">
         <section class="quote-modal-side">
             <div class="quote-modal-brand">
-                @if ($brandLogoUrl !== '')
-                    <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="quote-modal-brand-logo">
+                @if ($quoteModalBrandLogoUrl !== '')
+                    <span class="quote-modal-brand-logo-wrap">
+                        <img src="{{ $quoteModalBrandLogoUrl }}" alt="{{ $brandName }}" class="quote-modal-brand-logo">
+                    </span>
                 @else
                     <span class="quote-modal-brand-mark">{{ $brandInitials }}</span>
                 @endif

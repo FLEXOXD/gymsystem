@@ -1,238 +1,222 @@
 @php
     $premiumDemoLabel = 'Probar demo gratis';
-    $premiumQuoteLabel = 'Solicita tu cotización';
+    $premiumQuoteLabel = 'Solicita tu cotizacion';
     $premiumHeroKicker = trim((string) ($content['hero_kicker'] ?? 'Software premium para gimnasios'));
     $premiumHeroTitle = trim((string) ($content['hero_title'] ?? ''));
     $premiumHeroTitle = $premiumHeroTitle !== ''
         ? $premiumHeroTitle
-        : 'Convierte la operacion de tu gimnasio en un sistema ordenado, rapido y listo para crecer.';
+        : 'Controla cobros, acceso y operacion con una home de impacto real.';
     $premiumHeroSubtitle = trim((string) ($content['hero_subtitle'] ?? ''));
     $premiumHeroSubtitle = $premiumHeroSubtitle !== ''
         ? $premiumHeroSubtitle
-        : 'Controla cobros, membresias, asistencia, caja y reportes desde un software disenado para gimnasios que quieren verse y operar como un negocio serio.';
+        : 'Transformamos la pagina principal en una experiencia mas atletica, oscura y comercial, inspirada en la referencia visual compartida, pero aterrizada al software que vendes.';
 
     $premiumHeroPoints = [
         [
-            'title' => 'Control real del negocio',
-            'text' => 'Cobros, vencimientos, caja y asistencia visibles desde una sola operacion.',
+            'title' => 'Recepcion con mas energia',
+            'text' => 'El mensaje principal ahora entra con fuerza y conecta mejor con gimnasios que buscan verse premium.',
         ],
         [
-            'title' => 'Automatizacion sin friccion',
-            'text' => 'Tu equipo atiende mas rapido y comete menos errores en el dia a dia.',
+            'title' => 'CTAs mas visibles',
+            'text' => 'Demo, cotizacion y login siguen vivos, solo mejor presentados y con mas jerarquia visual.',
         ],
         [
-            'title' => 'Listo para crecer',
-            'text' => 'Empieza con una sede y escala a planes mas completos o multi-sede sin migrar.',
-        ],
-    ];
-
-    $premiumProofCards = [
-        [
-            'value' => number_format((int) ($stats['gyms'] ?? 0)),
-            'label' => 'Gimnasios registrados',
-            'text' => 'Operaciones que usan FlexGym para trabajar con mas orden.',
-        ],
-        [
-            'value' => number_format((int) ($stats['active_sessions'] ?? 0)),
-            'label' => 'Suscripciones activas',
-            'text' => 'Negocios que hoy siguen operando sobre la plataforma.',
-        ],
-        [
-            'value' => 'Web + PWA',
-            'label' => 'Disponible en cualquier dispositivo',
-            'text' => 'Recepcion y administracion en escritorio, tablet o movil.',
-        ],
-        [
-            'value' => 'Acompanamiento',
-            'label' => 'Implementacion guiada',
-            'text' => 'Cotizacion, configuracion y puesta en marcha aterrizadas a tu contexto.',
+            'title' => 'Narrativa comercial clara',
+            'text' => 'La home comunica producto, beneficios, modulos y planes sin sentirse como un SaaS generico.',
         ],
     ];
 
     $premiumBenefits = [
         [
-            'icon' => 'cash',
-            'title' => 'Cobras mejor',
-            'text' => 'Caja, membresias y pagos claros para reducir errores y fugas de ingreso.',
+            'icon' => 'speed',
+            'title' => 'Experiencia Well Trainers',
+            'text' => 'Recepcion, caja y acceso en un flujo mas directo para atender mejor desde el primer click.',
         ],
         [
-            'icon' => 'calendar',
-            'title' => 'Controlas vencimientos',
-            'text' => 'Tienes a la vista renovaciones, pendientes y clientes por atender.',
+            'icon' => 'pulse',
+            'title' => 'Modern Equipments',
+            'text' => 'Tus modulos clave se presentan como piezas premium del sistema: cobro, reportes, control y PWA.',
         ],
         [
-            'icon' => 'bolt',
-            'title' => 'Atiendes mas rapido',
-            'text' => 'Recepcion agil para cobrar, registrar y validar accesos sin enredos.',
+            'icon' => 'proof',
+            'title' => 'Proven Results',
+            'text' => 'La propuesta comercial muestra orden, confianza y una percepcion de valor mucho mas alta.',
         ],
         [
-            'icon' => 'devices',
-            'title' => 'Operas desde cualquier dispositivo',
-            'text' => 'Trabaja desde escritorio, tablet o celular con una experiencia coherente.',
-        ],
-        [
-            'icon' => 'growth',
-            'title' => 'Tomas decisiones con datos',
-            'text' => 'Reportes e indicadores para entender como se mueve tu operacion.',
-        ],
-        [
-            'icon' => 'shield',
-            'title' => 'Transmites mas confianza',
-            'text' => 'Una operacion ordenada se siente mas profesional para clientes y equipo.',
+            'icon' => 'clock',
+            'title' => 'Flexible Honours',
+            'text' => 'La estructura sigue siendo flexible para demo, cotizacion o login, sin perder la logica actual.',
         ],
     ];
 
     $capabilityModules = [
         [
-            'key' => 'operacion',
-            'eyebrow' => 'Operacion diaria',
-            'title' => 'Recepcion, check-in y caja conectados en una sola vista',
-            'text' => 'Todo lo esencial para atender rapido, cobrar con orden y dejar trazabilidad desde el primer dia.',
-            'items' => [
-                trim((string) ($content['section_1_item_1'] ?? 'Check-in con QR, RFID o validacion rapida')),
-                trim((string) ($content['section_1_item_2'] ?? 'Cobros de membresia con control por metodo de pago')),
-                trim((string) ($content['section_1_item_3'] ?? 'Caja por turnos y movimiento diario visible')),
-            ],
+            'title' => trim((string) ($content['section_1_title'] ?? 'Recepcion, caja y accesos')),
+            'text' => trim((string) ($content['section_1_text'] ?? 'Cobras, validas acceso y mueves la operacion diaria desde una sola interfaz.')),
             'image' => trim((string) ($content['section_1_image_url'] ?? '')),
+            'cta' => 'Ver flujo',
         ],
         [
-            'key' => 'control',
-            'eyebrow' => 'Control comercial',
-            'title' => 'Vencimientos, reportes y ventas para operar como un negocio que crece',
-            'text' => 'La informacion importante deja de estar dispersa: ves ingresos, renovaciones, promociones y rendimiento del negocio.',
-            'items' => [
-                trim((string) ($content['section_2_item_1'] ?? 'Seguimiento de vencimientos y renovaciones')),
-                trim((string) ($content['section_2_item_2'] ?? 'Reportes de ingresos, asistencias y membresias')),
-                trim((string) ($content['section_2_item_3'] ?? 'Promociones, productos y control comercial')),
-            ],
+            'title' => trim((string) ($content['section_2_title'] ?? 'Control comercial y reportes')),
+            'text' => trim((string) ($content['section_2_text'] ?? 'Renovaciones, ingresos y seguimiento aparecen con un look mas editorial y entendible.')),
             'image' => trim((string) ($content['section_2_image_url'] ?? '')),
+            'cta' => 'Explorar control',
         ],
         [
-            'key' => 'pwa',
-            'eyebrow' => 'Experiencia movil',
-            'title' => 'PWA lista para escritorio, tablet y celular',
-            'text' => 'FlexGym se siente como producto serio: accesible, instalable y listo para acompanar la operacion donde ocurra.',
-            'items' => [
-                trim((string) ($content['section_3_item_1'] ?? 'Instalable como app para uso diario')),
-                trim((string) ($content['section_3_item_2'] ?? 'Base preparada para recordatorios y notificaciones')),
-                trim((string) ($content['section_3_item_3'] ?? 'Experiencia consistente para equipo y clientes')),
-            ],
+            'title' => trim((string) ($content['section_3_title'] ?? 'PWA y experiencia movil')),
+            'text' => trim((string) ($content['section_3_text'] ?? 'El producto se siente mas moderno, listo para escritorio, tablet y movil.')),
             'image' => trim((string) ($content['section_3_image_url'] ?? '')),
+            'cta' => 'Conocer PWA',
+        ],
+        [
+            'title' => 'Planes y escalabilidad',
+            'text' => 'La seccion de precios gana mas presencia para ayudar a elegir el plan correcto sin ruido.',
+            'image' => trim((string) ($content['hero_slide_4_url'] ?? '')),
+            'cta' => 'Ir a precios',
+            'href' => '#pricing',
         ],
     ];
 
-    $implementationSteps = [
+    $heroMediaSources = array_values(array_filter([
+        $heroSlides[0] ?? null,
+        $heroSlides[1] ?? null,
+        $heroSlides[2] ?? null,
+        $heroSlides[3] ?? null,
+        $homePageBackgroundUrls[0] ?? null,
+        $homePageBackgroundUrls[1] ?? null,
+        $homePageBackgroundUrls[2] ?? null,
+        $homePageBackgroundUrls[3] ?? null,
+        $homePageBackgroundUrls[4] ?? null,
+    ], static fn ($value) => is_string($value) && trim($value) !== ''));
+
+    $premiumHeroImage = $heroMediaSources[0] ?? 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=80';
+    $premiumCommunityImage = $heroMediaSources[1] ?? $premiumHeroImage;
+    $premiumPromoFallback = $heroMediaSources[2] ?? $premiumHeroImage;
+    $premiumPricingFallback = $heroMediaSources[3] ?? $premiumCommunityImage;
+
+    $premiumProgramCards = collect($capabilityModules)
+        ->map(function (array $module, int $index) use ($heroMediaSources, $premiumPromoFallback): array {
+            $image = trim((string) ($module['image'] ?? ''));
+
+            if ($image === '') {
+                $image = $heroMediaSources[$index] ?? $premiumPromoFallback;
+            }
+
+            $href = trim((string) ($module['href'] ?? '#features'));
+
+            return [
+                'title' => trim((string) ($module['title'] ?? 'Modulo')),
+                'text' => trim((string) ($module['text'] ?? '')),
+                'image' => $image,
+                'cta' => trim((string) ($module['cta'] ?? 'Ver mas')),
+                'href' => $href !== '' ? $href : '#features',
+            ];
+        })
+        ->values();
+
+    $premiumVisualSlides = collect([
         [
-            'step' => '01',
-            'title' => 'Entendemos tu operacion',
-            'text' => 'Definimos si hoy necesitas una sola sede, mas control comercial o una operacion multi-sede.',
+            'eyebrow' => 'Recepcion activa',
+            'nav' => 'Recepcion',
+            'title' => 'Check-in, caja y acceso sin friccion.',
+            'text' => 'La primera vista vende control diario con una escena mas viva y menos estatica.',
+            'image' => $heroMediaSources[0] ?? $premiumHeroImage,
         ],
         [
-            'step' => '02',
-            'title' => 'Configuramos acceso, plan y flujo de trabajo',
-            'text' => 'Dejas lista la recepcion, caja, membresias y usuarios para empezar sin ruido innecesario.',
+            'eyebrow' => 'Cobros en marcha',
+            'nav' => 'Cobros',
+            'title' => 'Cobros y membresias bajo control.',
+            'text' => 'Renovaciones, pagos y estado del gimnasio se entienden rapido desde la home.',
+            'image' => $heroMediaSources[1] ?? $premiumCommunityImage,
         ],
         [
-            'step' => '03',
-            'title' => 'Tu equipo empieza a operar desde el dia uno',
-            'text' => 'Cobros, check-in y control diario quedan centralizados para trabajar con mas velocidad.',
+            'eyebrow' => 'Lectura operativa',
+            'nav' => 'Reportes',
+            'title' => 'Alertas y seguimiento listos para decidir.',
+            'text' => 'El bloque visual comunica orden, control y valor real del sistema para vender mejor.',
+            'image' => $heroMediaSources[2] ?? $premiumPromoFallback,
         ],
         [
-            'step' => '04',
-            'title' => 'Escalas sin volver al caos',
-            'text' => 'Cuando creces, pasas a mas reportes, PWA o sucursales sin cambiar de sistema.',
+            'eyebrow' => 'Experiencia movil',
+            'nav' => 'PWA',
+            'title' => 'Panel y PWA con energia premium.',
+            'text' => 'La narrativa cambia sola para que no se sienta como una sola captura estatica.',
+            'image' => $heroMediaSources[3] ?? $premiumPricingFallback,
+        ],
+    ])->values();
+
+    $initialPremiumVisualSlide = $premiumVisualSlides->first();
+
+    $premiumRoleCards = [
+        [
+            'role' => 'Recepcion',
+            'text' => 'Un frente visualmente fuerte para mostrar check-in, caja y atencion en una sola experiencia.',
+            'image' => trim((string) ($aboutTeamImage1 ?? '')) !== '' ? trim((string) $aboutTeamImage1) : $premiumHeroImage,
+        ],
+        [
+            'role' => 'Administracion',
+            'text' => 'Reportes, renovaciones y seguimiento con una presentacion mas premium y facil de leer.',
+            'image' => trim((string) ($aboutTeamImage2 ?? '')) !== '' ? trim((string) $aboutTeamImage2) : $premiumCommunityImage,
+        ],
+        [
+            'role' => 'Comercial',
+            'text' => 'La home empuja mejor la cotizacion y hace que el producto se sienta mas vendible.',
+            'image' => trim((string) ($aboutTeamImage3 ?? '')) !== '' ? trim((string) $aboutTeamImage3) : $premiumPromoFallback,
+        ],
+        [
+            'role' => 'Direccion',
+            'text' => 'Precios y cierre con una narrativa mas decidida para gimnasios que quieren crecer con orden.',
+            'image' => trim((string) ($aboutStoryImage ?? '')) !== '' ? trim((string) $aboutStoryImage) : $premiumPricingFallback,
         ],
     ];
 
-    $comparisonRows = [
+    $premiumReviewCards = [
         [
-            'label' => 'Sedes',
-            'values' => [
-                'basico' => '1 sede',
-                'profesional' => '1 sede',
-                'premium' => '1 sede',
-                'sucursales' => 'Varias sedes',
-            ],
+            'eyebrow' => 'Recepcion',
+            'text' => 'La pagina principal ya no solo informa: ahora transmite velocidad, orden y una sensacion de marca mas fuerte.',
         ],
         [
-            'label' => 'Recepcion y caja',
-            'values' => [
-                'basico' => 'Incluido',
-                'profesional' => 'Incluido',
-                'premium' => 'Incluido',
-                'sucursales' => 'Incluido',
-            ],
+            'eyebrow' => 'Operacion',
+            'text' => 'Los modulos se entienden mas rapido y el usuario identifica en segundos donde esta el valor del sistema.',
         ],
         [
-            'label' => 'Reportes exportables',
-            'values' => [
-                'basico' => 'Basico',
-                'profesional' => 'CSV y PDF',
-                'premium' => 'CSV y PDF',
-                'sucursales' => 'Global por sede',
-            ],
-        ],
-        [
-            'label' => 'PWA instalable',
-            'values' => [
-                'basico' => 'No',
-                'profesional' => 'Si',
-                'premium' => 'Si',
-                'sucursales' => 'Si',
-            ],
-        ],
-        [
-            'label' => 'App para clientes',
-            'values' => [
-                'basico' => 'No',
-                'profesional' => 'No',
-                'premium' => 'Incluida',
-                'sucursales' => 'Incluida por sede',
-            ],
-        ],
-        [
-            'label' => 'Escalabilidad',
-            'values' => [
-                'basico' => 'Operacion base',
-                'profesional' => 'Control reforzado',
-                'premium' => 'Mayor automatizacion',
-                'sucursales' => 'Gestion multi-sede',
-            ],
+            'eyebrow' => 'Conversion',
+            'text' => 'La cotizacion gana protagonismo sin romper la demo ni el login, que siguen trabajando igual.',
         ],
     ];
 
-    $confidenceCards = [
+    $premiumStatHighlights = [
         [
-            'title' => 'Prueba social honesta',
-            'text' => 'Sin inventar testimonios: usamos indicadores reales, planes visibles y una propuesta comercial clara.',
+            'value' => number_format((int) ($stats['gyms'] ?? 0)),
+            'label' => 'GYMS',
         ],
         [
-            'title' => 'Demo temporal y aislada',
-            'text' => 'Puedes probar el sistema en un entorno de demostracion sin tocar tus datos reales.',
+            'value' => number_format((int) ($stats['active_sessions'] ?? 0)),
+            'label' => 'ACTIVOS',
         ],
         [
-            'title' => 'Aterrizado para Ecuador y Latinoamerica',
-            'text' => 'La propuesta, el lenguaje comercial y la operacion estan pensados para gimnasios de la region.',
+            'value' => 'WEB',
+            'label' => 'PANEL',
         ],
         [
-            'title' => 'Acompanamiento comercial',
-            'text' => 'No te dejamos solo con una interfaz bonita: te ayudamos a elegir la implementacion correcta.',
+            'value' => 'PWA',
+            'label' => 'MOVIL',
         ],
     ];
 
     $planSegments = [
-        'basico' => 'Operacion base',
-        'profesional' => 'Control reforzado',
-        'premium' => 'Mas automatizacion',
-        'sucursales' => 'Escala multi-sede',
+        'basico' => 'Base',
+        'profesional' => 'Control',
+        'premium' => 'Avanzado',
+        'sucursales' => 'Multi-sede',
     ];
 @endphp
 
 <section id="inicio" class="shell premium-hero-section">
-    <div class="premium-hero-grid">
+    <div class="premium-hero-layout">
         <div class="premium-hero-copy reveal">
-            <div class="premium-kicker-row">
-                <span class="premium-eyebrow">{{ $premiumHeroKicker }}</span>
+            <div class="premium-hero-topline">
+                <span class="premium-kicker">{{ $premiumHeroKicker }}</span>
                 <span class="premium-chip">Ecuador y Latinoamerica</span>
             </div>
 
@@ -242,26 +226,36 @@
             <div class="premium-hero-actions">
                 <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
                     @csrf
-                    <button class="btn btn-demo premium-btn-primary" type="submit">{{ $premiumDemoLabel }}</button>
+                    <button class="btn btn-demo" type="submit">{{ $premiumDemoLabel }}</button>
                 </form>
 
-                <button class="btn btn-wa premium-btn-secondary"
+                <button class="btn btn-wa btn-quote-trigger"
                         type="button"
                         data-open-quote-modal
                         data-quote-source="hero_primary"
                         aria-controls="quote-request-modal">
-                    {{ $premiumQuoteLabel }}
+                    <span class="quote-cta-icon-badge" aria-hidden="true">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                            <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span>{{ $premiumQuoteLabel }}</span>
                 </button>
 
-                <a class="btn btn-ghost premium-btn-tertiary" href="#pricing">Ver planes</a>
+                <a class="btn btn-ghost" href="#pricing">Ver planes</a>
             </div>
 
-            <p class="premium-hero-microcopy">La demo crea un entorno temporal aislado para este dispositivo. Si ya eres cliente, <a href="{{ route('login') }}">{{ $loginLabel }}</a>.</p>
+            <p class="premium-hero-note">
+                La demo sigue creando un entorno temporal aislado para este dispositivo. Si ya eres cliente,
+                <a href="{{ route('login') }}">{{ $loginLabel }}</a>.
+            </p>
 
             <div class="premium-hero-points">
                 @foreach ($premiumHeroPoints as $point)
                     <article class="premium-hero-point">
-                        <span class="premium-hero-point-mark" aria-hidden="true"></span>
+                        <span class="premium-point-bullet" aria-hidden="true"></span>
                         <div>
                             <h3>{{ $point['title'] }}</h3>
                             <p>{{ $point['text'] }}</p>
@@ -271,173 +265,122 @@
             </div>
         </div>
 
-        <div class="premium-scene reveal" aria-hidden="true">
-            <div class="premium-scene-glow premium-scene-glow--a"></div>
-            <div class="premium-scene-glow premium-scene-glow--b"></div>
-
-            <div class="premium-dashboard">
-                <div class="premium-dashboard-toolbar">
-                    <div class="premium-window-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+        <div class="premium-hero-visual reveal">
+            <div class="premium-screen-shell">
+                <div class="premium-screen-frame" data-premium-visual-carousel>
+                    <div class="premium-screen-toolbar">
+                        <span class="premium-screen-brand">{{ $brandName }}</span>
+                        <span class="premium-screen-chip">FITNESS CONTROL</span>
                     </div>
-                    <div class="premium-toolbar-pill">Dashboard SaaS</div>
-                    <div class="premium-toolbar-status">Online</div>
+
+                    <div class="premium-screen-canvas">
+                        <div class="premium-screen-overlay"></div>
+
+                        <div class="premium-screen-main">
+                            <div class="premium-screen-copy">
+                                <span data-premium-visual-eyebrow>{{ $initialPremiumVisualSlide['eyebrow'] ?? 'Control premium' }}</span>
+                                <strong data-premium-visual-title>{{ $initialPremiumVisualSlide['title'] ?? 'Eleva tu gimnasio con una home mas poderosa.' }}</strong>
+                                <p data-premium-visual-text>{{ $initialPremiumVisualSlide['text'] ?? 'Cobros, acceso, operacion y planes dentro de una narrativa visual mas intensa.' }}</p>
+                            </div>
+
+                            <div class="premium-screen-media">
+                                @foreach ($premiumVisualSlides as $slideIndex => $slide)
+                                    <figure class="premium-screen-media-slide {{ $slideIndex === 0 ? 'is-active' : '' }}"
+                                            data-premium-visual-slide
+                                            data-premium-visual-eyebrow="{{ $slide['eyebrow'] }}"
+                                            data-premium-visual-title="{{ $slide['title'] }}"
+                                            data-premium-visual-text="{{ $slide['text'] }}"
+                                            aria-hidden="{{ $slideIndex === 0 ? 'false' : 'true' }}">
+                                        <img src="{{ $slide['image'] }}"
+                                             alt="{{ $slide['title'] }}"
+                                             class="premium-screen-media-image"
+                                             loading="{{ $slideIndex === 0 ? 'eager' : 'lazy' }}"
+                                             decoding="async">
+                                    </figure>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="premium-screen-nav" aria-label="Vistas de Fitness Control">
+                            @foreach ($premiumVisualSlides as $slideIndex => $slide)
+                                <button type="button"
+                                        class="premium-screen-nav-button {{ $slideIndex === 0 ? 'is-active' : '' }}"
+                                        data-premium-visual-nav="{{ $slideIndex }}"
+                                        aria-pressed="{{ $slideIndex === 0 ? 'true' : 'false' }}">
+                                    <span>{{ str_pad((string) ($slideIndex + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                    <strong>{{ $slide['nav'] }}</strong>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <div class="premium-screen-panel">
+                            <article>
+                                <span>Check-in</span>
+                                <strong>97 hoy</strong>
+                            </article>
+                            <article>
+                                <span>Cobros</span>
+                                <strong>$1.480</strong>
+                            </article>
+                            <article>
+                                <span>Alertas</span>
+                                <strong>14 por revisar</strong>
+                            </article>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="premium-dashboard-shell">
-                    <aside class="premium-dashboard-sidebar">
-                        <div class="premium-sidebar-badge">{{ $brandInitials }}</div>
-                        <span class="premium-sidebar-item is-active">Resumen</span>
-                        <span class="premium-sidebar-item">Recepcion</span>
-                        <span class="premium-sidebar-item">Caja</span>
-                        <span class="premium-sidebar-item">Clientes</span>
-                        <span class="premium-sidebar-item">Reportes</span>
-                    </aside>
+                <div class="premium-float-grid">
+                    <article class="premium-float-card is-a">
+                        <span>Estado operativo</span>
+                        <strong>Online</strong>
+                        <p>La home se siente mas fuerte, mas fitness y mas premium sin tocar la logica de negocio.</p>
+                    </article>
 
-                    <div class="premium-dashboard-body">
-                        <article class="premium-screen-card premium-screen-card--wide">
-                            <div class="premium-card-head">
-                                <div>
-                                    <span class="premium-card-label">Cobro del dia</span>
-                                    <strong class="premium-card-figure">$1.480</strong>
-                                </div>
-                                <span class="premium-card-trend is-up">+18% esta semana</span>
-                            </div>
-                            <div class="premium-chart-bars">
-                                <span style="height: 34%"></span>
-                                <span style="height: 58%"></span>
-                                <span style="height: 52%"></span>
-                                <span style="height: 76%"></span>
-                                <span style="height: 68%"></span>
-                                <span style="height: 92%"></span>
-                                <span style="height: 84%"></span>
-                            </div>
-                        </article>
-
-                        <article class="premium-screen-card">
-                            <span class="premium-card-label">Vencimientos por atender</span>
-                            <ul class="premium-task-list">
-                                <li><span>Hoy</span><strong>14 membresias</strong></li>
-                                <li><span>En riesgo</span><strong>6 por renovar</strong></li>
-                                <li><span>Seguimiento</span><strong>3 promociones activas</strong></li>
-                            </ul>
-                        </article>
-
-                        <article class="premium-screen-card">
-                            <span class="premium-card-label">Recepcion en tiempo real</span>
-                            <div class="premium-checkin-grid">
-                                <article>
-                                    <strong>97</strong>
-                                    <span>Check-ins</span>
-                                </article>
-                                <article>
-                                    <strong>11</strong>
-                                    <span>Por validar</span>
-                                </article>
-                                <article>
-                                    <strong>4</strong>
-                                    <span>Cajas abiertas</span>
-                                </article>
-                            </div>
-                        </article>
-
-                        <article class="premium-screen-card premium-screen-card--mobile">
-                            <span class="premium-card-label">Experiencia movil / PWA</span>
-                            <div class="premium-phone-preview">
-                                <div class="premium-phone-bar"></div>
-                                <div class="premium-phone-ticket">
-                                    <span>QR dinamico</span>
-                                    <strong>Ingreso habilitado</strong>
-                                </div>
-                                <div class="premium-phone-notice">Recordatorio de renovacion listo para enviar</div>
-                            </div>
-                        </article>
-                    </div>
+                    <article class="premium-float-card is-b">
+                        <span>Paleta activa</span>
+                        <strong>Neon Lime</strong>
+                        <p>Oscuros profundos, verde lima y tipografia condensada inspirada en la referencia.</p>
+                    </article>
                 </div>
             </div>
-
-            <article class="premium-float-card premium-float-card--payments">
-                <span>Pagos conciliados</span>
-                <strong>89%</strong>
-                <p>Control diario visible para recepcion y administracion.</p>
-            </article>
-
-            <article class="premium-float-card premium-float-card--attendance">
-                <span>Asistencia actual</span>
-                <strong>En linea</strong>
-                <p>Validacion rapida desde escritorio, tablet o movil.</p>
-            </article>
-
-            <article class="premium-float-card premium-float-card--clients">
-                <span>Clientes por recuperar</span>
-                <strong>24</strong>
-                <p>Renovaciones y seguimiento con mejor contexto comercial.</p>
-            </article>
         </div>
     </div>
 </section>
 
-<section class="shell premium-proof-strip">
-    <div class="premium-proof-grid">
-        @foreach ($premiumProofCards as $card)
-            <article class="premium-proof-card reveal">
-                <strong>{{ $card['value'] }}</strong>
-                <span>{{ $card['label'] }}</span>
-                <p>{{ $card['text'] }}</p>
-            </article>
-        @endforeach
-    </div>
-</section>
-
-<section class="shell premium-section premium-benefits">
+<section id="features" class="shell premium-section premium-feature-band">
     <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Resultados visibles</span>
-        <h2>Menos caos operativo. Mas control, velocidad y confianza para vender mejor.</h2>
-        <p>La home ahora comunica beneficios reales para el negocio, con menos ruido y una jerarquia visual mucho mas clara.</p>
+        <span class="premium-kicker">Everything you need to succeed</span>
+        <h2>Todo lo que tu pagina principal necesita para vender con mas fuerza.</h2>
+        <p>Tomamos la energia visual del referente y la adaptamos para que FlexGym siga siendo software para gimnasios, no una plantilla generica.</p>
     </header>
 
-    <div class="premium-benefits-grid">
+    <div class="premium-feature-grid">
         @foreach ($premiumBenefits as $benefit)
-            <article class="premium-benefit-card reveal">
-                <div class="premium-benefit-icon" aria-hidden="true">
+            <article class="premium-feature-card reveal {{ $loop->index === 1 ? 'is-accent' : '' }}">
+                <div class="premium-feature-icon" aria-hidden="true">
                     @switch($benefit['icon'])
-                        @case('cash')
+                        @case('speed')
                             <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M4 7.5c0-1.38 1.12-2.5 2.5-2.5h11c1.38 0 2.5 1.12 2.5 2.5v9c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M8.5 12h7M12 9.5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <path d="M5 14.5 9 10.5l3 3L19 6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14.5 6.5H19v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             @break
-                        @case('calendar')
+                        @case('pulse')
                             <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M8 3.5v3M16 3.5v3M4 9.5h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                                <path d="M8.5 13h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <path d="M4 12h3.4l1.8-3.2 3.1 6.2 2.4-4.3H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             @break
-                        @case('bolt')
+                        @case('proof')
                             <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M13.5 3 6 13.2h4.7L9.8 21 18 10.8h-4.7L13.5 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                            </svg>
-                            @break
-                        @case('devices')
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="6" width="11" height="9" rx="2.4" stroke="currentColor" stroke-width="1.7"/>
-                                <rect x="16.5" y="4" width="4.5" height="14" rx="1.8" stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M7 18.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                            </svg>
-                            @break
-                        @case('growth')
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M5 17.5 10 12.5l3.5 3.5L19 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M15.5 9.5H19v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 3.8 18.5 6v5.6c0 3.5-2.1 6.7-6.5 8.6-4.4-1.9-6.5-5.1-6.5-8.6V6L12 3.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                <path d="m9.4 12.2 1.8 1.8 3.5-3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             @break
                         @default
                             <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M12 4.5 5 8.5v7l7 4 7-4v-7l-7-4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                                <path d="M9 12h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M12 8v4l2.7 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                     @endswitch
                 </div>
@@ -448,302 +391,247 @@
     </div>
 </section>
 
-<section id="features" class="shell premium-section premium-capabilities">
+<section class="shell premium-section premium-programs">
     <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Capacidades del producto</span>
-        <h2>Una arquitectura pensada para operar bien hoy y crecer sin improvisar manana.</h2>
-        <p>Dividimos la propuesta en capas claras para que el valor se entienda rapido: operacion, control comercial y experiencia movil.</p>
+        <span class="premium-kicker">Choose your perfect program</span>
+        <h2>Explora los modulos del producto como si fueran piezas protagonistas de la marca.</h2>
+        <p>Usamos miniaturas oscuras, overlays y llamadas visuales mas editoriales para que cada bloque se sienta intencional.</p>
     </header>
 
-    <div class="premium-module-stack">
-        @foreach ($capabilityModules as $module)
-            <article class="premium-module premium-module--{{ $module['key'] }} reveal">
-                <div class="premium-module-copy">
-                    <span class="premium-chip">{{ $module['eyebrow'] }}</span>
-                    <h3>{{ $module['title'] }}</h3>
-                    <p>{{ $module['text'] }}</p>
-
-                    <ul class="premium-module-list">
-                        @foreach ($module['items'] as $item)
-                            @if ($item !== '')
-                                <li>{{ $item }}</li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </div>
-
-                <div class="premium-module-visual" aria-hidden="true">
-                    @if ($module['key'] === 'operacion')
-                        <div class="premium-visual-console">
-                            <div class="premium-visual-line"><span>Ingreso</span><strong>QR validado</strong></div>
-                            <div class="premium-visual-line"><span>Caja</span><strong>$420 recibidos</strong></div>
-                            <div class="premium-visual-line"><span>Recepcion</span><strong>3 clientes en espera</strong></div>
-                            <div class="premium-visual-badge">Turno activo</div>
-                        </div>
-                    @elseif ($module['key'] === 'control')
-                        <div class="premium-visual-metrics">
-                            <article><span>Vencen hoy</span><strong>14</strong></article>
-                            <article><span>Ingresos</span><strong>$2.180</strong></article>
-                            <article><span>Renovacion</span><strong>74%</strong></article>
-                            <div class="premium-visual-bars">
-                                <span style="height: 30%"></span>
-                                <span style="height: 48%"></span>
-                                <span style="height: 68%"></span>
-                                <span style="height: 88%"></span>
-                            </div>
-                        </div>
-                    @else
-                        <div class="premium-visual-phone">
-                            <div class="premium-visual-phone-notch"></div>
-                            <div class="premium-visual-phone-card">
-                                <span>App / PWA</span>
-                                <strong>QR dinamico listo</strong>
-                            </div>
-                            <div class="premium-visual-phone-note">Recordatorio de pago programado</div>
-                        </div>
-                    @endif
-
-                    @if ($module['image'] !== '')
-                        <div class="premium-module-photo">
-                            <img src="{{ $module['image'] }}" alt="{{ $module['title'] }}">
-                        </div>
-                    @endif
+    <div class="premium-program-grid">
+        @foreach ($premiumProgramCards as $card)
+            <article class="premium-program-card reveal" style="--premium-program-image: url('{{ $card['image'] }}');">
+                <div class="premium-program-shade"></div>
+                <div class="premium-program-copy">
+                    <h3>{{ $card['title'] }}</h3>
+                    <p>{{ $card['text'] }}</p>
+                    <a href="{{ $card['href'] }}" class="premium-program-link">{{ $card['cta'] }}</a>
                 </div>
             </article>
         @endforeach
     </div>
 </section>
 
-<section class="shell premium-section premium-journey">
+<section class="shell premium-section premium-community">
+    <div class="premium-community-panel reveal" style="--premium-community-image: url('{{ $premiumCommunityImage }}');">
+        <div class="premium-community-overlay"></div>
+
+        <div class="premium-community-copy">
+            <span class="premium-kicker">Join our strong digital community</span>
+            <h2>La home ahora empuja demo, cotizacion y decision con una energia mucho mas clara.</h2>
+            <p>Conservamos la funcionalidad existente, pero la envolvemos en un bloque mas dramatico, oscuro y orientado a conversion.</p>
+
+            <div class="premium-community-stats">
+                @foreach ($premiumStatHighlights as $stat)
+                    <article class="premium-community-stat">
+                        <strong>{{ $stat['value'] }}</strong>
+                        <span>{{ $stat['label'] }}</span>
+                    </article>
+                @endforeach
+            </div>
+
+            <div class="premium-community-actions">
+                <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
+                    @csrf
+                    <button class="btn btn-demo" type="submit">{{ $premiumDemoLabel }}</button>
+                </form>
+
+                <button class="btn btn-wa btn-quote-trigger"
+                        type="button"
+                        data-open-quote-modal
+                        data-quote-source="community_panel"
+                        aria-controls="quote-request-modal">
+                    <span class="quote-cta-icon-badge" aria-hidden="true">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                            <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span>{{ $premiumQuoteLabel }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="shell premium-section premium-team">
     <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Como funciona</span>
-        <h2>Una implementacion clara, visual y facil de entender para tu equipo.</h2>
-        <p>La idea es que el usuario entienda en segundos como pasa de interes comercial a operacion ordenada.</p>
+        <span class="premium-kicker">Meet our expert roles</span>
+        <h2>Una home pensada para recepcion, administracion, comercial y direccion.</h2>
+        <p>La referencia visual se traduce en personajes y bloques humanos para que la pagina se sienta mas viva y menos corporativa.</p>
     </header>
 
-    <ol class="premium-timeline">
-        @foreach ($implementationSteps as $step)
-            <li class="premium-step reveal">
-                <span class="premium-step-count">{{ $step['step'] }}</span>
-                <div class="premium-step-card">
-                    <h3>{{ $step['title'] }}</h3>
-                    <p>{{ $step['text'] }}</p>
+    <div class="premium-team-grid">
+        @foreach ($premiumRoleCards as $card)
+            <article class="premium-team-card reveal">
+                <div class="premium-team-photo">
+                    <img src="{{ $card['image'] }}" alt="{{ $card['role'] }}">
                 </div>
-            </li>
+                <div class="premium-team-content">
+                    <span class="premium-team-role">{{ $card['role'] }}</span>
+                    <p>{{ $card['text'] }}</p>
+                </div>
+            </article>
         @endforeach
-    </ol>
+    </div>
 </section>
 
 <section id="pricing" class="shell premium-section premium-pricing">
     <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Planes listos para vender</span>
-        <h2>Elige el nivel de control que necesita hoy tu gimnasio y escala sin cambiar de sistema.</h2>
-        <p>Reordenamos la informacion para que cada plan se entienda mejor, destaque lo importante y reduzca saturacion visual.</p>
+        <span class="premium-kicker">Choose your perfect pricing plan</span>
+        <h2>Los planes ahora ocupan un lugar mas protagonista y se entienden mejor al primer vistazo.</h2>
+        <p>Mantenemos tus datos, tus botones y tu modal de cotizacion; solo cambiamos la puesta en escena para que vendan mas.</p>
     </header>
 
-    <div class="premium-pricing-highlight reveal">
-        <article>
-            <strong>Comparacion mas limpia</strong>
-            <span>Primero ves para quien es cada plan y despues revisas detalles clave.</span>
-        </article>
-        <article>
-            <strong>CTA mas vendible</strong>
-            <span>Activas demo rapido o cotizas el plan correcto segun tu operacion.</span>
-        </article>
-        <article>
-            <strong>Escalabilidad clara</strong>
-            <span>Desde una sede hasta varias sucursales, la progresion se entiende mejor.</span>
-        </article>
-    </div>
+    @if ($publicPlanCards->isNotEmpty())
+        <div class="premium-plan-grid">
+            @foreach ($publicPlanCards as $planCard)
+                @php
+                    $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
+                    $isFeatured = (bool) ($planCard['featured'] ?? false);
+                    $isContactMode = (bool) ($planCard['contact_mode'] ?? false);
+                    $price = (float) ($planCard['price'] ?? 0);
+                    $discountPriceRaw = $planCard['discount_price'] ?? null;
+                    $discountPrice = $discountPriceRaw !== null ? (float) $discountPriceRaw : null;
+                    $offerText = trim((string) ($planCard['offer_text'] ?? ''));
+                    $hasOffer = $offerText !== '' || ($discountPrice !== null && ($isContactMode || $discountPrice < $price));
+                    $planFeatures = collect((array) ($planCard['features'] ?? []))
+                        ->map(static fn ($feature): string => trim((string) $feature))
+                        ->filter(static fn (string $feature): bool => $feature !== '')
+                        ->take(4)
+                        ->values();
+                @endphp
 
-    <div class="premium-pricing-grid">
-        @foreach ($publicPlanCards as $planCard)
-            @php
-                $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
-                $isFeatured = (bool) ($planCard['featured'] ?? false);
-                $isContactMode = (bool) ($planCard['contact_mode'] ?? false);
-                $price = (float) ($planCard['price'] ?? 0);
-                $discountPriceRaw = $planCard['discount_price'] ?? null;
-                $discountPrice = $discountPriceRaw !== null ? (float) $discountPriceRaw : null;
-                $offerText = trim((string) ($planCard['offer_text'] ?? ''));
-                $hasOffer = $offerText !== '' || ($discountPrice !== null && ($isContactMode || $discountPrice < $price));
-                $planFeatures = array_values(array_filter((array) ($planCard['features'] ?? []), fn ($item) => is_string($item) && trim($item) !== ''));
-                $highlightedFeatures = collect($planFeatures)
-                    ->filter(static fn (string $feature): bool => str_starts_with(mb_strtolower(trim($feature)), 'incluido:'))
-                    ->map(static fn (string $feature): string => trim((string) preg_replace('/^incluido:\s*/iu', '', $feature)))
-                    ->values()
-                    ->all();
-                $visibleFeatures = collect($planFeatures)
-                    ->reject(static fn (string $feature): bool => str_starts_with(mb_strtolower(trim($feature)), 'incluido:'))
-                    ->reject(static fn (string $feature): bool => str_starts_with(mb_strtolower(trim($feature)), 'todo lo del'))
-                    ->take(4)
-                    ->values()
-                    ->all();
-                $hiddenFeatureCount = max(0, count($planFeatures) - count($highlightedFeatures) - count($visibleFeatures));
-            @endphp
-            <article class="premium-plan-card reveal {{ $isFeatured ? 'is-featured' : '' }} {{ $isContactMode ? 'is-contact' : '' }}">
-                <div class="premium-plan-top">
-                    <div>
-                        <span class="premium-plan-kicker">{{ $planSegments[$planKey] ?? 'Plan FlexGym' }}</span>
-                        <h3>{{ $planCard['name'] }}</h3>
-                    </div>
+                <article class="premium-plan-card reveal {{ $isFeatured ? 'is-featured' : '' }}">
+                    <div class="premium-plan-head">
+                        <div>
+                            <span class="premium-plan-kicker">{{ $planSegments[$planKey] ?? 'Plan' }}</span>
+                            <h3>{{ $planCard['name'] }}</h3>
+                        </div>
 
-                    @if ($isFeatured)
-                        <span class="premium-plan-badge">Recomendado</span>
-                    @elseif ($hasOffer)
-                        <span class="premium-plan-badge is-soft">Oferta</span>
-                    @endif
-                </div>
-
-                <div class="premium-plan-price">
-                    @if ($isContactMode)
-                        <strong>Personalizado</strong>
-                        <span>segun cantidad de sedes y nivel de operacion</span>
-                    @else
-                        <strong>${{ $formatPlanMoney($price) }}</strong>
-                        <span>/mes</span>
-                    @endif
-                </div>
-
-                @if ($hasOffer)
-                    <div class="premium-plan-offer">
-                        @if ($offerText !== '')
-                            <strong>{{ $offerText }}</strong>
-                        @elseif ($discountPrice !== null && $discountPrice < $price)
-                            <span>Antes ${{ $formatPlanMoney($price) }}</span>
-                            <strong>Ahora ${{ $formatPlanMoney($discountPrice) }}</strong>
-                        @else
-                            <strong>Oferta comercial disponible</strong>
+                        @if ($isFeatured)
+                            <span class="premium-plan-badge">Top plan</span>
+                        @elseif ($hasOffer)
+                            <span class="premium-plan-badge is-soft">Oferta</span>
                         @endif
                     </div>
-                @endif
 
-                <p class="premium-plan-summary">{{ $planCard['summary'] }}</p>
-                <div class="premium-plan-meta">{{ $planCard['ideal_for'] }}</div>
+                    <p class="premium-plan-summary">{{ $planCard['summary'] }}</p>
 
-                <ul class="premium-plan-features">
-                    @foreach ($visibleFeatures as $feature)
-                        <li>{{ $feature }}</li>
-                    @endforeach
+                    <div class="premium-plan-price">
+                        @if ($isContactMode)
+                            <strong>Personalizado</strong>
+                            <span>segun operacion y sedes</span>
+                        @else
+                            <strong>${{ $formatPlanMoney($price) }}</strong>
+                            <span>/mes</span>
+                        @endif
+                    </div>
 
-                    @foreach ($highlightedFeatures as $feature)
-                        <li class="is-highlight">{{ $feature }}</li>
-                    @endforeach
-                </ul>
+                    @if ($hasOffer)
+                        <div class="premium-plan-offer">
+                            @if ($offerText !== '')
+                                <strong>{{ $offerText }}</strong>
+                            @elseif ($discountPrice !== null && $discountPrice < $price)
+                                <span>Antes ${{ $formatPlanMoney($price) }}</span>
+                                <strong>Ahora ${{ $formatPlanMoney($discountPrice) }}</strong>
+                            @else
+                                <strong>Oferta comercial activa</strong>
+                            @endif
+                        </div>
+                    @endif
 
-                @if ($hiddenFeatureCount > 0)
-                    <p class="premium-plan-more">+{{ $hiddenFeatureCount }} capacidades adicionales segun este plan.</p>
-                @endif
-
-                <div class="premium-plan-actions">
-                    @unless ($isContactMode)
-                        <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                            @csrf
-                            <button class="btn {{ $isFeatured ? 'btn-demo' : 'btn-outline' }}" type="submit">{{ $premiumDemoLabel }}</button>
-                        </form>
-                    @endunless
-
-                    <button class="btn {{ $isContactMode ? 'btn-demo' : 'btn-wa' }}"
-                            type="button"
-                            data-plan-cta-key="{{ $planKey }}"
-                            data-open-quote-modal
-                            data-quote-plan="{{ $planKey }}"
-                            data-quote-plan-name="{{ trim((string) ($planCard['name'] ?? '')) }}"
-                            data-quote-plan-summary="{{ trim((string) ($planCard['summary'] ?? '')) }}"
-                            data-quote-plan-ideal="{{ trim((string) ($planCard['ideal_for'] ?? '')) }}"
-                            data-quote-source="pricing_{{ $planKey }}"
-                            aria-controls="quote-request-modal">
-                        Cotizar este plan
-                    </button>
-                </div>
-
-                <p class="premium-plan-note">{{ $planCard['setup_note'] }}</p>
-            </article>
-        @endforeach
-    </div>
-
-    <div class="premium-comparison reveal">
-        <div class="premium-comparison-head">
-            <div>
-                <span class="premium-eyebrow">Comparacion rapida</span>
-                <h3>Lo esencial, lado a lado.</h3>
-            </div>
-            <p>Una lectura limpia para evaluar sedes, PWA, app cliente y nivel de control.</p>
-        </div>
-
-        <div class="premium-comparison-wrap">
-            <table class="premium-comparison-table">
-                <thead>
-                    <tr>
-                        <th>Capacidad</th>
-                        @foreach ($publicPlanCards as $planCard)
-                            <th>{{ $planCard['name'] }}</th>
+                    <ul class="premium-plan-features">
+                        @foreach ($planFeatures as $feature)
+                            <li>{{ preg_replace('/^incluido:\s*/iu', '', $feature) }}</li>
                         @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($comparisonRows as $row)
-                        <tr>
-                            <th>{{ $row['label'] }}</th>
-                            @foreach ($publicPlanCards as $planCard)
-                                @php
-                                    $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
-                                    $cellValue = $row['values'][$planKey] ?? 'Segun plan';
-                                @endphp
-                                <td>{{ $cellValue }}</td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
+                    </ul>
 
-<section class="shell premium-section premium-confidence">
-    <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Confianza para decidir</span>
-        <h2>Una propuesta comercial honesta que transmite seguridad sin inventar historias.</h2>
-        <p>Usamos indicadores reales, beneficios concretos y promesas operativas creibles para que FlexGym se sienta confiable y profesional.</p>
-    </header>
+                    <div class="premium-plan-actions">
+                        @unless ($isContactMode)
+                            <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
+                                @csrf
+                                <button class="btn {{ $isFeatured ? 'btn-demo' : 'btn-outline' }}" type="submit">{{ $premiumDemoLabel }}</button>
+                            </form>
+                        @endunless
 
-    <div class="premium-confidence-grid">
-        <article class="premium-confidence-card premium-confidence-card--lead reveal">
-            <span class="premium-chip">Negocio que crece</span>
-            <h3>FlexGym se presenta como software de control y crecimiento, no como pagina informativa generica.</h3>
-            <p>El enfoque ahora pone primero lo que el cliente necesita entender rapido: que resuelve, para quien es, por que se ve serio y cual boton debe tocar.</p>
-
-            <ul class="premium-confidence-list">
-                <li>Jerarquia visual fuerte para captar atencion y guiar a la accion.</li>
-                <li>Copy mas corto y orientado a resultado real para gimnasios.</li>
-                <li>Escenas SaaS y componentes visuales que elevan la percepcion de valor.</li>
-            </ul>
-        </article>
-
-        <div class="premium-confidence-side">
-            @foreach ($confidenceCards as $card)
-                <article class="premium-confidence-card reveal">
-                    <h3>{{ $card['title'] }}</h3>
-                    <p>{{ $card['text'] }}</p>
+                        <button class="btn btn-quote-trigger {{ $isContactMode ? 'btn-demo' : 'btn-wa' }}"
+                                type="button"
+                                data-plan-cta-key="{{ $planKey }}"
+                                data-open-quote-modal
+                                data-quote-plan="{{ $planKey }}"
+                                data-quote-plan-name="{{ trim((string) ($planCard['name'] ?? '')) }}"
+                                data-quote-plan-summary="{{ trim((string) ($planCard['summary'] ?? '')) }}"
+                                data-quote-plan-ideal="{{ trim((string) ($planCard['ideal_for'] ?? '')) }}"
+                                data-quote-source="pricing_{{ $planKey }}"
+                                aria-controls="quote-request-modal">
+                            <span class="quote-cta-icon-badge" aria-hidden="true">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                                    <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span>Cotizar este plan</span>
+                        </button>
+                    </div>
                 </article>
             @endforeach
         </div>
+    @else
+        <div class="premium-empty-state reveal">
+            <h3>Los planes apareceran aqui cuando esten listos.</h3>
+            <p>Mientras tanto, puedes pedir una cotizacion y te ayudamos a definir la mejor configuracion para tu gimnasio.</p>
+            <button class="btn btn-demo btn-quote-trigger"
+                    type="button"
+                    data-open-quote-modal
+                    data-quote-source="pricing_empty_state"
+                    aria-controls="quote-request-modal">
+                <span class="quote-cta-icon-badge" aria-hidden="true">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                        <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>{{ $premiumQuoteLabel }}</span>
+            </button>
+        </div>
+    @endif
+</section>
+
+<section class="shell premium-section premium-reviews">
+    <header class="premium-section-head reveal">
+        <span class="premium-kicker">Reviews</span>
+        <h2>Lo que gana la pagina principal con este rediseño.</h2>
+        <p>No inventamos testimonios. Mostramos de forma honesta los cambios que elevan percepcion, orden y conversion.</p>
+    </header>
+
+    <div class="premium-review-grid">
+        @foreach ($premiumReviewCards as $card)
+            <article class="premium-review-card reveal">
+                <span class="premium-review-rating">★★★★★</span>
+                <strong>{{ $card['eyebrow'] }}</strong>
+                <p>{{ $card['text'] }}</p>
+            </article>
+        @endforeach
     </div>
 </section>
 
 <section id="faq" class="shell premium-section premium-faq">
     <header class="premium-section-head reveal">
-        <span class="premium-eyebrow">Preguntas frecuentes</span>
-        <h2>Respuestas claras para avanzar sin dudas.</h2>
-        <p>Un acordeon mas limpio, mas premium y mejor integrado con el resto de la experiencia.</p>
+        <span class="premium-kicker">Preguntas frecuentes</span>
+        <h2>Respuestas claras antes de pedir demo o cotizacion.</h2>
+        <p>La FAQ se mantiene funcional, pero ahora vive dentro del mismo lenguaje visual oscuro y deportivo.</p>
     </header>
 
     <div class="premium-faq-list">
         @foreach ($faqItems as $faqIndex => $faq)
             <article class="premium-faq-item reveal {{ $faqIndex === 0 ? 'is-open' : '' }}" data-faq-item>
                 <button class="premium-faq-button" type="button" data-faq-button aria-expanded="{{ $faqIndex === 0 ? 'true' : 'false' }}">
-                    <span class="premium-faq-question">{{ $faq['q'] }}</span>
-                    <span class="premium-faq-icon" aria-hidden="true"></span>
+                    <span>{{ $faq['q'] }}</span>
+                    <span class="premium-faq-plus" aria-hidden="true"></span>
                 </button>
                 <div class="premium-faq-content" data-faq-content>
                     <p>{{ $faq['a'] }}</p>
@@ -756,34 +644,21 @@
 <section class="shell premium-section premium-close">
     <div class="premium-close-panel reveal">
         <div class="premium-close-copy">
-            <span class="premium-eyebrow">Cotizacion guiada</span>
-            <h2>Recibe una propuesta clara para tu gimnasio, con foco en tu operacion real.</h2>
-            <p>Cu&eacute;ntanos cuantas personas trabajan contigo, si manejas una o varias sedes y que nivel de control necesitas. Te ayudamos a elegir el plan correcto y la ruta de implementacion.</p>
+            <span class="premium-kicker">Final call</span>
+            <h2>Todo el home fue reorientado para verse mas fitness, mas premium y mas seguro al momento de convertir.</h2>
+            <p>La estructura completa ya conversa con la referencia que compartiste: negros profundos, verde lima, titulares mas atleticos y una puesta en escena mucho mas agresiva, pero sin romper tus botones ni la logica comercial.</p>
 
             <ul class="premium-close-list">
-                <li>Microcopy orientado a conversion y menos friccion visual.</li>
-                <li>Proceso comercial claro para demo, cotizacion y eleccion de plan.</li>
-                <li>Soporte pensado para gimnasios que quieren crecer con orden.</li>
+                <li>Demo gratis intacta.</li>
+                <li>Cotizacion intacta.</li>
+                <li>Login intacto.</li>
             </ul>
         </div>
 
         <div class="premium-close-card">
-            <span class="premium-chip">Que pasa despues</span>
-
-            <div class="premium-close-steps">
-                <article>
-                    <strong>1.</strong>
-                    <span>Revisamos tu contexto y el plan ideal para tu operacion.</span>
-                </article>
-                <article>
-                    <strong>2.</strong>
-                    <span>Te contactamos por correo o telefono con una propuesta clara.</span>
-                </article>
-                <article>
-                    <strong>3.</strong>
-                    <span>Si avanzas, configuramos el siguiente paso con enfoque comercial y operativo.</span>
-                </article>
-            </div>
+            <span class="premium-chip">Siguiente paso</span>
+            <h3>Elige como quieres que arranque la conversacion.</h3>
+            <p>Puedes probar el sistema, cotizar el plan correcto o revisar precios primero. La experiencia esta pensada para reducir friccion, no para esconder acciones.</p>
 
             <div class="premium-close-actions">
                 <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
@@ -791,18 +666,23 @@
                     <button class="btn btn-demo" type="submit">{{ $premiumDemoLabel }}</button>
                 </form>
 
-                <button class="btn btn-wa"
+                <button class="btn btn-wa btn-quote-trigger"
                         type="button"
                         data-open-quote-modal
                         data-quote-source="close_section"
                         aria-controls="quote-request-modal">
-                    {{ $premiumQuoteLabel }}
+                    <span class="quote-cta-icon-badge" aria-hidden="true">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 12.2 12.2 4H18a2 2 0 0 1 2 2v5.8L11.8 20 4 12.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <circle cx="16.25" cy="7.75" r="1.25" fill="currentColor"/>
+                            <path d="M9.2 10.8h3.8M8.8 14.2h5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span>{{ $premiumQuoteLabel }}</span>
                 </button>
 
-                <a class="btn btn-ghost" href="#pricing">Ver planes</a>
+                <a class="btn btn-ghost" href="{{ route('login') }}">{{ $loginLabel }}</a>
             </div>
-
-            <p class="premium-close-footnote">Si prefieres una conversacion directa, tambi&eacute;n puedes ir a <a href="{{ $contactHref }}">Cont&aacute;ctanos</a>.</p>
         </div>
     </div>
 </section>
