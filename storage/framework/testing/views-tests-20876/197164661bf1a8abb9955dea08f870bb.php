@@ -1,14 +1,14 @@
-@php($content = $content ?? \App\Support\MarketingContent::defaults())
-@php($demoCtaLabel = 'Demo gratis')
-@php($brandName = trim((string) ($content['brand_name'] ?? 'FlexGym')))
+<?php ($content = $content ?? \App\Support\MarketingContent::defaults()); ?>
+<?php ($demoCtaLabel = 'Demo gratis'); ?>
+<?php ($brandName = trim((string) ($content['brand_name'] ?? 'FlexGym'))); ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b1020">
-    <title>{{ $brandName }} | Demo guiada</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title><?php echo e($brandName); ?> | Demo guiada</title>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         body {
             margin: 0;
@@ -137,52 +137,52 @@
 <body>
     <main class="guide-wrap">
         <div class="top">
-            <a href="{{ route('landing') }}">Volver al inicio</a>
-            <a href="{{ route('demo') }}">Volver a información demo</a>
+            <a href="<?php echo e(route('landing')); ?>">Volver al inicio</a>
+            <a href="<?php echo e(route('demo')); ?>">Volver a información demo</a>
         </div>
 
         <section class="hero">
-            <h1>{{ $content['guide_title'] ?? 'Demo guiada' }}</h1>
-            <p>{{ $content['guide_subtitle'] ?? 'Te acompanas paso a paso para conocer el flujo operativo.' }}</p>
+            <h1><?php echo e($content['guide_title'] ?? 'Demo guiada'); ?></h1>
+            <p><?php echo e($content['guide_subtitle'] ?? 'Te acompanas paso a paso para conocer el flujo operativo.'); ?></p>
             <div class="cta">
-                <form method="POST" action="{{ route('demo.request') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-main">{{ $demoCtaLabel }}</button>
+                <form method="POST" action="<?php echo e(route('demo.request')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <button type="submit" class="btn btn-main"><?php echo e($demoCtaLabel); ?></button>
                 </form>
-                <a class="btn btn-soft" href="{{ route('landing.contact') }}">Contáctanos</a>
+                <a class="btn btn-soft" href="<?php echo e(route('landing', ['quote' => 1])); ?>">Solicita tu cotización</a>
             </div>
         </section>
 
         <section class="steps" aria-label="Pasos de demo guiada">
             <article class="step">
                 <span class="step-index">1</span>
-                <h2>{{ $content['guide_step_1_title'] ?? 'Paso 1' }}</h2>
-                <p>{{ $content['guide_step_1_text'] ?? 'Configura tu sede principal y datos base.' }}</p>
+                <h2><?php echo e($content['guide_step_1_title'] ?? 'Paso 1'); ?></h2>
+                <p><?php echo e($content['guide_step_1_text'] ?? 'Configura tu sede principal y datos base.'); ?></p>
             </article>
             <article class="step">
                 <span class="step-index">2</span>
-                <h2>{{ $content['guide_step_2_title'] ?? 'Paso 2' }}</h2>
-                <p>{{ $content['guide_step_2_text'] ?? 'Carga clientes y planes iniciales.' }}</p>
+                <h2><?php echo e($content['guide_step_2_title'] ?? 'Paso 2'); ?></h2>
+                <p><?php echo e($content['guide_step_2_text'] ?? 'Carga clientes y planes iniciales.'); ?></p>
             </article>
             <article class="step">
                 <span class="step-index">3</span>
-                <h2>{{ $content['guide_step_3_title'] ?? 'Paso 3' }}</h2>
-                <p>{{ $content['guide_step_3_text'] ?? 'Activa membresías y prueba recepción.' }}</p>
+                <h2><?php echo e($content['guide_step_3_title'] ?? 'Paso 3'); ?></h2>
+                <p><?php echo e($content['guide_step_3_text'] ?? 'Activa membresías y prueba recepción.'); ?></p>
             </article>
             <article class="step">
                 <span class="step-index">4</span>
-                <h2>{{ $content['guide_step_4_title'] ?? 'Paso 4' }}</h2>
-                <p>{{ $content['guide_step_4_text'] ?? 'Válida caja, cobros y reportes.' }}</p>
+                <h2><?php echo e($content['guide_step_4_title'] ?? 'Paso 4'); ?></h2>
+                <p><?php echo e($content['guide_step_4_text'] ?? 'Válida caja, cobros y reportes.'); ?></p>
             </article>
             <article class="step" style="grid-column: 1 / -1;">
                 <span class="step-index">5</span>
-                <h2>{{ $content['guide_step_5_title'] ?? 'Paso 5' }}</h2>
-                <p>{{ $content['guide_step_5_text'] ?? 'Confirma configuración final antes de operar.' }}</p>
+                <h2><?php echo e($content['guide_step_5_title'] ?? 'Paso 5'); ?></h2>
+                <p><?php echo e($content['guide_step_5_text'] ?? 'Confirma configuración final antes de operar.'); ?></p>
             </article>
         </section>
 
         <div class="footer-note">
-            Esta guía muestra el orden recomendado. Con "{{ $demoCtaLabel }}" entras al sistema real en modo temporal.
+            Esta guía muestra el orden recomendado. Con "<?php echo e($demoCtaLabel); ?>" entras al sistema real en modo temporal.
         </div>
     </main>
 </body>
@@ -190,3 +190,4 @@
 
 
 
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/demo-guide.blade.php ENDPATH**/ ?>

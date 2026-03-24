@@ -424,3 +424,4 @@
                 padding: 1rem;
             }
         }
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/contact-premium-styles.blade.php ENDPATH**/ ?>

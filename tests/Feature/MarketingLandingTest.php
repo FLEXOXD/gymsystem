@@ -87,13 +87,13 @@ it('shows dedicated pages for about and contact', function () {
         ->assertDontSee('id="nosotros"', false);
 });
 
-it('renders the premium contact page without mojibake', function () {
+it('renders the simplified contact page in spanish without mojibake', function () {
     $this->get(route('landing.contact'))
         ->assertOk()
-        ->assertSee('Conversemos sobre el crecimiento de tu gimnasio')
-        ->assertSee('Respuesta rápida')
-        ->assertSee('Atención por WhatsApp')
-        ->assertSee('Propuesta personalizada')
+        ->assertSee('CONTACTANOS')
+        ->assertSee('Machachi, canton Mejia, Pichincha, Ecuador')
+        ->assertSee('flexjok.agencia@gmail.com')
+        ->assertSee('De 9:00 AM a 7:00 PM')
         ->assertDontSee('ContÃ¡ctanos')
         ->assertDontSee('Â¿Cuántos');
 });
@@ -118,19 +118,12 @@ it('shows dedicated legal pages', function () {
         ->assertDontSee('id="contacto"', false);
 });
 
-it('renders quote triggers across landing ctas and pricing cards', function () {
+it('does not render quote modal triggers on the landing', function () {
     $this->get(route('landing'))
         ->assertOk()
-        ->assertSee('Solicita tu cotización')
-        ->assertSee('data-open-quote-modal', false)
-        ->assertSee('data-plan-cta-key="basico"', false)
-        ->assertSee('data-plan-cta-key="profesional"', false)
-        ->assertSee('data-plan-cta-key="premium"', false)
-        ->assertSee('data-plan-cta-key="sucursales"', false)
-        ->assertSee('data-quote-plan="basico"', false)
-        ->assertSee('data-quote-plan="profesional"', false)
-        ->assertSee('data-quote-plan="premium"', false)
-        ->assertSee('data-quote-plan="sucursales"', false);
+        ->assertDontSee('data-open-quote-modal', false)
+        ->assertDontSee('quote-request-modal', false)
+        ->assertSee('Contáctanos');
 });
 
 it('renders decimal prices from superadmin plans on the landing', function () {

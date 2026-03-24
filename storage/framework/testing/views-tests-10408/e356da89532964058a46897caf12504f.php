@@ -1,4 +1,4 @@
-@php
+<?php
     $premiumDemoLabel = 'Probar demo gratis';
     $premiumContactLabel = 'Contáctanos';
     $premiumHeroKicker = trim((string) ($content['hero_kicker'] ?? 'Software premium para gimnasios'));
@@ -226,44 +226,45 @@
         'premium' => 'Mas automatizacion',
         'sucursales' => 'Escala multi-sede',
     ];
-@endphp
+?>
 
 <section id="inicio" class="shell premium-hero-section">
     <div class="premium-hero-grid">
         <div class="premium-hero-copy reveal">
             <div class="premium-kicker-row">
-                <span class="premium-eyebrow">{{ $premiumHeroKicker }}</span>
+                <span class="premium-eyebrow"><?php echo e($premiumHeroKicker); ?></span>
                 <span class="premium-chip">Ecuador y Latinoamerica</span>
             </div>
 
-            <h1 class="premium-hero-title">{{ $premiumHeroTitle }}</h1>
-            <p class="premium-hero-text">{{ $premiumHeroSubtitle }}</p>
+            <h1 class="premium-hero-title"><?php echo e($premiumHeroTitle); ?></h1>
+            <p class="premium-hero-text"><?php echo e($premiumHeroSubtitle); ?></p>
 
             <div class="premium-hero-actions">
-                <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                    @csrf
-                    <button class="btn btn-demo premium-btn-primary" type="submit">{{ $premiumDemoLabel }}</button>
+                <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <button class="btn btn-demo premium-btn-primary" type="submit"><?php echo e($premiumDemoLabel); ?></button>
                 </form>
 
-                <a class="btn btn-wa premium-btn-secondary" href="{{ $contactHref }}">
-                    {{ $premiumContactLabel }}
+                <a class="btn btn-wa premium-btn-secondary" href="<?php echo e($contactHref); ?>">
+                    <?php echo e($premiumContactLabel); ?>
+
                 </a>
 
                 <a class="btn btn-ghost premium-btn-tertiary" href="#pricing">Ver planes</a>
             </div>
 
-            <p class="premium-hero-microcopy">La demo crea un entorno temporal aislado para este dispositivo. Si ya eres cliente, <a href="{{ route('login') }}">{{ $loginLabel }}</a>.</p>
+            <p class="premium-hero-microcopy">La demo crea un entorno temporal aislado para este dispositivo. Si ya eres cliente, <a href="<?php echo e(route('login')); ?>"><?php echo e($loginLabel); ?></a>.</p>
 
             <div class="premium-hero-points">
-                @foreach ($premiumHeroPoints as $point)
+                <?php $__currentLoopData = $premiumHeroPoints; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $point): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <article class="premium-hero-point">
                         <span class="premium-hero-point-mark" aria-hidden="true"></span>
                         <div>
-                            <h3>{{ $point['title'] }}</h3>
-                            <p>{{ $point['text'] }}</p>
+                            <h3><?php echo e($point['title']); ?></h3>
+                            <p><?php echo e($point['text']); ?></p>
                         </div>
                     </article>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
 
@@ -284,7 +285,7 @@
 
                 <div class="premium-dashboard-shell">
                     <aside class="premium-dashboard-sidebar">
-                        <div class="premium-sidebar-badge">{{ $brandInitials }}</div>
+                        <div class="premium-sidebar-badge"><?php echo e($brandInitials); ?></div>
                         <span class="premium-sidebar-item is-active">Resumen</span>
                         <span class="premium-sidebar-item">Recepcion</span>
                         <span class="premium-sidebar-item">Caja</span>
@@ -377,13 +378,13 @@
 
 <section class="shell premium-proof-strip">
     <div class="premium-proof-grid">
-        @foreach ($premiumProofCards as $card)
+        <?php $__currentLoopData = $premiumProofCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <article class="premium-proof-card reveal">
-                <strong>{{ $card['value'] }}</strong>
-                <span>{{ $card['label'] }}</span>
-                <p>{{ $card['text'] }}</p>
+                <strong><?php echo e($card['value']); ?></strong>
+                <span><?php echo e($card['label']); ?></span>
+                <p><?php echo e($card['text']); ?></p>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </section>
 
@@ -395,52 +396,52 @@
     </header>
 
     <div class="premium-benefits-grid">
-        @foreach ($premiumBenefits as $benefit)
+        <?php $__currentLoopData = $premiumBenefits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $benefit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <article class="premium-benefit-card reveal">
                 <div class="premium-benefit-icon" aria-hidden="true">
-                    @switch($benefit['icon'])
-                        @case('cash')
+                    <?php switch($benefit['icon']):
+                        case ('cash'): ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M4 7.5c0-1.38 1.12-2.5 2.5-2.5h11c1.38 0 2.5 1.12 2.5 2.5v9c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M8.5 12h7M12 9.5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                             </svg>
-                            @break
-                        @case('calendar')
+                            <?php break; ?>
+                        <?php case ('calendar'): ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M8 3.5v3M16 3.5v3M4 9.5h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                                 <path d="M8.5 13h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                             </svg>
-                            @break
-                        @case('bolt')
+                            <?php break; ?>
+                        <?php case ('bolt'): ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M13.5 3 6 13.2h4.7L9.8 21 18 10.8h-4.7L13.5 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
                             </svg>
-                            @break
-                        @case('devices')
+                            <?php break; ?>
+                        <?php case ('devices'): ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="6" width="11" height="9" rx="2.4" stroke="currentColor" stroke-width="1.7"/>
                                 <rect x="16.5" y="4" width="4.5" height="14" rx="1.8" stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M7 18.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                             </svg>
-                            @break
-                        @case('growth')
+                            <?php break; ?>
+                        <?php case ('growth'): ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M5 17.5 10 12.5l3.5 3.5L19 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M15.5 9.5H19v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            @break
-                        @default
+                            <?php break; ?>
+                        <?php default: ?>
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M12 4.5 5 8.5v7l7 4 7-4v-7l-7-4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
                                 <path d="M9 12h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                             </svg>
-                    @endswitch
+                    <?php endswitch; ?>
                 </div>
-                <h3>{{ $benefit['title'] }}</h3>
-                <p>{{ $benefit['text'] }}</p>
+                <h3><?php echo e($benefit['title']); ?></h3>
+                <p><?php echo e($benefit['text']); ?></p>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </section>
 
@@ -452,31 +453,31 @@
     </header>
 
     <div class="premium-module-stack">
-        @foreach ($capabilityModules as $module)
-            <article class="premium-module premium-module--{{ $module['key'] }} reveal">
+        <?php $__currentLoopData = $capabilityModules; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $module): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <article class="premium-module premium-module--<?php echo e($module['key']); ?> reveal">
                 <div class="premium-module-copy">
-                    <span class="premium-chip">{{ $module['eyebrow'] }}</span>
-                    <h3>{{ $module['title'] }}</h3>
-                    <p>{{ $module['text'] }}</p>
+                    <span class="premium-chip"><?php echo e($module['eyebrow']); ?></span>
+                    <h3><?php echo e($module['title']); ?></h3>
+                    <p><?php echo e($module['text']); ?></p>
 
                     <ul class="premium-module-list">
-                        @foreach ($module['items'] as $item)
-                            @if ($item !== '')
-                                <li>{{ $item }}</li>
-                            @endif
-                        @endforeach
+                        <?php $__currentLoopData = $module['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($item !== ''): ?>
+                                <li><?php echo e($item); ?></li>
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </ul>
                 </div>
 
                 <div class="premium-module-visual" aria-hidden="true">
-                    @if ($module['key'] === 'operacion')
+                    <?php if($module['key'] === 'operacion'): ?>
                         <div class="premium-visual-console">
                             <div class="premium-visual-line"><span>Ingreso</span><strong>QR validado</strong></div>
                             <div class="premium-visual-line"><span>Caja</span><strong>$420 recibidos</strong></div>
                             <div class="premium-visual-line"><span>Recepcion</span><strong>3 clientes en espera</strong></div>
                             <div class="premium-visual-badge">Turno activo</div>
                         </div>
-                    @elseif ($module['key'] === 'control')
+                    <?php elseif($module['key'] === 'control'): ?>
                         <div class="premium-visual-metrics">
                             <article><span>Vencen hoy</span><strong>14</strong></article>
                             <article><span>Ingresos</span><strong>$2.180</strong></article>
@@ -488,7 +489,7 @@
                                 <span style="height: 88%"></span>
                             </div>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="premium-visual-phone">
                             <div class="premium-visual-phone-notch"></div>
                             <div class="premium-visual-phone-card">
@@ -497,16 +498,16 @@
                             </div>
                             <div class="premium-visual-phone-note">Recordatorio de pago programado</div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
-                    @if ($module['image'] !== '')
+                    <?php if($module['image'] !== ''): ?>
                         <div class="premium-module-photo">
-                            <img src="{{ $module['image'] }}" alt="{{ $module['title'] }}">
+                            <img src="<?php echo e($module['image']); ?>" alt="<?php echo e($module['title']); ?>">
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </section>
 
@@ -518,15 +519,15 @@
     </header>
 
     <ol class="premium-timeline">
-        @foreach ($implementationSteps as $step)
+        <?php $__currentLoopData = $implementationSteps; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $step): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <li class="premium-step reveal">
-                <span class="premium-step-count">{{ $step['step'] }}</span>
+                <span class="premium-step-count"><?php echo e($step['step']); ?></span>
                 <div class="premium-step-card">
-                    <h3>{{ $step['title'] }}</h3>
-                    <p>{{ $step['text'] }}</p>
+                    <h3><?php echo e($step['title']); ?></h3>
+                    <p><?php echo e($step['text']); ?></p>
                 </div>
             </li>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </ol>
 </section>
 
@@ -553,8 +554,8 @@
     </div>
 
     <div class="premium-pricing-grid">
-        @foreach ($publicPlanCards as $planCard)
-            @php
+        <?php $__currentLoopData = $publicPlanCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planCard): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php
                 $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
                 $isFeatured = (bool) ($planCard['featured'] ?? false);
                 $isContactMode = (bool) ($planCard['contact_mode'] ?? false);
@@ -576,77 +577,78 @@
                     ->values()
                     ->all();
                 $hiddenFeatureCount = max(0, count($planFeatures) - count($highlightedFeatures) - count($visibleFeatures));
-            @endphp
-            <article class="premium-plan-card reveal {{ $isFeatured ? 'is-featured' : '' }} {{ $isContactMode ? 'is-contact' : '' }}">
+            ?>
+            <article class="premium-plan-card reveal <?php echo e($isFeatured ? 'is-featured' : ''); ?> <?php echo e($isContactMode ? 'is-contact' : ''); ?>">
                 <div class="premium-plan-top">
                     <div>
-                        <span class="premium-plan-kicker">{{ $planSegments[$planKey] ?? 'Plan FlexGym' }}</span>
-                        <h3>{{ $planCard['name'] }}</h3>
+                        <span class="premium-plan-kicker"><?php echo e($planSegments[$planKey] ?? 'Plan FlexGym'); ?></span>
+                        <h3><?php echo e($planCard['name']); ?></h3>
                     </div>
 
-                    @if ($isFeatured)
+                    <?php if($isFeatured): ?>
                         <span class="premium-plan-badge">Recomendado</span>
-                    @elseif ($hasOffer)
+                    <?php elseif($hasOffer): ?>
                         <span class="premium-plan-badge is-soft">Oferta</span>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
                 <div class="premium-plan-price">
-                    @if ($isContactMode)
+                    <?php if($isContactMode): ?>
                         <strong>Personalizado</strong>
                         <span>segun cantidad de sedes y nivel de operacion</span>
-                    @else
-                        <strong>${{ $formatPlanMoney($price) }}</strong>
+                    <?php else: ?>
+                        <strong>$<?php echo e($formatPlanMoney($price)); ?></strong>
                         <span>/mes</span>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                @if ($hasOffer)
+                <?php if($hasOffer): ?>
                     <div class="premium-plan-offer">
-                        @if ($offerText !== '')
-                            <strong>{{ $offerText }}</strong>
-                        @elseif ($discountPrice !== null && $discountPrice < $price)
-                            <span>Antes ${{ $formatPlanMoney($price) }}</span>
-                            <strong>Ahora ${{ $formatPlanMoney($discountPrice) }}</strong>
-                        @else
+                        <?php if($offerText !== ''): ?>
+                            <strong><?php echo e($offerText); ?></strong>
+                        <?php elseif($discountPrice !== null && $discountPrice < $price): ?>
+                            <span>Antes $<?php echo e($formatPlanMoney($price)); ?></span>
+                            <strong>Ahora $<?php echo e($formatPlanMoney($discountPrice)); ?></strong>
+                        <?php else: ?>
                             <strong>Oferta comercial disponible</strong>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                <p class="premium-plan-summary">{{ $planCard['summary'] }}</p>
-                <div class="premium-plan-meta">{{ $planCard['ideal_for'] }}</div>
+                <p class="premium-plan-summary"><?php echo e($planCard['summary']); ?></p>
+                <div class="premium-plan-meta"><?php echo e($planCard['ideal_for']); ?></div>
 
                 <ul class="premium-plan-features">
-                    @foreach ($visibleFeatures as $feature)
-                        <li>{{ $feature }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $visibleFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($feature); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                    @foreach ($highlightedFeatures as $feature)
-                        <li class="is-highlight">{{ $feature }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $highlightedFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li class="is-highlight"><?php echo e($feature); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
 
-                @if ($hiddenFeatureCount > 0)
-                    <p class="premium-plan-more">+{{ $hiddenFeatureCount }} capacidades adicionales segun este plan.</p>
-                @endif
+                <?php if($hiddenFeatureCount > 0): ?>
+                    <p class="premium-plan-more">+<?php echo e($hiddenFeatureCount); ?> capacidades adicionales segun este plan.</p>
+                <?php endif; ?>
 
                 <div class="premium-plan-actions">
-                    @unless ($isContactMode)
-                        <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                            @csrf
-                            <button class="btn {{ $isFeatured ? 'btn-demo' : 'btn-outline' }}" type="submit">{{ $premiumDemoLabel }}</button>
+                    <?php if (! ($isContactMode)): ?>
+                        <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <button class="btn <?php echo e($isFeatured ? 'btn-demo' : 'btn-outline'); ?>" type="submit"><?php echo e($premiumDemoLabel); ?></button>
                         </form>
-                    @endunless
+                    <?php endif; ?>
 
-                    <a class="btn {{ $isContactMode ? 'btn-demo' : 'btn-wa' }}" href="{{ $contactHref }}">
-                        {{ $isContactMode ? 'Contáctanos' : 'Más información' }}
+                    <a class="btn <?php echo e($isContactMode ? 'btn-demo' : 'btn-wa'); ?>" href="<?php echo e($contactHref); ?>">
+                        <?php echo e($isContactMode ? 'Contáctanos' : 'Más información'); ?>
+
                     </a>
                 </div>
 
-                <p class="premium-plan-note">{{ $planCard['setup_note'] }}</p>
+                <p class="premium-plan-note"><?php echo e($planCard['setup_note']); ?></p>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
     <div class="premium-comparison reveal">
@@ -663,24 +665,24 @@
                 <thead>
                     <tr>
                         <th>Capacidad</th>
-                        @foreach ($publicPlanCards as $planCard)
-                            <th>{{ $planCard['name'] }}</th>
-                        @endforeach
+                        <?php $__currentLoopData = $publicPlanCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planCard): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <th><?php echo e($planCard['name']); ?></th>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($comparisonRows as $row)
+                    <?php $__currentLoopData = $comparisonRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
-                            <th>{{ $row['label'] }}</th>
-                            @foreach ($publicPlanCards as $planCard)
-                                @php
+                            <th><?php echo e($row['label']); ?></th>
+                            <?php $__currentLoopData = $publicPlanCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planCard): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
                                     $planKey = strtolower(trim((string) ($planCard['plan_key'] ?? '')));
                                     $cellValue = $row['values'][$planKey] ?? 'Segun plan';
-                                @endphp
-                                <td>{{ $cellValue }}</td>
-                            @endforeach
+                                ?>
+                                <td><?php echo e($cellValue); ?></td>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -708,12 +710,12 @@
         </article>
 
         <div class="premium-confidence-side">
-            @foreach ($confidenceCards as $card)
+            <?php $__currentLoopData = $confidenceCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <article class="premium-confidence-card reveal">
-                    <h3>{{ $card['title'] }}</h3>
-                    <p>{{ $card['text'] }}</p>
+                    <h3><?php echo e($card['title']); ?></h3>
+                    <p><?php echo e($card['text']); ?></p>
                 </article>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
 </section>
@@ -726,17 +728,17 @@
     </header>
 
     <div class="premium-faq-list">
-        @foreach ($faqItems as $faqIndex => $faq)
-            <article class="premium-faq-item reveal {{ $faqIndex === 0 ? 'is-open' : '' }}" data-faq-item>
-                <button class="premium-faq-button" type="button" data-faq-button aria-expanded="{{ $faqIndex === 0 ? 'true' : 'false' }}">
-                    <span class="premium-faq-question">{{ $faq['q'] }}</span>
+        <?php $__currentLoopData = $faqItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $faqIndex => $faq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <article class="premium-faq-item reveal <?php echo e($faqIndex === 0 ? 'is-open' : ''); ?>" data-faq-item>
+                <button class="premium-faq-button" type="button" data-faq-button aria-expanded="<?php echo e($faqIndex === 0 ? 'true' : 'false'); ?>">
+                    <span class="premium-faq-question"><?php echo e($faq['q']); ?></span>
                     <span class="premium-faq-icon" aria-hidden="true"></span>
                 </button>
                 <div class="premium-faq-content" data-faq-content>
-                    <p>{{ $faq['a'] }}</p>
+                    <p><?php echo e($faq['a']); ?></p>
                 </div>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </section>
 
@@ -773,19 +775,21 @@
             </div>
 
             <div class="premium-close-actions">
-                <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                    @csrf
-                    <button class="btn btn-demo" type="submit">{{ $premiumDemoLabel }}</button>
+                <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <button class="btn btn-demo" type="submit"><?php echo e($premiumDemoLabel); ?></button>
                 </form>
 
-                <a class="btn btn-wa" href="{{ $contactHref }}">
-                    {{ $premiumContactLabel }}
+                <a class="btn btn-wa" href="<?php echo e($contactHref); ?>">
+                    <?php echo e($premiumContactLabel); ?>
+
                 </a>
 
                 <a class="btn btn-ghost" href="#pricing">Ver planes</a>
             </div>
 
-            <p class="premium-close-footnote">Si prefieres una conversacion directa, tambi&eacute;n puedes ir a <a href="{{ $contactHref }}">Cont&aacute;ctanos</a>.</p>
+            <p class="premium-close-footnote">Si prefieres una conversacion directa, tambi&eacute;n puedes ir a <a href="<?php echo e($contactHref); ?>">Cont&aacute;ctanos</a>.</p>
         </div>
     </div>
 </section>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/home-premium.blade.php ENDPATH**/ ?>
