@@ -1,4 +1,4 @@
-@php
+<?php
     $aboutProductName = trim((string) ($brandName ?? ''));
     $aboutProductName = $aboutProductName !== '' ? $aboutProductName : 'GymSystem';
     $aboutHeroVisualImage = trim((string) ($aboutHeroImage ?? ''));
@@ -54,26 +54,26 @@
         ['icon' => 'shield', 'title' => 'Enfoque profesional', 'text' => 'Diseño, producto y experiencia alineados para que tu sistema también transmita seriedad.'],
         ['icon' => 'growth', 'title' => 'Pensado para crecer contigo', 'text' => 'Desde una sede hasta una operación más grande, sin volver al desorden cada vez que creces.'],
     ];
-@endphp
+?>
 
 <section id="nosotros" class="section about-section about-premium">
     <div class="shell">
-        <div class="about-premium-hero reveal" @if ($aboutHeroVisualImage !== '') style="--about-premium-hero-image: url('{{ $aboutHeroVisualImage }}');" @endif>
+        <div class="about-premium-hero reveal" <?php if($aboutHeroVisualImage !== ''): ?> style="--about-premium-hero-image: url('<?php echo e($aboutHeroVisualImage); ?>');" <?php endif; ?>>
             <div class="about-premium-hero-copy">
                 <span class="about-premium-kicker">Nosotros</span>
                 <h1 class="about-premium-hero-title">Creamos tecnología para que los gimnasios crezcan de verdad</h1>
-                <p class="about-premium-hero-lead">En {{ $aboutProductName }} ayudamos a dueños de gimnasios de Ecuador y Latinoamérica a ordenar pagos, asistencia y operación diaria con una plataforma clara, rápida y pensada para vender mejor.</p>
+                <p class="about-premium-hero-lead">En <?php echo e($aboutProductName); ?> ayudamos a dueños de gimnasios de Ecuador y Latinoamérica a ordenar pagos, asistencia y operación diaria con una plataforma clara, rápida y pensada para vender mejor.</p>
                 <div class="about-premium-badge-row" data-reveal-group data-reveal-step="80">
-                    @foreach ($aboutTrustBadges as $badge)
-                        <span class="about-premium-badge">{{ $badge }}</span>
-                    @endforeach
+                    <?php $__currentLoopData = $aboutTrustBadges; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $badge): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <span class="about-premium-badge"><?php echo e($badge); ?></span>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
                 <div class="about-premium-actions" data-reveal-group data-reveal-step="95">
-                    <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                        @csrf
+                    <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                        <?php echo csrf_field(); ?>
                         <button class="btn btn-demo" type="submit">Solicitar demo gratis</button>
                     </form>
-                    <a href="{{ $pricingHref }}" class="btn btn-ghost">Ver planes</a>
+                    <a href="<?php echo e($pricingHref); ?>" class="btn btn-ghost">Ver planes</a>
                 </div>
             </div>
             <div class="about-premium-hero-panel">
@@ -90,17 +90,17 @@
                 </article>
                 <div class="about-premium-panel-grid" data-reveal-group data-reveal-step="95" data-reveal-delay="80">
                     <article class="about-premium-mini-card">
-                        <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => 'control'])</span>
+                        <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => 'control'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
                         <strong>Pagos bajo control</strong>
                         <p>Detecta pendientes, vencimientos y renovaciones antes de que afecten tus ingresos.</p>
                     </article>
                     <article class="about-premium-mini-card">
-                        <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => 'access'])</span>
+                        <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => 'access'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
                         <strong>Asistencia sin fricción</strong>
                         <p>Revisa movimiento, entradas y actividad diaria sin depender de registros dispersos.</p>
                     </article>
                     <article class="about-premium-mini-card">
-                        <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => 'mobile'])</span>
+                        <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => 'mobile'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
                         <strong>Gestión móvil</strong>
                         <p>Consulta lo importante desde el celular o escritorio, según cómo operas tu negocio.</p>
                     </article>
@@ -112,34 +112,34 @@
     <div class="shell about-premium-story-grid">
         <article class="about-premium-story-card reveal">
             <span class="about-premium-kicker">Nuestra historia</span>
-            <h2 class="about-premium-section-title">{{ $aboutProductName }} nació viendo el mismo problema una y otra vez</h2>
+            <h2 class="about-premium-section-title"><?php echo e($aboutProductName); ?> nació viendo el mismo problema una y otra vez</h2>
             <p class="about-premium-copy">Muchos gimnasios tienen energía, clientes y ganas de crecer, pero siguen operando con cuadernos, Excel, chats y demasiadas tareas manuales.</p>
             <p class="about-premium-copy">Cuando nadie sabe con claridad quién debe, qué membresía vence hoy o cómo cerró la caja, el desgaste aparece rápido. Y con el desgaste, también se frena el crecimiento.</p>
-            <p class="about-premium-copy">Por eso creamos {{ $aboutProductName }}: para devolverle al dueño control total, automatizar lo repetitivo y convertir la operación en una ventaja real.</p>
+            <p class="about-premium-copy">Por eso creamos <?php echo e($aboutProductName); ?>: para devolverle al dueño control total, automatizar lo repetitivo y convertir la operación en una ventaja real.</p>
             <div class="about-premium-story-steps" data-reveal-group data-reveal-step="90">
-                @foreach ($aboutStorySteps as $storyStep)
+                <?php $__currentLoopData = $aboutStorySteps; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $storyStep): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="about-premium-story-step">
-                        <span class="about-premium-story-step-count">{{ $storyStep['step'] }}</span>
+                        <span class="about-premium-story-step-count"><?php echo e($storyStep['step']); ?></span>
                         <div>
-                            <strong>{{ $storyStep['title'] }}</strong>
-                            <p>{{ $storyStep['text'] }}</p>
+                            <strong><?php echo e($storyStep['title']); ?></strong>
+                            <p><?php echo e($storyStep['text']); ?></p>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </article>
         <aside class="about-premium-story-visual reveal">
-            @if ($aboutStoryVisualImage !== '')
-                <img src="{{ $aboutStoryVisualImage }}" alt="Operación moderna de gimnasio enfocada en control y crecimiento" loading="lazy">
-            @else
+            <?php if($aboutStoryVisualImage !== ''): ?>
+                <img src="<?php echo e($aboutStoryVisualImage); ?>" alt="Operación moderna de gimnasio enfocada en control y crecimiento" loading="lazy">
+            <?php else: ?>
                 <div class="about-premium-story-placeholder">Agrega una imagen real del producto o de la operación del gimnasio para reforzar esta historia.</div>
-            @endif
+            <?php endif; ?>
             <div class="about-premium-story-overlay">
                 <span class="about-premium-story-overlay-label">Problemas que resolvemos</span>
                 <ul class="about-premium-story-pains">
-                    @foreach ($aboutStoryPains as $pain)
-                        <li>{{ $pain }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $aboutStoryPains; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pain): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($pain); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
         </aside>
@@ -153,14 +153,14 @@
                 <p class="about-premium-copy">No hablamos de “ser líderes”. Hablamos de que el dueño pueda cobrar mejor, ver su operación en tiempo real y crecer sin volver al caos.</p>
             </div>
             <div class="about-premium-mission-points" data-reveal-group data-reveal-step="90">
-                @foreach ($aboutMissionPoints as $missionPoint)
+                <?php $__currentLoopData = $aboutMissionPoints; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $missionPoint): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="about-premium-mission-point">
                         <div>
-                            <strong>{{ $missionPoint['title'] }}</strong>
-                            <span>{{ $missionPoint['text'] }}</span>
+                            <strong><?php echo e($missionPoint['title']); ?></strong>
+                            <span><?php echo e($missionPoint['text']); ?></span>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </article>
     </div>
@@ -172,14 +172,14 @@
     </header>
 
     <div class="shell about-premium-feature-grid">
-        @foreach ($aboutDifferentiators as $item)
+        <?php $__currentLoopData = $aboutDifferentiators; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <article class="about-premium-feature-card reveal">
-                <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => $item['icon']])</span>
-                <h3>{{ $item['title'] }}</h3>
-                <p>{{ $item['text'] }}</p>
-                <span class="about-premium-card-caption">{{ $item['caption'] }}</span>
+                <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => $item['icon']], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
+                <h3><?php echo e($item['title']); ?></h3>
+                <p><?php echo e($item['text']); ?></p>
+                <span class="about-premium-card-caption"><?php echo e($item['caption']); ?></span>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
     <header class="shell heading reveal about-premium-heading">
@@ -189,14 +189,14 @@
     </header>
 
     <div class="shell about-premium-outcome-grid">
-        @foreach ($aboutOutcomeCards as $item)
+        <?php $__currentLoopData = $aboutOutcomeCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <article class="about-premium-outcome-card reveal">
-                <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => $item['icon']])</span>
-                <h3>{{ $item['title'] }}</h3>
-                <p>{{ $item['text'] }}</p>
-                <span class="about-premium-outcome-pill">{{ $item['tag'] }}</span>
+                <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => $item['icon']], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
+                <h3><?php echo e($item['title']); ?></h3>
+                <p><?php echo e($item['text']); ?></p>
+                <span class="about-premium-outcome-pill"><?php echo e($item['tag']); ?></span>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
     <div class="shell">
@@ -205,26 +205,26 @@
                 <div class="about-premium-founder-avatar" aria-hidden="true">
                     <span class="about-premium-founder-avatar-core">DQ</span>
                 </div>
-                <span class="about-premium-founder-badge">Fundador de {{ $aboutProductName }}</span>
+                <span class="about-premium-founder-badge">Fundador de <?php echo e($aboutProductName); ?></span>
             </div>
             <div class="about-premium-founder-copy">
                 <span class="about-premium-kicker">Fundador</span>
                 <h2 class="about-premium-section-title">David Quintana</h2>
                 <p class="about-premium-founder-role">Desarrollador enfocado en soluciones para negocios reales.</p>
-                <p class="about-premium-copy">David impulsa {{ $aboutProductName }} con una idea simple: el software para gimnasios no debe complicar la operación, debe ordenar cobros, reducir errores y darle al dueño visibilidad real para crecer con más seguridad.</p>
+                <p class="about-premium-copy">David impulsa <?php echo e($aboutProductName); ?> con una idea simple: el software para gimnasios no debe complicar la operación, debe ordenar cobros, reducir errores y darle al dueño visibilidad real para crecer con más seguridad.</p>
                 <div class="about-premium-founder-tags" data-reveal-group data-reveal-step="75">
-                    @foreach ($aboutFounderTags as $tag)
-                        <span class="about-premium-founder-tag">{{ $tag }}</span>
-                    @endforeach
+                    <?php $__currentLoopData = $aboutFounderTags; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tag): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <span class="about-premium-founder-tag"><?php echo e($tag); ?></span>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
             <aside class="about-premium-founder-side">
                 <span class="about-premium-founder-side-label">Lo que guía el producto</span>
                 <h4>Principios que se reflejan en cada módulo</h4>
                 <ul class="about-premium-soft-list" data-reveal-group data-reveal-selector="li" data-reveal-step="80">
-                    @foreach ($aboutFounderPrinciples as $principle)
-                        <li>{{ $principle }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $aboutFounderPrinciples; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $principle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($principle); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </aside>
         </section>
@@ -237,13 +237,13 @@
     </header>
 
     <div class="shell about-premium-trust-grid">
-        @foreach ($aboutTrustCards as $item)
+        <?php $__currentLoopData = $aboutTrustCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <article class="about-premium-trust-card reveal">
-                <span class="about-premium-icon-slot">@include('marketing.partials.about-icon', ['name' => $item['icon']])</span>
-                <h3>{{ $item['title'] }}</h3>
-                <p>{{ $item['text'] }}</p>
+                <span class="about-premium-icon-slot"><?php echo $__env->make('marketing.partials.about-icon', ['name' => $item['icon']], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></span>
+                <h3><?php echo e($item['title']); ?></h3>
+                <p><?php echo e($item['text']); ?></p>
             </article>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
     <section class="shell about-premium-cta reveal">
@@ -253,11 +253,12 @@
             <p class="about-premium-cta-copy">Prueba cómo se siente operar con más control, menos errores y una plataforma pensada para acompañar el crecimiento de tu gimnasio.</p>
         </div>
         <div class="about-premium-cta-actions" data-reveal-group data-reveal-step="95">
-            <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
-                @csrf
+            <form class="inline-form" method="POST" action="<?php echo e(route('demo.request')); ?>">
+                <?php echo csrf_field(); ?>
                 <button class="btn btn-demo" type="submit">Solicitar demo gratis</button>
             </form>
-            <a href="{{ $pricingHref }}" class="btn btn-ghost">Ver planes</a>
+            <a href="<?php echo e($pricingHref); ?>" class="btn btn-ghost">Ver planes</a>
         </div>
     </section>
 </section>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/about-premium.blade.php ENDPATH**/ ?>

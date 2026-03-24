@@ -1,10 +1,8 @@
-@extends('layouts.panel')
+<?php $__env->startSection('title', 'Administrar página web'); ?>
+<?php $__env->startSection('page-title', 'Administrar página web'); ?>
 
-@section('title', 'Administrar página web')
-@section('page-title', 'Administrar página web')
-
-@section('content')
-    @php
+<?php $__env->startSection('content'); ?>
+    <?php
         $sectionImageMap = [
             1 => ['file' => 'section_1_image_file', 'path' => 'section_1_image_path', 'url' => 'section_1_image_url', 'label' => 'Imagen sección 1'],
             2 => ['file' => 'section_2_image_file', 'path' => 'section_2_image_path', 'url' => 'section_2_image_url', 'label' => 'Imagen sección 2'],
@@ -70,7 +68,7 @@
         $footerReady = filled($content['footer_text'] ?? null) && filled($content['footer_contact_email'] ?? null);
         $whatsappReady = filled($content['whatsapp_phone'] ?? null) && filled($content['whatsapp_message'] ?? null);
         $editorReadiness = collect([$brandReady, $heroReady, $footerReady, $whatsappReady])->filter()->count();
-    @endphp
+    ?>
 
     <div class="sa-shell">
         <section class="sa-hero">
@@ -84,7 +82,7 @@
                     </p>
                     <div class="sa-actions">
                         <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-primary">Abrir vista previa</button>
-                        <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing pública</a>
+                        <a href="<?php echo e($landingPreviewUrl); ?>" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing pública</a>
                         <span class="sa-pill is-info">Edición en vivo con preview</span>
                     </div>
                 </div>
@@ -110,44 +108,53 @@
         </section>
 
         <section class="sa-stat-grid">
-            <article class="sa-stat-card {{ $editorReadiness >= 3 ? 'is-success' : 'is-warning' }}">
+            <article class="sa-stat-card <?php echo e($editorReadiness >= 3 ? 'is-success' : 'is-warning'); ?>">
                 <p class="sa-stat-label">Base editorial</p>
-                <p class="sa-stat-value">{{ $editorReadiness }}/4</p>
+                <p class="sa-stat-value"><?php echo e($editorReadiness); ?>/4</p>
                 <p class="sa-stat-meta">Marca, WhatsApp, hero y footer con mínimos listos para publicar.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Slides hero</p>
-                <p class="sa-stat-value">{{ $heroSlidesConfigured }}/4</p>
+                <p class="sa-stat-value"><?php echo e($heroSlidesConfigured); ?>/4</p>
                 <p class="sa-stat-meta">Cobertura visual del bloque principal de captación.</p>
             </article>
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Servicios documentados</p>
-                <p class="sa-stat-value">{{ $serviceSectionsConfigured }}/3</p>
-                <p class="sa-stat-meta">{{ $serviceImagesConfigured }}/3 secciones ya tienen imagen cargada.</p>
+                <p class="sa-stat-value"><?php echo e($serviceSectionsConfigured); ?>/3</p>
+                <p class="sa-stat-meta"><?php echo e($serviceImagesConfigured); ?>/3 secciones ya tienen imagen cargada.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">Logos de banda</p>
-                <p class="sa-stat-value">{{ $marqueeLogosConfigured }}/6</p>
+                <p class="sa-stat-value"><?php echo e($marqueeLogosConfigured); ?>/6</p>
                 <p class="sa-stat-meta">Prueba visual y soporte comercial para la franja de credibilidad.</p>
             </article>
         </section>
 
-        @if ($errors->any())
+        <?php if($errors->any()): ?>
             <div class="ui-alert ui-alert-danger" role="alert" aria-labelledby="site-content-errors-title">
                 <p id="site-content-errors-title" class="font-semibold">Hay errores en el contenido web.</p>
                 <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="grid items-start gap-6 2xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.65fr)]">
         <div class="space-y-4">
-            <x-ui.card title="Contenido comercial" subtitle="Editor visual de landing para editar por secciones y ver la vista previa al instante.">
-                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2" aria-describedby="site-content-form-help">
-                    @csrf
+            <?php if (isset($component)) { $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.card','data' => ['title' => 'Contenido comercial','subtitle' => 'Editor visual de landing para editar por secciones y ver la vista previa al instante.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => 'Contenido comercial','subtitle' => 'Editor visual de landing para editar por secciones y ver la vista previa al instante.']); ?>
+                <form id="site-content-form" method="POST" action="<?php echo e(route('superadmin.web-page.update')); ?>" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2" aria-describedby="site-content-form-help">
+                    <?php echo csrf_field(); ?>
 
                     <p id="site-content-form-help" class="sr-only">
                         Editor de contenido comercial con navegación rápida, vista previa en vivo y bloques para marca, WhatsApp, hero, banda, servicios y footer.
@@ -161,7 +168,7 @@
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-secondary">Vista previa</button>
-                                <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing</a>
+                                <a href="<?php echo e($landingPreviewUrl); ?>" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost">Abrir landing</a>
                                 <span id="editor-change-indicator"
                                       role="status"
                                       aria-live="polite"
@@ -171,14 +178,15 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            @foreach ($editorSections as $editorSection)
+                            <?php $__currentLoopData = $editorSections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $editorSection): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <button type="button"
-                                        data-scroll-target="#{{ $editorSection['id'] }}"
-                                        aria-label="Ir a la sección {{ $editorSection['label'] }}"
+                                        data-scroll-target="#<?php echo e($editorSection['id']); ?>"
+                                        aria-label="Ir a la sección <?php echo e($editorSection['label']); ?>"
                                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900">
-                                    {{ $editorSection['label'] }}
+                                    <?php echo e($editorSection['label']); ?>
+
                                 </button>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
 
@@ -190,29 +198,29 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Texto pequeño marca
-                            <input type="text" name="brand_kicker" data-preview-field="brand_kicker" class="ui-input" value="{{ old('brand_kicker', $content['brand_kicker'] ?? '') }}">
+                            <input type="text" name="brand_kicker" data-preview-field="brand_kicker" class="ui-input" value="<?php echo e(old('brand_kicker', $content['brand_kicker'] ?? '')); ?>">
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Nombre marca
-                            <input type="text" name="brand_name" data-preview-field="brand_name" class="ui-input" value="{{ old('brand_name', $content['brand_name'] ?? '') }}">
+                            <input type="text" name="brand_name" data-preview-field="brand_name" class="ui-input" value="<?php echo e(old('brand_name', $content['brand_name'] ?? '')); ?>">
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Texto botón login
-                            <input type="text" name="login_button_label" data-preview-field="login_button_label" class="ui-input" value="{{ old('login_button_label', $content['login_button_label'] ?? '') }}">
+                            <input type="text" name="login_button_label" data-preview-field="login_button_label" class="ui-input" value="<?php echo e(old('login_button_label', $content['login_button_label'] ?? '')); ?>">
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Texto botón demo
-                            <input type="text" name="demo_button_label" data-preview-field="demo_button_label" class="ui-input" value="{{ old('demo_button_label', $content['demo_button_label'] ?? '') }}" required>
+                            <input type="text" name="demo_button_label" data-preview-field="demo_button_label" class="ui-input" value="<?php echo e(old('demo_button_label', $content['demo_button_label'] ?? '')); ?>" required>
                         </label>
 
                         <div class="space-y-2 lg:col-span-2 rounded-xl border border-slate-300 bg-white p-3">
                             <p class="text-xs font-bold uppercase tracking-wide">Logo principal</p>
-                            @if (!empty($content['brand_logo_url']))
-                                <img src="{{ $content['brand_logo_url'] }}" alt="Logo principal" class="h-20 w-20 rounded-lg border border-slate-300 object-contain">
-                            @endif
+                            <?php if(!empty($content['brand_logo_url'])): ?>
+                                <img src="<?php echo e($content['brand_logo_url']); ?>" alt="Logo principal" class="h-20 w-20 rounded-lg border border-slate-300 object-contain">
+                            <?php endif; ?>
                             <input type="file" name="brand_logo_file" data-preview-image="brand_logo_file" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
                             <label class="inline-flex items-center gap-2 text-xs font-medium">
                                 <input type="checkbox" name="remove_brand_logo_path" value="1">
@@ -229,17 +237,17 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Teléfono WhatsApp
-                            <input type="text" id="wa-phone" name="whatsapp_phone" class="ui-input" value="{{ old('whatsapp_phone', $content['whatsapp_phone'] ?? '') }}" required>
+                            <input type="text" id="wa-phone" name="whatsapp_phone" class="ui-input" value="<?php echo e(old('whatsapp_phone', $content['whatsapp_phone'] ?? '')); ?>" required>
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Mensaje base del usuario
-                            <textarea id="wa-message" name="whatsapp_message" class="ui-input min-h-[96px]" required>{{ old('whatsapp_message', $content['whatsapp_message'] ?? '') }}</textarea>
+                            <textarea id="wa-message" name="whatsapp_message" class="ui-input min-h-[96px]" required><?php echo e(old('whatsapp_message', $content['whatsapp_message'] ?? '')); ?></textarea>
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             URL WhatsApp generada automáticamente
-                            <input type="text" id="wa-preview" class="ui-input" value="{{ $content['whatsapp_url'] ?? '' }}" readonly>
+                            <input type="text" id="wa-preview" class="ui-input" value="<?php echo e($content['whatsapp_url'] ?? ''); ?>" readonly>
                         </label>
 
                         <div class="lg:col-span-2 rounded-xl border border-slate-300 bg-white p-3">
@@ -249,38 +257,38 @@
                             <div class="mt-3 grid gap-3 lg:grid-cols-2">
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     Mensaje plan básico
-                                    <textarea id="wa-plan-basico-message" name="whatsapp_message_plan_basico" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_basico', $content['whatsapp_message_plan_basico'] ?? '') }}</textarea>
+                                    <textarea id="wa-plan-basico-message" name="whatsapp_message_plan_basico" class="ui-input min-h-[88px]"><?php echo e(old('whatsapp_message_plan_basico', $content['whatsapp_message_plan_basico'] ?? '')); ?></textarea>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     Mensaje plan profesional
-                                    <textarea id="wa-plan-profesional-message" name="whatsapp_message_plan_profesional" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_profesional', $content['whatsapp_message_plan_profesional'] ?? '') }}</textarea>
+                                    <textarea id="wa-plan-profesional-message" name="whatsapp_message_plan_profesional" class="ui-input min-h-[88px]"><?php echo e(old('whatsapp_message_plan_profesional', $content['whatsapp_message_plan_profesional'] ?? '')); ?></textarea>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     Mensaje plan premium
-                                    <textarea id="wa-plan-premium-message" name="whatsapp_message_plan_premium" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_premium', $content['whatsapp_message_plan_premium'] ?? '') }}</textarea>
+                                    <textarea id="wa-plan-premium-message" name="whatsapp_message_plan_premium" class="ui-input min-h-[88px]"><?php echo e(old('whatsapp_message_plan_premium', $content['whatsapp_message_plan_premium'] ?? '')); ?></textarea>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     Mensaje plan sucursales
-                                    <textarea id="wa-plan-sucursales-message" name="whatsapp_message_plan_sucursales" class="ui-input min-h-[88px]">{{ old('whatsapp_message_plan_sucursales', $content['whatsapp_message_plan_sucursales'] ?? '') }}</textarea>
+                                    <textarea id="wa-plan-sucursales-message" name="whatsapp_message_plan_sucursales" class="ui-input min-h-[88px]"><?php echo e(old('whatsapp_message_plan_sucursales', $content['whatsapp_message_plan_sucursales'] ?? '')); ?></textarea>
                                 </label>
                             </div>
 
                             <div class="mt-3 grid gap-3 lg:grid-cols-2">
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     URL plan básico
-                                    <input type="text" id="wa-plan-basico-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_basico'] ?? '' }}" readonly>
+                                    <input type="text" id="wa-plan-basico-preview" class="ui-input" value="<?php echo e($content['whatsapp_url_plan_basico'] ?? ''); ?>" readonly>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     URL plan profesional
-                                    <input type="text" id="wa-plan-profesional-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_profesional'] ?? '' }}" readonly>
+                                    <input type="text" id="wa-plan-profesional-preview" class="ui-input" value="<?php echo e($content['whatsapp_url_plan_profesional'] ?? ''); ?>" readonly>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     URL plan premium
-                                    <input type="text" id="wa-plan-premium-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_premium'] ?? '' }}" readonly>
+                                    <input type="text" id="wa-plan-premium-preview" class="ui-input" value="<?php echo e($content['whatsapp_url_plan_premium'] ?? ''); ?>" readonly>
                                 </label>
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                     URL plan sucursales
-                                    <input type="text" id="wa-plan-sucursales-preview" class="ui-input" value="{{ $content['whatsapp_url_plan_sucursales'] ?? '' }}" readonly>
+                                    <input type="text" id="wa-plan-sucursales-preview" class="ui-input" value="<?php echo e($content['whatsapp_url_plan_sucursales'] ?? ''); ?>" readonly>
                                 </label>
                             </div>
                         </div>
@@ -293,49 +301,50 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Hero kicker
-                            <input type="text" name="hero_kicker" data-preview-field="hero_kicker" class="ui-input" value="{{ old('hero_kicker', $content['hero_kicker'] ?? '') }}" required>
+                            <input type="text" name="hero_kicker" data-preview-field="hero_kicker" class="ui-input" value="<?php echo e(old('hero_kicker', $content['hero_kicker'] ?? '')); ?>" required>
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Hero título
-                            <input type="text" name="hero_title" data-preview-field="hero_title" class="ui-input" value="{{ old('hero_title', $content['hero_title'] ?? '') }}" required>
+                            <input type="text" name="hero_title" data-preview-field="hero_title" class="ui-input" value="<?php echo e(old('hero_title', $content['hero_title'] ?? '')); ?>" required>
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Hero subtítulo
-                            <textarea name="hero_subtitle" data-preview-field="hero_subtitle" class="ui-input min-h-[108px]" required>{{ old('hero_subtitle', $content['hero_subtitle'] ?? '') }}</textarea>
+                            <textarea name="hero_subtitle" data-preview-field="hero_subtitle" class="ui-input min-h-[108px]" required><?php echo e(old('hero_subtitle', $content['hero_subtitle'] ?? '')); ?></textarea>
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Etiqueta sobre carrusel
-                            <input type="text" name="hero_media_tag" data-preview-field="hero_media_tag" class="ui-input" value="{{ old('hero_media_tag', $content['hero_media_tag'] ?? '') }}">
+                            <input type="text" name="hero_media_tag" data-preview-field="hero_media_tag" class="ui-input" value="<?php echo e(old('hero_media_tag', $content['hero_media_tag'] ?? '')); ?>">
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                             Texto inferior carrusel
-                            <input type="text" name="hero_media_note" data-preview-field="hero_media_note" class="ui-input" value="{{ old('hero_media_note', $content['hero_media_note'] ?? '') }}">
+                            <input type="text" name="hero_media_note" data-preview-field="hero_media_note" class="ui-input" value="<?php echo e(old('hero_media_note', $content['hero_media_note'] ?? '')); ?>">
                         </label>
 
                         <div class="space-y-2 lg:col-span-2 rounded-xl border border-slate-300 bg-white p-3">
                             <p class="text-xs font-bold uppercase tracking-wide">Carrusel hero (4 imágenes)</p>
                             <div class="grid gap-3 lg:grid-cols-4">
-                                @for ($slide = 1; $slide <= 4; $slide++)
+                                <?php for($slide = 1; $slide <= 4; $slide++): ?>
                                     <div class="space-y-2 rounded-lg border border-slate-300/70 bg-slate-50/60 p-2">
-                                        <p class="text-[11px] font-bold uppercase tracking-wide">Slide {{ $slide }}</p>
-                                        @if (!empty($content['hero_slide_'.$slide.'_url'] ?? ''))
-                                            <img src="{{ $content['hero_slide_'.$slide.'_url'] }}" alt="Slide {{ $slide }}" class="h-24 w-full rounded-md border border-slate-300 object-cover">
-                                        @endif
+                                        <p class="text-[11px] font-bold uppercase tracking-wide">Slide <?php echo e($slide); ?></p>
+                                        <?php if(!empty($content['hero_slide_'.$slide.'_url'] ?? '')): ?>
+                                            <img src="<?php echo e($content['hero_slide_'.$slide.'_url']); ?>" alt="Slide <?php echo e($slide); ?>" class="h-24 w-full rounded-md border border-slate-300 object-cover">
+                                        <?php endif; ?>
                                         <input type="file"
-                                               name="hero_slide_{{ $slide }}_file"
-                                               data-preview-image="hero_slide_{{ $slide }}_file"
+                                               name="hero_slide_<?php echo e($slide); ?>_file"
+                                               data-preview-image="hero_slide_<?php echo e($slide); ?>_file"
                                                accept=".jpg,.jpeg,.png,.webp,.svg"
                                                class="ui-input">
                                         <label class="inline-flex items-center gap-2 text-xs font-medium">
-                                            <input type="checkbox" name="remove_hero_slide_{{ $slide }}_path" value="1">
-                                            Quitar slide {{ $slide }}
+                                            <input type="checkbox" name="remove_hero_slide_<?php echo e($slide); ?>_path" value="1">
+                                            Quitar slide <?php echo e($slide); ?>
+
                                         </label>
                                     </div>
-                                @endfor
+                                <?php endfor; ?>
                             </div>
                         </div>
                     </section>
@@ -346,26 +355,27 @@
                             <p class="sa-section-copy">Usa este bloque para reforzar prueba visual, alianzas o mensajes breves de confianza.</p>
                         </div>
 
-                        @foreach ([1, 2, 3, 4, 5, 6] as $item)
+                        <?php $__currentLoopData = [1, 2, 3, 4, 5, 6]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="grid gap-3 rounded-xl border border-slate-300 bg-white p-3 lg:grid-cols-2">
                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                    Item {{ $item }} texto
-                                    <input type="text" name="marquee_item_{{ $item }}_text" data-preview-field="marquee_item_{{ $item }}_text" class="ui-input" value="{{ old('marquee_item_'.$item.'_text', $content['marquee_item_'.$item.'_text'] ?? '') }}">
+                                    Item <?php echo e($item); ?> texto
+                                    <input type="text" name="marquee_item_<?php echo e($item); ?>_text" data-preview-field="marquee_item_<?php echo e($item); ?>_text" class="ui-input" value="<?php echo e(old('marquee_item_'.$item.'_text', $content['marquee_item_'.$item.'_text'] ?? '')); ?>">
                                 </label>
 
                                 <div class="space-y-2 lg:col-span-2 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3">
-                                    <p class="text-xs font-bold uppercase tracking-wide">Item {{ $item }} logo (opcional)</p>
-                                    @if (!empty($content[$marqueeLogoMap[$item]['url']] ?? ''))
-                                        <img src="{{ $content[$marqueeLogoMap[$item]['url']] }}" alt="Logo item {{ $item }}" class="h-16 w-44 rounded-lg border border-slate-300 bg-slate-950 object-contain">
-                                    @endif
-                                    <input type="file" name="{{ $marqueeLogoMap[$item]['file'] }}" data-preview-image="{{ $marqueeLogoMap[$item]['file'] }}" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
+                                    <p class="text-xs font-bold uppercase tracking-wide">Item <?php echo e($item); ?> logo (opcional)</p>
+                                    <?php if(!empty($content[$marqueeLogoMap[$item]['url']] ?? '')): ?>
+                                        <img src="<?php echo e($content[$marqueeLogoMap[$item]['url']]); ?>" alt="Logo item <?php echo e($item); ?>" class="h-16 w-44 rounded-lg border border-slate-300 bg-slate-950 object-contain">
+                                    <?php endif; ?>
+                                    <input type="file" name="<?php echo e($marqueeLogoMap[$item]['file']); ?>" data-preview-image="<?php echo e($marqueeLogoMap[$item]['file']); ?>" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
                                     <label class="inline-flex items-center gap-2 text-xs font-medium">
-                                        <input type="checkbox" name="remove_{{ $marqueeLogoMap[$item]['path'] }}" value="1">
-                                        Quitar logo item {{ $item }}
+                                        <input type="checkbox" name="remove_<?php echo e($marqueeLogoMap[$item]['path']); ?>" value="1">
+                                        Quitar logo item <?php echo e($item); ?>
+
                                     </label>
                                 </div>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </section>
 
                     <section id="editor-services" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
@@ -375,38 +385,39 @@
                             <p class="sa-section-copy">Organiza beneficios en bloques legibles. Cada sección debe explicar una ventaja concreta y visual.</p>
                         </div>
 
-                        @foreach ([1, 2, 3] as $section)
-                            <details class="rounded-xl border border-slate-300 bg-white p-3" {{ $section === 1 ? 'open' : '' }}>
-                                <summary class="cursor-pointer text-sm font-bold text-slate-800">Sección {{ $section }}</summary>
+                        <?php $__currentLoopData = [1, 2, 3]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <details class="rounded-xl border border-slate-300 bg-white p-3" <?php echo e($section === 1 ? 'open' : ''); ?>>
+                                <summary class="cursor-pointer text-sm font-bold text-slate-800">Sección <?php echo e($section); ?></summary>
 
                                 <div class="mt-3 grid gap-4 lg:grid-cols-2">
                                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                        Sección {{ $section }} título
-                                        <input type="text" name="section_{{ $section }}_title" data-preview-field="section_{{ $section }}_title" class="ui-input" value="{{ old('section_'.$section.'_title', $content['section_'.$section.'_title'] ?? '') }}">
+                                        Sección <?php echo e($section); ?> título
+                                        <input type="text" name="section_<?php echo e($section); ?>_title" data-preview-field="section_<?php echo e($section); ?>_title" class="ui-input" value="<?php echo e(old('section_'.$section.'_title', $content['section_'.$section.'_title'] ?? '')); ?>">
                                     </label>
 
                                     <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                        Sección {{ $section }} texto
-                                        <textarea name="section_{{ $section }}_text" data-preview-field="section_{{ $section }}_text" class="ui-input min-h-[88px]">{{ old('section_'.$section.'_text', $content['section_'.$section.'_text'] ?? '') }}</textarea>
+                                        Sección <?php echo e($section); ?> texto
+                                        <textarea name="section_<?php echo e($section); ?>_text" data-preview-field="section_<?php echo e($section); ?>_text" class="ui-input min-h-[88px]"><?php echo e(old('section_'.$section.'_text', $content['section_'.$section.'_text'] ?? '')); ?></textarea>
                                     </label>
 
-                                    @for ($item = 1; $item <= 3; $item++)
+                                    <?php for($item = 1; $item <= 3; $item++): ?>
                                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                            Sección {{ $section }} item {{ $item }}
-                                            <input type="text" name="section_{{ $section }}_item_{{ $item }}" data-preview-field="section_{{ $section }}_item_{{ $item }}" class="ui-input" value="{{ old('section_'.$section.'_item_'.$item, $content['section_'.$section.'_item_'.$item] ?? '') }}">
+                                            Sección <?php echo e($section); ?> item <?php echo e($item); ?>
+
+                                            <input type="text" name="section_<?php echo e($section); ?>_item_<?php echo e($item); ?>" data-preview-field="section_<?php echo e($section); ?>_item_<?php echo e($item); ?>" class="ui-input" value="<?php echo e(old('section_'.$section.'_item_'.$item, $content['section_'.$section.'_item_'.$item] ?? '')); ?>">
                                         </label>
-                                    @endfor
+                                    <?php endfor; ?>
 
                                     <div class="lg:col-span-2 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3">
                                         <p class="text-xs font-bold uppercase tracking-wide">Botones de la interfaz</p>
                                         <div class="mt-3 grid gap-4 lg:grid-cols-2">
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                                 Texto botÃ³n principal
-                                                <input type="text" name="section_{{ $section }}_cta_label" class="ui-input" value="{{ old('section_'.$section.'_cta_label', $content['section_'.$section.'_cta_label'] ?? '') }}">
+                                                <input type="text" name="section_<?php echo e($section); ?>_cta_label" class="ui-input" value="<?php echo e(old('section_'.$section.'_cta_label', $content['section_'.$section.'_cta_label'] ?? '')); ?>">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
                                                 Texto botÃ³n modal
-                                                <input type="text" name="section_{{ $section }}_modal_button_label" class="ui-input" value="{{ old('section_'.$section.'_modal_button_label', $content['section_'.$section.'_modal_button_label'] ?? '') }}">
+                                                <input type="text" name="section_<?php echo e($section); ?>_modal_button_label" class="ui-input" value="<?php echo e(old('section_'.$section.'_modal_button_label', $content['section_'.$section.'_modal_button_label'] ?? '')); ?>">
                                             </label>
                                         </div>
                                     </div>
@@ -415,9 +426,10 @@
                                         <p class="text-xs font-bold uppercase tracking-wide">Destino del boton principal</p>
                                         <label class="mt-3 block space-y-1 text-xs font-bold uppercase tracking-wide">
                                             URL boton principal
-                                            <input type="text" name="section_{{ $section }}_cta_url" class="ui-input" value="{{ old('section_'.$section.'_cta_url', $content['section_'.$section.'_cta_url'] ?? '') }}" placeholder="{{ $sectionCtaDefaults[$section] }}">
+                                            <input type="text" name="section_<?php echo e($section); ?>_cta_url" class="ui-input" value="<?php echo e(old('section_'.$section.'_cta_url', $content['section_'.$section.'_cta_url'] ?? '')); ?>" placeholder="<?php echo e($sectionCtaDefaults[$section]); ?>">
                                             <span class="text-[11px] font-medium normal-case tracking-normal text-slate-500">
-                                                Si lo dejas vacio, usara por defecto: {{ $sectionCtaDefaults[$section] }}
+                                                Si lo dejas vacio, usara por defecto: <?php echo e($sectionCtaDefaults[$section]); ?>
+
                                             </span>
                                         </label>
                                     </div>
@@ -427,63 +439,64 @@
                                         <div class="mt-3 grid gap-4 lg:grid-cols-2">
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                                                 Etiqueta pequeÃ±a modal
-                                                <input type="text" name="section_{{ $section }}_modal_badge" class="ui-input" value="{{ old('section_'.$section.'_modal_badge', $content['section_'.$section.'_modal_badge'] ?? '') }}">
+                                                <input type="text" name="section_<?php echo e($section); ?>_modal_badge" class="ui-input" value="<?php echo e(old('section_'.$section.'_modal_badge', $content['section_'.$section.'_modal_badge'] ?? '')); ?>">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                                                 TÃ­tulo modal
-                                                <input type="text" name="section_{{ $section }}_modal_title" class="ui-input" value="{{ old('section_'.$section.'_modal_title', $content['section_'.$section.'_modal_title'] ?? '') }}">
+                                                <input type="text" name="section_<?php echo e($section); ?>_modal_title" class="ui-input" value="<?php echo e(old('section_'.$section.'_modal_title', $content['section_'.$section.'_modal_title'] ?? '')); ?>">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                                                 DescripciÃ³n modal
-                                                <textarea name="section_{{ $section }}_modal_text" class="ui-input min-h-[108px]">{{ old('section_'.$section.'_modal_text', $content['section_'.$section.'_modal_text'] ?? '') }}</textarea>
+                                                <textarea name="section_<?php echo e($section); ?>_modal_text" class="ui-input min-h-[108px]"><?php echo e(old('section_'.$section.'_modal_text', $content['section_'.$section.'_modal_text'] ?? '')); ?></textarea>
                                             </label>
-                                            @for ($modalItem = 1; $modalItem <= 3; $modalItem++)
+                                            <?php for($modalItem = 1; $modalItem <= 3; $modalItem++): ?>
                                                 <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                                    Modal item {{ $modalItem }}
-                                                    <input type="text" name="section_{{ $section }}_modal_item_{{ $modalItem }}" class="ui-input" value="{{ old('section_'.$section.'_modal_item_'.$modalItem, $content['section_'.$section.'_modal_item_'.$modalItem] ?? '') }}">
+                                                    Modal item <?php echo e($modalItem); ?>
+
+                                                    <input type="text" name="section_<?php echo e($section); ?>_modal_item_<?php echo e($modalItem); ?>" class="ui-input" value="<?php echo e(old('section_'.$section.'_modal_item_'.$modalItem, $content['section_'.$section.'_modal_item_'.$modalItem] ?? '')); ?>">
                                                 </label>
-                                            @endfor
+                                            <?php endfor; ?>
                                         </div>
                                     </div>
 
                                     <div class="space-y-2 lg:col-span-2 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3">
-                                        <p class="text-xs font-bold uppercase tracking-wide">{{ $sectionImageMap[$section]['label'] }}</p>
-                                        @if (!empty($content[$sectionImageMap[$section]['url']] ?? ''))
-                                            <img src="{{ $content[$sectionImageMap[$section]['url']] }}" alt="{{ $sectionImageMap[$section]['label'] }}" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
-                                        @endif
-                                        <input type="file" name="{{ $sectionImageMap[$section]['file'] }}" data-preview-image="{{ $sectionImageMap[$section]['file'] }}" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
+                                        <p class="text-xs font-bold uppercase tracking-wide"><?php echo e($sectionImageMap[$section]['label']); ?></p>
+                                        <?php if(!empty($content[$sectionImageMap[$section]['url']] ?? '')): ?>
+                                            <img src="<?php echo e($content[$sectionImageMap[$section]['url']]); ?>" alt="<?php echo e($sectionImageMap[$section]['label']); ?>" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
+                                        <?php endif; ?>
+                                        <input type="file" name="<?php echo e($sectionImageMap[$section]['file']); ?>" data-preview-image="<?php echo e($sectionImageMap[$section]['file']); ?>" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
                                         <label class="inline-flex items-center gap-2 text-xs font-medium">
-                                            <input type="checkbox" name="remove_{{ $sectionImageMap[$section]['path'] }}" value="1">
+                                            <input type="checkbox" name="remove_<?php echo e($sectionImageMap[$section]['path']); ?>" value="1">
                                             Quitar imagen actual
                                         </label>
                                     </div>
 
                                     <div class="space-y-2 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3">
                                         <p class="text-xs font-bold uppercase tracking-wide">Imagen principal modal</p>
-                                        @if (!empty($content[$sectionModalImageMap[$section]['main_url']] ?? ''))
-                                            <img src="{{ $content[$sectionModalImageMap[$section]['main_url']] }}" alt="Imagen principal modal {{ $section }}" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
-                                        @endif
-                                        <input type="file" name="{{ $sectionModalImageMap[$section]['main_file'] }}" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
+                                        <?php if(!empty($content[$sectionModalImageMap[$section]['main_url']] ?? '')): ?>
+                                            <img src="<?php echo e($content[$sectionModalImageMap[$section]['main_url']]); ?>" alt="Imagen principal modal <?php echo e($section); ?>" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
+                                        <?php endif; ?>
+                                        <input type="file" name="<?php echo e($sectionModalImageMap[$section]['main_file']); ?>" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
                                         <label class="inline-flex items-center gap-2 text-xs font-medium">
-                                            <input type="checkbox" name="remove_{{ $sectionModalImageMap[$section]['main_path'] }}" value="1">
+                                            <input type="checkbox" name="remove_<?php echo e($sectionModalImageMap[$section]['main_path']); ?>" value="1">
                                             Quitar imagen principal
                                         </label>
                                     </div>
 
                                     <div class="space-y-2 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3">
                                         <p class="text-xs font-bold uppercase tracking-wide">Imagen secundaria modal</p>
-                                        @if (!empty($content[$sectionModalImageMap[$section]['secondary_url']] ?? ''))
-                                            <img src="{{ $content[$sectionModalImageMap[$section]['secondary_url']] }}" alt="Imagen secundaria modal {{ $section }}" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
-                                        @endif
-                                        <input type="file" name="{{ $sectionModalImageMap[$section]['secondary_file'] }}" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
+                                        <?php if(!empty($content[$sectionModalImageMap[$section]['secondary_url']] ?? '')): ?>
+                                            <img src="<?php echo e($content[$sectionModalImageMap[$section]['secondary_url']]); ?>" alt="Imagen secundaria modal <?php echo e($section); ?>" class="h-40 w-full rounded-lg border border-slate-300 object-cover">
+                                        <?php endif; ?>
+                                        <input type="file" name="<?php echo e($sectionModalImageMap[$section]['secondary_file']); ?>" accept=".jpg,.jpeg,.png,.webp,.svg" class="ui-input">
                                         <label class="inline-flex items-center gap-2 text-xs font-medium">
-                                            <input type="checkbox" name="remove_{{ $sectionModalImageMap[$section]['secondary_path'] }}" value="1">
+                                            <input type="checkbox" name="remove_<?php echo e($sectionModalImageMap[$section]['secondary_path']); ?>" value="1">
                                             Quitar imagen secundaria
                                         </label>
                                     </div>
                                 </div>
                             </details>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </section>
                     <section id="editor-footer" tabindex="-1" class="editor-block lg:col-span-2 grid gap-4 lg:grid-cols-2 rounded-xl border border-slate-300/70 bg-slate-50/60 p-3">
                         <div class="lg:col-span-2">
@@ -493,12 +506,12 @@
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Footer (usa {year} para el año actual)
-                            <input type="text" name="footer_text" data-preview-field="footer_text" class="ui-input" value="{{ old('footer_text', $content['footer_text'] ?? '') }}">
+                            <input type="text" name="footer_text" data-preview-field="footer_text" class="ui-input" value="<?php echo e(old('footer_text', $content['footer_text'] ?? '')); ?>">
                         </label>
 
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
                             Correo de contacto footer
-                            <input type="email" name="footer_contact_email" data-preview-field="footer_contact_email" class="ui-input" value="{{ old('footer_contact_email', $content['footer_contact_email'] ?? 'soporte@flexgym.local') }}">
+                            <input type="email" name="footer_contact_email" data-preview-field="footer_contact_email" class="ui-input" value="<?php echo e(old('footer_contact_email', $content['footer_contact_email'] ?? 'soporte@flexgym.local')); ?>">
                         </label>
                     </section>
 
@@ -506,10 +519,37 @@
                         <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">
                             Antes de guardar, revisa preview y CTA de WhatsApp. Son las dos superficies con más impacto comercial inmediato.
                         </p>
-                        <x-ui.button type="submit">Guardar contenido web</x-ui.button>
+                        <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'submit']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit']); ?>Guardar contenido web <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
                     </div>
                 </form>
-            </x-ui.card>
+             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $attributes = $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $component = $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
         </div>
 
         <aside class="space-y-4 2xl:sticky 2xl:top-6">
@@ -521,19 +561,19 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Marca y CTA</span>
-                        <span class="sa-pill {{ $brandReady ? 'is-success' : 'is-warning' }}">{{ $brandReady ? 'Listo' : 'Revisar' }}</span>
+                        <span class="sa-pill <?php echo e($brandReady ? 'is-success' : 'is-warning'); ?>"><?php echo e($brandReady ? 'Listo' : 'Revisar'); ?></span>
                     </div>
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Hero principal</span>
-                        <span class="sa-pill {{ $heroReady ? 'is-success' : 'is-warning' }}">{{ $heroReady ? 'Listo' : 'Revisar' }}</span>
+                        <span class="sa-pill <?php echo e($heroReady ? 'is-success' : 'is-warning'); ?>"><?php echo e($heroReady ? 'Listo' : 'Revisar'); ?></span>
                     </div>
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">WhatsApp</span>
-                        <span class="sa-pill {{ $whatsappReady ? 'is-success' : 'is-warning' }}">{{ $whatsappReady ? 'Listo' : 'Revisar' }}</span>
+                        <span class="sa-pill <?php echo e($whatsappReady ? 'is-success' : 'is-warning'); ?>"><?php echo e($whatsappReady ? 'Listo' : 'Revisar'); ?></span>
                     </div>
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Footer</span>
-                        <span class="sa-pill {{ $footerReady ? 'is-success' : 'is-warning' }}">{{ $footerReady ? 'Listo' : 'Revisar' }}</span>
+                        <span class="sa-pill <?php echo e($footerReady ? 'is-success' : 'is-warning'); ?>"><?php echo e($footerReady ? 'Listo' : 'Revisar'); ?></span>
                     </div>
                 </div>
             </div>
@@ -545,17 +585,18 @@
                 </div>
                 <div class="flex flex-col gap-2">
                     <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-secondary w-full justify-center">Abrir vista previa</button>
-                    <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost w-full justify-center">Abrir landing pública</a>
+                    <a href="<?php echo e($landingPreviewUrl); ?>" target="_blank" rel="noreferrer" class="ui-button ui-button-ghost w-full justify-center">Abrir landing pública</a>
                 </div>
                 <div class="space-y-2">
-                    @foreach ($editorSections as $editorSection)
+                    <?php $__currentLoopData = $editorSections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $editorSection): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <button type="button"
-                                data-scroll-target="#{{ $editorSection['id'] }}"
-                                aria-label="Ir a la sección {{ $editorSection['label'] }}"
+                                data-scroll-target="#<?php echo e($editorSection['id']); ?>"
+                                aria-label="Ir a la sección <?php echo e($editorSection['label']); ?>"
                                 class="ui-button ui-button-ghost w-full justify-start">
-                            {{ $editorSection['label'] }}
+                            <?php echo e($editorSection['label']); ?>
+
                         </button>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
@@ -732,14 +773,14 @@
                     <button type="button" data-preview-device="tablet" class="web-preview-btn">Tablet</button>
                     <button type="button" data-preview-device="mobile" class="web-preview-btn">Mobile</button>
                     <button type="button" id="preview-modal-reload" class="web-preview-btn">Recargar</button>
-                    <a href="{{ $landingPreviewUrl }}" target="_blank" rel="noreferrer" class="web-preview-btn web-preview-link">Abrir landing</a>
+                    <a href="<?php echo e($landingPreviewUrl); ?>" target="_blank" rel="noreferrer" class="web-preview-btn web-preview-link">Abrir landing</a>
                     <button type="button" id="live-preview-close" class="web-preview-btn">Cerrar</button>
                 </div>
             </div>
             <div class="web-preview-body">
                 <div id="preview-modal-viewport" class="web-preview-viewport">
                     <iframe id="landing-preview-modal"
-                            src="{{ $landingPreviewUrl }}"
+                            src="<?php echo e($landingPreviewUrl); ?>"
                             title="Preview landing modal"
                             tabindex="-1"
                             class="web-preview-frame"></iframe>
@@ -1329,5 +1370,7 @@
             updateChangeIndicator();
         })();
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make('layouts.panel', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\gymsystem\resources\views/superadmin/site-content.blade.php ENDPATH**/ ?>

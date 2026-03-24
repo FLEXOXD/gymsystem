@@ -354,14 +354,12 @@ it('requires checkbox acceptance for legal registration', function () {
     expect(LegalAcceptance::query()->count())->toBe(0);
 });
 
-it('shows demo and guided demo pages for guests', function () {
+it('redirects guest demo routes into the landing modal experience', function () {
     $this->get(route('demo'))
-        ->assertOk()
-        ->assertSee('FlexGym Demo');
+        ->assertRedirect(route('landing', ['interface' => 'control']).'#features');
 
     $this->get(route('demo.guide'))
-        ->assertOk()
-        ->assertSee('Demo guiada');
+        ->assertRedirect(route('landing', ['interface' => 'reception']).'#features');
 });
 
 it('redirects gym users from demo routes to their panel context', function () {

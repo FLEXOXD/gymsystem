@@ -32,9 +32,9 @@ class MarketingContent
             'brand_name' => self::BRAND_NAME,
             'brand_logo_path' => '',
             'login_button_label' => 'Iniciar sesión',
-            'hero_kicker' => 'Software para gimnasios',
-            'hero_title' => 'Administra tu gimnasio en un solo sistema, rápido y sin problemas.',
-            'hero_subtitle' => 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil. Ideal para gimnasios individuales o multisucursal.',
+            'hero_kicker' => 'Software para dueños de gimnasios',
+            'hero_title' => 'Deja de perder clientes y has un Gymnasio inteligente',
+            'hero_subtitle' => 'Administra clientes, membresías, caja, accesos y reportes desde una sola plataforma. Cobra a tiempo, controla renovaciones y lleva tu operación diaria con más orden desde escritorio o móvil.',
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => self::DEFAULT_WHATSAPP_PHONE,
             'whatsapp_message' => 'Hola, quiero más información de FlexGym para controlar mi gimnasio.',
@@ -65,25 +65,47 @@ class MarketingContent
             'hero_slide_4_path' => '',
             'section_1_title' => 'Operación diaria clara para recepción y administración',
             'section_1_text' => 'Todo lo que tu equipo necesita en una sola vista para cobrar y registrar ingresos de forma rápida.',
-            'section_1_item_1' => 'Ingreso y check-in con QR, RFID, pulseras y llaveros',
+            'section_1_item_1' => 'Ingreso y registro de acceso con QR, RFID, pulseras y llaveros',
             'section_1_item_2' => 'Cobros de membresía con control por método de pago',
             'section_1_item_3' => 'Reportes de ingresos y asistencia en tiempo real',
+            'section_1_cta_label' => 'Ver demo guiada',
+            'section_1_cta_url' => '',
+            'section_1_modal_button_label' => 'Abrir interfaz',
+            'section_1_modal_badge' => 'RecepciÃ³n en vivo',
+            'section_1_modal_title' => 'Ve cÃ³mo recepciÃ³n, caja y acceso trabajan en una sola interfaz.',
+            'section_1_modal_text' => 'Usa este modal para explicar el flujo real: recepciÃ³n registra, cobra, valida acceso y sigue al cliente sin saltar entre pantallas innecesarias.',
+            'section_1_modal_item_1' => 'Alta rÃ¡pida del cliente y validaciÃ³n de acceso en un solo paso.',
+            'section_1_modal_item_2' => 'Cobro y renovaciÃ³n visibles para recepciÃ³n y administraciÃ³n.',
+            'section_1_modal_item_3' => 'Lectura clara para equipos que necesitan rapidez y orden diario.',
             'section_1_image_path' => '',
+            'section_1_modal_image_path' => '',
+            'section_1_modal_secondary_image_path' => '',
             'section_1_metric_1_label' => 'Por vencer',
             'section_1_metric_1_value' => '18',
             'section_1_metric_2_label' => 'Vencidos',
             'section_1_metric_2_value' => '6',
             'section_1_metric_3_label' => 'Ingresos hoy',
             'section_1_metric_3_value' => '$ 320',
-            'section_1_metric_4_label' => 'Check-ins',
+            'section_1_metric_4_label' => 'Accesos',
             'section_1_metric_4_value' => '54',
             'section_2_title' => 'Más control, menos caos operativo',
             'section_2_text' => 'Convierte tu operación diaria en procesos claros, medibles y fáciles de ejecutar.',
             'section_2_item_1' => 'Flujo de recepción optimizado',
             'section_2_item_2' => 'Caja por turnos con control real',
             'section_2_item_3' => 'Panel simple para ver ingresos, vencimientos y clientes activos',
+            'section_2_cta_label' => 'Ver demo operativa',
+            'section_2_cta_url' => '',
+            'section_2_modal_button_label' => 'Abrir interfaz',
+            'section_2_modal_badge' => 'Control y reportes',
+            'section_2_modal_title' => 'Muestra reportes, renovaciones y control con una escena mucho mÃ¡s clara.',
+            'section_2_modal_text' => 'Este modal sirve para aterrizar mejor el valor del sistema: quÃ© ve administraciÃ³n, cÃ³mo entiende renovaciones y dÃ³nde detecta alertas o movimiento operativo.',
+            'section_2_modal_item_1' => 'Seguimiento de renovaciones y vencimientos sin perder contexto.',
+            'section_2_modal_item_2' => 'Reportes e indicadores listos para revisar rÃ¡pido.',
+            'section_2_modal_item_3' => 'Mejor lectura comercial para vender orden y control real.',
             'section_2_image_path' => '',
-            'section_2_metric_1_label' => 'Control tenant',
+            'section_2_modal_image_path' => '',
+            'section_2_modal_secondary_image_path' => '',
+            'section_2_metric_1_label' => 'Control por sede',
             'section_2_metric_1_value' => 'Activo',
             'section_2_metric_2_label' => 'Integridad',
             'section_2_metric_2_value' => 'OK',
@@ -91,19 +113,30 @@ class MarketingContent
             'section_2_metric_3_value' => 'Por rol',
             'section_2_metric_4_label' => 'Escalabilidad',
             'section_2_metric_4_value' => 'Lista',
-            'section_3_title' => 'Experiencia móvil tipo app (PWA) para operar desde cualquier dispositivo',
+            'section_3_title' => 'Experiencia móvil tipo aplicación (PWA) para operar desde cualquier dispositivo',
             'section_3_text' => 'Instalable en celular y escritorio, con interfaz operativa adaptada para recepción y administración diaria.',
             'section_3_item_1' => 'Pantalla de inicio tipo aplicación',
-            'section_3_item_2' => 'Caché de assets para carga rápida',
+            'section_3_item_2' => 'Caché de recursos para carga rápida',
             'section_3_item_3' => 'Base lista para notificaciones y recordatorios',
+            'section_3_cta_label' => 'Ver uso en celular',
+            'section_3_cta_url' => '',
+            'section_3_modal_button_label' => 'Abrir interfaz',
+            'section_3_modal_badge' => 'PWA y mÃ³vil',
+            'section_3_modal_title' => 'EnseÃ±a mejor la experiencia mÃ³vil para operar desde celular o tablet.',
+            'section_3_modal_text' => 'AquÃ­ puedes explicar cÃ³mo se instala la PWA, quÃ© tan cÃ³modo se usa en recepciÃ³n y por quÃ© se siente como una app lista para trabajar.',
+            'section_3_modal_item_1' => 'Instalable en celular y escritorio con entrada directa.',
+            'section_3_modal_item_2' => 'Interfaz adaptada para recepciÃ³n, caja y operaciÃ³n diaria.',
+            'section_3_modal_item_3' => 'Base visual perfecta para explicar movilidad y velocidad.',
             'section_3_image_path' => '',
+            'section_3_modal_image_path' => '',
+            'section_3_modal_secondary_image_path' => '',
             'section_3_metric_1_label' => 'PWA',
             'section_3_metric_1_value' => 'Instalable',
-            'section_3_metric_2_label' => 'Offline base',
+            'section_3_metric_2_label' => 'Base sin conexión',
             'section_3_metric_2_value' => 'Activo',
-            'section_3_metric_3_label' => 'Mobile UX',
+            'section_3_metric_3_label' => 'Experiencia móvil',
             'section_3_metric_3_value' => 'Optimizada',
-            'section_3_metric_4_label' => 'Desktop',
+            'section_3_metric_4_label' => 'Escritorio',
             'section_3_metric_4_value' => 'Soportado',
             'marquee_item_1_text' => 'Marcas creativas',
             'marquee_item_1_logo_path' => '',
@@ -115,7 +148,7 @@ class MarketingContent
             'marquee_item_4_logo_path' => '',
             'marquee_item_5_text' => 'Equipos globales',
             'marquee_item_5_logo_path' => '',
-            'marquee_item_6_text' => 'Gym owners',
+            'marquee_item_6_text' => 'Dueños de gimnasios',
             'marquee_item_6_logo_path' => '',
         ];
     }
@@ -178,6 +211,7 @@ class MarketingContent
         $defaults = self::replaceLegacyBrandingCopy($defaults);
         $defaults = self::replaceLegacySectionOneCopy($defaults);
         $defaults = self::replaceLegacySectionTwoCopy($defaults);
+        $defaults = self::normalizeStoredDefaultCopy($defaults);
 
         return self::withComputed($defaults);
     }
@@ -237,8 +271,14 @@ class MarketingContent
         $content['hero_slide_3_url'] = self::publicStorageUrl((string) ($content['hero_slide_3_path'] ?? ''));
         $content['hero_slide_4_url'] = self::publicStorageUrl((string) ($content['hero_slide_4_path'] ?? ''));
         $content['section_1_image_url'] = self::publicStorageUrl((string) ($content['section_1_image_path'] ?? ''));
+        $content['section_1_modal_image_url'] = self::publicStorageUrl((string) ($content['section_1_modal_image_path'] ?? ''));
+        $content['section_1_modal_secondary_image_url'] = self::publicStorageUrl((string) ($content['section_1_modal_secondary_image_path'] ?? ''));
         $content['section_2_image_url'] = self::publicStorageUrl((string) ($content['section_2_image_path'] ?? ''));
+        $content['section_2_modal_image_url'] = self::publicStorageUrl((string) ($content['section_2_modal_image_path'] ?? ''));
+        $content['section_2_modal_secondary_image_url'] = self::publicStorageUrl((string) ($content['section_2_modal_secondary_image_path'] ?? ''));
         $content['section_3_image_url'] = self::publicStorageUrl((string) ($content['section_3_image_path'] ?? ''));
+        $content['section_3_modal_image_url'] = self::publicStorageUrl((string) ($content['section_3_modal_image_path'] ?? ''));
+        $content['section_3_modal_secondary_image_url'] = self::publicStorageUrl((string) ($content['section_3_modal_secondary_image_path'] ?? ''));
         for ($i = 1; $i <= 6; $i++) {
             $content['marquee_item_'.$i.'_logo_url'] = self::publicStorageUrl((string) ($content['marquee_item_'.$i.'_logo_path'] ?? ''));
         }
@@ -448,5 +488,151 @@ class MarketingContent
         }
 
         return $content;
+    }
+
+    /**
+     * @param array<string, string> $content
+     * @return array<string, string>
+     */
+    private static function normalizeStoredDefaultCopy(array $content): array
+    {
+        $defaults = self::defaults();
+
+        foreach ($defaults as $key => $defaultValue) {
+            $current = trim((string) ($content[$key] ?? ''));
+            $desired = trim((string) $defaultValue);
+
+            if ($current === '' || $desired === '') {
+                continue;
+            }
+
+            if (self::matchesCopyVariant($current, $desired)) {
+                $content[$key] = $desired;
+            }
+        }
+
+        $manualLegacyVariants = [
+            'section_1_item_1' => [
+                'Ingreso y check-in con QR, RFID, pulseras y llaveros',
+            ],
+            'section_1_metric_4_label' => [
+                'Check-ins',
+            ],
+            'section_2_metric_1_label' => [
+                'Control tenant',
+            ],
+            'section_3_title' => [
+                'Experiencia movil tipo app (PWA) para operar desde cualquier dispositivo',
+            ],
+            'section_3_item_2' => [
+                'Cache de assets para carga rapida',
+                'Caché de assets para carga rápida',
+            ],
+            'section_3_metric_2_label' => [
+                'Offline base',
+            ],
+            'section_3_metric_3_label' => [
+                'Mobile UX',
+            ],
+            'section_3_metric_4_label' => [
+                'Desktop',
+            ],
+            'marquee_item_6_text' => [
+                'Gym owners',
+                'Gym Administrativo',
+            ],
+        ];
+
+        foreach ($manualLegacyVariants as $key => $variants) {
+            $current = trim((string) ($content[$key] ?? ''));
+            $desired = trim((string) ($defaults[$key] ?? ''));
+
+            if ($current === '' || $desired === '') {
+                continue;
+            }
+
+            foreach ($variants as $variant) {
+                if (self::matchesCopyVariant($current, $variant)) {
+                    $content[$key] = $desired;
+                    break;
+                }
+            }
+        }
+
+        return $content;
+    }
+
+    private static function matchesCopyVariant(string $current, string $desired): bool
+    {
+        $normalizedCurrent = self::normalizeCopyVariant($current);
+        if ($normalizedCurrent === '') {
+            return false;
+        }
+
+        $variants = array_filter(array_unique([
+            trim($desired),
+            trim(self::stripDiacritics($desired)),
+            trim(self::replaceAccentsWithQuestionMark($desired)),
+            trim(self::replaceAccentsWithQuestionMark(self::stripDiacritics($desired))),
+        ]));
+
+        foreach ($variants as $variant) {
+            if (self::normalizeCopyVariant((string) $variant) === $normalizedCurrent) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function normalizeCopyVariant(string $value): string
+    {
+        $value = str_replace(["\r\n", "\r"], "\n", trim(mb_strtolower($value)));
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+
+        return trim($value);
+    }
+
+    private static function stripDiacritics(string $value): string
+    {
+        if (class_exists(Normalizer::class)) {
+            $normalized = Normalizer::normalize($value, Normalizer::FORM_D);
+            if (is_string($normalized)) {
+                $value = preg_replace('/\p{Mn}+/u', '', $normalized) ?? $normalized;
+            }
+        }
+
+        return strtr($value, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'Á' => 'A',
+            'É' => 'E',
+            'Í' => 'I',
+            'Ó' => 'O',
+            'Ú' => 'U',
+            'ñ' => 'n',
+            'Ñ' => 'N',
+        ]);
+    }
+
+    private static function replaceAccentsWithQuestionMark(string $value): string
+    {
+        return strtr($value, [
+            'á' => '?',
+            'é' => '?',
+            'í' => '?',
+            'ó' => '?',
+            'ú' => '?',
+            'Á' => '?',
+            'É' => '?',
+            'Í' => '?',
+            'Ó' => '?',
+            'Ú' => '?',
+            'ñ' => '?',
+            'Ñ' => '?',
+        ]);
     }
 }

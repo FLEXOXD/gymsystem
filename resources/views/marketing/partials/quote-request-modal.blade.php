@@ -99,7 +99,7 @@
                  aria-hidden="true">
                 <div class="quote-modal-photo-badge">
                     <span>Atención comercial</span>
-                    <strong>9:00 AM a 7:00 PM</strong>
+                    <strong>9:00 a. m. a 7:00 p. m.</strong>
                 </div>
 
                 <div class="quote-modal-photo-badge is-secondary">

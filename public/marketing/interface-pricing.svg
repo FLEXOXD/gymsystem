@@ -1,0 +1,64 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="220" y1="80" x2="1380" y2="1120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10161D"/>
+      <stop offset="1" stop-color="#05070B"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#171F28"/>
+      <stop offset="1" stop-color="#0B1016"/>
+    </linearGradient>
+    <linearGradient id="featured" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#B8FF1F"/>
+      <stop offset="1" stop-color="#63DE78"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1200" rx="64" fill="url(#bg)"/>
+  <circle cx="1260" cy="210" r="170" fill="#C7FF45" opacity=".12"/>
+  <circle cx="310" cy="1020" r="200" fill="#37D180" opacity=".09"/>
+  <rect x="190" y="132" width="1220" height="936" rx="42" fill="#0B1016" stroke="#27333E"/>
+  <text x="260" y="238" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="48" font-weight="700">Planes claros para crecer sin ruido</text>
+  <text x="260" y="294" fill="#7E95A7" font-family="Arial, sans-serif" font-size="24">Comparacion visual para una sola sede o multi-sede</text>
+  <rect x="260" y="380" width="320" height="542" rx="34" fill="url(#card)" stroke="#2A3640"/>
+  <text x="304" y="450" fill="#7E95A7" font-family="Arial, sans-serif" font-size="18">Base</text>
+  <text x="304" y="512" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="52" font-weight="700">$29</text>
+  <text x="304" y="554" fill="#7E95A7" font-family="Arial, sans-serif" font-size="18">Mensual</text>
+  <rect x="304" y="596" width="230" height="2" fill="#27333E"/>
+  <circle cx="320" cy="648" r="9" fill="#7AAAFF"/>
+  <text x="348" y="656" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Clientes y cobros</text>
+  <circle cx="320" cy="704" r="9" fill="#7AAAFF"/>
+  <text x="348" y="712" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Caja diaria</text>
+  <circle cx="320" cy="760" r="9" fill="#7AAAFF"/>
+  <text x="348" y="768" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Reporte esencial</text>
+  <rect x="640" y="332" width="320" height="638" rx="38" fill="url(#featured)"/>
+  <rect x="662" y="354" width="276" height="594" rx="30" fill="#0F151C"/>
+  <rect x="744" y="300" width="112" height="48" rx="24" fill="#DFFF8A"/>
+  <text x="776" y="331" fill="#11190F" font-family="Arial, sans-serif" font-size="18" font-weight="700">TOP</text>
+  <text x="706" y="432" fill="#C7FF45" font-family="Arial, sans-serif" font-size="18">Control</text>
+  <text x="706" y="494" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="58" font-weight="700">$49</text>
+  <text x="706" y="536" fill="#7E95A7" font-family="Arial, sans-serif" font-size="18">Mensual</text>
+  <rect x="706" y="578" width="190" height="2" fill="#293640"/>
+  <circle cx="722" cy="630" r="10" fill="#C7FF45"/>
+  <text x="752" y="638" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Renovaciones y alertas</text>
+  <circle cx="722" cy="686" r="10" fill="#C7FF45"/>
+  <text x="752" y="694" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Panel administrativo</text>
+  <circle cx="722" cy="742" r="10" fill="#C7FF45"/>
+  <text x="752" y="750" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Recepcion movil</text>
+  <circle cx="722" cy="798" r="10" fill="#C7FF45"/>
+  <text x="752" y="806" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Caja por turnos</text>
+  <rect x="1020" y="380" width="320" height="542" rx="34" fill="url(#card)" stroke="#2A3640"/>
+  <text x="1064" y="450" fill="#7E95A7" font-family="Arial, sans-serif" font-size="18">Multi-sede</text>
+  <text x="1064" y="512" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="52" font-weight="700">Custom</text>
+  <text x="1064" y="554" fill="#7E95A7" font-family="Arial, sans-serif" font-size="18">Segun operacion</text>
+  <rect x="1064" y="596" width="230" height="2" fill="#27333E"/>
+  <circle cx="1080" cy="648" r="9" fill="#58DA8D"/>
+  <text x="1108" y="656" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Sedes conectadas</text>
+  <circle cx="1080" cy="704" r="9" fill="#58DA8D"/>
+  <text x="1108" y="712" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Permisos por rol</text>
+  <circle cx="1080" cy="760" r="9" fill="#58DA8D"/>
+  <text x="1108" y="768" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="21">Crecimiento ordenado</text>
+  <rect x="260" y="964" width="1080" height="58" rx="29" fill="#131B23" stroke="#293640"/>
+  <rect x="286" y="986" width="312" height="14" rx="7" fill="#C7FF45"/>
+  <rect x="620" y="986" width="256" height="14" rx="7" fill="#5BD98C"/>
+  <rect x="898" y="986" width="226" height="14" rx="7" fill="#7AAAFF"/>
+</svg>

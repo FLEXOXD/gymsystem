@@ -56,11 +56,7 @@ class MarketingController extends Controller
             return $redirect;
         }
 
-        $this->applyPublicTimezone();
-
-        return view('marketing.demo', [
-            'content' => MarketingContent::load(),
-        ]);
+        return redirect()->to(route('landing', ['interface' => 'control']).'#features');
     }
 
     public function demoGuide(Request $request): View|RedirectResponse
@@ -70,11 +66,7 @@ class MarketingController extends Controller
             return $redirect;
         }
 
-        $this->applyPublicTimezone();
-
-        return view('marketing.demo-guide', [
-            'content' => MarketingContent::load(),
-        ]);
+        return redirect()->to(route('landing', ['interface' => 'reception']).'#features');
     }
 
     public function storeContactMessage(Request $request): RedirectResponse

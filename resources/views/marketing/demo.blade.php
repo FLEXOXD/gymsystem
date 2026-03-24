@@ -198,7 +198,7 @@
             <article class="card"><small>Clientes</small><b>124</b></article>
             <article class="card"><small>Membresías activas</small><b>87</b></article>
             <article class="card"><small>Por vencer</small><b>12</b></article>
-            <article class="card"><small>Check-ins hoy</small><b>54</b></article>
+            <article class="card"><small>Accesos hoy</small><b>54</b></article>
             <article class="card"><small>Ingresos hoy</small><b>$ 1,430</b></article>
             <article class="card"><small>Turno de caja</small><b>Abierto</b></article>
         </section>

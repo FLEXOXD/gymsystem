@@ -1,0 +1,88 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="240" y1="60" x2="1360" y2="1140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10161D"/>
+      <stop offset="1" stop-color="#06080B"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="304" y1="188" x2="1222" y2="1048" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17212A"/>
+      <stop offset="1" stop-color="#0A0F14"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#C7FF45"/>
+      <stop offset="1" stop-color="#75E66D"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="1600" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1200" rx="64" fill="url(#bg)"/>
+  <g filter="url(#glow)" opacity=".45">
+    <circle cx="1180" cy="182" r="148" fill="#B8FF1F"/>
+    <circle cx="340" cy="972" r="188" fill="#29C778"/>
+  </g>
+  <rect x="208" y="118" width="1184" height="964" rx="40" fill="url(#panel)" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="208" y="118" width="1184" height="88" rx="40" fill="#1C2832"/>
+  <circle cx="274" cy="162" r="10" fill="#C7FF45"/>
+  <circle cx="310" cy="162" r="10" fill="#7FF56B" opacity=".55"/>
+  <circle cx="346" cy="162" r="10" fill="#FFFFFF" opacity=".22"/>
+  <rect x="1060" y="138" width="252" height="48" rx="24" fill="#111820" stroke="#32414D"/>
+  <text x="1088" y="168" fill="#EAF3F8" font-family="Arial, sans-serif" font-size="20" font-weight="700">RECEPCION EN VIVO</text>
+  <rect x="256" y="238" width="246" height="792" rx="28" fill="#0D141B" stroke="#26323C"/>
+  <text x="296" y="298" fill="#EAF3F8" font-family="Arial, sans-serif" font-size="24" font-weight="700">Turno</text>
+  <text x="296" y="332" fill="#7F97A8" font-family="Arial, sans-serif" font-size="18">Caja abierta y check-in continuo</text>
+  <rect x="288" y="382" width="182" height="118" rx="24" fill="#18232D"/>
+  <text x="318" y="428" fill="#7F97A8" font-family="Arial, sans-serif" font-size="16">Clientes hoy</text>
+  <text x="318" y="470" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="42" font-weight="700">54</text>
+  <rect x="288" y="530" width="182" height="118" rx="24" fill="#18232D"/>
+  <text x="318" y="576" fill="#7F97A8" font-family="Arial, sans-serif" font-size="16">Caja hoy</text>
+  <text x="318" y="618" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="38" font-weight="700">$1.430</text>
+  <rect x="288" y="678" width="182" height="118" rx="24" fill="#18232D"/>
+  <text x="318" y="724" fill="#7F97A8" font-family="Arial, sans-serif" font-size="16">Por vencer</text>
+  <text x="318" y="766" fill="#F8FCFF" font-family="Arial, sans-serif" font-size="42" font-weight="700">12</text>
+  <rect x="540" y="238" width="520" height="792" rx="32" fill="#0D141B" stroke="#26323C"/>
+  <text x="590" y="314" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="46" font-weight="700">Ingreso rapido</text>
+  <text x="590" y="354" fill="#8198A8" font-family="Arial, sans-serif" font-size="22">Documento, QR o RFID en una sola pantalla</text>
+  <rect x="590" y="404" width="420" height="70" rx="20" fill="#121B24" stroke="#2D404C"/>
+  <text x="622" y="447" fill="#6F8798" font-family="Arial, sans-serif" font-size="18">Documento o identificador</text>
+  <rect x="590" y="496" width="200" height="66" rx="18" fill="#121B24" stroke="#2D404C"/>
+  <text x="622" y="537" fill="#6F8798" font-family="Arial, sans-serif" font-size="18">Telefono</text>
+  <rect x="810" y="496" width="200" height="66" rx="18" fill="#121B24" stroke="#2D404C"/>
+  <text x="842" y="537" fill="#6F8798" font-family="Arial, sans-serif" font-size="18">Membresia</text>
+  <rect x="590" y="594" width="204" height="62" rx="31" fill="url(#accent)"/>
+  <text x="644" y="633" fill="#0B1208" font-family="Arial, sans-serif" font-size="21" font-weight="700">VALIDAR ACCESO</text>
+  <rect x="816" y="594" width="194" height="62" rx="31" fill="#17222C" stroke="#30404B"/>
+  <text x="872" y="633" fill="#F4FAFF" font-family="Arial, sans-serif" font-size="21" font-weight="700">COBRAR</text>
+  <rect x="590" y="708" width="420" height="272" rx="28" fill="#121B24" stroke="#2D404C"/>
+  <text x="626" y="760" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="22" font-weight="700">Actividad de recepcion</text>
+  <rect x="626" y="800" width="348" height="1" fill="#2B3A45"/>
+  <circle cx="650" cy="842" r="10" fill="#C7FF45"/>
+  <text x="682" y="850" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="19">Ingreso validado con QR</text>
+  <text x="930" y="850" fill="#73899A" font-family="Arial, sans-serif" font-size="17">09:41</text>
+  <circle cx="650" cy="898" r="10" fill="#4FDB85"/>
+  <text x="682" y="906" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="19">Membresia renovada</text>
+  <text x="930" y="906" fill="#73899A" font-family="Arial, sans-serif" font-size="17">09:53</text>
+  <circle cx="650" cy="954" r="10" fill="#78A7FF"/>
+  <text x="682" y="962" fill="#F3FAFF" font-family="Arial, sans-serif" font-size="19">Ingreso por documento</text>
+  <text x="930" y="962" fill="#73899A" font-family="Arial, sans-serif" font-size="17">10:08</text>
+  <rect x="1094" y="238" width="250" height="250" rx="30" fill="#0D141B" stroke="#26323C"/>
+  <text x="1130" y="298" fill="#7F97A8" font-family="Arial, sans-serif" font-size="18">QR / RFID</text>
+  <rect x="1134" y="338" width="170" height="110" rx="22" fill="#152028"/>
+  <rect x="1160" y="364" width="34" height="34" rx="8" fill="#C7FF45"/>
+  <rect x="1204" y="364" width="74" height="12" rx="6" fill="#7B909F"/>
+  <rect x="1204" y="386" width="52" height="12" rx="6" fill="#465563"/>
+  <rect x="1160" y="408" width="118" height="12" rx="6" fill="#465563"/>
+  <text x="1134" y="468" fill="#F4FAFF" font-family="Arial, sans-serif" font-size="20" font-weight="700">Lista de ingreso</text>
+  <rect x="1094" y="520" width="250" height="250" rx="30" fill="#0D141B" stroke="#26323C"/>
+  <text x="1130" y="580" fill="#7F97A8" font-family="Arial, sans-serif" font-size="18">Cobros</text>
+  <path d="M1140 686C1176 650 1206 662 1230 622C1256 580 1284 574 1312 540" stroke="#C7FF45" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="1140" cy="686" r="8" fill="#C7FF45"/>
+  <circle cx="1230" cy="622" r="8" fill="#C7FF45"/>
+  <circle cx="1312" cy="540" r="8" fill="#C7FF45"/>
+  <text x="1130" y="738" fill="#F4FAFF" font-family="Arial, sans-serif" font-size="36" font-weight="700">$4.820</text>
+  <rect x="1094" y="802" width="250" height="228" rx="30" fill="#0D141B" stroke="#26323C"/>
+  <text x="1130" y="862" fill="#7F97A8" font-family="Arial, sans-serif" font-size="18">Turno estable</text>
+  <rect x="1130" y="896" width="178" height="18" rx="9" fill="#1D2B36"/>
+  <rect x="1130" y="896" width="132" height="18" rx="9" fill="url(#accent)"/>
+  <text x="1130" y="960" fill="#F4FAFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">Recepcion lista para cobrar</text>
+</svg>

@@ -143,7 +143,7 @@
 
         <section class="hero">
             <h1>{{ $content['guide_title'] ?? 'Demo guiada' }}</h1>
-            <p>{{ $content['guide_subtitle'] ?? 'Te acompanas paso a paso para conocer el flujo operativo.' }}</p>
+            <p>{{ $content['guide_subtitle'] ?? 'Te acompañamos paso a paso para conocer el flujo operativo.' }}</p>
             <div class="cta">
                 <form method="POST" action="{{ route('demo.request') }}">
                     @csrf
