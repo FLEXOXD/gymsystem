@@ -1709,37 +1709,18 @@
     }
 
     .quote-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 96;
         background: rgba(7, 12, 19, 0.66);
         backdrop-filter: blur(18px);
-        display: none;
-    }
-
-    .quote-modal-backdrop.is-open {
-        display: block;
     }
 
     .quote-modal {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        z-index: 97;
-        display: none;
-        transform: translate(-50%, -50%);
         width: min(1180px, calc(100% - 1.5rem));
-        max-height: calc(100vh - 1.5rem);
         border: 1px solid rgba(197, 210, 224, 0.3);
         border-radius: 2rem;
         background: #ffffff;
         box-shadow: 0 38px 90px rgba(2, 12, 27, 0.28);
         padding: 0;
-        overflow: auto;
-    }
-
-    .quote-modal.is-open {
-        display: block;
+        overflow: hidden;
     }
 
     .quote-modal-shell {
@@ -1750,10 +1731,8 @@
     }
 
     .quote-modal-close {
-        position: absolute;
         top: 1rem;
         right: 1rem;
-        z-index: 2;
         width: 44px;
         height: 44px;
         border-radius: 999px;
@@ -1761,7 +1740,6 @@
         background: rgba(255, 255, 255, 0.9);
         color: #0f172a;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
-        cursor: pointer;
     }
 
     .quote-modal-side {
@@ -2445,3 +2423,4 @@
         }
     }
 </style>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/home-premium-styles.blade.php ENDPATH**/ ?>

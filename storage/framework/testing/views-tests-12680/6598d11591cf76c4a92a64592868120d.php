@@ -1709,380 +1709,120 @@
     }
 
     .quote-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 96;
-        background: rgba(7, 12, 19, 0.66);
-        backdrop-filter: blur(18px);
-        display: none;
-    }
-
-    .quote-modal-backdrop.is-open {
-        display: block;
+        background: rgba(3, 7, 12, 0.76);
+        backdrop-filter: blur(16px);
     }
 
     .quote-modal {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        z-index: 97;
-        display: none;
-        transform: translate(-50%, -50%);
-        width: min(1180px, calc(100% - 1.5rem));
-        max-height: calc(100vh - 1.5rem);
-        border: 1px solid rgba(197, 210, 224, 0.3);
-        border-radius: 2rem;
-        background: #ffffff;
-        box-shadow: 0 38px 90px rgba(2, 12, 27, 0.28);
+        width: min(1120px, calc(100% - 1.5rem));
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 1.9rem;
+        background: linear-gradient(180deg, rgba(14, 21, 34, 0.98), rgba(10, 17, 28, 0.98));
+        box-shadow: 0 36px 90px rgba(0, 0, 0, 0.38);
         padding: 0;
-        overflow: auto;
-    }
-
-    .quote-modal.is-open {
-        display: block;
+        overflow: hidden;
     }
 
     .quote-modal-shell {
         display: grid;
-        grid-template-columns: minmax(360px, 0.92fr) minmax(0, 1.08fr);
+        grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
         align-items: stretch;
         overflow: hidden;
     }
 
     .quote-modal-close {
-        position: absolute;
         top: 1rem;
         right: 1rem;
-        z-index: 2;
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
         border-radius: 999px;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        background: rgba(255, 255, 255, 0.9);
-        color: #0f172a;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
-        cursor: pointer;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: rgba(11, 18, 30, 0.86);
+        color: var(--premium-text);
     }
 
     .quote-modal-side {
         position: relative;
         min-width: 0;
         overflow: hidden;
-        border-right: 1px solid rgba(196, 206, 218, 0.34);
+        border-right: 1px solid rgba(148, 163, 184, 0.1);
         background:
-            radial-gradient(circle at top left, rgba(132, 245, 204, 0.16), transparent 24%),
-            radial-gradient(circle at top right, rgba(113, 170, 255, 0.18), transparent 30%),
-            linear-gradient(180deg, #0d1f34 0%, #102c4a 56%, #16385a 100%);
-        padding: 2rem 1.7rem;
-        display: grid;
-        align-content: start;
-        gap: 1.2rem;
-        color: #f8fbff;
+            radial-gradient(circle at top right, rgba(132, 245, 204, 0.18), transparent 30%),
+            linear-gradient(180deg, rgba(17, 26, 40, 0.98), rgba(11, 18, 30, 0.98));
+        padding: 2rem 1.6rem;
     }
 
-    .quote-modal-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.85rem;
-    }
-
-    .quote-modal-brand-logo,
-    .quote-modal-brand-mark {
-        width: 54px;
-        height: 54px;
-        border-radius: 1rem;
-        flex: 0 0 54px;
-    }
-
-    .quote-modal-brand-logo {
-        object-fit: contain;
-        background: rgba(255, 255, 255, 0.12);
-        padding: 0.45rem;
-    }
-
-    .quote-modal-brand-mark {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(132, 245, 204, 0.24), rgba(113, 170, 255, 0.32));
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        color: #ffffff;
-        font-size: 1rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-    }
-
-    .quote-modal-brand-name {
-        display: block;
-        font-size: 1rem;
-        font-weight: 900;
-        line-height: 1.15;
-    }
-
-    .quote-modal-brand-caption {
-        display: block;
-        margin-top: 0.18rem;
-        color: rgba(226, 236, 248, 0.82);
-        font-size: 0.84rem;
-        line-height: 1.45;
+    .quote-modal-side::after {
+        background: linear-gradient(180deg, rgba(132, 245, 204, 0.18), rgba(113, 170, 255, 0));
     }
 
     .quote-modal-kicker {
-        color: #bfffe3;
-        font-size: 0.74rem;
-        letter-spacing: 0.18em;
+        color: var(--premium-accent);
+        font-size: 0.78rem;
+        letter-spacing: 0.16em;
         font-weight: 900;
         text-transform: uppercase;
     }
 
     .quote-modal-title {
-        margin: 0.7rem 0 0;
-        font-size: clamp(2rem, 3vw, 3rem);
-        line-height: 0.98;
-        letter-spacing: -0.05em;
-        color: #ffffff;
-        max-width: 11ch;
+        margin-top: 0.8rem;
+        font-size: clamp(1.8rem, 3vw, 2.45rem);
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+        color: var(--premium-text);
     }
 
     .quote-modal-copy {
         margin-top: 0.9rem;
-        max-width: 38ch;
-        color: rgba(232, 240, 250, 0.86);
-        line-height: 1.72;
+        max-width: 36ch;
+        color: #b8c8d9;
+        line-height: 1.7;
     }
 
-    .quote-modal-photo-frame {
+    .quote-modal-visual {
         position: relative;
-        min-height: 360px;
-        border-radius: 1.8rem;
-        background:
-            linear-gradient(180deg, rgba(9, 18, 31, 0.12), rgba(9, 18, 31, 0.72)),
-            linear-gradient(135deg, rgba(45, 212, 191, 0.34), rgba(59, 130, 246, 0.28));
-        background-size: cover;
-        background-position: center;
-        padding: 1.2rem;
-        display: flex;
-        align-items: flex-end;
-        box-shadow: 0 24px 60px rgba(2, 12, 27, 0.2);
-        overflow: hidden;
+        min-height: 340px;
+        margin-top: 1.3rem;
+        padding-top: 0.15rem;
     }
 
-    .quote-modal-photo-frame::after {
-        content: "";
+    .quote-modal-stat {
         position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(8, 18, 31, 0) 18%, rgba(8, 18, 31, 0.52) 100%);
-        pointer-events: none;
-    }
-
-    .quote-modal-photo-badge {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1;
-        max-width: 180px;
-        padding: 0.8rem 0.9rem;
-        border-radius: 1rem;
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(12px);
-    }
-
-    .quote-modal-photo-badge.is-secondary {
-        left: auto;
-        right: 1rem;
-    }
-
-    .quote-modal-photo-badge span {
-        display: block;
-        color: rgba(225, 237, 249, 0.82);
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .quote-modal-photo-badge strong {
-        display: block;
-        margin-top: 0.34rem;
-        color: #ffffff;
-        font-size: 0.88rem;
-        line-height: 1.4;
-    }
-
-    .quote-modal-plan-spotlight {
-        position: relative;
-        z-index: 1;
-        width: min(100%, 360px);
-        padding: 1rem 1.05rem;
-        border-radius: 1.35rem;
-        background: rgba(7, 18, 31, 0.48);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        backdrop-filter: blur(16px);
-        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.16);
-    }
-
-    .quote-modal-plan-caption {
-        display: block;
-        color: #bfffe3;
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-    }
-
-    .quote-modal-plan-spotlight strong {
-        display: block;
-        margin-top: 0.46rem;
-        color: #ffffff;
-        font-size: 1.2rem;
-        line-height: 1.2;
-    }
-
-    .quote-modal-plan-spotlight p {
-        margin: 0.55rem 0 0;
-        color: rgba(235, 242, 250, 0.84);
-        font-size: 0.92rem;
-        line-height: 1.58;
-    }
-
-    .quote-modal-feature-list {
+        right: 0.75rem;
+        top: 0.2rem;
+        z-index: 2;
+        width: min(230px, calc(100% - 1.5rem));
+        min-width: 0;
         margin: 0;
-        padding: 0;
-        list-style: none;
-        display: grid;
-        gap: 0.65rem;
-    }
-
-    .quote-modal-feature-list li {
-        position: relative;
-        padding-left: 1.35rem;
-        color: rgba(235, 242, 250, 0.9);
-        line-height: 1.58;
-    }
-
-    .quote-modal-feature-list li::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0.62rem;
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #7df0d8, #9dff7c);
-        box-shadow: 0 0 0 4px rgba(132, 245, 204, 0.14);
-    }
-
-    .quote-modal-stat-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.8rem;
-    }
-
-    .quote-modal-stat-card {
-        padding: 0.95rem 1rem;
-        border-radius: 1.15rem;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-    .quote-modal-stat-card span {
-        display: block;
-        color: #bfffe3;
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .quote-modal-stat-card strong {
-        display: block;
-        margin-top: 0.4rem;
-        color: #ffffff;
-        font-size: 0.92rem;
-        line-height: 1.55;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid rgba(132, 245, 204, 0.16);
+        border-radius: 1.2rem;
+        background: rgba(132, 245, 204, 0.08);
     }
 
     .quote-modal-form-panel {
-        padding: 2rem 1.8rem;
-        background:
-            radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 20%),
-            linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
-        color: #0f172a;
+        padding: 2rem 1.6rem;
+        background: rgba(9, 15, 24, 0.9);
+        color: var(--premium-text);
     }
 
     .quote-form-header h3 {
         margin: 0.7rem 0 0;
-        font-size: clamp(2rem, 3vw, 2.75rem);
-        line-height: 1.02;
-        letter-spacing: -0.05em;
-        color: #0f172a;
-        max-width: 13ch;
+        font-size: clamp(1.8rem, 3vw, 2.35rem);
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+        color: var(--premium-text);
     }
 
     .quote-form-header p {
         margin: 0.8rem 0 0;
-        color: #536375;
+        color: #b8c8d9;
         line-height: 1.7;
-        max-width: 54ch;
-    }
-
-    .quote-form-hint-grid {
-        margin-top: 1.25rem;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.75rem;
-    }
-
-    .quote-form-hint {
-        padding: 0.92rem 1rem;
-        border-radius: 1rem;
-        border: 1px solid rgba(196, 206, 218, 0.48);
-        background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
-    }
-
-    .quote-form-hint strong {
-        display: block;
-        color: #0f172a;
-        font-size: 0.88rem;
-    }
-
-    .quote-form-hint span {
-        display: block;
-        margin-top: 0.34rem;
-        color: #607184;
-        font-size: 0.83rem;
-        line-height: 1.5;
     }
 
     .quote-form-alert {
         border-radius: 1rem;
-        padding: 0.9rem 0.95rem;
-        display: grid;
-        gap: 0.24rem;
-        border: 1px solid transparent;
-    }
-
-    .quote-form-alert strong {
-        font-size: 0.9rem;
-    }
-
-    .quote-form-alert span {
-        font-size: 0.84rem;
-        line-height: 1.5;
-    }
-
-    .quote-form-alert.is-error {
-        border-color: rgba(248, 113, 113, 0.26);
-        background: rgba(254, 242, 242, 0.92);
-        color: #991b1b;
-    }
-
-    .quote-form-alert.is-success {
-        border-color: rgba(16, 185, 129, 0.24);
-        background: rgba(236, 253, 245, 0.94);
-        color: #065f46;
+        padding: 0.85rem 0.95rem;
     }
 
     .quote-plan-pill {
@@ -2090,12 +1830,15 @@
         display: none;
         gap: 0.22rem;
         width: fit-content;
-        max-width: min(100%, 460px);
-        padding: 0.76rem 0.98rem;
-        border-radius: 1rem;
-        border: 1px solid rgba(45, 212, 191, 0.24);
-        background: linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(239, 246, 255, 0.96));
-        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+        max-width: min(100%, 420px);
+        padding: 0.72rem 0.95rem;
+        border-radius: 1.05rem;
+        border: 1px solid rgba(132, 245, 204, 0.24);
+        background:
+            linear-gradient(135deg, rgba(17, 39, 35, 0.96), rgba(10, 24, 34, 0.96));
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 14px 28px rgba(0, 0, 0, 0.22);
         white-space: normal;
     }
 
@@ -2105,8 +1848,8 @@
 
     .quote-plan-pill span {
         display: block;
-        color: #0f766e;
-        font-size: 0.7rem;
+        color: #79dbb7;
+        font-size: 0.72rem;
         font-weight: 900;
         letter-spacing: 0.12em;
         line-height: 1.2;
@@ -2115,75 +1858,45 @@
 
     .quote-plan-pill strong {
         display: block;
-        color: #0f172a;
+        color: var(--premium-text);
         font-size: 1rem;
         font-weight: 900;
         line-height: 1.25;
     }
 
     .quote-form-grid {
-        margin-top: 1.15rem;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.95rem;
     }
 
     .quote-form-field {
-        color: #172033;
+        color: #dce6f5;
         font-size: 0.9rem;
         font-weight: 700;
         display: grid;
         gap: 0.52rem;
     }
 
-    .quote-form-field--full {
-        grid-column: 1 / -1;
-    }
-
-    .quote-form-label {
-        color: #111827;
-        font-size: 0.87rem;
-        font-weight: 800;
-    }
-
-    .quote-form-label em {
-        color: #dc2626;
-        font-style: normal;
-    }
-
-    .quote-form-inline {
-        display: grid;
-        grid-template-columns: 124px minmax(0, 1fr);
-        gap: 0.65rem;
-    }
-
     .contact-input {
         width: 100%;
-        border: 1px solid #d4dde7;
-        border-radius: 0.95rem;
-        background: rgba(255, 255, 255, 0.96);
-        color: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 1rem;
+        background: rgba(15, 23, 36, 0.88);
+        color: var(--premium-text);
         min-height: 52px;
         padding: 0.9rem 0.95rem;
         font-size: 0.96rem;
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     }
 
     .contact-input::placeholder {
-        color: #7a8798;
+        color: #7f94aa;
     }
 
     .contact-input:focus {
         outline: none;
-        border-color: rgba(20, 184, 166, 0.54);
-        box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.14);
-        background: #ffffff;
-    }
-
-    .contact-input.is-invalid {
-        border-color: rgba(239, 68, 68, 0.52);
-        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        border-color: rgba(132, 245, 204, 0.34);
+        box-shadow: 0 0 0 4px rgba(132, 245, 204, 0.08);
+        background: rgba(16, 24, 38, 0.96);
     }
 
     textarea.contact-input {
@@ -2193,43 +1906,34 @@
 
     .quote-form-help,
     .quote-form-legal {
-        color: #64748b;
+        color: var(--premium-muted);
         font-size: 0.82rem;
         line-height: 1.55;
     }
 
-    .quote-form-error {
-        color: #b91c1c;
-        font-size: 0.82rem;
-        line-height: 1.45;
-    }
-
     .quote-form-checkbox {
-        border: 1px solid rgba(209, 219, 232, 0.84);
+        border: 1px solid rgba(148, 163, 184, 0.12);
         border-radius: 1rem;
-        background: rgba(255, 255, 255, 0.82);
-        padding: 0.95rem;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.9rem;
     }
 
     .quote-form-checkbox label {
         display: flex;
         align-items: flex-start;
         gap: 0.7rem;
-        color: #172033;
-        line-height: 1.55;
+        color: #dce6f5;
     }
 
     .quote-form-checkbox input {
         margin-top: 0.2rem;
-        accent-color: #14b8a6;
     }
 
     .quote-form-submit {
         width: 100%;
-        margin-top: 1.15rem;
-        min-height: 56px;
-        font-size: 0.97rem;
-        box-shadow: 0 18px 34px rgba(34, 197, 94, 0.16);
+        margin-top: 1rem;
+        min-height: 54px;
+        font-size: 0.96rem;
     }
 
     @media (max-width: 1220px) {
@@ -2273,11 +1977,6 @@
         .quote-modal-side {
             border-right: 0;
             border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .quote-form-hint-grid,
-        .quote-modal-stat-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
@@ -2338,10 +2037,6 @@
 
         .premium-float-card {
             display: none;
-        }
-
-        .quote-form-hint-grid {
-            grid-template-columns: 1fr;
         }
     }
 
@@ -2425,23 +2120,6 @@
         .quote-modal-form-panel {
             max-height: none;
         }
-
-        .quote-form-grid,
-        .quote-modal-stat-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .quote-form-inline {
-            grid-template-columns: 1fr;
-        }
-
-        .quote-modal-photo-frame {
-            min-height: 300px;
-            padding-top: 4.9rem;
-        }
-
-        .quote-modal-photo-badge {
-            max-width: 150px;
-        }
     }
 </style>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/home-premium-styles.blade.php ENDPATH**/ ?>

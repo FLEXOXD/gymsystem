@@ -118,12 +118,19 @@ it('shows dedicated legal pages', function () {
         ->assertDontSee('id="contacto"', false);
 });
 
-it('does not render quote modal triggers on the landing', function () {
+it('renders quote triggers across landing ctas and pricing cards', function () {
     $this->get(route('landing'))
         ->assertOk()
-        ->assertDontSee('data-open-quote-modal', false)
-        ->assertDontSee('quote-request-modal', false)
-        ->assertSee('Contáctanos');
+        ->assertSee('Solicita tu cotización')
+        ->assertSee('data-open-quote-modal', false)
+        ->assertSee('data-plan-cta-key="basico"', false)
+        ->assertSee('data-plan-cta-key="profesional"', false)
+        ->assertSee('data-plan-cta-key="premium"', false)
+        ->assertSee('data-plan-cta-key="sucursales"', false)
+        ->assertSee('data-quote-plan="basico"', false)
+        ->assertSee('data-quote-plan="profesional"', false)
+        ->assertSee('data-quote-plan="premium"', false)
+        ->assertSee('data-quote-plan="sucursales"', false);
 });
 
 it('renders decimal prices from superadmin plans on the landing', function () {
