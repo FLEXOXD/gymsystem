@@ -9,6 +9,7 @@ use App\Models\LandingQuoteRequest;
 use App\Models\SiteSetting;
 use App\Models\SuperAdminPlanTemplate;
 use App\Models\User;
+use App\Support\MarketingContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -196,6 +197,22 @@ it('stores contact messages from the public contact page', function () {
         ->and($contact->message)->toBe('Necesito ordenar caja, recepción y membresías en mi gimnasio.');
 });
 
+it('upgrades legacy whatsapp numbers to the current contact number', function () {
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_phone',
+        'value' => '+593 99 106 6303',
+    ]);
+    SiteSetting::query()->create([
+        'key' => 'marketing.whatsapp_url',
+        'value' => 'https://api.whatsapp.com/send?phone=593991066303&text=hola',
+    ]);
+
+    $content = MarketingContent::load();
+
+    expect($content['whatsapp_phone'])->toBe('593995142566')
+        ->and($content['whatsapp_url'])->toContain('phone=593995142566');
+});
+
 it('stores quote request timestamps using superadmin public timezone', function () {
     User::factory()->create([
         'gym_id' => null,
@@ -213,7 +230,7 @@ it('stores quote request timestamps using superadmin public timezone', function 
             'quote_last_name' => 'Quintana',
             'quote_email' => 'evelyn@example.com',
             'quote_phone_country_code' => '+593',
-            'quote_phone_number' => '0991066303',
+            'quote_phone_number' => '0995142566',
             'quote_country' => 'Ecuador',
             'quote_professionals_count' => 2,
             'quote_notes' => 'Horario correcto Ecuador.',

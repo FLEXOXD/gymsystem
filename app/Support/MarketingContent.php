@@ -13,6 +13,13 @@ class MarketingContent
 
     private const LEGACY_BRAND_NAME = 'GymSystem';
 
+    private const DEFAULT_WHATSAPP_PHONE = '593995142566';
+
+    private const LEGACY_WHATSAPP_PHONES = [
+        '593991066303',
+        '0991066303',
+    ];
+
     private const DEFAULT_FOOTER_EMAIL = 'soporte@flexgym.local';
 
     /**
@@ -29,7 +36,7 @@ class MarketingContent
             'hero_title' => 'Administra tu gimnasio en un solo sistema, rápido y sin problemas.',
             'hero_subtitle' => 'Gestiona recepción, clientes, membresías, caja y reportes desde una plataforma estable para escritorio y móvil. Ideal para gimnasios individuales o multisucursal.',
             'demo_button_label' => 'Demo gratis',
-            'whatsapp_phone' => '593991066303',
+            'whatsapp_phone' => self::DEFAULT_WHATSAPP_PHONE,
             'whatsapp_message' => 'Hola, quiero más información de FlexGym para controlar mi gimnasio.',
             'whatsapp_message_plan_basico' => 'Hola, quiero información del Plan básico de FlexGym.',
             'whatsapp_message_plan_profesional' => 'Hola, quiero información del Plan profesional de FlexGym.',
@@ -130,12 +137,19 @@ class MarketingContent
             ->whereIn('key', $storageKeys)
             ->pluck('value', 'key');
 
+        $hasStoredWhatsappPhone = false;
+
         foreach ($keys as $key) {
             $storedValue = $stored->get('marketing.'.$key);
             if ($storedValue !== null && trim((string) $storedValue) !== '') {
                 $defaults[$key] = (string) $storedValue;
+                if ($key === 'whatsapp_phone') {
+                    $hasStoredWhatsappPhone = true;
+                }
             }
         }
+
+        $defaults['whatsapp_phone'] = self::upgradeWhatsappPhone((string) ($defaults['whatsapp_phone'] ?? ''));
 
         $legacyWhatsappUrl = trim((string) SiteSetting::query()
             ->where('key', 'marketing.whatsapp_url')
@@ -143,7 +157,7 @@ class MarketingContent
         if ($legacyWhatsappUrl !== '') {
             $parsed = parse_url($legacyWhatsappUrl);
             $legacyPath = (string) ($parsed['path'] ?? '');
-            $legacyPhone = trim((string) preg_replace('/\D+/', '', $legacyPath));
+            $legacyPhone = self::upgradeWhatsappPhone(trim((string) preg_replace('/\D+/', '', $legacyPath)));
             $legacyMessage = '';
             $legacyQuery = (string) ($parsed['query'] ?? '');
             if ($legacyQuery !== '') {
@@ -153,7 +167,7 @@ class MarketingContent
 
             $templatePhone = trim((string) ($template['whatsapp_phone'] ?? ''));
             $templateMessage = trim((string) ($template['whatsapp_message'] ?? ''));
-            if (trim((string) ($defaults['whatsapp_phone'] ?? '')) === $templatePhone && $legacyPhone !== '') {
+            if (! $hasStoredWhatsappPhone && trim((string) ($defaults['whatsapp_phone'] ?? '')) === $templatePhone && $legacyPhone !== '') {
                 $defaults['whatsapp_phone'] = $legacyPhone;
             }
             if (trim((string) ($defaults['whatsapp_message'] ?? '')) === $templateMessage && $legacyMessage !== '') {
@@ -259,6 +273,22 @@ class MarketingContent
         }
 
         return $base.'&text='.rawurlencode($text);
+    }
+
+    private static function upgradeWhatsappPhone(string $phone): string
+    {
+        $trimmed = trim($phone);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+
+        if (in_array($digits, self::LEGACY_WHATSAPP_PHONES, true)) {
+            return self::DEFAULT_WHATSAPP_PHONE;
+        }
+
+        return $trimmed;
     }
 
     private static function publicStorageUrl(string $path): string
