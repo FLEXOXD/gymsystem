@@ -1,4 +1,4 @@
-@php
+<?php
     $contactWhatsappUrl = trim((string) ($content['whatsapp_url'] ?? '#'));
     $contactWhatsappPhoneRaw = trim((string) ($content['whatsapp_phone'] ?? ''));
     $formatMarketingPhone = static function (string $rawPhone): string {
@@ -26,10 +26,10 @@
         ? 'Completa los campos pendientes y vuelve a intentarlo para que podamos responderte mejor.'
         : 'Gracias por escribirnos. Revisaremos tu mensaje y te responderemos lo antes posible.';
     $contactBackgroundImage = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=2200&q=80';
-@endphp
+?>
 
 <section id="contacto" class="shell section">
-    <div class="contact-simple-shell" style="--contact-bg-image: url('{{ $contactBackgroundImage }}');">
+    <div class="contact-simple-shell" style="--contact-bg-image: url('<?php echo e($contactBackgroundImage); ?>');">
         <div class="contact-simple-grid">
             <div class="contact-simple-copy reveal">
                 <p class="contact-simple-kicker">CONTÁCTANOS</p>
@@ -39,17 +39,17 @@
                 </p>
 
                 <div class="contact-simple-actions">
-                    @if ($contactWhatsappUrl !== '#')
-                        <a href="{{ $contactWhatsappUrl }}" target="_blank" rel="noreferrer" class="contact-action-button">
+                    <?php if($contactWhatsappUrl !== '#'): ?>
+                        <a href="<?php echo e($contactWhatsappUrl); ?>" target="_blank" rel="noreferrer" class="contact-action-button">
                             Escribir por WhatsApp
                         </a>
-                    @elseif ($contactPhoneDigits !== '')
-                        <a href="tel:+{{ $contactPhoneDigits }}" class="contact-action-button">
+                    <?php elseif($contactPhoneDigits !== ''): ?>
+                        <a href="tel:+<?php echo e($contactPhoneDigits); ?>" class="contact-action-button">
                             Llamar ahora
                         </a>
-                    @endif
+                    <?php endif; ?>
 
-                    <a href="mailto:{{ $contactEmail }}" class="contact-action-button contact-action-button--secondary">
+                    <a href="mailto:<?php echo e($contactEmail); ?>" class="contact-action-button contact-action-button--secondary">
                         Enviar correo
                     </a>
                 </div>
@@ -63,7 +63,7 @@
                             </svg>
                         </span>
                         <span class="contact-detail-label">Ubicación</span>
-                        <strong class="contact-detail-value">{{ $contactLocation }}</strong>
+                        <strong class="contact-detail-value"><?php echo e($contactLocation); ?></strong>
                         <p class="contact-detail-note">Atención cercana para tu gimnasio.</p>
                     </article>
 
@@ -74,7 +74,7 @@
                             </svg>
                         </span>
                         <span class="contact-detail-label">Número de teléfono</span>
-                        <strong class="contact-detail-value">{{ $contactPhoneDisplay }}</strong>
+                        <strong class="contact-detail-value"><?php echo e($contactPhoneDisplay); ?></strong>
                         <p class="contact-detail-note">Disponible por llamada o WhatsApp.</p>
                     </article>
 
@@ -86,7 +86,7 @@
                             </svg>
                         </span>
                         <span class="contact-detail-label">Correo electrónico</span>
-                        <strong class="contact-detail-value">{{ $contactEmail }}</strong>
+                        <strong class="contact-detail-value"><?php echo e($contactEmail); ?></strong>
                         <p class="contact-detail-note">Ideal para consultas más detalladas.</p>
                     </article>
 
@@ -98,7 +98,7 @@
                             </svg>
                         </span>
                         <span class="contact-detail-label">Horario de atención</span>
-                        <strong class="contact-detail-value">{{ $contactHours }}</strong>
+                        <strong class="contact-detail-value"><?php echo e($contactHours); ?></strong>
                         <p class="contact-detail-note">Respondemos dentro de este horario.</p>
                     </article>
                 </div>
@@ -114,62 +114,118 @@
                 <form id="landing-contact-form"
                       class="contact-form-grid"
                       method="POST"
-                      action="{{ route('landing.contact.store') }}">
-                    @csrf
+                      action="<?php echo e(route('landing.contact.store')); ?>">
+                    <?php echo csrf_field(); ?>
 
                     <label class="contact-form-field">
                         <span class="contact-label">Nombre <em>*</em></span>
                         <input type="text"
-                               class="contact-input @error('first_name', 'landingContact') is-invalid @enderror"
+                               class="contact-input <?php $__errorArgs = ['first_name', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                name="first_name"
-                               value="{{ old('first_name') }}"
+                               value="<?php echo e(old('first_name')); ?>"
                                placeholder="Tu nombre"
                                autocomplete="given-name"
                                required>
-                        @error('first_name', 'landingContact')
-                            <span class="contact-feedback">{{ $message }}</span>
-                        @enderror
+                        <?php $__errorArgs = ['first_name', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <span class="contact-feedback"><?php echo e($message); ?></span>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </label>
 
                     <label class="contact-form-field">
                         <span class="contact-label">Apellido <em>*</em></span>
                         <input type="text"
-                               class="contact-input @error('last_name', 'landingContact') is-invalid @enderror"
+                               class="contact-input <?php $__errorArgs = ['last_name', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                name="last_name"
-                               value="{{ old('last_name') }}"
+                               value="<?php echo e(old('last_name')); ?>"
                                placeholder="Tu apellido"
                                autocomplete="family-name"
                                required>
-                        @error('last_name', 'landingContact')
-                            <span class="contact-feedback">{{ $message }}</span>
-                        @enderror
+                        <?php $__errorArgs = ['last_name', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <span class="contact-feedback"><?php echo e($message); ?></span>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </label>
 
                     <label class="contact-form-field contact-form-field--full">
                         <span class="contact-label">Correo <em>*</em></span>
                         <input type="email"
-                               class="contact-input @error('email', 'landingContact') is-invalid @enderror"
+                               class="contact-input <?php $__errorArgs = ['email', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                name="email"
-                               value="{{ old('email') }}"
+                               value="<?php echo e(old('email')); ?>"
                                placeholder="tucorreo@gmail.com"
                                autocomplete="email"
                                required>
-                        @error('email', 'landingContact')
-                            <span class="contact-feedback">{{ $message }}</span>
-                        @enderror
+                        <?php $__errorArgs = ['email', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <span class="contact-feedback"><?php echo e($message); ?></span>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </label>
 
                     <label class="contact-form-field contact-form-field--full">
                         <span class="contact-label">Mensaje <em>*</em></span>
-                        <textarea class="contact-input @error('message', 'landingContact') is-invalid @enderror"
+                        <textarea class="contact-input <?php $__errorArgs = ['message', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                   name="message"
                                   rows="6"
                                   placeholder="Escribe aquí tu mensaje"
-                                  required>{{ old('message') }}</textarea>
+                                  required><?php echo e(old('message')); ?></textarea>
                         <span class="contact-helper">También puedes escribirnos directo por WhatsApp o correo.</span>
-                        @error('message', 'landingContact')
-                            <span class="contact-feedback">{{ $message }}</span>
-                        @enderror
+                        <?php $__errorArgs = ['message', 'landingContact'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <span class="contact-feedback"><?php echo e($message); ?></span>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </label>
 
                     <div class="contact-submit">
@@ -182,37 +238,38 @@
     </div>
 </section>
 
-<div id="contact-status-backdrop" class="contact-status-backdrop {{ $contactModalMessage !== '' ? 'is-open' : '' }}"></div>
+<div id="contact-status-backdrop" class="contact-status-backdrop <?php echo e($contactModalMessage !== '' ? 'is-open' : ''); ?>"></div>
 <div id="contact-status-modal"
-     class="contact-status-modal {{ $contactModalMessage !== '' ? 'is-open' : '' }} {{ $contactModalType === 'error' ? 'is-error' : '' }}"
-     data-variant="{{ $contactModalType }}"
+     class="contact-status-modal <?php echo e($contactModalMessage !== '' ? 'is-open' : ''); ?> <?php echo e($contactModalType === 'error' ? 'is-error' : ''); ?>"
+     data-variant="<?php echo e($contactModalType); ?>"
      role="dialog"
      aria-modal="true"
      aria-labelledby="contact-status-title">
     <div class="contact-status-inner">
-        <span class="contact-status-badge">{{ $contactModalType === 'error' ? 'Revisa los datos' : 'Mensaje recibido' }}</span>
+        <span class="contact-status-badge"><?php echo e($contactModalType === 'error' ? 'Revisa los datos' : 'Mensaje recibido'); ?></span>
         <span class="contact-status-icon" aria-hidden="true">
-            @if ($contactModalType === 'error')
+            <?php if($contactModalType === 'error'): ?>
                 <svg viewBox="0 0 24 24" fill="none">
                     <path d="M12 8v5.5M12 17h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                 </svg>
-            @else
+            <?php else: ?>
                 <svg viewBox="0 0 24 24" fill="none">
                     <path d="m7 12 3.2 3.2L17.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                 </svg>
-            @endif
+            <?php endif; ?>
         </span>
         <div>
-            <h4 id="contact-status-title">{{ $contactStatusTitle }}</h4>
-            <p>{{ $contactModalMessage !== '' ? $contactModalMessage : $contactStatusFallback }}</p>
+            <h4 id="contact-status-title"><?php echo e($contactStatusTitle); ?></h4>
+            <p><?php echo e($contactModalMessage !== '' ? $contactModalMessage : $contactStatusFallback); ?></p>
         </div>
         <div class="contact-status-actions">
-            @if ($contactModalType !== 'error' && $contactWhatsappUrl !== '#')
-                <a class="contact-status-link" href="{{ $contactWhatsappUrl }}" target="_blank" rel="noreferrer">Continuar por WhatsApp</a>
-            @endif
-            <button id="contact-status-close" type="button" class="contact-status-close">{{ $contactModalType === 'error' ? 'Volver al formulario' : 'Entendido' }}</button>
+            <?php if($contactModalType !== 'error' && $contactWhatsappUrl !== '#'): ?>
+                <a class="contact-status-link" href="<?php echo e($contactWhatsappUrl); ?>" target="_blank" rel="noreferrer">Continuar por WhatsApp</a>
+            <?php endif; ?>
+            <button id="contact-status-close" type="button" class="contact-status-close"><?php echo e($contactModalType === 'error' ? 'Volver al formulario' : 'Entendido'); ?></button>
         </div>
     </div>
 </div>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/marketing/partials/contact-premium.blade.php ENDPATH**/ ?>

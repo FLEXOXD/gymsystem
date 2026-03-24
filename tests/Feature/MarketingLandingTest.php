@@ -90,8 +90,8 @@ it('shows dedicated pages for about and contact', function () {
 it('renders the simplified contact page in spanish without mojibake', function () {
     $this->get(route('landing.contact'))
         ->assertOk()
-        ->assertSee('CONTACTANOS')
-        ->assertSee('Machachi, canton Mejia, Pichincha, Ecuador')
+        ->assertSee('CONTÁCTANOS')
+        ->assertSee('Machachi, cantón Mejía, Pichincha, Ecuador')
         ->assertSee('flexjok.agencia@gmail.com')
         ->assertSee('De 9:00 AM a 7:00 PM')
         ->assertDontSee('ContÃ¡ctanos')
