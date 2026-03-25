@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" fill="none">
+  <defs>
+    <linearGradient id="ecuadorStroke" x1="126" y1="164" x2="723" y2="756" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#66F6FF"/>
+      <stop offset="0.52" stop-color="#14B8FF"/>
+      <stop offset="1" stop-color="#66F6FF"/>
+    </linearGradient>
+    <linearGradient id="ecuadorFill" x1="206" y1="204" x2="676" y2="730" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#07172A" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#0A2142" stop-opacity="0.16"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5.4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="13" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0.62  0 0 1 0 1  0 0 0 1 0"/>
+    </filter>
+    <path id="mainland-shape" d="M438 170L492 177L534 191L579 213L616 245L637 278L664 305L701 341L693 377L664 392L653 419L644 458L635 502L617 558L586 612L551 654L519 700L477 733L426 743L386 735L347 711L314 681L286 641L268 602L255 559L242 517L228 478L216 437L217 397L208 354L220 309L247 270L284 237L318 209L360 189L404 177L438 170Z"/>
+    <path id="galapagos-west" d="M124 424C132 418 145 418 153 426C159 432 159 442 151 447C141 455 126 453 118 444C114 438 115 429 124 424Z"/>
+    <path id="galapagos-central" d="M158 470C170 460 190 463 199 477C205 487 204 501 191 508C176 518 155 516 144 504C137 494 143 480 158 470Z"/>
+    <path id="galapagos-south" d="M111 523C121 516 136 518 145 529C152 537 151 548 142 555C131 564 113 564 103 553C96 544 99 530 111 523Z"/>
+    <path id="galapagos-east" d="M194 542C203 536 216 538 224 547C230 554 229 565 220 571C210 579 195 578 186 570C180 563 183 549 194 542Z"/>
+    <clipPath id="map-clip">
+      <use href="#mainland-shape"/>
+      <use href="#galapagos-west"/>
+      <use href="#galapagos-central"/>
+      <use href="#galapagos-south"/>
+      <use href="#galapagos-east"/>
+    </clipPath>
+  </defs>
+
+  <g opacity="0.46" filter="url(#softGlow)">
+    <circle cx="456" cy="458" r="260" fill="#163FFF"/>
+    <circle cx="174" cy="493" r="94" fill="#1CC8FF"/>
+  </g>
+
+  <g opacity="0.46" stroke="#1E63FF" stroke-width="2" stroke-linecap="round">
+    <path d="M96 322L286 212L474 172L704 342L644 708L346 730L112 550L96 322Z"/>
+    <path d="M96 322L242 476L347 711L644 708"/>
+    <path d="M286 212L358 189L551 654L346 730"/>
+    <path d="M154 426L174 492L216 554L346 730"/>
+    <path d="M474 172L492 302L693 377L704 342"/>
+    <path d="M242 476L438 170L635 502L346 730"/>
+  </g>
+
+  <g clip-path="url(#map-clip)" opacity="0.82" stroke="#2693FF" stroke-width="2" stroke-linecap="round">
+    <path d="M154 426L242 476L217 397L284 237L438 170L492 302L635 502L551 654L386 735L255 559L154 426Z"/>
+    <path d="M174 492L268 602L477 733L617 558L653 419L492 302L318 209L174 492Z"/>
+    <path d="M124 424L158 470L111 523L194 542L216 437L242 517L347 711L551 654L644 458L616 245L404 177L124 424Z"/>
+    <path d="M145 529L255 559L635 502"/>
+    <path d="M158 470L347 711L664 305"/>
+    <path d="M194 542L551 654L693 377"/>
+    <path d="M124 424L318 209L664 305"/>
+    <path d="M111 523L268 602L586 612"/>
+    <path d="M224 547L347 711L617 558"/>
+    <path d="M144 504L255 559L426 743"/>
+  </g>
+
+  <g fill="#78F7FF" filter="url(#glow)">
+    <circle cx="154" cy="426" r="4.6"/>
+    <circle cx="174" cy="492" r="5.2"/>
+    <circle cx="124" cy="424" r="4.2"/>
+    <circle cx="111" cy="523" r="4.2"/>
+    <circle cx="145" cy="529" r="4.4"/>
+    <circle cx="194" cy="542" r="4.4"/>
+    <circle cx="216" cy="437" r="4"/>
+    <circle cx="242" cy="476" r="4.2"/>
+    <circle cx="255" cy="559" r="4.4"/>
+    <circle cx="268" cy="602" r="4.2"/>
+    <circle cx="284" cy="237" r="4"/>
+    <circle cx="318" cy="209" r="4"/>
+    <circle cx="358" cy="189" r="4.4"/>
+    <circle cx="404" cy="177" r="4.2"/>
+    <circle cx="438" cy="170" r="5"/>
+    <circle cx="474" cy="172" r="4.2"/>
+    <circle cx="492" cy="302" r="4.8"/>
+    <circle cx="551" cy="654" r="5.2"/>
+    <circle cx="586" cy="612" r="4.2"/>
+    <circle cx="617" cy="558" r="4.2"/>
+    <circle cx="635" cy="502" r="4.8"/>
+    <circle cx="644" cy="458" r="4.2"/>
+    <circle cx="653" cy="419" r="4.4"/>
+    <circle cx="664" cy="305" r="4.6"/>
+    <circle cx="693" cy="377" r="4.4"/>
+    <circle cx="347" cy="711" r="4.8"/>
+    <circle cx="386" cy="735" r="4.4"/>
+    <circle cx="426" cy="743" r="4.8"/>
+    <circle cx="477" cy="733" r="4.6"/>
+  </g>
+
+  <g fill="url(#ecuadorFill)" filter="url(#glow)">
+    <use href="#mainland-shape"/>
+    <use href="#galapagos-west"/>
+    <use href="#galapagos-central"/>
+    <use href="#galapagos-south"/>
+    <use href="#galapagos-east"/>
+  </g>
+
+  <g stroke="url(#ecuadorStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <use href="#mainland-shape"/>
+    <use href="#galapagos-west"/>
+    <use href="#galapagos-central"/>
+    <use href="#galapagos-south"/>
+    <use href="#galapagos-east"/>
+  </g>
+</svg>
