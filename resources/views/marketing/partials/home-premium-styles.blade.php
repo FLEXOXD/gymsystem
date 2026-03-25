@@ -485,18 +485,22 @@
     }
     .interface-modal-close {
         position: absolute;
-        top: .95rem;
-        right: .95rem;
-        width: 42px;
-        height: 42px;
-        border: 1px solid rgba(255, 255, 255, .08);
+        top: .9rem;
+        right: .9rem;
+        z-index: 12;
+        width: 50px;
+        height: 50px;
+        border: 1px solid rgba(184, 255, 31, .18);
         border-radius: 999px;
-        background: rgba(12, 12, 12, .76);
+        background: rgba(12, 12, 12, .92);
         color: #f4f7e8;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        pointer-events: auto;
+        touch-action: manipulation;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .28);
     }
     .interface-modal-close svg { width: 18px; height: 18px; }
     .interface-modal-copy {
