@@ -400,32 +400,6 @@
                             </div>
                         </div>
 
-                        <div class="premium-screen-nav" aria-label="Vistas del control total" data-reveal-group data-reveal-step="80">
-                            @foreach ($premiumVisualSlides as $slideIndex => $slide)
-                                <button type="button"
-                                        class="premium-screen-nav-button {{ $slideIndex === 0 ? 'is-active' : '' }}"
-                                        data-premium-visual-nav="{{ $slideIndex }}"
-                                        aria-pressed="{{ $slideIndex === 0 ? 'true' : 'false' }}">
-                                    <span>{{ str_pad((string) ($slideIndex + 1), 2, '0', STR_PAD_LEFT) }}</span>
-                                    <strong>{{ $slide['nav'] }}</strong>
-                                </button>
-                            @endforeach
-                        </div>
-
-                        <div class="premium-screen-panel" data-reveal-group data-reveal-step="85">
-                            <article>
-                                <span>Ingresos</span>
-                                <strong>97 hoy</strong>
-                            </article>
-                            <article>
-                                <span>Cobros</span>
-                                <strong>$1.480</strong>
-                            </article>
-                            <article>
-                                <span>Alertas</span>
-                                <strong>14 por revisar</strong>
-                            </article>
-                        </div>
                     </div>
                 </div>
 
