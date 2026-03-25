@@ -246,32 +246,32 @@
 
         .brand {
             display: grid;
-            gap: 8px;
-            margin-bottom: 14px;
+            gap: 12px;
+            margin-bottom: 18px;
             padding: 0;
-            justify-items: stretch;
+            align-items: center;
             text-align: left;
         }
 
         .auth-logo-wrap {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 0;
             padding: 0;
         }
 
         .auth-logo {
-            width: min(100%, 280px);
+            width: min(100%, 182px);
             max-width: none;
-            max-height: 110px;
+            max-height: 132px;
             object-fit: contain;
             filter: drop-shadow(0 10px 26px rgba(184, 255, 31, 0.08));
         }
 
         .brand-copy {
             display: grid;
-            gap: 6px;
+            gap: 8px;
             justify-items: start;
             width: 100%;
         }
@@ -289,20 +289,23 @@
             font-family: var(--login-heading);
             width: 100%;
             max-width: none;
-            font-size: clamp(4.8rem, 8.8vw, 6.2rem);
-            line-height: 0.74;
+            font-size: clamp(3.8rem, 5.8vw, 5rem);
+            line-height: 0.84;
             font-weight: 800;
-            letter-spacing: -0.065em;
-            word-spacing: -0.18em;
-            white-space: normal;
+            letter-spacing: -0.05em;
+            word-spacing: -0.08em;
+            white-space: nowrap;
             text-transform: uppercase;
-            text-wrap: balance;
         }
 
         .brand-copy h1 span {
-            display: block;
+            display: inline;
             color: #f5ffd8;
             text-shadow: 0 0 18px rgba(184, 255, 31, 0.12);
+        }
+
+        .brand-copy h1 span + span {
+            margin-left: 0.1em;
         }
 
         .brand-copy p {
@@ -514,8 +517,8 @@
 
         @media (min-width: 720px) {
             .brand {
-                grid-template-columns: 1fr;
-                gap: 8px;
+                grid-template-columns: clamp(150px, 18vw, 196px) minmax(0, 1fr);
+                gap: clamp(18px, 3vw, 28px);
             }
 
             .form {
@@ -530,7 +533,7 @@
             }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 719px) {
             .card-top {
                 align-items: flex-start;
                 flex-direction: column;
@@ -544,6 +547,7 @@
             .auth-logo-wrap {
                 min-height: 0;
                 padding: 0;
+                justify-content: center;
             }
 
             .auth-logo {
@@ -556,6 +560,14 @@
                 font-size: clamp(3.2rem, 13vw, 4.2rem);
                 line-height: 0.78;
                 white-space: normal;
+            }
+
+            .brand-copy h1 span {
+                display: block;
+            }
+
+            .brand-copy h1 span + span {
+                margin-left: 0;
             }
 
             .brand-copy p,
