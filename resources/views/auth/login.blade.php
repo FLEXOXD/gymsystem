@@ -185,6 +185,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
             gap: 12px;
             margin-bottom: 12px;
         }
@@ -287,25 +288,28 @@
         .brand-copy h1 {
             margin: 0;
             font-family: var(--login-heading);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 0 0.12em;
             width: 100%;
             max-width: none;
-            font-size: clamp(3.8rem, 5.8vw, 5rem);
+            font-size: clamp(3.45rem, 5.35vw, 4.7rem);
             line-height: 0.84;
             font-weight: 800;
-            letter-spacing: -0.05em;
-            word-spacing: -0.08em;
-            white-space: nowrap;
+            letter-spacing: -0.025em;
+            white-space: normal;
             text-transform: uppercase;
         }
 
         .brand-copy h1 span {
-            display: inline;
+            display: block;
             color: #f5ffd8;
             text-shadow: 0 0 18px rgba(184, 255, 31, 0.12);
         }
 
         .brand-copy h1 span + span {
-            margin-left: 0.1em;
+            margin-left: 0;
         }
 
         .brand-copy p {
@@ -535,13 +539,16 @@
 
         @media (max-width: 719px) {
             .card-top {
-                align-items: flex-start;
-                flex-direction: column;
+                align-items: center;
+                justify-content: space-between;
                 margin-bottom: 12px;
             }
 
             .brand {
+                justify-items: center;
+                gap: 16px;
                 margin-bottom: 14px;
+                text-align: center;
             }
 
             .auth-logo-wrap {
@@ -556,18 +563,19 @@
                 max-height: 88px;
             }
 
+            .brand-copy {
+                justify-items: center;
+                text-align: center;
+            }
+
             .brand-copy h1 {
-                font-size: clamp(3.2rem, 13vw, 4.2rem);
-                line-height: 0.78;
-                white-space: normal;
+                justify-content: center;
+                font-size: clamp(2.85rem, 12vw, 3.8rem);
+                line-height: 0.8;
             }
 
-            .brand-copy h1 span {
-                display: block;
-            }
-
-            .brand-copy h1 span + span {
-                margin-left: 0;
+            .brand-copy p {
+                max-width: 28ch;
             }
 
             .brand-copy p,

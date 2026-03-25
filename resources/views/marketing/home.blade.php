@@ -1392,7 +1392,14 @@
                 radial-gradient(circle at 92% 24%, rgba(71, 255, 111, .2), transparent 42%),
                 linear-gradient(145deg, #06120b, #08160f 56%, #060f0a);
         }
-        .footer-grid { display: grid; grid-template-columns: 1.35fr .8fr .8fr .8fr; gap: 1.1rem; }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            column-gap: clamp(1.6rem, 4vw, 4.5rem);
+            row-gap: 1.25rem;
+            align-items: start;
+            justify-items: center;
+        }
         .footer h4 { margin: 0; font-size: 1rem; color: #f0f6ff; }
         .footer-neon-title {
             color: #47ff6f;
@@ -1421,30 +1428,42 @@
             }
         }
         .footer-brand {
-            padding-right: .5rem;
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: 100%;
+            max-width: 420px;
+            padding-right: 0;
             overflow: visible;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            margin: 0 auto .35rem;
+            text-align: center;
         }
         .footer-brand-logo {
-            width: clamp(170px, 18vw, 240px);
-            height: 58px;
+            width: clamp(180px, 19vw, 255px);
+            height: 62px;
             object-fit: contain;
             border: 0;
             border-radius: 0;
             background: transparent;
             filter: drop-shadow(0 0 12px rgba(60, 255, 60, 0.18));
             display: block;
-            transform: scale(2.2);
+            transform: scale(2.3);
             transform-origin: center center;
-            margin: .55rem auto 1.3rem;
+            margin: .65rem auto .45rem;
         }
-        .footer-lead { margin: .2rem 0 0; color: #b7cabf; line-height: 1.65; text-align: center; }
+        .footer-nav-column {
+            width: 100%;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+        .footer-nav-column h4 { text-align: left; }
         .footer p,
         .footer li,
         .footer a { color: #b5c9be; line-height: 1.6; text-decoration: none; font-size: .94rem; }
-        .footer ul { margin: .7rem 0 0; padding: 0; list-style: none; display: grid; gap: .24rem; }
+        .footer ul { width: 100%; margin: .8rem 0 0; padding: 0; list-style: none; display: grid; gap: .42rem; }
         .footer a:hover { color: #eaf4ff; }
         .copy {
             margin-top: 1.2rem;
@@ -2208,9 +2227,9 @@
             .about-year-value { font-size: 1.48rem; }
             .service-media { min-height: 170px; padding: .4rem; }
             .footer-brand-logo {
-                width: clamp(150px, 54vw, 210px);
-                height: 52px;
-                transform: scale(2);
+                width: clamp(165px, 58vw, 230px);
+                height: 56px;
+                transform: scale(2.1);
                 transform-origin: center center;
                 margin-left: auto;
                 margin-right: auto;
@@ -3280,9 +3299,8 @@
                 @else
                     <h4>{{ $brandName }}</h4>
                 @endif
-                <p class="footer-lead">{{ $footerText }}</p>
             </section>
-            <section>
+            <section class="footer-nav-column">
                 <h4 class="footer-neon-title">Compañía</h4>
                 <ul>
                     <li><a href="{{ $inicioHref }}">Inicio</a></li>
@@ -3293,7 +3311,7 @@
                     <li><a href="{{ $contactHref }}">Contáctanos</a></li>
                 </ul>
             </section>
-            <section>
+            <section class="footer-nav-column">
                 <h4 class="footer-neon-title">Legal</h4>
                 <ul>
                     <li><a href="{{ $privacyHref }}">Política de privacidad</a></li>
@@ -3301,7 +3319,7 @@
                     <li><a href="{{ $commercialTermsHref }}">Términos comerciales</a></li>
                 </ul>
             </section>
-            <section>
+            <section class="footer-nav-column">
                 <h4 class="footer-neon-title">Contacto</h4>
                 <ul>
                     <li><a href="{{ $content['whatsapp_url'] }}" target="_blank" rel="noreferrer">Atención comercial por WhatsApp</a></li>
