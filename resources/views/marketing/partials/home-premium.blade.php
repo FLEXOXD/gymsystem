@@ -5,7 +5,22 @@
     $premiumHeroTitle = trim((string) ($content['hero_title'] ?? ''));
     $premiumHeroTitle = $premiumHeroTitle !== ''
         ? $premiumHeroTitle
-        : 'Deja de perder clientes y haz un gimnasio inteligente';
+        : "Deja de perder\nclientes y haz un\ngimnasio\ninteligente";
+    $premiumHeroTitleNormalized = mb_strtolower(preg_replace('/\s+/u', ' ', trim(strip_tags((string) $premiumHeroTitle))));
+    if ($premiumHeroTitleNormalized === 'deja de perder clientes y haz un gimnasio inteligente') {
+        $premiumHeroTitleLines = [
+            'Deja de perder',
+            'clientes y haz un',
+            'gimnasio',
+            'inteligente',
+        ];
+    } else {
+        $premiumHeroTitleLines = preg_split('/\R+/', str_ireplace(['<br />', '<br/>', '<br>'], "\n", $premiumHeroTitle)) ?: [];
+        $premiumHeroTitleLines = array_values(array_filter(array_map(static fn ($line) => trim(strip_tags((string) $line)), $premiumHeroTitleLines), static fn ($line) => $line !== ''));
+        if ($premiumHeroTitleLines === []) {
+            $premiumHeroTitleLines = [trim(strip_tags($premiumHeroTitle))];
+        }
+    }
     $premiumHeroSubtitle = trim((string) ($content['hero_subtitle'] ?? ''));
     $premiumHeroSubtitle = $premiumHeroSubtitle !== ''
         ? $premiumHeroSubtitle
@@ -300,7 +315,11 @@
                 <span class="premium-chip">Ecuador y Latinoamérica</span>
             </div>
 
-            <h1 class="premium-hero-title">{{ $premiumHeroTitle }}</h1>
+            <h1 class="premium-hero-title">
+                @foreach ($premiumHeroTitleLines as $line)
+                    <span>{{ $line }}</span>
+                @endforeach
+            </h1>
             <p class="premium-hero-text">{{ $premiumHeroSubtitle }}</p>
 
             <div class="premium-hero-actions" data-reveal-group data-reveal-delay="280" data-reveal-step="95">
@@ -802,6 +821,14 @@
             <span class="premium-kicker">Último paso</span>
             <h2>Toda la portada fue reorientada para verse más sólida, más deportiva y más segura al momento de convertir.</h2>
             <p>La estructura completa ya conversa con la referencia que compartiste: negros profundos, verde lima, titulares más atléticos y una puesta en escena mucho más decidida, pero sin romper tus botones ni la lógica comercial.</p>
+
+            <h2 class="premium-close-title-manual">
+                <span>Toda la portada fue</span>
+                <span>reorientada para verse</span>
+                <span>m&aacute;s s&oacute;lida, m&aacute;s</span>
+                <span>deportiva y m&aacute;s segura</span>
+                <span>al momento de convertir.</span>
+            </h2>
 
             <ul class="premium-close-list" data-reveal-group data-reveal-selector="li" data-reveal-step="80">
                 <li>Demo gratis intacta.</li>

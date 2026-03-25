@@ -186,7 +186,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 28px;
+            margin-bottom: 12px;
         }
 
         .eyebrow {
@@ -246,9 +246,11 @@
 
         .brand {
             display: grid;
-            gap: 22px;
-            margin-bottom: 26px;
-            padding: 6px 0 2px;
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 0;
+            justify-items: stretch;
+            text-align: left;
         }
 
         .auth-logo-wrap {
@@ -260,16 +262,18 @@
         }
 
         .auth-logo {
-            width: min(100%, 170px);
+            width: min(100%, 280px);
             max-width: none;
-            max-height: 170px;
+            max-height: 110px;
             object-fit: contain;
             filter: drop-shadow(0 10px 26px rgba(184, 255, 31, 0.08));
         }
 
         .brand-copy {
             display: grid;
-            gap: 12px;
+            gap: 6px;
+            justify-items: start;
+            width: 100%;
         }
 
         .brand-kicker {
@@ -283,15 +287,20 @@
         .brand-copy h1 {
             margin: 0;
             font-family: var(--login-heading);
-            font-size: clamp(3.8rem, 7vw, 5rem);
-            line-height: 0.88;
+            width: 100%;
+            max-width: none;
+            font-size: clamp(4.8rem, 8.8vw, 6.2rem);
+            line-height: 0.74;
             font-weight: 800;
-            letter-spacing: -0.02em;
-            text-wrap: balance;
+            letter-spacing: -0.065em;
+            word-spacing: -0.18em;
+            white-space: normal;
             text-transform: uppercase;
+            text-wrap: balance;
         }
 
         .brand-copy h1 span {
+            display: block;
             color: #f5ffd8;
             text-shadow: 0 0 18px rgba(184, 255, 31, 0.12);
         }
@@ -299,8 +308,8 @@
         .brand-copy p {
             margin: 0;
             color: var(--login-muted);
-            font-size: 1rem;
-            line-height: 1.75;
+            font-size: 0.95rem;
+            line-height: 1.55;
             max-width: 34rem;
         }
 
@@ -505,9 +514,8 @@
 
         @media (min-width: 720px) {
             .brand {
-                grid-template-columns: minmax(180px, 0.56fr) minmax(0, 1.44fr);
-                align-items: center;
-                gap: 28px;
+                grid-template-columns: 1fr;
+                gap: 8px;
             }
 
             .form {
@@ -526,11 +534,11 @@
             .card-top {
                 align-items: flex-start;
                 flex-direction: column;
-                margin-bottom: 24px;
+                margin-bottom: 12px;
             }
 
             .brand {
-                margin-bottom: 24px;
+                margin-bottom: 14px;
             }
 
             .auth-logo-wrap {
@@ -539,13 +547,15 @@
             }
 
             .auth-logo {
-                width: min(100%, 138px);
+                width: min(100%, 220px);
                 max-width: none;
-                max-height: 138px;
+                max-height: 88px;
             }
 
             .brand-copy h1 {
-                font-size: 3rem;
+                font-size: clamp(3.2rem, 13vw, 4.2rem);
+                line-height: 0.78;
+                white-space: normal;
             }
 
             .brand-copy p,
@@ -569,8 +579,8 @@
     $branding = is_array($loginBranding ?? null) ? $loginBranding : [];
     $logoLightUrl = trim((string) ($branding['logo_light_url'] ?? ''));
     $logoDarkUrl = trim((string) ($branding['logo_dark_url'] ?? ''));
-    $brandIconUrl = asset('pwa/fg-favicon-192.png?v=20260317');
-    $logoUrl = $brandIconUrl !== '' ? $brandIconUrl : ($logoDarkUrl !== '' ? $logoDarkUrl : $logoLightUrl);
+    $defaultWordmarkUrl = asset('pwa/flexgymlogo.png?v=20260317');
+    $logoUrl = $logoDarkUrl !== '' ? $logoDarkUrl : ($logoLightUrl !== '' ? $logoLightUrl : $defaultWordmarkUrl);
     $backgroundImageFile = '20260324_2310_Neon Ecuador Outline_simple_compose_01kmhjzh42fnebkbadymqhymsx.png';
     $backgroundImage = asset('images/premium/' . rawurlencode($backgroundImageFile)) . '?v=20260324b';
 @endphp
@@ -593,8 +603,8 @@
 
                     <div class="brand-copy">
                         <span class="brand-kicker">Acceso administrativo</span>
-                        <h1>Iniciar <span>sesi&oacute;n</span></h1>
-                        <p>Ingresa al panel con una experiencia m&aacute;s elegante, clara y profesional, pensada para escritorio y m&oacute;vil.</p>
+                        <h1><span>Iniciar</span><span>sesi&oacute;n</span></h1>
+                        <p>Accede al panel administrativo desde escritorio o m&oacute;vil.</p>
                     </div>
                 </div>
 

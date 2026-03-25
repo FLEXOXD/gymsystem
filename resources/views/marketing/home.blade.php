@@ -2298,12 +2298,11 @@
             width: clamp(258px, 22vw, 362px);
             height: auto;
             max-height: 98px;
-            margin: 0 -2.1rem 0 -1.05rem;
-            transform: scale(1.74);
-            transform-origin: left center;
+            margin: 0;
             object-fit: contain;
             object-position: left center;
-            filter: drop-shadow(0 0 18px rgba(184, 255, 31, .2));
+            filter: drop-shadow(0 0 10px rgba(184, 255, 31, .14));
+            backface-visibility: hidden;
         }
 
         .top-wrap .brand .brand-fallback {
@@ -2443,12 +2442,11 @@
             display: block;
             width: min(100%, 272px);
             height: auto;
-            margin: 0 -1.32rem 0 -.76rem;
-            transform: scale(1.52);
-            transform-origin: left center;
+            margin: 0;
             object-fit: contain;
             object-position: left center;
-            filter: drop-shadow(0 0 16px rgba(184, 255, 31, .18));
+            filter: drop-shadow(0 0 10px rgba(184, 255, 31, .14));
+            backface-visibility: hidden;
         }
 
         .top-wrap .mobile-nav-brand-stage .brand-fallback {
@@ -2505,8 +2503,7 @@
             .top-wrap .brand-logo {
                 width: clamp(242px, 20vw, 322px);
                 max-height: 88px;
-                margin-right: -1.76rem;
-                transform: scale(1.64);
+                margin-right: 0;
             }
 
             .top-wrap .menu-links a {
@@ -2557,8 +2554,7 @@
             .top-wrap .brand-logo {
                 width: clamp(228px, 39vw, 310px);
                 max-height: 86px;
-                margin-right: -1.42rem;
-                transform: scale(1.58);
+                margin-right: 0;
             }
 
             .top-wrap .menu-links,
@@ -2588,8 +2584,7 @@
             .top-wrap .brand-logo {
                 width: clamp(208px, 47vw, 272px);
                 max-height: 78px;
-                margin-right: -1.16rem;
-                transform: scale(1.46);
+                margin-right: 0;
             }
 
             .top-wrap .mobile-nav-panel {
@@ -2601,8 +2596,7 @@
 
             .top-wrap .mobile-nav-brand-logo {
                 width: min(100%, 236px);
-                margin-right: -1rem;
-                transform: scale(1.38);
+                margin-right: 0;
             }
         }
     </style>
