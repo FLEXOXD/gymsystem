@@ -27,13 +27,13 @@ class MarketingContent
      */
     public static function defaults(): array
     {
-        return [
+        return self::repairBrokenEncodingCopy([
             'brand_kicker' => 'Sistema Operativo',
             'brand_name' => self::BRAND_NAME,
             'brand_logo_path' => '',
             'login_button_label' => 'Iniciar sesión',
             'hero_kicker' => 'Software para dueños de gimnasios',
-            'hero_title' => 'Deja de perder clientes y has un Gymnasio inteligente',
+            'hero_title' => 'Deja de perder clientes y haz un gimnasio inteligente',
             'hero_subtitle' => 'Administra clientes, membresías, caja, accesos y reportes desde una sola plataforma. Cobra a tiempo, controla renovaciones y lleva tu operación diaria con más orden desde escritorio o móvil.',
             'demo_button_label' => 'Demo gratis',
             'whatsapp_phone' => self::DEFAULT_WHATSAPP_PHONE,
@@ -71,11 +71,11 @@ class MarketingContent
             'section_1_cta_label' => 'Ver demo guiada',
             'section_1_cta_url' => '',
             'section_1_modal_button_label' => 'Abrir interfaz',
-            'section_1_modal_badge' => 'RecepciÃ³n en vivo',
-            'section_1_modal_title' => 'Ve cÃ³mo recepciÃ³n, caja y acceso trabajan en una sola interfaz.',
-            'section_1_modal_text' => 'Usa este modal para explicar el flujo real: recepciÃ³n registra, cobra, valida acceso y sigue al cliente sin saltar entre pantallas innecesarias.',
-            'section_1_modal_item_1' => 'Alta rÃ¡pida del cliente y validaciÃ³n de acceso en un solo paso.',
-            'section_1_modal_item_2' => 'Cobro y renovaciÃ³n visibles para recepciÃ³n y administraciÃ³n.',
+            'section_1_modal_badge' => 'Recepción en vivo',
+            'section_1_modal_title' => 'Ve cómo recepción, caja y acceso trabajan en una sola interfaz.',
+            'section_1_modal_text' => 'Usa este modal para explicar el flujo real: recepción registra, cobra, valida acceso y sigue al cliente sin saltar entre pantallas innecesarias.',
+            'section_1_modal_item_1' => 'Alta rápida del cliente y validación de acceso en un solo paso.',
+            'section_1_modal_item_2' => 'Cobro y renovación visibles para recepción y administración.',
             'section_1_modal_item_3' => 'Lectura clara para equipos que necesitan rapidez y orden diario.',
             'section_1_image_path' => '',
             'section_1_modal_image_path' => '',
@@ -97,10 +97,10 @@ class MarketingContent
             'section_2_cta_url' => '',
             'section_2_modal_button_label' => 'Abrir interfaz',
             'section_2_modal_badge' => 'Control y reportes',
-            'section_2_modal_title' => 'Muestra reportes, renovaciones y control con una escena mucho mÃ¡s clara.',
-            'section_2_modal_text' => 'Este modal sirve para aterrizar mejor el valor del sistema: quÃ© ve administraciÃ³n, cÃ³mo entiende renovaciones y dÃ³nde detecta alertas o movimiento operativo.',
+            'section_2_modal_title' => 'Muestra reportes, renovaciones y control con una escena mucho más clara.',
+            'section_2_modal_text' => 'Este modal sirve para aterrizar mejor el valor del sistema: qué ve administración, cómo entiende renovaciones y dónde detecta alertas o movimiento operativo.',
             'section_2_modal_item_1' => 'Seguimiento de renovaciones y vencimientos sin perder contexto.',
-            'section_2_modal_item_2' => 'Reportes e indicadores listos para revisar rÃ¡pido.',
+            'section_2_modal_item_2' => 'Reportes e indicadores listos para revisar rápido.',
             'section_2_modal_item_3' => 'Mejor lectura comercial para vender orden y control real.',
             'section_2_image_path' => '',
             'section_2_modal_image_path' => '',
@@ -121,11 +121,11 @@ class MarketingContent
             'section_3_cta_label' => 'Ver uso en celular',
             'section_3_cta_url' => '',
             'section_3_modal_button_label' => 'Abrir interfaz',
-            'section_3_modal_badge' => 'PWA y mÃ³vil',
-            'section_3_modal_title' => 'EnseÃ±a mejor la experiencia mÃ³vil para operar desde celular o tablet.',
-            'section_3_modal_text' => 'AquÃ­ puedes explicar cÃ³mo se instala la PWA, quÃ© tan cÃ³modo se usa en recepciÃ³n y por quÃ© se siente como una app lista para trabajar.',
+            'section_3_modal_badge' => 'PWA y móvil',
+            'section_3_modal_title' => 'Enseña mejor la experiencia móvil para operar desde celular o tablet.',
+            'section_3_modal_text' => 'Aquí puedes explicar cómo se instala la PWA, qué tan cómodo se usa en recepción y por qué se siente como una app lista para trabajar.',
             'section_3_modal_item_1' => 'Instalable en celular y escritorio con entrada directa.',
-            'section_3_modal_item_2' => 'Interfaz adaptada para recepciÃ³n, caja y operaciÃ³n diaria.',
+            'section_3_modal_item_2' => 'Interfaz adaptada para recepción, caja y operación diaria.',
             'section_3_modal_item_3' => 'Base visual perfecta para explicar movilidad y velocidad.',
             'section_3_image_path' => '',
             'section_3_modal_image_path' => '',
@@ -150,7 +150,7 @@ class MarketingContent
             'marquee_item_5_logo_path' => '',
             'marquee_item_6_text' => 'Dueños de gimnasios',
             'marquee_item_6_logo_path' => '',
-        ];
+        ]);
     }
 
     /**
@@ -208,6 +208,7 @@ class MarketingContent
             }
         }
 
+        $defaults = self::repairBrokenEncodingCopy($defaults);
         $defaults = self::replaceLegacyBrandingCopy($defaults);
         $defaults = self::replaceLegacySectionOneCopy($defaults);
         $defaults = self::replaceLegacySectionTwoCopy($defaults);
@@ -233,7 +234,7 @@ class MarketingContent
 
             SiteSetting::query()->updateOrCreate(
                 ['key' => 'marketing.'.$key],
-                ['value' => trim((string) $value)]
+                ['value' => self::repairBrokenEncodingString(trim((string) $value))]
             );
         }
     }
@@ -522,10 +523,10 @@ class MarketingContent
                 'Control tenant',
             ],
             'section_3_title' => [
-                'Experiencia movil tipo app (PWA) para operar desde cualquier dispositivo',
+                'Experiencia móvil tipo app (PWA) para operar desde cualquier dispositivo',
             ],
             'section_3_item_2' => [
-                'Cache de assets para carga rapida',
+                'Cache de assets para carga rápida',
                 'Caché de assets para carga rápida',
             ],
             'section_3_metric_2_label' => [
@@ -562,6 +563,61 @@ class MarketingContent
         return $content;
     }
 
+    /**
+     * @param array<string, string> $content
+     * @return array<string, string>
+     */
+    private static function repairBrokenEncodingCopy(array $content): array
+    {
+        foreach ($content as $key => $value) {
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            $content[$key] = self::repairBrokenEncodingString($value);
+        }
+
+        return $content;
+    }
+
+    private static function repairBrokenEncodingString(string $value): string
+    {
+        return strtr($value, [
+            'ÃƒÂ¡' => 'á',
+            'ÃƒÂ©' => 'é',
+            'ÃƒÂ­' => 'í',
+            'ÃƒÂ³' => 'ó',
+            'ÃƒÂº' => 'ú',
+            'ÃƒÂ' => 'Á',
+            'ÃƒÂ‰' => 'É',
+            'ÃƒÂ' => 'Í',
+            'ÃƒÂ“' => 'Ó',
+            'ÃƒÂš' => 'Ú',
+            'ÃƒÂ±' => 'ñ',
+            'ÃƒÂ‘' => 'Ñ',
+            'ÃƒÂ¼' => 'ü',
+            'ÃƒÂœ' => 'Ü',
+            'Ã¡' => 'á',
+            'Ã©' => 'é',
+            'Ã­' => 'í',
+            'Ã³' => 'ó',
+            'Ãº' => 'ú',
+            'Ã' => 'Á',
+            'Ã‰' => 'É',
+            'Ã' => 'Í',
+            'Ã“' => 'Ó',
+            'Ãš' => 'Ú',
+            'Ã±' => 'ñ',
+            'Ã‘' => 'Ñ',
+            'Ã¼' => 'ü',
+            'Ãœ' => 'Ü',
+            'Â¿' => '¿',
+            'Â¡' => '¡',
+            'Â«' => '«',
+            'Â»' => '»',
+        ]);
+    }
+
     private static function matchesCopyVariant(string $current, string $desired): bool
     {
         $normalizedCurrent = self::normalizeCopyVariant($current);
@@ -587,6 +643,7 @@ class MarketingContent
 
     private static function normalizeCopyVariant(string $value): string
     {
+        $value = self::repairBrokenEncodingString($value);
         $value = str_replace(["\r\n", "\r"], "\n", trim(mb_strtolower($value)));
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
 

@@ -5,7 +5,7 @@
     $premiumHeroTitle = trim((string) ($content['hero_title'] ?? ''));
     $premiumHeroTitle = $premiumHeroTitle !== ''
         ? $premiumHeroTitle
-        : 'Deja de perder clientes y has un Gymnasio inteligente';
+        : 'Deja de perder clientes y haz un gimnasio inteligente';
     $premiumHeroSubtitle = trim((string) ($content['hero_subtitle'] ?? ''));
     $premiumHeroSubtitle = $premiumHeroSubtitle !== ''
         ? $premiumHeroSubtitle
@@ -65,12 +65,12 @@
             'cta' => trim((string) ($content['section_1_cta_label'] ?? 'Ver demo guiada')),
             'href' => trim((string) ($content['section_1_cta_url'] ?? '')) !== '' ? trim((string) ($content['section_1_cta_url'] ?? '')) : route('demo.guide'),
             'modal_button_label' => trim((string) ($content['section_1_modal_button_label'] ?? 'Ver detalle')),
-            'modal_badge' => trim((string) ($content['section_1_modal_badge'] ?? 'Recepcion en vivo')),
-            'modal_title' => trim((string) ($content['section_1_modal_title'] ?? 'Ve como recepcion, caja y acceso trabajan en una sola interfaz.')),
-            'modal_text' => trim((string) ($content['section_1_modal_text'] ?? 'Usa este modal para explicar el flujo real: recepcion registra, cobra, valida acceso y sigue al cliente sin saltar entre pantallas innecesarias.')),
+            'modal_badge' => trim((string) ($content['section_1_modal_badge'] ?? 'Recepción en vivo')),
+            'modal_title' => trim((string) ($content['section_1_modal_title'] ?? 'Ve cómo recepción, caja y acceso trabajan en una sola interfaz.')),
+            'modal_text' => trim((string) ($content['section_1_modal_text'] ?? 'Usa este modal para explicar el flujo real: recepción registra, cobra, valida acceso y sigue al cliente sin saltar entre pantallas innecesarias.')),
             'modal_items' => [
-                trim((string) ($content['section_1_modal_item_1'] ?? 'Alta rapida del cliente y validacion de acceso en un solo paso.')),
-                trim((string) ($content['section_1_modal_item_2'] ?? 'Cobro y renovacion visibles para recepcion y administracion.')),
+                trim((string) ($content['section_1_modal_item_1'] ?? 'Alta rápida del cliente y validación de acceso en un solo paso.')),
+                trim((string) ($content['section_1_modal_item_2'] ?? 'Cobro y renovación visibles para recepción y administración.')),
                 trim((string) ($content['section_1_modal_item_3'] ?? 'Lectura clara para equipos que necesitan rapidez y orden diario.')),
             ],
             'modal_image' => $premiumModuleVisuals['reception'],
@@ -88,11 +88,11 @@
             'href' => trim((string) ($content['section_2_cta_url'] ?? '')) !== '' ? trim((string) ($content['section_2_cta_url'] ?? '')) : route('demo'),
             'modal_button_label' => trim((string) ($content['section_2_modal_button_label'] ?? 'Ver detalle')),
             'modal_badge' => trim((string) ($content['section_2_modal_badge'] ?? 'Control y reportes')),
-            'modal_title' => trim((string) ($content['section_2_modal_title'] ?? 'Muestra reportes, renovaciones y control con una escena mucho mas clara.')),
-            'modal_text' => trim((string) ($content['section_2_modal_text'] ?? 'Este modal sirve para aterrizar mejor el valor del sistema: que ve administracion, como entiende renovaciones y donde detecta alertas o movimiento operativo.')),
+            'modal_title' => trim((string) ($content['section_2_modal_title'] ?? 'Muestra reportes, renovaciones y control con una escena mucho más clara.')),
+            'modal_text' => trim((string) ($content['section_2_modal_text'] ?? 'Este modal sirve para aterrizar mejor el valor del sistema: qué ve administración, cómo entiende renovaciones y dónde detecta alertas o movimiento operativo.')),
             'modal_items' => [
                 trim((string) ($content['section_2_modal_item_1'] ?? 'Seguimiento de renovaciones y vencimientos sin perder contexto.')),
-                trim((string) ($content['section_2_modal_item_2'] ?? 'Reportes e indicadores listos para revisar rapido.')),
+                trim((string) ($content['section_2_modal_item_2'] ?? 'Reportes e indicadores listos para revisar rápido.')),
                 trim((string) ($content['section_2_modal_item_3'] ?? 'Mejor lectura comercial para vender orden y control real.')),
             ],
             'modal_image' => $premiumModuleVisuals['control'],
@@ -109,19 +109,19 @@
             'cta' => trim((string) ($content['section_3_cta_label'] ?? 'Ver uso en celular')),
             'href' => trim((string) ($content['section_3_cta_url'] ?? '')) !== '' ? trim((string) ($content['section_3_cta_url'] ?? '')) : route('landing').'#faq-movil',
             'modal_button_label' => trim((string) ($content['section_3_modal_button_label'] ?? 'Ver detalle')),
-            'modal_badge' => trim((string) ($content['section_3_modal_badge'] ?? 'PWA y movil')),
-            'modal_title' => trim((string) ($content['section_3_modal_title'] ?? 'Ensena mejor la experiencia movil para operar desde celular o tablet.')),
-            'modal_text' => trim((string) ($content['section_3_modal_text'] ?? 'Aqui puedes explicar como se instala la PWA, que tan comodo se usa en recepcion y por que se siente como una app lista para trabajar.')),
+            'modal_badge' => trim((string) ($content['section_3_modal_badge'] ?? 'PWA y móvil')),
+            'modal_title' => trim((string) ($content['section_3_modal_title'] ?? 'Enseña mejor la experiencia móvil para operar desde celular o tablet.')),
+            'modal_text' => trim((string) ($content['section_3_modal_text'] ?? 'Aquí puedes explicar cómo se instala la PWA, qué tan cómodo se usa en recepción y por qué se siente como una app lista para trabajar.')),
             'modal_items' => [
                 trim((string) ($content['section_3_modal_item_1'] ?? 'Instalable en celular y escritorio con entrada directa.')),
-                trim((string) ($content['section_3_modal_item_2'] ?? 'Interfaz adaptada para recepcion, caja y operacion diaria.')),
+                trim((string) ($content['section_3_modal_item_2'] ?? 'Interfaz adaptada para recepción, caja y operación diaria.')),
                 trim((string) ($content['section_3_modal_item_3'] ?? 'Base visual perfecta para explicar movilidad y velocidad.')),
             ],
             'modal_image' => $premiumModuleVisuals['mobile'],
             'modal_action_mode' => 'demo',
             'modal_action_label' => $premiumDemoLabel,
             'modal_action_href' => '',
-            'modal_note' => 'La misma demo funciona en escritorio y celular, con acceso temporal para revisar recepcion y operacion diaria.',
+            'modal_note' => 'La misma demo funciona en escritorio y celular, con acceso temporal para revisar recepción y operación diaria.',
         ],
         [
             'title' => 'Planes y escalabilidad',
@@ -133,10 +133,10 @@
             'modal_button_label' => 'Ver detalle',
             'modal_badge' => 'Planes y escalabilidad',
             'modal_title' => 'Compara planes dentro de la misma experiencia, sin pantallas sueltas.',
-            'modal_text' => 'La seccion comercial ya no te manda a paginas separadas: ves el enfoque visual y luego bajas directo al comparador.',
+            'modal_text' => 'La sección comercial ya no te manda a páginas separadas: ves el enfoque visual y luego bajas directo al comparador.',
             'modal_items' => [
                 'Comparas planes para una sede, control operativo y multi-sede.',
-                'Tienes mas contexto visual antes de hablar de precio.',
+                'Tienes más contexto visual antes de hablar de precio.',
                 'Todo mantiene un solo lenguaje de marca y una sola experiencia.',
             ],
             'modal_image' => $premiumModuleVisuals['pricing'],
@@ -292,9 +292,9 @@
     ];
 @endphp
 
-<section id="inicio" class="shell premium-hero-section">
+<section id="inicio" class="shell premium-hero-section page-intro-item" style="--page-intro-delay: 160ms; --page-intro-distance: 26px;">
     <div class="premium-hero-layout">
-        <div class="premium-hero-copy reveal">
+        <div class="premium-hero-copy reveal" style="--reveal-delay: 180ms; --reveal-distance: 28px; --reveal-duration: .95s;">
             <div class="premium-hero-topline">
                 <span class="premium-kicker">{{ $premiumHeroKicker }}</span>
                 <span class="premium-chip">Ecuador y Latinoamérica</span>
@@ -303,7 +303,7 @@
             <h1 class="premium-hero-title">{{ $premiumHeroTitle }}</h1>
             <p class="premium-hero-text">{{ $premiumHeroSubtitle }}</p>
 
-            <div class="premium-hero-actions" data-reveal-group data-reveal-step="95">
+            <div class="premium-hero-actions" data-reveal-group data-reveal-delay="280" data-reveal-step="95">
                 <form class="inline-form" method="POST" action="{{ route('demo.request') }}">
                     @csrf
                     <button class="btn btn-demo" type="submit">{{ $premiumDemoLabel }}</button>
@@ -332,7 +332,7 @@
                 <a href="{{ route('login') }}">{{ $loginLabel }}</a>.
             </p>
 
-            <div class="premium-hero-points" data-reveal-group data-reveal-step="90">
+            <div class="premium-hero-points" data-reveal-group data-reveal-delay="420" data-reveal-step="90">
                 @foreach ($premiumHeroPoints as $point)
                     <article class="premium-hero-point">
                         <span class="premium-point-bullet" aria-hidden="true"></span>
@@ -345,7 +345,7 @@
             </div>
         </div>
 
-        <div class="premium-hero-visual reveal">
+        <div class="premium-hero-visual reveal" style="--reveal-delay: 320ms; --reveal-distance: 34px; --reveal-duration: 1.05s;">
             <div class="premium-screen-shell">
                 <div class="premium-screen-frame" data-premium-visual-carousel>
                     <div class="premium-screen-toolbar">
@@ -523,7 +523,7 @@
         <div class="interface-modal-copy">
             <span class="interface-modal-kicker" id="interface-modal-badge">Interfaz destacada</span>
             <h3 id="interface-modal-title">Detalle de la interfaz</h3>
-            <p id="interface-modal-text">ExplicaciÃ³n breve de la interfaz seleccionada.</p>
+            <p id="interface-modal-text">Explicación breve de la interfaz seleccionada.</p>
 
             <ul class="interface-modal-list" id="interface-modal-list"></ul>
 
@@ -563,9 +563,9 @@
         <div class="premium-community-overlay"></div>
 
         <div class="premium-community-copy">
-            <span class="premium-kicker">Una presencia digital más sólida</span>
-            <h2>La portada ahora impulsa la demo, la cotización y la decisión con una energía mucho más clara.</h2>
-            <p>Conservamos la funcionalidad existente, pero la envolvemos en un bloque más dramático, oscuro y orientado a la conversión.</p>
+            <span class="premium-kicker">Gimnasios que ya confían</span>
+            <h2>Estas cifras reflejan la confianza de gimnasios que ya usan nuestro sistema para operar con más control.</h2>
+            <p>Más sedes, más operaciones activas y una experiencia web y móvil pensada para gimnasios que quieren crecer con orden.</p>
 
             <div class="premium-community-stats" data-reveal-group data-reveal-step="90">
                 @foreach ($premiumStatHighlights as $stat)

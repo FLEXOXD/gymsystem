@@ -464,7 +464,7 @@
         left: 50%;
         top: 50%;
         z-index: 1190;
-        width: min(1080px, calc(100% - 2rem));
+        width: min(1220px, calc(100% - 2rem));
         max-height: calc(100vh - 2rem);
         transform: translate(-50%, -50%);
     }
@@ -473,9 +473,9 @@
     .interface-modal-shell {
         position: relative;
         display: grid;
-        grid-template-columns: minmax(320px, .92fr) minmax(320px, 1.08fr);
-        gap: 1rem;
-        padding: 1rem;
+        grid-template-columns: minmax(320px, .86fr) minmax(420px, 1.14fr);
+        gap: 1.45rem;
+        padding: 1.3rem;
         border: 1px solid rgba(184, 255, 31, .2);
         border-radius: 1.8rem;
         background:
@@ -503,8 +503,8 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: .95rem;
-        padding: 1.1rem;
+        gap: 1.12rem;
+        padding: 1.45rem 1.3rem 1.3rem;
     }
     .interface-modal-kicker {
         display: inline-flex;
@@ -521,7 +521,8 @@
     .interface-modal-copy h3 {
         margin: 0;
         font-size: clamp(2.1rem, 4vw, 3.4rem);
-        line-height: .92;
+        line-height: .96;
+        max-width: 11ch;
     }
     .interface-modal-copy p {
         margin: 0;
@@ -552,14 +553,17 @@
         background: var(--premium-accent);
         box-shadow: 0 0 0 4px rgba(184, 255, 31, .08);
     }
-    .interface-modal-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+    .interface-modal-actions { display: flex; flex-wrap: wrap; gap: .82rem; }
     .interface-modal-note {
         margin: 0;
         color: rgba(243, 241, 233, .72);
-        font-size: .84rem;
+        font-size: .88rem;
         line-height: 1.6;
     }
-    .interface-modal-visual { display: block; }
+    .interface-modal-visual {
+        display: flex;
+        align-items: stretch;
+    }
     .interface-modal-main-photo,
     .interface-modal-secondary-photo {
         overflow: hidden;
@@ -572,10 +576,16 @@
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center center;
     }
-    .interface-modal-main-photo { min-height: 520px; }
+    .interface-modal-main-photo {
+        min-height: 560px;
+        width: 100%;
+        padding: .6rem;
+    }
     .interface-modal-secondary-photo { min-height: 460px; }
+    .interface-modal-main-photo img { transform: scale(1.08); }
 
     .premium-community-panel { position: relative; overflow: hidden; border: 1px solid rgba(184, 255, 31, .14); border-radius: 1.8rem; min-height: 440px; background: var(--premium-panel); box-shadow: var(--premium-shadow); }
     .premium-community-panel::before { content: ""; position: absolute; inset: 0; background: var(--premium-community-image) center/cover no-repeat; transform: scale(1.02); }
@@ -629,6 +639,87 @@
     .premium-empty-state h3 { margin: 0; font-size: 2rem; line-height: .95; }
     .premium-empty-state p { margin: .8rem 0 0; color: var(--premium-muted); line-height: 1.7; }
     .premium-empty-state .btn { margin-top: 1rem; }
+
+    .page-intro-veil {
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        background:
+            radial-gradient(circle at 50% 18%, rgba(184, 255, 31, .18), transparent 22%),
+            linear-gradient(180deg, rgba(5, 5, 5, .97) 0%, rgba(7, 7, 7, .88) 55%, rgba(7, 7, 7, .78) 100%);
+        backdrop-filter: blur(16px);
+        transition:
+            opacity .96s cubic-bezier(.22, 1, .36, 1),
+            visibility 0s linear .96s;
+    }
+
+    .page-intro-item {
+        transition:
+            opacity .9s cubic-bezier(.22, 1, .36, 1),
+            transform 1.04s cubic-bezier(.22, 1, .36, 1),
+            filter .9s ease;
+    }
+
+    html.js body.is-home .page-intro-veil {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    html.js body.is-home .page-intro-item {
+        opacity: 0;
+        transform: translate3d(0, var(--page-intro-distance, 24px), 0) scale(var(--page-intro-scale, .992));
+        filter: blur(var(--page-intro-blur, 2px));
+        transition-delay: var(--page-intro-delay, 0ms);
+        will-change: opacity, transform, filter;
+    }
+
+    html.js body.is-home .page-intro-item[data-intro-axis="top"] {
+        transform: translate3d(0, calc(var(--page-intro-distance, 24px) * -1), 0) scale(var(--page-intro-scale, .992));
+    }
+
+    html.js body.is-home.page-ready .page-intro-veil {
+        opacity: 0;
+        visibility: hidden;
+        transition-delay: .08s, 1.04s;
+    }
+
+    html.js body.is-home.page-ready .page-intro-item {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        filter: blur(0);
+    }
+
+    html.js body.is-home .home-scroll-bg-layer {
+        transition:
+            opacity 1.05s ease,
+            transform 1.8s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    html.js body.is-home:not(.page-ready) .home-scroll-bg-layer.is-active {
+        opacity: 0;
+        transform: scale(1.1);
+    }
+
+    html.js body.is-home.page-ready .home-scroll-bg-layer.is-active {
+        opacity: 1;
+        transform: scale(1.04);
+    }
+
+    html.js body.is-home .premium-hero-section::before {
+        opacity: 0;
+        transform: translate3d(0, 26px, 0);
+        transition:
+            opacity 1.05s cubic-bezier(.22, 1, .36, 1) .22s,
+            transform 1.18s cubic-bezier(.22, 1, .36, 1) .22s;
+    }
+
+    html.js body.is-home.page-ready .premium-hero-section::before {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
 
     .premium-review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
     .premium-review-card { border: 1px solid rgba(255, 255, 255, .07); border-radius: 1.25rem; background: linear-gradient(180deg, rgba(28, 28, 28, .95), rgba(16, 16, 16, .98)); padding: 1.15rem; }
@@ -708,6 +799,8 @@
 
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+        .page-intro-veil { display: none !important; }
+        .page-intro-item { opacity: 1 !important; transform: none !important; filter: none !important; }
         .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
     }
 
@@ -735,7 +828,7 @@
         .premium-screen-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .premium-program-copy { max-width: 70%; }
         .interface-modal-main-photo,
-        .interface-modal-secondary-photo { min-height: 260px; }
+        .interface-modal-secondary-photo { min-height: 300px; }
     }
 
     @media (max-width: 820px) {
@@ -774,8 +867,8 @@
         .premium-community-copy h2,
         .premium-community-copy p { margin-left: 0; margin-right: 0; }
         .premium-community-actions { justify-content: flex-start; }
-        .interface-modal { width: min(1080px, calc(100% - 1rem)); max-height: calc(100vh - 1rem); }
-        .interface-modal-main-photo { min-height: 280px; }
+        .interface-modal { width: min(1120px, calc(100% - 1rem)); max-height: calc(100vh - 1rem); }
+        .interface-modal-main-photo { min-height: 320px; padding: .35rem; }
     }
 
     @media (max-width: 640px) {
@@ -799,14 +892,14 @@
         .premium-screen-panel article { padding: .82rem .9rem; }
         .premium-program-card { min-height: 230px; }
         .premium-team-photo { min-height: 230px; }
-        .interface-modal-shell { padding: .85rem; }
-        .interface-modal-copy { padding: .75rem .3rem .2rem; }
+        .interface-modal-shell { padding: .95rem; gap: .9rem; }
+        .interface-modal-copy { padding: .9rem .4rem .3rem; }
         .interface-modal-actions > * { width: 100%; }
         .premium-hero-visual { display: block; min-height: 0; }
         .premium-community-panel { min-height: 0; }
         .premium-community-copy { padding: 1.4rem 1rem; }
         .premium-close-panel { padding: 1.1rem; }
         .footer-panel { padding: 1.4rem 1rem 1rem; }
-        .interface-modal-main-photo { min-height: 220px; }
+        .interface-modal-main-photo { min-height: 240px; padding: .2rem; }
     }
 </style>

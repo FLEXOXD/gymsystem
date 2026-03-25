@@ -175,7 +175,7 @@
         ],
         [
             'step' => '03',
-            'title' => 'Sabes como va el gimnasio cada día',
+            'title' => 'Sabes cómo va el gimnasio cada día',
             'text' => 'Ves vencimientos, ingresos y movimiento diario para tomar decisiones con más claridad.',
         ],
     ];
@@ -233,6 +233,9 @@
     <link rel="shortcut icon" href="{{ $tabIconUrl }}">
     <link rel="apple-touch-icon" href="{{ $tabTouchIconUrl }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        document.documentElement.classList.add('js');
+    </script>
     <style>
         :root {
             --bg: #030405;
@@ -2174,111 +2177,377 @@
     @include('marketing.partials.home-premium-styles')
     <style>
         .shell {
-            width: min(1360px, calc(100% - 2rem));
+            width: min(1540px, calc(100% - 3rem));
+        }
+
+        .top-wrap {
+            padding-top: .72rem;
+            backdrop-filter: blur(16px);
+            background: linear-gradient(180deg, rgba(6, 8, 7, .94), rgba(6, 8, 7, .18) 72%, rgba(6, 8, 7, 0));
+        }
+
+        .top-wrap.is-compact {
+            padding-top: .38rem;
+            background: linear-gradient(180deg, rgba(6, 8, 7, .98), rgba(6, 8, 7, .42) 76%, rgba(6, 8, 7, 0));
+        }
+
+        .top-wrap .shell {
+            width: min(1420px, calc(100% - 2rem));
         }
 
         .top-wrap .top-nav,
         .top-wrap.is-compact .top-nav {
+            position: relative;
             display: grid;
-            grid-template-columns: minmax(248px, auto) minmax(0, 1fr) auto;
+            grid-template-columns: max-content minmax(0, 1fr) max-content;
             align-items: center;
-            gap: 1.1rem;
-            padding: .72rem 0;
-            background: transparent;
+            gap: 1.4rem;
+            min-height: 0;
+            padding: .28rem 0;
             border: 0;
             border-radius: 0;
+            background: transparent;
             box-shadow: none;
         }
 
+        .top-wrap .top-nav::after,
+        .top-wrap.is-compact .top-nav::after {
+            display: none;
+        }
+
+        .top-wrap .brand,
+        .top-wrap .menu-links,
+        .top-wrap .nav-actions {
+            position: relative;
+            z-index: 1;
+        }
+
         .top-wrap .brand {
-            width: 248px;
-            min-width: 248px;
+            width: auto;
+            min-width: 0;
             padding: 0;
             margin: 0;
             justify-self: start;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .top-wrap .brand-logo-stage {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            overflow: visible;
+        }
+
+        .top-wrap .brand-logo-stage::after {
+            display: none;
         }
 
         .top-wrap .brand-logo {
-            width: 224px;
+            display: block;
+            width: clamp(258px, 22vw, 362px);
             height: auto;
-            margin: 0;
-            transform: scale(1.08);
+            max-height: 98px;
+            margin: 0 -2.1rem 0 -1.05rem;
+            transform: scale(1.74);
             transform-origin: left center;
+            object-fit: contain;
             object-position: left center;
+            filter: drop-shadow(0 0 18px rgba(184, 255, 31, .2));
+        }
+
+        .top-wrap .brand .brand-fallback {
+            width: 3.2rem;
+            height: 3.2rem;
+            font-size: 1rem;
         }
 
         .top-wrap .menu-links {
             display: flex;
+            align-items: center;
             justify-self: center;
             justify-content: center;
             width: 100%;
-            max-width: 640px;
+            min-width: 0;
             margin-inline: 0;
+            padding: 0;
+            gap: .16rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .top-wrap .menu-links a {
-            padding-inline: .8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 .82rem;
             white-space: nowrap;
+            border: 1px solid transparent;
+            border-radius: .82rem;
+            color: rgba(243, 241, 233, .84);
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+            transition: color .22s ease, background .22s ease, border-color .22s ease, box-shadow .22s ease;
+        }
+
+        .top-wrap .menu-links a:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(255, 255, 255, .08);
+        }
+
+        .top-wrap .menu-links a.is-active {
+            color: #0a0c05;
+            background: linear-gradient(135deg, var(--premium-accent), #d7ff72);
+            border-color: rgba(184, 255, 31, .34);
+            box-shadow: 0 10px 22px rgba(184, 255, 31, .18);
         }
 
         .top-wrap .nav-actions {
             justify-self: end;
+            display: inline-flex;
+            align-items: center;
+            gap: .58rem;
+            margin-left: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
-        @media (max-width: 1080px) {
+        .top-wrap .nav-actions .btn {
+            min-height: 44px;
+            white-space: nowrap;
+            padding: .7rem 1.05rem;
+            border-radius: .9rem;
+            font-size: .8rem;
+            letter-spacing: .04em;
+        }
+
+        .top-wrap .nav-actions .btn-outline {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(255, 255, 255, .12);
+            box-shadow: none;
+        }
+
+        .top-wrap .nav-actions .btn-demo {
+            color: #0a0d04;
+            box-shadow: 0 12px 24px rgba(184, 255, 31, .18);
+        }
+
+        .top-wrap .mobile-menu-toggle {
+            justify-self: end;
+            width: 46px;
+            height: 46px;
+            border-radius: .85rem;
+            border-color: rgba(255, 255, 255, .1);
+            background: linear-gradient(180deg, rgba(18, 18, 18, .96), rgba(11, 11, 11, .96));
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+        }
+
+        .top-wrap .mobile-nav-panel {
+            top: .9rem;
+            left: .9rem;
+            right: .9rem;
+            padding: .92rem;
+            border-radius: 1.05rem;
+            border-color: rgba(255, 255, 255, .08);
+            background: linear-gradient(180deg, rgba(18, 18, 18, .98), rgba(8, 8, 8, .98));
+            box-shadow:
+                0 22px 50px rgba(0, 0, 0, .32),
+                inset 0 1px 0 rgba(255, 255, 255, .04);
+        }
+
+        .top-wrap .mobile-nav-brand {
+            margin-bottom: .8rem;
+        }
+
+        .top-wrap .mobile-nav-brand-link {
+            display: inline-flex;
+            text-decoration: none;
+        }
+
+        .top-wrap .mobile-nav-brand-stage {
+            display: inline-flex;
+            align-items: center;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            overflow: visible;
+        }
+
+        .top-wrap .mobile-nav-brand-stage::after {
+            display: none;
+        }
+
+        .top-wrap .mobile-nav-brand-logo {
+            display: block;
+            width: min(100%, 272px);
+            height: auto;
+            margin: 0 -1.32rem 0 -.76rem;
+            transform: scale(1.52);
+            transform-origin: left center;
+            object-fit: contain;
+            object-position: left center;
+            filter: drop-shadow(0 0 16px rgba(184, 255, 31, .18));
+        }
+
+        .top-wrap .mobile-nav-brand-stage .brand-fallback {
+            width: 3.2rem;
+            height: 3.2rem;
+            font-size: 1rem;
+        }
+
+        .top-wrap .mobile-nav-links {
+            gap: .5rem;
+        }
+
+        .top-wrap .mobile-nav-links a {
+            min-height: 48px;
+            padding: .74rem .88rem;
+            border-radius: .9rem;
+            border: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .top-wrap .mobile-nav-actions {
+            margin-top: .82rem;
+            gap: .58rem;
+        }
+
+        .top-wrap .mobile-nav-actions .btn {
+            min-height: 48px;
+            border-radius: .9rem;
+        }
+
+        @media (max-width: 1360px) {
+            .top-wrap .shell {
+                width: min(100%, calc(100% - 1.7rem));
+            }
+
             .top-wrap .top-nav,
             .top-wrap.is-compact .top-nav {
-                grid-template-columns: minmax(205px, auto) minmax(0, 1fr) auto;
-                gap: .9rem;
-                padding: .68rem 0;
-            }
-
-            .top-wrap .brand {
-                width: 205px;
-                min-width: 205px;
+                gap: 1rem;
+                padding: .22rem 0;
             }
 
             .top-wrap .brand-logo {
-                width: 186px;
-                transform: scale(1.03);
+                width: clamp(242px, 20vw, 322px);
+                max-height: 88px;
+                margin-right: -1.76rem;
+                transform: scale(1.64);
             }
 
-            .top-wrap .menu-links {
-                max-width: 540px;
+            .top-wrap .menu-links a {
+                padding-inline: .72rem;
+                font-size: .64rem;
+            }
+
+            .top-wrap .nav-actions .btn {
+                padding-inline: .94rem;
+                font-size: .76rem;
             }
         }
 
-        @media (max-width: 820px) {
-            .shell {
-                width: min(1240px, calc(100% - 1rem));
+        @media (max-width: 1180px) {
+            .top-wrap .top-nav,
+            .top-wrap.is-compact .top-nav {
+                grid-template-columns: max-content minmax(0, 1fr) auto;
+                gap: .82rem;
+            }
+
+            .top-wrap .menu-links a {
+                padding-inline: .58rem;
+                font-size: .61rem;
+            }
+
+            .top-wrap .nav-actions .btn-outline {
+                display: none;
+            }
+
+            .top-wrap .nav-actions .btn {
+                min-height: 42px;
+            }
+        }
+
+        @media (max-width: 920px) {
+            .top-wrap .shell {
+                width: min(100%, calc(100% - 1rem));
             }
 
             .top-wrap .top-nav,
             .top-wrap.is-compact .top-nav {
-                grid-template-columns: minmax(172px, auto) auto;
-                justify-content: space-between;
-                padding: .66rem 0;
-            }
-
-            .top-wrap .brand {
-                width: 172px;
-                min-width: 172px;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: .8rem;
+                min-height: 0;
+                padding: .2rem 0;
             }
 
             .top-wrap .brand-logo {
-                width: 166px;
-                transform: none;
+                width: clamp(228px, 39vw, 310px);
+                max-height: 86px;
+                margin-right: -1.42rem;
+                transform: scale(1.58);
+            }
+
+            .top-wrap .menu-links,
+            .top-wrap .nav-actions {
+                display: none !important;
+            }
+
+            .top-wrap .mobile-menu-toggle {
+                display: inline-flex;
             }
         }
 
-        @media (max-width: 720px) {
-            .top-wrap .brand {
-                width: 148px;
-                min-width: 148px;
+        @media (max-width: 560px) {
+            .top-wrap {
+                padding-top: .52rem;
+            }
+
+            .top-wrap .shell {
+                width: calc(100% - .8rem);
+            }
+
+            .top-wrap .top-nav,
+            .top-wrap.is-compact .top-nav {
+                padding: .16rem 0;
             }
 
             .top-wrap .brand-logo {
-                width: 148px;
+                width: clamp(208px, 47vw, 272px);
+                max-height: 78px;
+                margin-right: -1.16rem;
+                transform: scale(1.46);
+            }
+
+            .top-wrap .mobile-nav-panel {
+                top: .7rem;
+                left: .7rem;
+                right: .7rem;
+                padding: .8rem;
+            }
+
+            .top-wrap .mobile-nav-brand-logo {
+                width: min(100%, 236px);
+                margin-right: -1rem;
+                transform: scale(1.38);
             }
         }
     </style>
@@ -2289,17 +2558,20 @@
             <span class="home-scroll-bg-layer is-a is-active" data-home-bg-layer="0"></span>
             <span class="home-scroll-bg-layer is-b" data-home-bg-layer="1"></span>
         </div>
+        <div class="page-intro-veil" aria-hidden="true"></div>
     @endif
 
-    <header class="top-wrap">
+    <header class="top-wrap page-intro-item" style="--page-intro-delay: 70ms; --page-intro-distance: 20px;" data-intro-axis="top">
         <div class="shell">
             <nav class="top-nav">
-                <a class="brand" href="{{ route('landing') }}">
-                    @if ($brandLogoUrl !== '')
-                        <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="brand-logo">
-                    @else
-                        <span class="brand-fallback">{{ $brandInitials }}</span>
-                    @endif
+                <a class="brand" href="{{ route('landing') }}" aria-label="{{ $brandName }}">
+                    <span class="brand-logo-stage">
+                        @if ($brandLogoUrl !== '')
+                            <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="brand-logo">
+                        @else
+                            <span class="brand-fallback">{{ $brandInitials }}</span>
+                        @endif
+                    </span>
                 </a>
 
                 <button type="button"
@@ -2335,6 +2607,17 @@
             </nav>
 
             <div id="landing-mobile-nav" class="mobile-nav-panel" data-mobile-nav-panel hidden>
+                <div class="mobile-nav-brand">
+                    <a class="mobile-nav-brand-link" href="{{ route('landing') }}" aria-label="{{ $brandName }}">
+                        <span class="mobile-nav-brand-stage">
+                            @if ($brandLogoUrl !== '')
+                                <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="mobile-nav-brand-logo">
+                            @else
+                                <span class="brand-fallback">{{ $brandInitials }}</span>
+                            @endif
+                        </span>
+                    </a>
+                </div>
                 <div class="mobile-nav-links">
                     <a href="{{ $inicioHref }}">Inicio</a>
                     <a href="{{ $featuresHref }}">Servicios</a>
@@ -2358,7 +2641,7 @@
     </header>
 
     <main class="main">
-        <section class="shell flash-stack" aria-live="polite">
+        <section class="shell flash-stack page-intro-item" style="--page-intro-delay: 150ms; --page-intro-distance: 18px;" aria-live="polite">
             @if (session('status'))
                 <div class="flash">{{ session('status') }}</div>
             @endif
@@ -2562,9 +2845,9 @@
 
         <section class="shell section">
             <header class="heading reveal">
-                <small>Como funciona</small>
+                <small>Cómo funciona</small>
                 <h2>Así te ayuda en el día a día del gimnasio</h2>
-                <p>El recorrido muestra de forma simple como pasas de configurar tu cuenta a cobrar, controlar y crecer con orden.</p>
+                <p>El recorrido muestra de forma simple cómo pasas de configurar tu cuenta a cobrar, controlar y crecer con orden.</p>
             </header>
             <div class="workflow-grid">
                 @foreach ($journeySteps as $journeyStep)
@@ -2666,7 +2949,7 @@
                                 <span>{{ $planCard['ops_focus'] ?? 'Control operativo.' }}</span>
                             </article>
                             <article class="plan-meta-item">
-                                <strong>Como empiezas</strong>
+                                <strong>Cómo empiezas</strong>
                                 <span>{{ $planCard['setup_note'] ?? 'Configuración según necesidad.' }}</span>
                             </article>
                         </div>
@@ -3008,6 +3291,7 @@
             const enablePerfLite = function () {
                 if (!document.body.classList.contains('perf-lite')) {
                     document.body.classList.add('perf-lite');
+                    document.body.classList.add('page-ready');
                     window.dispatchEvent(new Event('codex:perf-lite'));
                 }
             };
@@ -3045,6 +3329,33 @@
             } else if (prefersReducedMotion) {
                 enablePerfLite();
             }
+
+            const markPageReady = function () {
+                if (!document.body || document.body.classList.contains('page-ready')) {
+                    return;
+                }
+
+                const commitReady = function () {
+                    document.body.classList.add('page-ready');
+                };
+
+                if (prefersReducedMotion || document.body.classList.contains('perf-lite') || !('requestAnimationFrame' in window)) {
+                    commitReady();
+                    return;
+                }
+
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(commitReady);
+                });
+            };
+
+            markPageReady();
+
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) {
+                    document.body.classList.add('page-ready');
+                }
+            });
 
             const prepareRevealGroups = function () {
                 const groups = Array.from(document.querySelectorAll('[data-reveal-group]'));
@@ -3097,14 +3408,14 @@
                         item.classList.add('is-visible');
                     });
                 } else {
-                    const observer = new IntersectionObserver(function (entries, instance) {
+                    const observer = new IntersectionObserver(function (entries) {
                         entries.forEach(function (entry) {
-                            if (!entry.isIntersecting) {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('is-visible');
                                 return;
                             }
 
-                            entry.target.classList.add('is-visible');
-                            instance.unobserve(entry.target);
+                            entry.target.classList.remove('is-visible');
                         });
                     }, {
                         threshold: 0.14,
@@ -3426,7 +3737,7 @@
                 });
 
                 window.addEventListener('resize', function () {
-                    if (window.innerWidth > 820) {
+                    if (window.innerWidth > 920) {
                         closeMobileMenu();
                     }
                 });
