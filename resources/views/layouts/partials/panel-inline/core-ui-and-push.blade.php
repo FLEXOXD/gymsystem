@@ -162,6 +162,12 @@
         let uiLoadingHardReleaseId = null;
         let uiNavigationStarted = false;
 
+        function normalizeUiLoadingMessage(message) {
+            if (typeof message !== 'string') return '';
+
+            return message.replace(/\s*(?:\.{3}|\u2026)+\s*$/, '').trim();
+        }
+
         function showUiLoading(message, withFailsafe = false) {
             if (!uiLoadingOverlay) return;
             if (uiLoadingTimeoutId) {
@@ -171,7 +177,7 @@
             uiLoadingOverlay.setAttribute('data-open', '1');
             uiLoadingOverlay.setAttribute('aria-hidden', 'false');
             if (uiLoadingMessage && typeof message === 'string' && message.trim() !== '') {
-                uiLoadingMessage.textContent = message.trim();
+                uiLoadingMessage.textContent = normalizeUiLoadingMessage(message) || 'Procesando solicitud';
             }
             if (withFailsafe) {
                 uiLoadingTimeoutId = window.setTimeout(function () {
@@ -190,7 +196,7 @@
             uiLoadingOverlay.setAttribute('data-open', '0');
             uiLoadingOverlay.setAttribute('aria-hidden', 'true');
             if (uiLoadingMessage) {
-                uiLoadingMessage.textContent = 'Procesando solicitud...';
+                uiLoadingMessage.textContent = 'Procesando solicitud';
             }
         }
 

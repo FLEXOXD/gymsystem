@@ -559,6 +559,38 @@ it('requires note for manual stock adjustments', function () {
     ))->toThrow(RuntimeException::class, 'Debes registrar una nota para justificar ajustes manuales de stock.');
 });
 
+it('validates stock form when product is missing instead of returning not found', function () {
+    config(['plan_features.access_cache_seconds' => 0]);
+
+    $gym = makeGym('inventory-product-required');
+    $owner = makeGymUser($gym, 'inventory-product-required@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'status' => 'active',
+            'starts_at' => now()->subDay()->toDateString(),
+            'ends_at' => now()->addDays(30)->toDateString(),
+            'plan_key' => 'profesional',
+            'feature_version' => 'v1',
+        ]);
+
+    $response = $this->actingAs($owner)
+        ->from(route('products.index', ['contextGym' => $gym->slug]))
+        ->post(route('products.stock', ['contextGym' => $gym->slug]), [
+            'product_id' => '',
+            'movement_type' => 'entry',
+            'quantity' => 2,
+            'unit_cost' => '0.45',
+            'payment_method' => 'cash',
+            'note' => 'Compra semanal',
+        ]);
+
+    $response
+        ->assertRedirect(route('products.index', ['contextGym' => $gym->slug]))
+        ->assertSessionHasErrors(['product_id']);
+});
+
 it('does not allow membership sale when cash session is closed', function () {
     $gym = makeGym('membership-cash');
     $user = makeGymUser($gym, 'membership-cash@example.test');
@@ -1869,9 +1901,9 @@ it('renders superadmin dashboard without charge events history table', function 
     }
 });
 
-it('blocks reports module when current plan does not include reports_base', function () {
-    $gym = makeGym('reports-blocked');
-    $user = makeGymUser($gym, 'reports-blocked@example.test');
+it('allows reports module for Plan Control but still blocks exports', function () {
+    $gym = makeGym('reports-basic');
+    $user = makeGymUser($gym, 'reports-basic@example.test');
 
     Subscription::query()
         ->where('gym_id', $gym->id)
@@ -1885,6 +1917,25 @@ it('blocks reports module when current plan does not include reports_base', func
 
     $this->actingAs($user)
         ->get(route('reports.index', ['contextGym' => $gym->slug]))
+        ->assertOk();
+});
+
+it('blocks cashiers module for Plan Control', function () {
+    $gym = makeGym('staff-basic-blocked');
+    $user = makeGymUser($gym, 'staff-basic-blocked@example.test');
+
+    Subscription::query()
+        ->where('gym_id', $gym->id)
+        ->update([
+            'plan_key' => 'basico',
+            'feature_version' => 'v1',
+            'status' => 'active',
+            'starts_at' => Carbon::today()->subDay()->toDateString(),
+            'ends_at' => Carbon::today()->addDays(15)->toDateString(),
+        ]);
+
+    $this->actingAs($user)
+        ->get(route('staff.index', ['contextGym' => $gym->slug]))
         ->assertForbidden();
 });
 

@@ -8,26 +8,31 @@ use App\Http\Requests\UpdatePlanRequest;
 use App\Http\Requests\UpdatePromotionRequest;
 use App\Models\Plan;
 use App\Models\Promotion;
+use App\Services\PlanAccessService;
 use App\Support\ActiveGymContext;
 use App\Support\PlanDuration;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class PlanController extends Controller
 {
     /**
      * List plans for current gym.
      */
-    public function index(Request $request): View
+    public function index(Request $request, PlanAccessService $planAccessService): View
     {
-        $this->resolveGymId($request);
+        $gymId = $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $activePlanKey = $planAccessService->currentPlanKeyForGym($gymId);
+        $isPlanControl = $activePlanKey === 'basico';
 
         $plans = Plan::query()
             ->forGyms($gymIds)
             ->select(['id', 'gym_id', 'name', 'duration_days', 'duration_unit', 'duration_months', 'price', 'status'])
+            ->withCount('memberships')
             ->with(['gym:id,name'])
             ->orderByDesc('id')
             ->get();
@@ -55,6 +60,7 @@ class PlanController extends Controller
         return view('plans.index', [
             'plans' => $plans,
             'promotions' => $promotions,
+            'planControlPlansDashboard' => $this->buildPlanControlPlansDashboard($isPlanControl, $plans),
         ]);
     }
 
@@ -261,5 +267,66 @@ class PlanController extends Controller
         abort_if(! $gymId, 403, 'El usuario autenticado no tiene gym_id asignado.');
 
         return (int) $gymId;
+    }
+
+    /**
+     * @param  Collection<int, Plan>  $plans
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanControlPlansDashboard(bool $isPlanControl, Collection $plans): ?array
+    {
+        if (! $isPlanControl) {
+            return null;
+        }
+
+        $totalPlans = (int) $plans->count();
+        $activePlans = (int) $plans->where('status', 'active')->count();
+        $hiddenPlans = max(0, $totalPlans - $activePlans);
+        $basePrice = $plans
+            ->where('status', 'active')
+            ->pluck('price')
+            ->filter(static fn ($value): bool => $value !== null)
+            ->map(static fn ($value): float => (float) $value)
+            ->min();
+
+        if ($basePrice === null) {
+            $basePrice = $plans
+                ->pluck('price')
+                ->filter(static fn ($value): bool => $value !== null)
+                ->map(static fn ($value): float => (float) $value)
+                ->min();
+        }
+
+        $topPlan = $plans
+            ->sortByDesc(static fn (Plan $plan): string => sprintf(
+                '%010d-%010d',
+                (int) ($plan->memberships_count ?? 0),
+                (int) $plan->id
+            ))
+            ->first();
+        $topPlanMemberships = (int) ($topPlan?->memberships_count ?? 0);
+
+        $headline = $totalPlans === 0
+            ? 'Todavia no has creado el primer plan de esta sede'
+            : ($activePlans === 0
+                ? 'Tu catalogo existe, pero aun no hay un plan visible para vender'
+                : 'Catalogo claro y listo para vender desde una sola sede');
+
+        $summary = $totalPlans === 0
+            ? 'Crea el primer plan para que recepcion, clientes y caja puedan trabajar con una oferta clara desde el inicio.'
+            : ($activePlans === 0
+                ? 'Activa al menos un plan para que recepcion y clientes puedan renovar o vender sin vueltas.'
+                : 'Aqui lees lo esencial del catalogo: cuantos planes estan listos, cual es tu precio base y cual ya mueve membresias.');
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'total_plans' => $totalPlans,
+            'active_plans' => $activePlans,
+            'hidden_plans' => $hiddenPlans,
+            'base_price' => $basePrice !== null ? round((float) $basePrice, 2) : null,
+            'top_plan_name' => $topPlan?->name ?: 'Sin ventas aun',
+            'top_plan_memberships' => $topPlanMemberships,
+        ];
     }
 }

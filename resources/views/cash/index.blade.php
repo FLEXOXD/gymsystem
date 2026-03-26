@@ -11,6 +11,179 @@
     .theme-dark .cash-page [data-tone='ok'] { color: rgb(110 231 183); }
     .theme-dark .cash-page [data-tone='warn'] { color: rgb(252 211 77); }
     .theme-dark .cash-page [data-tone='bad'] { color: rgb(251 113 133); }
+    .cash-control-shell {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgb(163 230 53 / 0.22);
+        border-radius: 1.22rem;
+        background:
+            radial-gradient(circle at top right, rgb(163 230 53 / 0.16), transparent 34%),
+            linear-gradient(150deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.95));
+        box-shadow: 0 28px 56px -40px rgb(15 23 42 / 0.5);
+        backdrop-filter: blur(14px);
+        padding: 1.05rem;
+    }
+    .theme-dark .cash-control-shell,
+    .dark .cash-control-shell {
+        border-color: rgb(163 230 53 / 0.24);
+        background:
+            radial-gradient(circle at top right, rgb(163 230 53 / 0.14), transparent 34%),
+            linear-gradient(160deg, rgb(2 6 23 / 0.84), rgb(15 23 42 / 0.62));
+        box-shadow: 0 30px 58px -42px rgb(2 8 23 / 0.92);
+    }
+
+    .cash-control-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    .cash-control-shell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(95deg, transparent, rgb(163 230 53 / 0.05), transparent);
+    }
+    .cash-control-grid {
+        display: grid;
+        gap: 1.05rem;
+        position: relative;
+        z-index: 1;
+    }
+    .cash-control-copy {
+        max-width: 48rem;
+    }
+    .cash-control-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: rgb(77 124 15 / 0.94);
+    }
+    .theme-dark .cash-control-kicker,
+    .dark .cash-control-kicker {
+        color: rgb(217 249 157 / 0.94);
+    }
+    .cash-control-kicker::before {
+        content: '';
+        width: 0.52rem;
+        height: 0.52rem;
+        border-radius: 999px;
+        background: rgb(132 204 22 / 0.94);
+        box-shadow: 0 0 0 6px rgb(132 204 22 / 0.12);
+    }
+    .cash-control-heading {
+        margin-top: 0.78rem;
+        font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        font-weight: 900;
+        color: rgb(15 23 42 / 0.97);
+    }
+    .theme-dark .cash-control-heading,
+    .dark .cash-control-heading {
+        color: rgb(241 245 249 / 0.98);
+    }
+    .cash-control-summary {
+        margin-top: 0.5rem;
+        font-size: 0.88rem;
+        line-height: 1.58;
+        color: rgb(71 85 105 / 0.92);
+    }
+    .theme-dark .cash-control-summary,
+    .dark .cash-control-summary {
+        color: rgb(148 163 184 / 0.9);
+    }
+    .cash-control-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        align-items: center;
+    }
+    .cash-control-actions .ui-button {
+        min-height: 2.72rem;
+    }
+    .cash-control-priority-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .cash-control-priority {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.05rem;
+        border: 1px solid rgb(148 163 184 / 0.24);
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+        box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.28);
+        min-height: 7rem;
+        padding: 0.9rem 0.95rem;
+    }
+    .theme-dark .cash-control-priority,
+    .dark .cash-control-priority {
+        border-color: rgb(148 163 184 / 0.18);
+        background: linear-gradient(160deg, rgb(15 23 42 / 0.74), rgb(15 23 42 / 0.54));
+        box-shadow: 0 20px 34px -28px rgb(2 8 23 / 0.9);
+    }
+    .cash-control-priority::before {
+        content: '';
+        position: absolute;
+        left: 0.9rem;
+        right: 0.9rem;
+        top: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: rgb(148 163 184 / 0.22);
+    }
+    .cash-control-priority[data-tone='warning']::before {
+        background: linear-gradient(90deg, rgb(245 158 11 / 0.9), rgb(245 158 11 / 0.24));
+    }
+    .cash-control-priority[data-tone='success']::before {
+        background: linear-gradient(90deg, rgb(16 185 129 / 0.9), rgb(16 185 129 / 0.24));
+    }
+    .cash-control-priority[data-tone='info']::before {
+        background: linear-gradient(90deg, rgb(6 182 212 / 0.9), rgb(6 182 212 / 0.24));
+    }
+    .cash-control-priority-label {
+        font-size: 0.67rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgb(71 85 105 / 0.92);
+    }
+    .theme-dark .cash-control-priority-label,
+    .dark .cash-control-priority-label {
+        color: rgb(148 163 184 / 0.9);
+    }
+    .cash-control-priority-value {
+        margin-top: 0.42rem;
+        font-size: 1.46rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: rgb(15 23 42 / 0.97);
+    }
+    .theme-dark .cash-control-priority-value,
+    .dark .cash-control-priority-value {
+        color: rgb(248 250 252 / 0.98);
+    }
+    .cash-control-priority-note {
+        margin-top: 0.4rem;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: rgb(71 85 105 / 0.9);
+    }
+    .theme-dark .cash-control-priority-note,
+    .dark .cash-control-priority-note {
+        color: rgb(148 163 184 / 0.88);
+    }
     .cash-page .cash-kpi-grid {
         display: grid;
         gap: .75rem;
@@ -19,8 +192,26 @@
         display: none;
     }
     @media (min-width: 1280px) {
+        .cash-control-grid {
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+        }
+        .cash-control-priority-grid {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
         .cash-page .cash-kpi-grid {
             grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+    @media (min-width: 768px) {
+        .cash-control-priority-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 640px) {
+        .cash-control-actions .ui-button {
+            width: 100%;
         }
     }
     .cash-page .cash-method-accordion {
@@ -134,12 +325,234 @@
         gap: .45rem;
         width: 100%;
     }
+    .cash-page .cash-surface-card {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgb(148 163 184 / .26);
+        background:
+            radial-gradient(circle at top right, rgb(6 182 212 / .08), transparent 26%),
+            linear-gradient(165deg, rgb(255 255 255 / .98), rgb(248 250 252 / .95));
+        box-shadow: 0 26px 44px -38px rgb(15 23 42 / .24);
+    }
+    .cash-page .cash-surface-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / .72), transparent);
+        opacity: .82;
+        pointer-events: none;
+    }
+    .cash-page .cash-surface-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    .cash-page .cash-surface-card > header .ui-heading {
+        font-size: clamp(1.12rem, 1.35vw, 1.36rem);
+        letter-spacing: -.03em;
+        font-weight: 900;
+    }
+    .cash-page .cash-surface-card > header .ui-muted {
+        margin-top: .3rem;
+        font-size: .88rem;
+    }
+    .cash-page .cash-kpi-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        border: 1px solid rgb(148 163 184 / .24);
+        padding: .95rem 1rem;
+        box-shadow: 0 18px 28px -28px rgb(15 23 42 / .26);
+    }
+    .cash-page .cash-kpi-card::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        right: 1rem;
+        top: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: rgb(148 163 184 / .22);
+    }
+    .cash-page .cash-kpi-card[data-tone='neutral']::before {
+        background: linear-gradient(90deg, rgb(100 116 139 / .78), rgb(100 116 139 / .14));
+    }
+    .cash-page .cash-kpi-card[data-tone='success']::before {
+        background: linear-gradient(90deg, rgb(16 185 129 / .9), rgb(16 185 129 / .18));
+    }
+    .cash-page .cash-kpi-card[data-tone='danger']::before {
+        background: linear-gradient(90deg, rgb(244 63 94 / .9), rgb(244 63 94 / .18));
+    }
+    .cash-page .cash-kpi-card[data-tone='info']::before {
+        background: linear-gradient(90deg, rgb(6 182 212 / .9), rgb(6 182 212 / .18));
+    }
+    .cash-page .cash-kpi-card[data-tone='accent']::before {
+        background: linear-gradient(90deg, rgb(139 92 246 / .9), rgb(139 92 246 / .18));
+    }
+    .cash-page .cash-method-card {
+        border-radius: 1rem;
+        border: 1px solid rgb(148 163 184 / .24);
+        background: rgb(255 255 255 / .88);
+        box-shadow: 0 18px 30px -30px rgb(15 23 42 / .22);
+    }
+    .cash-page .cash-table-shell {
+        border: 1px solid rgb(148 163 184 / .24);
+        border-radius: 1rem;
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / .92), rgb(248 250 252 / .84));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / .8),
+            0 18px 32px -34px rgb(15 23 42 / .18);
+    }
+    .cash-page .cash-form-shell {
+        border: 1px solid rgb(148 163 184 / .22);
+        border-radius: 1rem;
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / .76), rgb(248 250 252 / .68));
+        padding: .95rem;
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / .78),
+            0 18px 30px -32px rgb(15 23 42 / .18);
+    }
+    .cash-page .cash-difference-card {
+        border-radius: 1rem;
+        box-shadow: 0 18px 30px -32px rgb(15 23 42 / .18);
+    }
+
+    .theme-light .cash-control-shell {
+        border-color: rgb(163 230 53 / 0.18);
+        background:
+            radial-gradient(circle at top right, rgb(163 230 53 / 0.1), transparent 34%),
+            linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(241 245 249 / 0.96));
+        box-shadow: 0 28px 48px -40px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light .cash-control-priority,
+    .theme-light .cash-page .cash-method-accordion,
+    .theme-light .cash-page .quick-actions,
+    .theme-light .cash-page .cash-kpi-grid > article,
+    .theme-light .cash-page .cash-surface-card,
+    .theme-light .cash-page .cash-kpi-card,
+    .theme-light .cash-page .cash-method-card,
+    .theme-light .cash-page .cash-table-shell,
+    .theme-light .cash-page .cash-form-shell,
+    .theme-light .cash-page #difference-total-card,
+    .theme-light .cash-page .closure-table-wrap {
+        border-color: rgb(203 213 225 / 0.82);
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.97), rgb(248 250 252 / 0.94));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.84),
+            0 18px 30px -30px rgb(15 23 42 / 0.1);
+    }
+
+    .theme-light .cash-page .cash-method-accordion > summary,
+    .theme-light .cash-control-priority-label {
+        color: rgb(71 85 105 / 0.9);
+    }
+
+    .theme-light .cash-control-summary,
+    .theme-light .cash-control-priority-note {
+        color: rgb(71 85 105 / 0.92);
+    }
+
+    .theme-light .cash-page .close-status-badge {
+        border-color: rgb(203 213 225 / 0.82);
+        background: rgb(248 250 252 / 0.92);
+        color: rgb(51 65 85 / 0.92);
+    }
+
+    .theme-light .cash-page .closure-table-wrap {
+        border-color: rgb(203 213 225 / 0.78) !important;
+    }
+
+    .theme-light .cash-page .cash-surface-card,
+    .theme-light .cash-page .cash-kpi-card,
+    .theme-light .cash-page .cash-method-card,
+    .theme-light .cash-page .cash-table-shell,
+    .theme-light .cash-page .cash-form-shell,
+    .theme-light .cash-page .cash-difference-card {
+        border-color: rgb(203 213 225 / 0.82);
+    }
+
+    .theme-light .cash-page .closure-table-wrap table thead th {
+        background:
+            linear-gradient(180deg, rgb(248 250 252 / 0.98), rgb(241 245 249 / 0.95));
+        color: rgb(71 85 105 / 0.9);
+    }
+
+    .theme-dark .cash-control-shell,
+    .dark .cash-control-shell {
+        border-color: rgb(163 230 53 / 0.18);
+        background:
+            radial-gradient(circle at top right, rgb(163 230 53 / 0.08), transparent 34%),
+            linear-gradient(160deg, rgb(9 16 32 / 0.96), rgb(15 23 42 / 0.88));
+    }
+
+    .theme-dark .cash-page .cash-method-accordion,
+    .dark .cash-page .cash-method-accordion,
+    .theme-dark .cash-page .quick-actions,
+    .dark .cash-page .quick-actions,
+    .theme-dark .cash-page .cash-kpi-grid > article,
+    .dark .cash-page .cash-kpi-grid > article,
+    .theme-dark .cash-page .cash-surface-card,
+    .dark .cash-page .cash-surface-card,
+    .theme-dark .cash-page .cash-kpi-card,
+    .dark .cash-page .cash-kpi-card,
+    .theme-dark .cash-page .cash-method-card,
+    .dark .cash-page .cash-method-card,
+    .theme-dark .cash-page .cash-table-shell,
+    .dark .cash-page .cash-table-shell,
+    .theme-dark .cash-page .cash-form-shell,
+    .dark .cash-page .cash-form-shell,
+    .theme-dark .cash-page #difference-total-card,
+    .dark .cash-page #difference-total-card,
+    .theme-dark .cash-page .closure-table-wrap,
+    .dark .cash-page .closure-table-wrap {
+        border-color: rgb(51 65 85 / 0.74);
+    }
+
+    .theme-dark .cash-page .cash-method-accordion,
+    .dark .cash-page .cash-method-accordion,
+    .theme-dark .cash-page .quick-actions,
+    .dark .cash-page .quick-actions,
+    .theme-dark .cash-page .cash-surface-card,
+    .dark .cash-page .cash-surface-card,
+    .theme-dark .cash-page .cash-method-card,
+    .dark .cash-page .cash-method-card,
+    .theme-dark .cash-page .cash-table-shell,
+    .dark .cash-page .cash-table-shell,
+    .theme-dark .cash-page .cash-form-shell,
+    .dark .cash-page .cash-form-shell,
+    .theme-dark .cash-page .closure-table-wrap,
+    .dark .cash-page .closure-table-wrap {
+        background:
+            linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(17 24 39 / 0.9));
+    }
+
+    .theme-dark .cash-page .cash-kpi-card,
+    .dark .cash-page .cash-kpi-card,
+    .theme-dark .cash-page .cash-difference-card,
+    .dark .cash-page .cash-difference-card {
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.04),
+            0 20px 32px -32px rgb(2 8 23 / 0.78);
+    }
+
+    .theme-dark .cash-page .close-status-badge,
+    .dark .cash-page .close-status-badge {
+        border-color: rgb(71 85 105 / 0.78);
+        background: rgb(15 23 42 / 0.88);
+        color: rgb(226 232 240 / 0.92);
+    }
 </style>
 @endpush
 
 @section('content')
     @php
         $currencyFormatter = \App\Support\Currency::class;
+        $planAccessService = app(\App\Services\PlanAccessService::class);
         $currencyCode = $appCurrencyCode ?? null;
         $currencySymbol = trim((string) ($appCurrencySymbol ?? '$'));
 
@@ -159,6 +572,9 @@
         $voidRouteTemplate = $routeHasVoidMovement ? route('cash.movements.void', ['movement' => '__MOVEMENT__']) : '';
 
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $contextGym = (string) request()->route('contextGym');
+        $routeExtras = request()->query('pwa_mode') === 'standalone' ? ['pwa_mode' => 'standalone'] : [];
+        $cashRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []) + $routeExtras;
         $isCurrentCashView = ! $isGlobalScope && array_key_exists('openSession', get_defined_vars());
         $openSession = $openSession ?? null;
         $isCashierScoped = (bool) ($isCashierScoped ?? false);
@@ -168,6 +584,150 @@
         $canCloseCash = (bool) ($canCloseCash ?? $isOwnerUser);
         $canManageMovements = (bool) ($canManageMovements ?? true);
         $recentClosedSessions = $recentClosedSessions ?? collect();
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? $user?->gym_id ?? 0);
+        $activePlanKey = $activeGymId > 0 ? $planAccessService->currentPlanKeyForGym($activeGymId) : null;
+        $isPlanControl = ! $isGlobalScope && $activePlanKey === 'basico';
+        $cashControlDashboard = null;
+
+        if ($isPlanControl && $isCurrentCashView) {
+            $lastClosedSession = $recentClosedSessions->first();
+            $lastClosingBalance = (float) ($lastClosedSession->closing_balance ?? 0);
+            $lastDifference = (float) ($lastClosedSession->difference ?? 0);
+
+            if ($openSession) {
+                $controlSummary = $summary ?? ['income_total' => 0.0, 'expense_total' => 0.0, 'expected_balance' => 0.0, 'movements_count' => 0];
+                $expectedVisible = (float) ($controlSummary['expected_balance'] ?? 0);
+                if (abs($expectedVisible) < 0.00001) {
+                    $expectedVisible = round(
+                        (float) ($openSession->opening_balance ?? 0)
+                        + (float) ($controlSummary['income_total'] ?? 0)
+                        - (float) ($controlSummary['expense_total'] ?? 0),
+                        2
+                    );
+                }
+
+                $cashControlDashboard = [
+                    'headline' => $isCashierScoped
+                        ? 'Tu caja del turno ya esta lista para cobrar sin salir del modulo'
+                        : 'Caja abierta y lista para cobrar desde una sola sede',
+                    'summary' => $isCashierScoped
+                        ? 'Ve tu produccion, registra movimientos y mantente dentro de una lectura compacta del turno.'
+                        : 'Ingresos, egresos y cierre quedan ordenados en una sola cabina para operar sin ruido.',
+                    'actions' => array_values(array_filter([
+                        ! $cashWriteBlocked && $canManageMovements ? [
+                            'label' => 'Registrar movimiento',
+                            'href' => '#cash-movement-form',
+                            'variant' => 'primary',
+                        ] : null,
+                        $canCloseCash ? [
+                            'label' => 'Ir a cierre',
+                            'href' => '#cash-close-form',
+                            'variant' => 'secondary',
+                        ] : null,
+                        [
+                            'label' => 'Ir a clientes',
+                            'href' => route('clients.index', $cashRouteParams),
+                            'variant' => 'ghost',
+                        ],
+                    ])),
+                    'priorities' => [
+                        [
+                            'label' => 'Turno',
+                            'value' => '#'.$openSession->id,
+                            'note' => 'Abierto '.$openSession->opened_at?->format('d/m H:i').' por '.($openSession->openedBy?->name ?? 'N/D'),
+                            'tone' => 'success',
+                        ],
+                        [
+                            'label' => $isCashierScoped ? 'Tus ingresos' : 'Ingresos',
+                            'value' => $currencyFormatter::format((float) ($controlSummary['income_total'] ?? 0), $currencyCode),
+                            'note' => 'Cobros registrados en el turno actual.',
+                            'tone' => 'success',
+                        ],
+                        [
+                            'label' => $isCashierScoped ? 'Tus egresos' : 'Egresos',
+                            'value' => $currencyFormatter::format((float) ($controlSummary['expense_total'] ?? 0), $currencyCode),
+                            'note' => 'Salidas registradas dentro del mismo turno.',
+                            'tone' => 'warning',
+                        ],
+                        [
+                            'label' => $isCashierScoped ? 'Saldo visible' : 'Saldo esperado',
+                            'value' => $currencyFormatter::format($expectedVisible, $currencyCode),
+                            'note' => ((int) ($controlSummary['movements_count'] ?? 0)).' movimiento(s) registrados.',
+                            'tone' => 'info',
+                        ],
+                    ],
+                ];
+            } else {
+                $statusValue = $cashWriteBlocked
+                    ? 'Solo lectura'
+                    : ($canOpenCash ? 'Lista para abrir' : 'Apertura restringida');
+                $statusNote = $cashWriteBlocked
+                    ? ($cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'Esta sede opera la caja desde la sede principal.')
+                    : ($canOpenCash
+                        ? 'Abre el turno para empezar a cobrar membresias y registrar caja.'
+                        : 'Necesitas un usuario autorizado para abrir el turno.');
+
+                $cashControlDashboard = [
+                    'headline' => $cashWriteBlocked
+                        ? 'Caja visible, pero administrada desde otra sede'
+                        : ($canOpenCash
+                            ? 'Caja lista para abrir y ordenar cobros del dia'
+                            : 'Caja pendiente de apertura por usuario autorizado'),
+                    'summary' => $cashWriteBlocked
+                        ? 'La sede puede revisar informacion, pero la operacion de apertura y cierre vive en la sede principal.'
+                        : ($canOpenCash
+                            ? 'Abre el turno desde aqui y deja cobros, ingresos y cierres dentro del sistema desde el primer movimiento.'
+                            : 'La vista ya esta preparada; falta una apertura autorizada para empezar a cobrar en orden.'),
+                    'actions' => array_values(array_filter([
+                        ! $cashWriteBlocked && $canOpenCash ? [
+                            'label' => 'Abrir turno',
+                            'href' => '#cash-open-form',
+                            'variant' => 'primary',
+                        ] : null,
+                        [
+                            'label' => 'Ir a clientes',
+                            'href' => route('clients.index', $cashRouteParams),
+                            'variant' => ! $cashWriteBlocked && $canOpenCash ? 'secondary' : 'primary',
+                        ],
+                        $recentClosedSessions->isNotEmpty() ? [
+                            'label' => 'Ver historial',
+                            'href' => route('cash.sessions.index', $cashRouteParams),
+                            'variant' => 'ghost',
+                        ] : null,
+                    ])),
+                    'priorities' => [
+                        [
+                            'label' => 'Estado',
+                            'value' => $statusValue,
+                            'note' => $statusNote,
+                            'tone' => $cashWriteBlocked ? 'warning' : ($canOpenCash ? 'success' : 'info'),
+                        ],
+                        [
+                            'label' => 'Cierres recientes',
+                            'value' => (string) $recentClosedSessions->count(),
+                            'note' => $recentClosedSessions->isNotEmpty() ? 'Ultimos turnos cerrados listos para revisar.' : 'Aun no hay cierres registrados.',
+                            'tone' => $recentClosedSessions->isNotEmpty() ? 'info' : 'neutral',
+                        ],
+                        [
+                            'label' => 'Ultimo cierre',
+                            'value' => $lastClosedSession?->closed_at?->format('d/m H:i') ?? 'Sin cierre',
+                            'note' => $lastClosedSession ? 'Balance final '.$currencyFormatter::format($lastClosingBalance, $currencyCode) : 'Todavia no hay un turno cerrado.',
+                            'tone' => $lastClosedSession ? 'success' : 'neutral',
+                        ],
+                        [
+                            'label' => 'Ultima diferencia',
+                            'value' => $lastClosedSession ? $currencyFormatter::format($lastDifference, $currencyCode) : $currencyFormatter::format(0, $currencyCode),
+                            'note' => ! $lastClosedSession
+                                ? 'Sin novedades de cierre todavia.'
+                                : ($lastDifference == 0.0
+                                    ? 'El ultimo cierre cuadro sin diferencias.'
+                                    : 'Revisa el ultimo cierre si quieres validar el ajuste.'),
+                            'tone' => ! $lastClosedSession ? 'neutral' : ($lastDifference == 0.0 ? 'success' : 'warning'),
+                        ],
+                    ],
+                ];
+            }
+        }
     @endphp
 
     <div class="cash-page space-y-4"
@@ -175,29 +735,56 @@
          data-currency-symbol="{{ $currencySymbol }}"
          data-void-route-template="{{ $voidRouteTemplate }}">
         @if ($isCurrentCashView && $isCashierScoped)
-            <x-ui.card title="Vista privada" subtitle="Solo ves tus cobros, egresos y movimientos personales dentro del turno.">
+            <x-ui.card title="Vista privada" subtitle="Solo ves tus cobros, egresos y movimientos personales dentro del turno." class="cash-surface-card">
                 <p class="ui-alert ui-alert-info">Los acumulados del gimnasio quedan ocultos para tu perfil.</p>
             </x-ui.card>
+        @endif
+        @if ($cashControlDashboard)
+            <section class="cash-control-shell">
+                <div class="cash-control-grid">
+                    <div class="cash-control-copy">
+                        <span class="cash-control-kicker">Plan Control / Caja</span>
+                        <h2 class="cash-control-heading">{{ $cashControlDashboard['headline'] ?? 'Caja lista para operar sin ruido' }}</h2>
+                        <p class="cash-control-summary">{{ $cashControlDashboard['summary'] ?? 'Apertura, movimientos y cierre quedan dentro de una sola lectura compacta.' }}</p>
+                    </div>
+
+                    <div class="cash-control-actions">
+                        @foreach (($cashControlDashboard['actions'] ?? []) as $action)
+                            <x-ui.button :href="$action['href'] ?? '#'" :variant="$action['variant'] ?? 'ghost'">{{ $action['label'] ?? 'Accion' }}</x-ui.button>
+                        @endforeach
+                    </div>
+
+                    <div class="cash-control-priority-grid">
+                        @foreach (($cashControlDashboard['priorities'] ?? []) as $priority)
+                            <article class="cash-control-priority" data-tone="{{ $priority['tone'] ?? 'neutral' }}">
+                                <p class="cash-control-priority-label">{{ $priority['label'] ?? 'Dato' }}</p>
+                                <p class="cash-control-priority-value">{{ $priority['value'] ?? '-' }}</p>
+                                <p class="cash-control-priority-note">{{ $priority['note'] ?? '' }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
         @endif
         @if ($isCurrentCashView)
             @if (! $openSession)
                 @if ($cashWriteBlocked)
-                    <x-ui.card title="Caja en solo lectura" subtitle="Operación administrada desde sede principal.">
+                    <x-ui.card title="Caja en solo lectura" subtitle="Operación administrada desde sede principal." class="cash-surface-card">
                         <p class="ui-alert ui-alert-warning">
                             {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'No tienes permisos para abrir o cerrar caja en esta sucursal.' }}
                         </p>
                     </x-ui.card>
                 @elseif (! $canOpenCash)
-                    <x-ui.card title="Apertura restringida" subtitle="Solo usuarios autorizados pueden abrir caja.">
+                    <x-ui.card title="Apertura restringida" subtitle="Solo usuarios autorizados pueden abrir caja." class="cash-surface-card">
                         <p class="ui-alert ui-alert-warning">
                             Tu perfil no tiene permiso para abrir caja. Solicita al dueño del gimnasio que abra el turno o te habilite este permiso.
                         </p>
                     </x-ui.card>
                 @else
-                    <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresías o registrar movimientos.">
-                        <form method="POST" action="{{ route('cash.open') }}" class="space-y-4">
+                    <x-ui.card title="Abrir turno" subtitle="Debes abrir caja para cobrar membresías o registrar movimientos." class="cash-surface-card">
+                        <form id="cash-open-form" method="POST" action="{{ route('cash.open') }}" class="space-y-4">
                             @csrf
-                            <div class="grid gap-4 md:grid-cols-2">
+                            <div class="cash-form-shell grid gap-4 md:grid-cols-2">
                                 <label class="space-y-1 text-sm font-semibold ui-muted">
                                     <span>Monto inicial (obligatorio)</span>
                                     <input type="number" name="opening_balance" step="0.01" min="0" value="{{ old('opening_balance') }}" required class="ui-input">
@@ -214,7 +801,7 @@
                     </x-ui.card>
                 @endif
 
-                <x-ui.card title="Historial reciente de cierres" subtitle="Fecha, hora, motivo y notas del cierre.">
+                <x-ui.card title="Historial reciente de cierres" subtitle="Fecha, hora, motivo y notas del cierre." class="cash-surface-card">
                     @include('cash.partials.closure-history', [
                         'sessions' => $recentClosedSessions,
                         'currencyFormatter' => $currencyFormatter,
@@ -257,54 +844,54 @@
                     $expectedTotal = round($expectedCash + $expectedCard + $expectedTransfer, 2);
                 @endphp
 
-                <x-ui.card title="{{ $isCashierScoped ? 'Tu producción en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}">
+                <x-ui.card title="{{ $isCashierScoped ? 'Tu producción en el turno #'.$openSession->id : 'Turno activo #'.$openSession->id }}" subtitle="Apertura {{ $openSession->opened_at?->format('Y-m-d H:i') }} por {{ $openSession->openedBy?->name ?? 'N/D' }}" class="cash-surface-card">
                     @if ($isCashierScoped)
                         <div class="cash-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                            <article class="cash-kpi-card rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75" data-tone="neutral">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
                                 <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15" data-tone="success">
                                 <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Tus ingresos</p>
                                 <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15" data-tone="danger">
                                 <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Tus egresos</p>
                                 <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15" data-tone="info">
                                 <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Saldo visible</p>
                                 <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($scopedVisibleTotal, $currencyCode) }}</p>
                                 <p class="text-xs text-cyan-700 dark:text-cyan-200">Apertura + tus movimientos</p>
                             </article>
-                            <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                            <article class="cash-kpi-card rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75" data-tone="neutral">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Tus movimientos</p>
                                 <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) $activeSummary['movements_count'] }}</p>
                             </article>
                         </div>
                     @else
                         <div class="cash-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                            <article class="cash-kpi-card rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75" data-tone="neutral">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Apertura</p>
                                 <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ $currencyFormatter::format((float) $openSession->opening_balance, $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15" data-tone="success">
                                 <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Ingresos</p>
                                 <p class="mt-1 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ $currencyFormatter::format((float) $activeSummary['income_total'], $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15" data-tone="danger">
                                 <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Egresos</p>
                                 <p class="mt-1 text-2xl font-black text-rose-800 dark:text-rose-100">{{ $currencyFormatter::format((float) $activeSummary['expense_total'], $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15" data-tone="info">
                                 <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Esperados</p>
                                 <p class="mt-1 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
+                            <article class="cash-kpi-card rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15" data-tone="accent">
                                 <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">Saldo actual</p>
                                 <p class="mt-1 text-2xl font-black text-violet-800 dark:text-violet-100">{{ $currencyFormatter::format($expectedTotal, $currencyCode) }}</p>
                             </article>
-                            <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                            <article class="cash-kpi-card rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75" data-tone="neutral">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos</p>
                                 <p class="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) $activeSummary['movements_count'] }}</p>
                             </article>
@@ -318,7 +905,7 @@
                         </summary>
                         <div class="cash-method-grid">
                         @foreach ($methodMap as $methodTotal)
-                            <article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                            <article class="cash-method-card rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/75">
                                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">{{ $methodLabels[$methodTotal->method] ?? $methodTotal->method }}</p>
                                 <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Movimientos: <strong>{{ $methodTotal->movements_count }}</strong></p>
                                 <p class="text-sm text-emerald-700 dark:text-emerald-300">+ {{ $currencyFormatter::format((float) $methodTotal->income_total, $currencyCode, true) }}</p>
@@ -331,13 +918,13 @@
 
                 <section class="cash-operational-grid">
                     @if ($cashWriteBlocked)
-                        <x-ui.card title="Operaciones de caja bloqueadas">
+                        <x-ui.card title="Operaciones de caja bloqueadas" class="cash-surface-card">
                             <p class="ui-alert ui-alert-warning">
                                 {{ $cashWriteBlockedReason !== '' ? $cashWriteBlockedReason : 'Esta sucursal opera con caja controlada por sede principal.' }}
                             </p>
                         </x-ui.card>
                     @else
-                        <x-ui.card title="Registrar movimiento">
+                        <x-ui.card title="Registrar movimiento" class="cash-surface-card">
                             @if (! $canManageMovements)
                                 <p class="ui-alert ui-alert-warning">
                                     Tu perfil no tiene permiso para registrar cobros o movimientos de caja.
@@ -349,7 +936,7 @@
 
                                 <div id="movement-guard-alert" class="hidden ui-alert ui-alert-warning"></div>
 
-                                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div class="cash-form-shell grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                     <label class="space-y-1 text-sm font-semibold ui-muted">
                                         <span>Tipo</span>
                                         <select id="movement-type" name="type" required class="ui-input" aria-label="Tipo de movimiento">
@@ -403,7 +990,7 @@
                                     <p class="text-sm ui-muted">Vista compacta del cierre mas reciente para operar sin scroll horizontal.</p>
                                 </div>
 
-                                <div class="closure-table-wrap max-h-72 overflow-auto rounded-xl border border-slate-300/30">
+                                <div class="cash-table-shell closure-table-wrap max-h-72 overflow-auto rounded-xl border border-slate-300/30">
                                     <table class="ui-table w-full text-sm">
                                         <thead>
                                         <tr>
@@ -455,7 +1042,7 @@
                             </div>
                         </x-ui.card>
 
-                        <x-ui.card title="{{ $canCloseCash ? 'Cerrar turno' : 'Cierre restringido' }}" subtitle="{{ $canCloseCash ? 'Conteo por metodo y control de diferencias.' : 'Solo usuarios autorizados pueden ver y ejecutar el cierre completo.' }}" class="cash-close-card">
+                        <x-ui.card title="{{ $canCloseCash ? 'Cerrar turno' : 'Cierre restringido' }}" subtitle="{{ $canCloseCash ? 'Conteo por metodo y control de diferencias.' : 'Solo usuarios autorizados pueden ver y ejecutar el cierre completo.' }}" class="cash-surface-card cash-close-card">
                             @if (! $canCloseCash)
                                 <p class="ui-alert ui-alert-warning mb-3">
                                     Tu perfil no tiene permiso para cerrar caja. Esta acción la realiza el dueño o un usuario autorizado.
@@ -480,7 +1067,7 @@
                                 <input id="close-closing-balance" type="hidden" name="closing_balance" value="{{ old('closing_balance') }}">
                                 <input id="close-difference-approved" type="hidden" name="difference_approved" value="0">
 
-                            <div class="grid gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                            <div class="cash-form-shell grid gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                                 <div class="grid grid-cols-4 gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                                     <span>Método</span>
                                     <span class="text-right">Esperado</span>
@@ -501,7 +1088,7 @@
                                 @endforeach
                             </div>
 
-                            <div id="difference-total-card" class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                            <div id="difference-total-card" class="cash-difference-card rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="font-semibold text-slate-700 dark:text-slate-200">Diferencia total</span>
                                     <span id="difference-total" class="cash-difference-total font-black" data-tone="ok">{{ $currencyFormatter::format(0, $currencyCode) }}</span>
@@ -529,8 +1116,8 @@
                     @endif
                 </section>
 
-                <x-ui.card title="{{ $isCashierScoped ? 'Tus últimos 10 movimientos' : 'últimos 10 movimientos' }}">
-                    <div class="overflow-x-auto">
+                <x-ui.card title="{{ $isCashierScoped ? 'Tus últimos 10 movimientos' : 'últimos 10 movimientos' }}" class="cash-surface-card">
+                    <div class="cash-table-shell overflow-x-auto">
                         <table class="ui-table min-w-[1180px]">
                             <thead>
                             <tr>
@@ -593,7 +1180,7 @@
                     <div class="quick-actions mt-4">
                         <p class="mb-3 text-xs font-black uppercase tracking-[0.14em] text-slate-400">Acciones rapidas de caja</p>
                         <div class="quick-actions-grid">
-                            <x-ui.button :href="route('clients.index')" variant="primary">
+                            <x-ui.button :href="route('clients.index', $cashRouteParams)" variant="primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M16 19h6"/>
                                     <path d="M19 16v6"/>
@@ -612,7 +1199,7 @@
                                 <span>{{ $isCashierScoped ? 'Ver mis movimientos del mes' : 'Ver movimientos del mes' }}</span>
                             </x-ui.button>
                             @if (! $isCashierUser || $canCloseCash)
-                                <x-ui.button id="cash-go-history" :href="route('cash.sessions.index')" variant="secondary">
+                                <x-ui.button id="cash-go-history" :href="route('cash.sessions.index', $cashRouteParams)" variant="secondary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M3 3h18v18H3z"/>
                                         <path d="M7 8h10"/>
@@ -623,7 +1210,7 @@
                                 </x-ui.button>
                             @endif
                             @if (! $isCashierUser)
-                                <x-ui.button :href="route('reports.income')" variant="ghost">
+                                <x-ui.button :href="route('reports.income', $cashRouteParams)" variant="ghost">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M3 3v18h18"/>
                                         <path d="m19 9-5 5-4-4-3 3"/>
@@ -642,13 +1229,13 @@
                 $historyRows = $sessions ?? collect();
             @endphp
 
-            <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables.">
+            <x-ui.card title="Historial de caja" subtitle="Revisión de cierres, diferencias y responsables." class="cash-surface-card">
                 @if ($isGlobalScope)
                     <p class="mb-4 ui-alert ui-alert-info">
                         Modo global activo: historial consolidado de todas tus sedes en solo lectura.
                     </p>
                 @endif
-                <div class="overflow-x-auto">
+                <div class="cash-table-shell overflow-x-auto">
                     <table class="ui-table min-w-[1480px]">
                         <thead>
                         <tr>

@@ -151,6 +151,74 @@
             color: color-mix(in srgb, var(--text) 92%, #ecfdf5);
         }
 
+        .theme-light .mnav-btn {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 44%, rgb(51 65 85));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.9),
+                0 12px 22px -22px color-mix(in srgb, var(--sidebar) 16%, transparent);
+        }
+
+        .theme-light .mnav-btn > span {
+            color: inherit;
+        }
+
+        .theme-light .mnav-btn::before {
+            background: color-mix(in srgb, var(--accent) 46%, transparent);
+        }
+
+        .theme-light .mnav-btn-active {
+            border-color: color-mix(in srgb, var(--accent) 36%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--accent) 20%, white),
+                    color-mix(in srgb, var(--sidebar) 9%, white)
+                );
+            color: color-mix(in srgb, var(--sidebar) 58%, rgb(15 23 42));
+            box-shadow:
+                0 14px 26px -22px color-mix(in srgb, var(--sidebar) 18%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.92);
+        }
+
+        .theme-light .mnav-btn-active > span {
+            color: inherit;
+        }
+
+        .theme-light .mnav-btn-highlight {
+            border-color: color-mix(in srgb, #10b981 34%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, #10b981 22%, white),
+                    color-mix(in srgb, var(--sidebar) 6%, white)
+                );
+            color: color-mix(in srgb, #065f46 68%, rgb(15 23 42));
+        }
+
+        .theme-light .mnav-btn-highlight > span {
+            color: inherit;
+        }
+
+        .theme-light .mnav-shell {
+            border-top-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.94),
+                    color-mix(in srgb, white 92%, var(--accent) 8%)
+                );
+            box-shadow:
+                0 -14px 32px -26px color-mix(in srgb, var(--sidebar) 18%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.76);
+        }
+
         .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-active,
         .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-highlight {
             border-color: color-mix(in srgb, var(--border) 84%, transparent);
@@ -164,6 +232,35 @@
             background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 34%, var(--card)), color-mix(in srgb, var(--accent) 24%, var(--card)));
             color: #ffffff;
             box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+        }
+
+        .theme-light .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-active,
+        .theme-light .mnav-shell.mnav-sheet-open .mnav-btn.mnav-btn-highlight {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 44%, rgb(51 65 85));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.9),
+                0 12px 22px -22px color-mix(in srgb, var(--sidebar) 16%, transparent);
+        }
+
+        .theme-light .mnav-shell.mnav-sheet-open #mnav-more-open.mnav-btn-active {
+            border-color: color-mix(in srgb, var(--accent) 36%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--accent) 20%, white),
+                    color-mix(in srgb, var(--sidebar) 9%, white)
+                );
+            color: color-mix(in srgb, var(--sidebar) 58%, rgb(15 23 42));
+            box-shadow:
+                0 14px 26px -22px color-mix(in srgb, var(--sidebar) 18%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.92);
         }
 
         .mnav-sheet-backdrop {
@@ -189,6 +286,19 @@
             overflow: auto;
         }
 
+        .theme-light .mnav-sheet {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    165deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 92%, var(--accent) 8%)
+                );
+            box-shadow:
+                0 24px 42px -28px color-mix(in srgb, var(--sidebar) 22%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.88);
+        }
+
         .mnav-sheet-head {
             display: flex;
             align-items: center;
@@ -206,6 +316,10 @@
             color: color-mix(in srgb, var(--muted) 88%, #ffffff);
         }
 
+        .theme-light .mnav-sheet-title {
+            color: color-mix(in srgb, var(--accent) 38%, rgb(71 85 105));
+        }
+
         .mnav-sheet-close {
             border-radius: 0.58rem;
             border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
@@ -214,6 +328,18 @@
             font-size: 0.66rem;
             font-weight: 700;
             color: color-mix(in srgb, var(--text) 86%, #ffffff);
+        }
+
+        .theme-light .mnav-sheet-close {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 46%, rgb(51 65 85));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9);
         }
 
         .mnav-sheet-grid {
@@ -257,6 +383,52 @@
             border-color: color-mix(in srgb, #22c55e 56%, var(--border));
             background: linear-gradient(145deg, color-mix(in srgb, #22c55e 24%, var(--card)), color-mix(in srgb, var(--card) 88%, #020617));
             color: color-mix(in srgb, var(--text) 92%, #ecfdf5);
+        }
+
+        .theme-light .mnav-sheet-link {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 44%, rgb(51 65 85));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.9),
+                0 12px 22px -22px color-mix(in srgb, var(--sidebar) 16%, transparent);
+        }
+
+        .theme-light .mnav-sheet-link.mnav-btn-active {
+            border-color: color-mix(in srgb, var(--accent) 36%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--accent) 20%, white),
+                    color-mix(in srgb, var(--sidebar) 9%, white)
+                );
+            color: color-mix(in srgb, var(--sidebar) 58%, rgb(15 23 42));
+            box-shadow:
+                0 14px 26px -22px color-mix(in srgb, var(--sidebar) 18%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.92);
+        }
+
+        .theme-light .mnav-sheet-link.mnav-btn-highlight {
+            border-color: color-mix(in srgb, #10b981 34%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, #10b981 22%, white),
+                    color-mix(in srgb, var(--sidebar) 6%, white)
+                );
+            color: color-mix(in srgb, #065f46 68%, rgb(15 23 42));
+        }
+
+        .theme-light .mnav-chat-badge {
+            border-color: color-mix(in srgb, #f59e0b 34%, rgb(148 163 184));
+            background: color-mix(in srgb, #f59e0b 18%, white);
+            color: rgb(120 53 15);
+            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.82);
         }
     }
 

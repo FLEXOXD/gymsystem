@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashMovement;
+use App\Models\Client;
+use App\Models\Product;
 use App\Models\ProductSale;
+use App\Models\Promotion;
+use App\Services\PlanAccessService;
 use App\Services\ReportService;
 use App\Support\ActiveGymContext;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,7 +23,8 @@ class ReportController extends Controller
     private const PDF_MAX_DETAIL_ROWS = 1200;
 
     public function __construct(
-        private readonly ReportService $reportService
+        private readonly ReportService $reportService,
+        private readonly PlanAccessService $planAccessService
     ) {
     }
 
@@ -28,14 +33,66 @@ class ReportController extends Controller
      */
     public function index(Request $request): View
     {
-        $this->resolveGymId($request);
+        $gymId = $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $activePlanKey = $this->planAccessService->currentPlanKeyForGym($gymId);
+        $isPlanControl = $activePlanKey === 'basico';
+        $isPlanProfessional = $activePlanKey === 'profesional';
+        $isPlanPremium = $activePlanKey === 'premium';
         ['from' => $from, 'to' => $to] = $this->resolveDateRange($request);
 
         $incomeSummary = $this->reportService->getIncomeSummary($gymIds, $from, $to);
         $incomeByMethod = $this->reportService->getIncomeByMethod($gymIds, $from, $to);
         $attendanceSummary = $this->reportService->getAttendanceSummary($gymIds, $from, $to);
         $membershipSummary = $this->reportService->getMembershipStatusSummary($gymIds);
+        $membershipIncome = (float) CashMovement::query()
+            ->forGyms($gymIds)
+            ->betweenOccurredAt($from, $to)
+            ->where('type', 'income')
+            ->whereNotNull('membership_id')
+            ->sum('amount');
+        $salesInventoryReady = $this->salesInventorySchemaReady();
+        $salesSummary = $salesInventoryReady
+            ? $this->reportService->getProductSalesSummary($gymIds, $from, $to)
+            : [
+                'total_sales' => 0,
+                'units_sold' => 0,
+                'total_revenue' => 0,
+                'total_cost' => 0,
+                'total_profit' => 0,
+                'average_ticket' => 0,
+            ];
+        $activePromotionsCount = $isPlanProfessional
+            ? (int) Promotion::query()
+                ->forGyms($gymIds)
+                ->active()
+                ->applicableOn(now()->toDateString())
+                ->count()
+            : 0;
+        $lowStockProductsCount = $isPlanProfessional && Schema::hasTable('products')
+            ? (int) Product::query()
+                ->forGyms($gymIds)
+                ->where('status', 'active')
+                ->whereColumn('stock', '<=', 'min_stock')
+                ->count()
+            : 0;
+        $clientsWithAppAccessCount = $isPlanPremium
+            ? (int) Client::query()
+                ->forGyms($gymIds)
+                ->whereNotNull('app_username')
+                ->where('app_username', '!=', '')
+                ->count()
+            : 0;
+        $activeClientsWithoutAppAccessCount = $isPlanPremium
+            ? (int) Client::query()
+                ->forGyms($gymIds)
+                ->where('status', 'active')
+                ->where(function ($query): void {
+                    $query->whereNull('app_username')
+                        ->orWhere('app_username', '');
+                })
+                ->count()
+            : 0;
         $methodLabels = $incomeByMethod
             ->pluck('method')
             ->map(fn (string $method) => match ($method) {
@@ -55,6 +112,32 @@ class ReportController extends Controller
         $attendanceData = $attendanceByDay
             ->map(fn ($row) => (int) $row->attendances_count)
             ->values();
+        $planControlReportsDashboard = $this->buildPlanControlReportsDashboard(
+            isPlanControl: $isPlanControl,
+            incomeSummary: $incomeSummary,
+            membershipSummary: $membershipSummary,
+            totalAttendances: (int) ($attendanceSummary['total_attendances'] ?? 0)
+        );
+        $professionalReportsDashboard = $this->buildPlanProfessionalReportsDashboard(
+            isPlanProfessional: $isPlanProfessional,
+            membershipIncome: $membershipIncome,
+            salesSummary: $salesSummary,
+            activePromotionsCount: $activePromotionsCount,
+            lowStockProductsCount: $lowStockProductsCount,
+            activeMemberships: (int) ($membershipSummary['active'] ?? 0),
+            expiredMemberships: (int) ($membershipSummary['expired'] ?? 0),
+            totalAttendances: (int) ($attendanceSummary['total_attendances'] ?? 0)
+        );
+        $premiumReportsDashboard = $this->buildPlanPremiumReportsDashboard(
+            isPlanPremium: $isPlanPremium,
+            membershipIncome: $membershipIncome,
+            salesSummary: $salesSummary,
+            clientsWithAppAccessCount: $clientsWithAppAccessCount,
+            activeClientsWithoutAppAccessCount: $activeClientsWithoutAppAccessCount,
+            activeMemberships: (int) ($membershipSummary['active'] ?? 0),
+            expiredMemberships: (int) ($membershipSummary['expired'] ?? 0),
+            totalAttendances: (int) ($attendanceSummary['total_attendances'] ?? 0)
+        );
 
         return view('reports.index', [
             'from' => $from,
@@ -67,6 +150,9 @@ class ReportController extends Controller
             'methodExpenseData' => $methodExpenseData,
             'attendanceLabels' => $attendanceLabels,
             'attendanceData' => $attendanceData,
+            'planControlReportsDashboard' => $planControlReportsDashboard,
+            'professionalReportsDashboard' => $professionalReportsDashboard,
+            'premiumReportsDashboard' => $premiumReportsDashboard,
         ]);
     }
 
@@ -775,6 +861,225 @@ class ReportController extends Controller
             ->betweenOccurredAt($from, $to);
     }
 
+    /**
+     * @param array<string, float|int> $salesSummary
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanProfessionalReportsDashboard(
+        bool $isPlanProfessional,
+        float $membershipIncome,
+        array $salesSummary,
+        int $activePromotionsCount,
+        int $lowStockProductsCount,
+        int $activeMemberships,
+        int $expiredMemberships,
+        int $totalAttendances
+    ): ?array {
+        if (! $isPlanProfessional) {
+            return null;
+        }
+
+        $productRevenue = (float) ($salesSummary['total_revenue'] ?? 0);
+        $productSalesCount = (int) ($salesSummary['total_sales'] ?? 0);
+        $commercialTotal = round($membershipIncome + $productRevenue, 2);
+        $alerts = [];
+
+        if ($expiredMemberships > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Renovaciones atrasadas',
+                'description' => 'Reportes detecta '.$expiredMemberships.' cliente(s) vencidos. Aqui hay recuperacion directa de ingresos.',
+            ];
+        }
+
+        if ($activePromotionsCount === 0 && $expiredMemberships > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Promo por activar',
+                'description' => 'No tienes promos activas. Una campana corta puede mover renovaciones y cerrar caja mas rapido.',
+            ];
+        }
+
+        if ($lowStockProductsCount > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Stock comprometido',
+                'description' => 'Tienes '.$lowStockProductsCount.' producto(s) en minimo. Reponerlos protege ventas del rango actual.',
+            ];
+        }
+
+        if ($productSalesCount === 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Productos sin facturacion',
+                'description' => 'No hay ventas de productos en el periodo. Inventario puede abrir una segunda linea de ingreso.',
+            ];
+        }
+
+        if ($totalAttendances === 0 && $activeMemberships > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Sin asistencias en el rango',
+                'description' => 'Tienes membresias activas sin movimiento. Cruza clientes y recepcion para detectar riesgo de fuga.',
+            ];
+        }
+
+        if ($alerts === []) {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Lectura comercial estable',
+                'description' => 'Tus indicadores de clientes, ventas y promociones ya pueden leerse como negocio, no solo como operacion.',
+            ];
+        }
+
+        return [
+            'headline' => 'Radar de crecimiento del plan Profesional',
+            'summary' => 'Lee renovaciones, productos, promos y movimiento del negocio en una sola franja antes de bajar al detalle.',
+            'commercial_total' => $commercialTotal,
+            'membership_income' => round($membershipIncome, 2),
+            'product_revenue' => round($productRevenue, 2),
+            'product_sales_count' => $productSalesCount,
+            'average_ticket' => (float) ($salesSummary['average_ticket'] ?? 0),
+            'active_promotions_count' => $activePromotionsCount,
+            'low_stock_products_count' => $lowStockProductsCount,
+            'active_memberships' => $activeMemberships,
+            'expired_memberships' => $expiredMemberships,
+            'total_attendances' => $totalAttendances,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @param array<string, float|int> $salesSummary
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanPremiumReportsDashboard(
+        bool $isPlanPremium,
+        float $membershipIncome,
+        array $salesSummary,
+        int $clientsWithAppAccessCount,
+        int $activeClientsWithoutAppAccessCount,
+        int $activeMemberships,
+        int $expiredMemberships,
+        int $totalAttendances
+    ): ?array {
+        if (! $isPlanPremium) {
+            return null;
+        }
+
+        $productRevenue = (float) ($salesSummary['total_revenue'] ?? 0);
+        $commercialTotal = round($membershipIncome + $productRevenue, 2);
+        $averageTicket = (float) ($salesSummary['average_ticket'] ?? 0);
+        $alerts = [];
+
+        if ($activeClientsWithoutAppAccessCount > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Accesos premium pendientes',
+                'description' => 'Hay '.$activeClientsWithoutAppAccessCount.' cliente(s) activos sin acceso app. Ese es valor premium aun no capturado.',
+            ];
+        }
+
+        if ($clientsWithAppAccessCount === 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Portal cliente por activar',
+                'description' => 'Todavia no hay usuarios app. Este reporte ya deja claro donde esta la siguiente mejora del plan premium.',
+            ];
+        } else {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Canal premium activo',
+                'description' => 'Ya tienes '.$clientsWithAppAccessCount.' cliente(s) con acceso app. Portal y experiencia movil ya forman parte del negocio.',
+            ];
+        }
+
+        if ($expiredMemberships > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Renovaciones premium por cerrar',
+                'description' => 'Aun tienes '.$expiredMemberships.' cliente(s) vencidos. Conviene renovarlos con la experiencia completa del plan.',
+            ];
+        }
+
+        if ($totalAttendances === 0 && $activeMemberships > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Sin uso en el rango',
+                'description' => 'Hay membresias activas sin asistencias. Cruzar uso real con acceso app puede levantar retencion.',
+            ];
+        }
+
+        return [
+            'headline' => 'Lectura premium de ingresos, clientes y experiencia movil',
+            'summary' => 'Mide no solo caja y ventas: tambien cuanto del valor premium ya esta activo en clientes y canal digital.',
+            'commercial_total' => $commercialTotal,
+            'membership_income' => round($membershipIncome, 2),
+            'product_revenue' => round($productRevenue, 2),
+            'average_ticket' => round($averageTicket, 2),
+            'clients_with_app_access_count' => $clientsWithAppAccessCount,
+            'active_clients_without_app_access_count' => $activeClientsWithoutAppAccessCount,
+            'active_memberships' => $activeMemberships,
+            'expired_memberships' => $expiredMemberships,
+            'total_attendances' => $totalAttendances,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $incomeSummary
+     * @param array<string, mixed> $membershipSummary
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanControlReportsDashboard(
+        bool $isPlanControl,
+        array $incomeSummary,
+        array $membershipSummary,
+        int $totalAttendances
+    ): ?array {
+        if (! $isPlanControl) {
+            return null;
+        }
+
+        $balance = (float) ($incomeSummary['balance'] ?? 0);
+        $activeMemberships = (int) ($membershipSummary['active'] ?? 0);
+        $expiredMemberships = (int) ($membershipSummary['expired'] ?? 0);
+        $totalMovements = (int) ($incomeSummary['total_movements'] ?? 0);
+
+        $headline = $expiredMemberships > 0
+            ? 'Tu sede ya tiene claridad de caja y renovaciones por recuperar'
+            : 'Reportes listos para leer la sede sin ruido';
+
+        $summary = $expiredMemberships > 0
+            ? 'Mira balance, membresias y actividad del periodo antes de bajar al detalle y decidir que cobrar hoy.'
+            : 'Caja, membresias y asistencia quedan ordenadas en una sola lectura ejecutiva para una sede.';
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'balance' => round($balance, 2),
+            'balance_note' => $balance >= 0
+                ? 'Ingresos menos egresos del rango actual.'
+                : 'Los egresos superan a los ingresos en el rango.',
+            'balance_tone' => $balance >= 0 ? 'success' : 'warning',
+            'memberships_value' => (string) $activeMemberships,
+            'memberships_note' => $expiredMemberships > 0
+                ? $expiredMemberships.' vencida(s) requieren renovacion.'
+                : 'Base vigente lista para seguir entrando.',
+            'memberships_tone' => $expiredMemberships > 0 ? 'warning' : 'success',
+            'attendance_value' => (string) $totalAttendances,
+            'attendance_note' => $totalAttendances > 0
+                ? 'Asistencias registradas en el rango.'
+                : 'Sin asistencias registradas en este periodo.',
+            'attendance_tone' => $totalAttendances > 0 ? 'info' : 'neutral',
+            'movements_value' => (string) $totalMovements,
+            'movements_note' => $totalMovements > 0
+                ? 'Movimientos de caja detectados en el periodo.'
+                : 'Sin movimientos registrados en el rango.',
+            'movements_tone' => $totalMovements > 0 ? 'info' : 'neutral',
+        ];
+    }
+
     private function salesInventorySchemaReady(): bool
     {
         return Schema::hasTable('products')
@@ -784,6 +1089,10 @@ class ReportController extends Controller
 
     private function clientBillingEntriesBaseQuery(array $gymIds, Carbon $from, Carbon $to)
     {
+        $clientNameExpression = DB::connection()->getDriverName() === 'sqlite'
+            ? "TRIM(COALESCE(c.first_name, '') || ' ' || COALESCE(c.last_name, ''))"
+            : "TRIM(CONCAT(COALESCE(c.first_name, ''), ' ', COALESCE(c.last_name, '')))";
+
         $membershipEntries = DB::table('cash_movements as cm')
             ->join('memberships as m', function ($join): void {
                 $join->on('m.id', '=', 'cm.membership_id')
@@ -800,7 +1109,7 @@ class ReportController extends Controller
             ->whereBetween('cm.occurred_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->selectRaw('cm.gym_id as gym_id')
             ->selectRaw('m.client_id as client_id')
-            ->selectRaw("TRIM(CONCAT(COALESCE(c.first_name, ''), ' ', COALESCE(c.last_name, ''))) as client_name")
+            ->selectRaw($clientNameExpression.' as client_name')
             ->selectRaw('c.document_number as document_number')
             ->selectRaw('g.name as gym_name')
             ->selectRaw('cm.created_by as source_user_id')
@@ -825,7 +1134,7 @@ class ReportController extends Controller
             ->whereBetween('ps.sold_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->selectRaw('ps.gym_id as gym_id')
             ->selectRaw('ps.client_id as client_id')
-            ->selectRaw("TRIM(CONCAT(COALESCE(c.first_name, ''), ' ', COALESCE(c.last_name, ''))) as client_name")
+            ->selectRaw($clientNameExpression.' as client_name')
             ->selectRaw('c.document_number as document_number')
             ->selectRaw('g.name as gym_name')
             ->selectRaw('ps.sold_by as source_user_id')

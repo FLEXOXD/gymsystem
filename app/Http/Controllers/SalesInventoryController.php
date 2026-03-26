@@ -99,11 +99,15 @@ class SalesInventoryController extends Controller
                 ->limit(12)
                 ->get();
 
+            $salesYearExpression = ProductSale::query()->getModel()->getConnection()->getDriverName() === 'sqlite'
+                ? "CAST(strftime('%Y', sold_at) as integer)"
+                : 'YEAR(sold_at)';
+
             $salesHistoryYears = ProductSale::query()
                 ->forGyms($gymIds)
-                ->selectRaw('YEAR(sold_at) as year')
+                ->selectRaw($salesYearExpression.' as year')
                 ->whereNotNull('sold_at')
-                ->groupByRaw('YEAR(sold_at)')
+                ->groupByRaw($salesYearExpression)
                 ->orderByDesc('year')
                 ->pluck('year')
                 ->map(static fn ($year): int => (int) $year)
@@ -183,6 +187,8 @@ class SalesInventoryController extends Controller
 
     public function storeSale(Request $request, string $contextGym): RedirectResponse
     {
+        $redirectParams = $this->panelRouteParams($request);
+
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
                 ->route('sales.index', ['contextGym' => $contextGym, 'scope' => 'global'])
@@ -190,17 +196,15 @@ class SalesInventoryController extends Controller
         }
 
         if (! $this->schemaReady()) {
-            return redirect()
-                ->route('sales.index', ['contextGym' => $contextGym])
+            return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams)
                 ->withErrors(['sales' => 'Falta ejecutar las migraciones del modulo de ventas.']);
         }
 
         $gymId = $this->resolveGymId($request);
         if (! $this->cashSessionService->getOpenSession($gymId)) {
-            return redirect()
-                ->route('sales.index', ['contextGym' => $contextGym])
+            return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams)
                 ->withErrors(['sales' => 'Debes abrir caja antes de registrar ventas de productos.'])
-                ->withInput(['open_sales_register_modal' => '1']);
+                ->withInput(array_merge($request->except([]), ['open_sales_register_modal' => '1']));
         }
 
         $actor = $request->user();
@@ -240,8 +244,7 @@ class SalesInventoryController extends Controller
             } catch (RuntimeException $exception) {
                 $firstProductId = isset($batchItems[0]['product']) ? (int) $batchItems[0]['product']->id : 0;
 
-                return redirect()
-                    ->route('sales.index', ['contextGym' => $contextGym, 'product_id' => $firstProductId])
+                return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams + ['product_id' => $firstProductId])
                     ->withErrors(['sales' => $exception->getMessage()])
                     ->withInput();
             }
@@ -251,8 +254,7 @@ class SalesInventoryController extends Controller
                 return $carry + (int) ($item['quantity'] ?? 0);
             }, 0);
 
-            return redirect()
-                ->route('sales.index', ['contextGym' => $contextGym])
+            return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams)
                 ->with('status', 'Venta múltiple registrada: '.$lineCount.' producto(s), '.$totalUnits.' unidad(es).')
                 ->with('clear_sales_scan_cart', 1);
         }
@@ -281,16 +283,42 @@ class SalesInventoryController extends Controller
                 soldAt: Carbon::now()
             );
         } catch (RuntimeException $exception) {
-            return redirect()
-                ->route('sales.index', ['contextGym' => $contextGym, 'product_id' => $product->id])
+            return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams + ['product_id' => $product->id])
                 ->withErrors(['sales' => $exception->getMessage()])
                 ->withInput();
         }
 
-        return redirect()
-            ->route('sales.index', ['contextGym' => $contextGym])
+        return $this->redirectToPanelTarget($request, 'sales.index', $redirectParams)
             ->with('status', 'Venta registrada y enviada a caja correctamente.')
             ->with('clear_sales_scan_cart', 1);
+    }
+
+    private function redirectToPanelTarget(Request $request, string $fallbackRoute, array $fallbackParams = []): RedirectResponse
+    {
+        $redirectTo = trim((string) $request->input('redirect_to', ''));
+        if ($redirectTo !== '' && str_starts_with($redirectTo, '/') && ! str_starts_with($redirectTo, '//')) {
+            return redirect()->to($redirectTo);
+        }
+
+        return redirect()->route($fallbackRoute, $fallbackParams);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function panelRouteParams(Request $request): array
+    {
+        $params = [];
+        $contextGym = trim((string) $request->route('contextGym'));
+        if ($contextGym !== '') {
+            $params['contextGym'] = $contextGym;
+        }
+
+        if (strtolower(trim((string) $request->query('pwa_mode', ''))) === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return $params;
     }
 
     private function resolveGymId(Request $request): int

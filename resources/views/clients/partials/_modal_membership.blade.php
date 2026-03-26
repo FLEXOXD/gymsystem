@@ -111,7 +111,7 @@
                     @if ($canManagePromotions)
                         <label class="space-y-1 text-sm font-semibold text-slate-300 md:col-span-2 xl:col-span-4">
                             <span>Promoción (opcional)</span>
-                            <select name="promotion_id" class="ui-input">
+                            <select name="promotion_id" class="ui-input" x-ref="membershipPromotionInput">
                                 <option value="">Sin promoción</option>
                                 @foreach (($promotions ?? collect()) as $promotion)
                                     @php

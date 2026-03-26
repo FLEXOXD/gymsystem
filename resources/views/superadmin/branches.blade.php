@@ -86,10 +86,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Red multisucursal</span>
-                    <h2 class="sa-title">Centraliza aperturas, control operativo y gobierno de sedes desde un solo flujo.</h2>
+                    <h2 class="sa-title">Red multisucursal clara para crear, leer y gestionar sedes sin enredos.</h2>
                     <p class="sa-subtitle">
-                        Esta vista debe reducir errores de alta: primero eliges la sede principal correcta, luego defines el plan de la sucursal,
-                        después completas ubicación y acceso administrativo. La caja queda claramente bajo control del hub.
+                        Primero eliges la sede principal, luego plan, ubicacion y acceso. La caja queda claramente bajo control del hub.
                     </p>
                     <div class="sa-actions">
                         <a href="#branch-create-form" class="ui-button ui-button-primary">Crear nueva sucursal</a>
@@ -98,20 +97,20 @@
                     </div>
                 </div>
 
-                <div class="sa-note-card">
-                    <p class="sa-note-label">Normas UI/UX aplicadas</p>
+                    <div class="sa-note-card">
+                    <p class="sa-note-label">Claves del flujo</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
-                            <strong>Flujo de alta por bloques</strong>
-                            <span>Separó selección de hub, identidad de la sede, ubicación y acceso para bajar carga cognitiva.</span>
+                            <strong>Alta por bloques</strong>
+                            <span>Hub, identidad, ubicacion y acceso en ese orden.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>Acciones destructivas contenidas</strong>
-                            <span>La desvinculación ya no compite visualmente con la lectura operacional de cada fila.</span>
+                            <strong>Desvinculacion contenida</strong>
+                            <span>La accion critica queda separada de la lectura diaria.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>Mejor escaneo de la red</strong>
-                            <span>Ahora puedes buscar, filtrar por plan o estado y entender volumen activo antes de actuar.</span>
+                            <strong>Escaneo rapido</strong>
+                            <span>Busqueda y filtros para leer la red antes de actuar.</span>
                         </div>
                     </div>
                 </div>
@@ -132,23 +131,22 @@
             <article class="sa-stat-card is-success">
                 <p class="sa-stat-label">Sucursales vinculadas</p>
                 <p class="sa-stat-value">{{ $branchCount }}</p>
-                <p class="sa-stat-meta">Sedes secundarias aisladas bajo administración global.</p>
+                <p class="sa-stat-meta">Sedes secundarias bajo administracion global.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">Promedio por hub</p>
                 <p class="sa-stat-value">{{ number_format($averageBranchesPerHub, 1) }}</p>
-                <p class="sa-stat-meta">Referencia rápida para detectar hubs subutilizados o concentrados.</p>
+                <p class="sa-stat-meta">Referencia rapida para detectar hubs concentrados.</p>
             </article>
         </section>
 
         <section class="grid gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-            <div id="branch-create-form" class="ui-card space-y-6">
+            <div id="branch-create-form" class="ui-card sa-form-card space-y-6">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h3 class="sa-section-title">Crear nueva sucursal</h3>
                         <p class="sa-section-copy">
-                            Alta guiada para una sede aislada con usuario propio y vínculo directo a una sede principal multisucursal.
-                            El objetivo es dejar lista la operación desde la primera creación.
+                            Alta guiada para una sede aislada con usuario propio y vinculo directo a una sede principal.
                         </p>
                     </div>
                     <span class="sa-pill {{ $canCreateBranch ? 'is-success' : 'is-warning' }}">
@@ -173,7 +171,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('superadmin.branches.store') }}" class="space-y-6" aria-describedby="branch-form-help">
+                <form method="POST" action="{{ route('superadmin.branches.store') }}" class="sa-form-workbench space-y-6" aria-describedby="branch-form-help">
                     @csrf
 
                     <p id="branch-form-help" class="sr-only">
@@ -183,7 +181,7 @@
                     <section class="sa-form-section rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                         <div>
                             <h4 class="sa-section-title">1. Vinculación operativa</h4>
-                            <p class="sa-section-copy">Selecciona la sede madre correcta y el plan bajo el que operará la sucursal.</p>
+                            <p class="sa-section-copy">Selecciona la sede madre correcta y el plan operativo.</p>
                         </div>
                         <div class="grid gap-4 lg:grid-cols-2">
                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
@@ -221,7 +219,7 @@
                     <section class="sa-form-section rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/70">
                         <div>
                             <h4 class="sa-section-title">2. Identidad y ubicación de la sucursal</h4>
-                            <p class="sa-section-copy">Define el nombre comercial visible, teléfono de contacto y dirección operativa para reportes y panel.</p>
+                            <p class="sa-section-copy">Define nombre visible, telefono y direccion operativa.</p>
                         </div>
 
                         <div class="grid gap-4 lg:grid-cols-2">
@@ -296,7 +294,7 @@
                     <section class="sa-form-section rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                         <div>
                             <h4 class="sa-section-title">3. Acceso administrativo de la sucursal</h4>
-                            <p class="sa-section-copy">Crea un acceso separado para la sede. El correo se genera automáticamente con el nombre del hub y la sucursal.</p>
+                            <p class="sa-section-copy">Crea un acceso separado para la sede. El correo se genera con el nombre del hub y la sucursal.</p>
                         </div>
 
                         <div class="grid gap-4 lg:grid-cols-2">
@@ -335,10 +333,10 @@
 
                     <div class="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 dark:border-amber-500/40 dark:bg-amber-900/20">
                         <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">
-                            La caja de cada sucursal secundaria queda gestionada por el Admin global de la sede principal. Esto evita fragmentar caja y criterios contables.
+                            La caja de cada sucursal secundaria queda gestionada por el Admin global de la sede principal.
                         </p>
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <span class="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-200">Alta recomendada: validar hub, slug y correo antes de crear.</span>
+                            <span class="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-200">Valida hub, slug y correo antes de crear.</span>
                             <x-ui.button type="submit" class="min-w-[240px]" :disabled="! $canCreateBranch">Crear sucursal y vincular</x-ui.button>
                         </div>
                     </div>
@@ -346,36 +344,36 @@
             </div>
 
             <aside class="space-y-4 2xl:sticky 2xl:top-6">
-                <div class="ui-card space-y-4">
+                <div class="ui-card sa-form-review space-y-4">
                     <div>
                         <h3 class="sa-section-title">Checklist antes de crear</h3>
-                        <p class="sa-section-copy">Pequeñas validaciones para evitar retrabajo operacional después del alta.</p>
+                        <p class="sa-section-copy">Validaciones cortas para evitar retrabajo.</p>
                     </div>
                     <ul class="sa-check-list">
-                        <li>Confirma que la sede principal sea la correcta para recibir control de caja y reporting.</li>
-                        <li>Usa un nombre de sucursal claro, consistente y reconocible para reportes y accesos.</li>
-                        <li>Verifica provincia y ciudad porque estas referencias alimentan dirección y contexto comercial.</li>
-                        <li>Revisa el correo autogenerado antes de entregar credenciales al administrador local.</li>
+                        <li>Confirma que la sede principal sea la correcta.</li>
+                        <li>Usa un nombre de sucursal claro y consistente.</li>
+                        <li>Verifica provincia y ciudad antes de guardar.</li>
+                        <li>Revisa el correo autogenerado antes de entregar acceso.</li>
                     </ul>
                 </div>
 
-                <div class="ui-card space-y-4">
+                <div class="ui-card sa-form-review space-y-4">
                     <div>
                         <h3 class="sa-section-title">Lo que produce este flujo</h3>
-                        <p class="sa-section-copy">Resultado esperado después del alta correcta.</p>
+                        <p class="sa-section-copy">Resultado esperado despues del alta.</p>
                     </div>
                     <div class="sa-mini-grid md:grid-cols-1">
                         <div class="sa-mini-card">
                             <strong>Sucursal aislada</strong>
-                            <span>Opera con identidad propia, pero bajo la relación administrativa del hub.</span>
+                            <span>Opera con identidad propia bajo la relacion administrativa del hub.</span>
                         </div>
                         <div class="sa-mini-card">
                             <strong>Acceso listo</strong>
-                            <span>Se crea un usuario administrador con credenciales independientes para la sede.</span>
+                            <span>Se crea un admin con credenciales independientes.</span>
                         </div>
                         <div class="sa-mini-card">
                             <strong>Gobierno claro</strong>
-                            <span>La política de caja y el marco multisucursal quedan definidos desde la creación.</span>
+                            <span>La politica de caja queda definida desde la creacion.</span>
                         </div>
                     </div>
                 </div>
@@ -387,7 +385,7 @@
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <h3 class="sa-section-title">Vínculos actuales</h3>
-                        <p class="sa-section-copy">Busca por sede principal, sucursal, slug o ubicación. Filtra por plan o estado para revisar la red antes de tocar acciones críticas.</p>
+                        <p class="sa-section-copy">Busca por sede principal, sucursal, slug o ubicacion. Filtra por plan o estado antes de tocar acciones criticas.</p>
                     </div>
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
                         <label class="sa-search">
@@ -418,7 +416,7 @@
                 </div>
             </div>
 
-            <div class="ui-card overflow-hidden">
+            <div class="ui-card sa-form-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="ui-table min-w-[1220px]" aria-describedby="branch-links-help">
                         <caption id="branch-links-help" class="sr-only">
@@ -497,7 +495,7 @@
                                             </summary>
                                             <div class="space-y-3 px-4 py-4">
                                                 <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                                                    Usa esta acción solo si la sucursal ya no debe operar bajo este hub. Revisa antes el impacto en operación, acceso y reportes.
+                                                    Usa esta accion solo si la sucursal ya no debe operar bajo este hub.
                                                 </p>
                                                 <form method="POST" action="{{ route('superadmin.branches.destroy', (int) $link->id) }}" onsubmit="return confirm('Esta acción desvinculara la sucursal del hub actual. Deseas continuar?');">
                                                     @csrf

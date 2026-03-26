@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Bandeja de contacto web')
-@section('page-title', 'Notificaciones de contacto')
+@section('page-title', 'Inbox de contacto y soporte')
 
 @section('content')
     @php
@@ -40,12 +40,70 @@
             return $normalized !== '' ? asset('storage/'.$normalized) : null;
         };
         $supportStatusBadgeClasses = [
-            \App\Models\SupportChatConversation::STATUS_BOT => 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
-            \App\Models\SupportChatConversation::STATUS_WAITING_AGENT => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-            \App\Models\SupportChatConversation::STATUS_ACTIVE => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-            \App\Models\SupportChatConversation::STATUS_CLOSED => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200',
+            \App\Models\SupportChatConversation::STATUS_BOT => 'sa-status-chip is-neutral',
+            \App\Models\SupportChatConversation::STATUS_WAITING_AGENT => 'sa-status-chip is-warning',
+            \App\Models\SupportChatConversation::STATUS_ACTIVE => 'sa-status-chip is-success',
+            \App\Models\SupportChatConversation::STATUS_CLOSED => 'sa-status-chip is-danger',
         ];
+        $reviewedCount = max(0, (int) $totalCount - (int) $unreadCount);
     @endphp
+    <div class="sa-shell">
+        <section class="sa-hero">
+            <div class="sa-hero-grid">
+                <div>
+                    <span class="sa-kicker">Inbox comercial</span>
+                    <h2 class="sa-title">Mensajes web y soporte en un solo lugar, sin perder prioridad.</h2>
+                    <p class="sa-subtitle">
+                        Primero lees lo pendiente, luego bajas al detalle. Asi el inbox deja de sentirse pesado y gana jerarquia.
+                    </p>
+                    <div class="sa-actions">
+                        <a href="#support-chat-inbox" class="ui-button ui-button-secondary">Ver soporte</a>
+                    </div>
+                </div>
+
+                <aside class="sa-note-card">
+                    <p class="sa-note-label">Reglas rapidas</p>
+                    <div class="sa-note-list">
+                        <div class="sa-note-item">
+                            <strong>Inbox web 24h</strong>
+                            <span>Los mensajes web se eliminan automaticamente despues de 24 horas.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>Chat con cierre automatico</strong>
+                            <span>El soporte recuerda y cierra conversaciones inactivas.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>{{ $supportRepresentativeOnline ? $supportRepresentativeName.' conectado' : 'Sin representante activo' }}</strong>
+                            <span>Estado actual del soporte para responder sin demora.</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="sa-stat-grid">
+            <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Mensajes web</p>
+                <p class="sa-stat-value">{{ $totalCount }}</p>
+                <p class="sa-stat-meta">Total visible dentro de la ventana activa.</p>
+            </article>
+            <article class="sa-stat-card is-warning">
+                <p class="sa-stat-label">Sin leer</p>
+                <p class="sa-stat-value">{{ $unreadCount }}</p>
+                <p class="sa-stat-meta">{{ $reviewedCount }} revisados en la bandeja web.</p>
+            </article>
+            <article class="sa-stat-card is-info">
+                <p class="sa-stat-label">Chats soporte</p>
+                <p class="sa-stat-value">{{ $supportTotalCount }}</p>
+                <p class="sa-stat-meta">Conversaciones registradas en el modulo de soporte.</p>
+            </article>
+            <article class="sa-stat-card is-success">
+                <p class="sa-stat-label">Pendientes soporte</p>
+                <p class="sa-stat-value">{{ $supportUnreadCount }}</p>
+                <p class="sa-stat-meta">Casos con mensajes por revisar en soporte.</p>
+            </article>
+        </section>
+
     <x-ui.card title="Bandeja de contacto web" subtitle="Mensajes del formulario público. Campaña: 4 horas. Inbox y borrado: 24 horas.">
         @if ($unreadCount > 0)
             <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-900/20 dark:text-amber-100">
@@ -59,12 +117,13 @@
             </div>
         @endif
 
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="sa-toolbar mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide">
-                <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span class="sa-pill is-neutral">
                     Total: {{ $totalCount }}
                 </span>
-                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                <span class="sa-pill is-success">
                     Sin leer: {{ $unreadCount }}
                 </span>
             </div>
@@ -78,11 +137,12 @@
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="ui-input" placeholder="Buscar por nombre, correo o texto">
                 <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
             </form>
+            </div>
         </div>
 
-        <div class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-            <aside class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                <div class="max-h-[68vh] overflow-y-auto">
+        <div class="sa-split-shell">
+            <aside class="sa-split-pane">
+                <div class="sa-split-scroll max-h-[68vh] overflow-y-auto">
                     @forelse ($messages as $message)
                         @php
                             $fullName = trim($message->first_name.' '.$message->last_name);
@@ -92,7 +152,7 @@
                             $minutesLeft = $expiresAt ? max(0, now()->diffInMinutes($expiresAt, false)) : null;
                         @endphp
                         <a href="{{ route('superadmin.inbox.show', array_merge(['message' => $message->id], request()->only(['status', 'q', 'page']))) }}"
-                           class="block border-b border-slate-100 px-4 py-3 transition last:border-b-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40 {{ $isActive ? 'bg-slate-100 dark:bg-slate-800/70' : '' }}">
+                           class="sa-split-item {{ $isActive ? 'is-active' : '' }}">
                             <div class="flex items-start justify-between gap-2">
                                 <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</p>
                                 @if ($isUnread)
@@ -113,14 +173,14 @@
                             </div>
                         </a>
                     @empty
-                        <div class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-300">
+                        <div class="sa-empty-row">
                             No hay mensajes con este filtro.
                         </div>
                     @endforelse
                 </div>
             </aside>
 
-            <section class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+            <section class="sa-split-detail">
                 @if ($selectedMessage)
                     @php
                         $selectedFullName = trim($selectedMessage->first_name.' '.$selectedMessage->last_name);
@@ -141,18 +201,20 @@
                             @endif
                         </div>
                         @if ($selectedMessage->read_at === null)
-                            <form method="POST" action="{{ route('superadmin.inbox.read', $selectedMessage->id) }}">
-                                @csrf
-                                <x-ui.button type="submit" size="sm" variant="secondary">Marcar como leído</x-ui.button>
-                            </form>
+                            <div class="sa-action-row">
+                                <form method="POST" action="{{ route('superadmin.inbox.read', $selectedMessage->id) }}">
+                                    @csrf
+                                    <x-ui.button type="submit" size="sm" variant="secondary">Marcar como leído</x-ui.button>
+                                </form>
+                            </div>
                         @else
-                            <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            <span class="sa-status-chip is-neutral">
                                 Leído
                             </span>
                         @endif
                     </div>
 
-                    <article class="mt-4 whitespace-pre-wrap break-words rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-800 dark:bg-slate-800/50 dark:text-slate-100">
+                    <article class="sa-message-surface mt-4 whitespace-pre-wrap break-words">
                         {{ $selectedMessage->message }}
                     </article>
                 @else
@@ -185,15 +247,16 @@
             Si no hay respuesta del cliente, el sistema enviará un recordatorio automático y cerrará la conversación a los 15 minutos de inactividad.
         </div>
 
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="sa-toolbar mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide">
-                <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span class="sa-pill is-neutral">
                     Total: {{ $supportTotalCount }}
                 </span>
-                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                <span class="sa-pill is-success">
                     Sin leer: {{ $supportUnreadCount }}
                 </span>
-                <span class="inline-flex items-center rounded-full px-2.5 py-1 {{ $supportRepresentativeOnline ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200' }}">
+                <span class="{{ $supportRepresentativeOnline ? 'sa-pill is-success' : 'sa-pill is-neutral' }}">
                     {{ $supportRepresentativeOnline ? ($supportRepresentativeName.' conectado') : 'Representante no conectado' }}
                 </span>
             </div>
@@ -212,6 +275,7 @@
                 <input type="text" name="support_q" value="{{ $supportFilters['q'] ?? '' }}" class="ui-input" placeholder="Buscar por gimnasio o contacto">
                 <x-ui.button type="submit" variant="secondary">Filtrar</x-ui.button>
             </form>
+            </div>
         </div>
 
         @if (($supportUnreadCount ?? 0) > 0 && ($supportTotalCount ?? 0) === 0)
@@ -220,8 +284,8 @@
             </div>
         @endif
 
-        <div class="support-chat-grid grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <aside class="support-chat-sidebar overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div class="sa-split-shell support-chat-grid">
+            <aside class="support-chat-sidebar sa-split-pane">
                 <div class="support-chat-list-scroll max-h-[70vh] overflow-y-auto">
                     @forelse ($supportConversations as $conversation)
                         @php
@@ -236,14 +300,14 @@
                                 ->implode('');
                             $displayInitials = $displayInitials !== '' ? $displayInitials : 'GY';
                             $unreadSupport = (int) ($conversation->unread_for_superadmin_count ?? 0);
-                            $statusClass = $supportStatusBadgeClasses[$conversation->status] ?? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
+                            $statusClass = $supportStatusBadgeClasses[$conversation->status] ?? 'sa-status-chip is-neutral';
                             $supportLinkQuery = array_merge(
                                 request()->only(['status', 'q', 'page', 'support_status', 'support_q', 'support_page']),
                                 ['support' => $conversation->id]
                             );
                         @endphp
                         <a href="{{ route('superadmin.inbox.index', $supportLinkQuery) }}"
-                           class="support-chat-list-item block border-b border-slate-100 px-4 py-3 transition last:border-b-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40 {{ $conversationActive ? 'is-active bg-slate-100 dark:bg-slate-800/70' : '' }}">
+                           class="support-chat-list-item sa-split-item {{ $conversationActive ? 'is-active' : '' }}">
                             <div class="flex items-start gap-3">
                                 <div class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
                                     @if ($logoUrl)
@@ -262,7 +326,7 @@
                                     <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-300">{{ $conversation->sourceLabel() }} - {{ $conversation->requesterLabel() }}</p>
                                     <p class="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{{ \Illuminate\Support\Str::limit((string) ($conversation->latestMessage?->message ?? 'Sin mensajes'), 110) }}</p>
                                     <div class="mt-1 flex items-center justify-between gap-2">
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide {{ $statusClass }}">
+                                        <span class="{{ $statusClass }}">
                                             {{ $conversation->statusLabel() }}
                                         </span>
                                         <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
@@ -273,21 +337,21 @@
                             </div>
                         </a>
                     @empty
-                        <div class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-300">
+                        <div class="sa-empty-row">
                             A&uacute;n no hay conversaciones de soporte.
                         </div>
                     @endforelse
                 </div>
             </aside>
 
-            <section class="support-chat-detail rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+            <section class="support-chat-detail sa-split-detail"
                      @if ($selectedSupportConversation)
                          data-support-detail
                          data-support-state-url="{{ route('superadmin.support-chat.state', $selectedSupportConversation->id) }}"
                      @endif>
                 @if ($selectedSupportConversation)
                     @php
-                        $selectedSupportStatusClass = $supportStatusBadgeClasses[$selectedSupportConversation->status] ?? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
+                        $selectedSupportStatusClass = $supportStatusBadgeClasses[$selectedSupportConversation->status] ?? 'sa-status-chip is-neutral';
                     @endphp
                     <div class="support-chat-detail__header flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-700">
                         <div>
@@ -304,7 +368,7 @@
                         </div>
                         <span data-support-status-badge
                               data-support-status="{{ $selectedSupportConversation->status }}"
-                              class="support-status-badge inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $selectedSupportStatusClass }}">
+                              class="{{ $selectedSupportStatusClass }}">
                             {{ $selectedSupportConversation->statusLabel() }}
                         </span>
                     </div>
@@ -408,6 +472,7 @@
             {{ $supportConversations->links() }}
         </div>
     </x-ui.card>
+    </div>
 @endsection
 
 @push('styles')
@@ -734,10 +799,10 @@
             const pollingMs = 5000;
             const finalizeMessage = 'Finalizar esta conversacion y borrar todo su historial ahora?';
             const statusClassMap = {
-                bot: 'support-status-badge is-bot',
-                waiting_agent: 'support-status-badge is-waiting',
-                active: 'support-status-badge is-active',
-                closed: 'support-status-badge is-closed',
+                bot: 'sa-status-chip is-neutral',
+                waiting_agent: 'sa-status-chip is-warning',
+                active: 'sa-status-chip is-success',
+                closed: 'sa-status-chip is-danger',
             };
 
             let pollTimer = null;

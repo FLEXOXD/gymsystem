@@ -66,10 +66,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Gestión de admins</span>
-                    <h2 class="sa-title">Mantiene limpios los accesos y la estructura operativa de cada gimnasio.</h2>
+                    <h2 class="sa-title">Accesos y estructura en una vista mas clara y menos riesgosa.</h2>
                     <p class="sa-subtitle">
-                        Esta vista ahora arranca con contexto de estructura antes de entrar a editar usuarios.
-                        El objetivo es reducir errores al tocar accesos y hacer más evidente la zona peligrosa.
+                        Primero ves el tipo de gimnasio y luego editas usuarios, para reducir errores al tocar accesos o borrar.
                     </p>
 
                     <div class="sa-actions">
@@ -79,19 +78,19 @@
                 </div>
 
                 <aside class="sa-note-card">
-                    <p class="sa-note-label">Alcance de esta página</p>
+                    <p class="sa-note-label">Desde aqui puedes</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
-                            <strong>Edición segura</strong>
-                            <span>Actualiza datos del admin principal sin entrar al panel del gimnasio.</span>
+                            <strong>Editar admin</strong>
+                            <span>Actualizar datos del admin principal sin entrar al panel.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>Reset de acceso</strong>
-                            <span>Restablece contrasenas desde un modal independiente para evitar errores de contexto.</span>
+                            <span>Restablecer contrasenas desde un modal separado.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>Borrado aislado</strong>
-                            <span>La acción destructiva queda separada de las tareas frecuentes de mantenimiento.</span>
+                            <span>La accion destructiva queda separada del mantenimiento normal.</span>
                         </div>
                     </div>
                 </aside>
@@ -102,7 +101,7 @@
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Total gimnasios</p>
                 <p class="sa-stat-value">{{ $gymsWithAdmins->count() }}</p>
-                <p class="sa-stat-meta">Base completa visible para mantenimiento administrativo.</p>
+                <p class="sa-stat-meta">Base visible para mantenimiento administrativo.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Sucursales</p>
@@ -112,7 +111,7 @@
             <article class="sa-stat-card is-success">
                 <p class="sa-stat-label">Casas matriz</p>
                 <p class="sa-stat-value">{{ $hubCount }}</p>
-                <p class="sa-stat-meta">Gimnasios que administran una o varias sucursales.</p>
+                <p class="sa-stat-meta">Gimnasios que administran sucursales.</p>
             </article>
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Independientes</p>
@@ -122,11 +121,11 @@
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">Con admin asignado</p>
                 <p class="sa-stat-value">{{ $withAdminCount }}</p>
-                <p class="sa-stat-meta">Cuentas con usuario principal listo para operar.</p>
+                <p class="sa-stat-meta">Cuentas con usuario principal listo.</p>
             </article>
         </section>
 
-        <x-ui.card title="Listado de gimnasios" subtitle="Edita el usuario administrador por gimnasio y filtra rapidamente por tipo de estructura.">
+        <x-ui.card title="Listado de gimnasios" subtitle="Edita admins por gimnasio y filtra rapido por estructura.">
             <p class="mb-3 text-xs font-semibold text-rose-700 dark:text-rose-300">
                 Eliminar gimnasio borrará todo: clientes, planes, membresías, caja, reportes y usuario del gimnasio.
             </p>
@@ -171,10 +170,10 @@
                 </div>
             </div>
             <p id="gym-list-filter-help" class="sa-filter-note mb-4">
-                Busca por gimnasio, responsable o estructura. El filtro se aplica al instante y mantiene visibles solo los casos sobre los que puedes actuar.
+                Busca por gimnasio, responsable o estructura. El filtro deja visibles solo los casos sobre los que puedes actuar.
             </p>
 
-            <div class="overflow-x-auto smart-list-wrap">
+            <div class="sa-table-shell overflow-x-auto smart-list-wrap">
                 <table class="ui-table min-w-[1040px]" data-smart-list-manual aria-describedby="gym-list-filter-help gym-list-table-help">
                     <caption id="gym-list-table-help" class="sr-only">
                         Tabla de gimnasios con filtros por texto y tipo de estructura.
@@ -281,11 +280,11 @@
                             </td>
                             <td class="w-[280px]">
                                 <div class="space-y-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="sa-action-row">
                                     @if ($adminUser)
                                         <button
                                             type="button"
-                                            class="ui-button ui-button-primary w-full justify-center px-3 py-2 text-xs font-bold shadow-sm"
+                                            class="ui-button ui-button-primary justify-center shadow-sm"
                                             data-edit-admin
                                             data-gym-id="{{ (int) $gymRow->id }}"
                                             data-user-id="{{ (int) $adminUser->id }}"
@@ -306,7 +305,7 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="ui-button ui-button-muted w-full justify-center px-3 py-2 text-xs font-bold"
+                                            class="ui-button ui-button-muted justify-center"
                                             data-reset-admin-password
                                             data-gym-id="{{ (int) $gymRow->id }}"
                                             data-user-id="{{ (int) $adminUser->id }}"
@@ -325,7 +324,7 @@
                                             </svg>
                                         </summary>
                                         <div class="space-y-3 p-4">
-                                            <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                                            <p class="sa-inline-note">
                                                 Elimina el gimnasio solo si confirmaste que no necesitas conservar clientes, caja, reportes ni historial.
                                             </p>
                                             <form method="POST"
@@ -358,111 +357,137 @@
                 </table>
             </div>
 
-            <div id="admin-edit-modal" class="fixed inset-0 z-[80] hidden items-center justify-center overflow-y-auto p-4" aria-hidden="true">
-                <div class="absolute inset-0 bg-black/60" data-admin-modal-close></div>
-                <div class="relative z-[81] flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="admin-edit-modal-title" aria-describedby="admin-edit-modal-description" tabindex="-1">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h3 id="admin-edit-modal-title" class="ui-heading text-lg">Editar usuario del gimnasio</h3>
+            <div id="admin-edit-modal" class="sa-modal-shell" aria-hidden="true">
+                <div class="sa-modal-backdrop" data-admin-modal-close></div>
+                <div class="sa-modal-panel max-h-[calc(100dvh-1rem)]" role="dialog" aria-modal="true" aria-labelledby="admin-edit-modal-title" aria-describedby="admin-edit-modal-description" tabindex="-1">
+                    <div class="sa-modal-header">
+                        <div>
+                            <h3 id="admin-edit-modal-title">Editar usuario del gimnasio</h3>
+                            <p id="admin-edit-modal-description" class="sa-modal-copy">
+                                Actualiza perfil, ubicación y contacto del admin principal sin salir del listado.
+                            </p>
+                        </div>
                         <button type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold" data-admin-modal-close>Cerrar</button>
                     </div>
-                    <p id="admin-edit-modal-description" class="ui-muted mb-3 text-sm">
-                        Actualiza datos del admin principal sin salir del listado. Guarda solo cuando hayas validado correo, identificación y teléfono.
-                    </p>
 
-                    <form id="admin-edit-form" method="POST" action="#" enctype="multipart/form-data" class="grid gap-3 overflow-y-auto pr-1 md:grid-cols-3">
+                    <form id="admin-edit-form" method="POST" action="#" enctype="multipart/form-data" class="sa-modal-body">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" id="modal-admin-user-id" name="admin_user_id" value="{{ (int) old('admin_user_id', 0) }}">
                         <input type="hidden" id="modal-admin-gym-id" name="admin_gym_id" value="{{ $adminEditOldGymId > 0 ? $adminEditOldGymId : 0 }}">
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Nombre
-                            <input id="modal-admin-name" type="text" name="admin_name" class="ui-input" value="{{ old('admin_name') }}" required>
-                        </label>
+                        <section class="sa-modal-section">
+                            <div class="sa-modal-section-header">
+                                <p class="sa-modal-section-title">Perfil base</p>
+                                <p class="sa-modal-section-copy">Lo esencial para identificar al admin y validar sus datos personales.</p>
+                            </div>
+                            <div class="sa-modal-grid md:grid-cols-3">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Nombre
+                                    <input id="modal-admin-name" type="text" name="admin_name" class="ui-input" value="{{ old('admin_name') }}" required>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-2">
-                            Correo
-                            <input id="modal-admin-email" type="email" name="admin_email" class="ui-input" value="{{ old('admin_email') }}" required>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-2">
+                                    Correo
+                                    <input id="modal-admin-email" type="email" name="admin_email" class="ui-input" value="{{ old('admin_email') }}" required>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Género
-                            <select id="modal-admin-gender" name="admin_gender" class="ui-input">
-                                <option value="">No especificado</option>
-                                <option value="male">Hombre</option>
-                                <option value="female">Mujer</option>
-                                <option value="other">Otro</option>
-                                <option value="prefer_not_say">Prefiero no decir</option>
-                            </select>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Género
+                                    <select id="modal-admin-gender" name="admin_gender" class="ui-input">
+                                        <option value="">No especificado</option>
+                                        <option value="male">Hombre</option>
+                                        <option value="female">Mujer</option>
+                                        <option value="other">Otro</option>
+                                        <option value="prefer_not_say">Prefiero no decir</option>
+                                    </select>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Nacimiento
-                            <input id="modal-admin-birth-date" type="date" name="admin_birth_date" class="ui-input" value="{{ old('admin_birth_date') }}">
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Nacimiento
+                                    <input id="modal-admin-birth-date" type="date" name="admin_birth_date" class="ui-input" value="{{ old('admin_birth_date') }}">
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Tipo de identificación
-                            <select id="modal-admin-identification-type" name="admin_identification_type" class="ui-input">
-                                <option value="">No especificado</option>
-                                <option value="cédula">Cédula</option>
-                                <option value="dni">DNI</option>
-                                <option value="passport">Pasaporte</option>
-                            </select>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Tipo de identificación
+                                    <select id="modal-admin-identification-type" name="admin_identification_type" class="ui-input">
+                                        <option value="">No especificado</option>
+                                        <option value="cédula">Cédula</option>
+                                        <option value="dni">DNI</option>
+                                        <option value="passport">Pasaporte</option>
+                                    </select>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Número identificación
-                            <input id="modal-admin-identification-number" type="text" name="admin_identification_number" class="ui-input" value="{{ old('admin_identification_number') }}" placeholder="Ej: 1726309071">
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-3">
+                                    Número identificación
+                                    <input id="modal-admin-identification-number" type="text" name="admin_identification_number" class="ui-input" value="{{ old('admin_identification_number') }}" placeholder="Ej: 1726309071">
+                                </label>
+                            </div>
+                        </section>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            País
-                            <select id="modal-admin-country-iso" name="admin_country_iso" class="ui-input">
-                                <option value="">No especificado</option>
-                                @foreach ($locationCatalog as $countryCode => $countryMeta)
-                                    <option value="{{ $countryCode }}">{{ $countryMeta['label'] }}</option>
-                                @endforeach
-                            </select>
-                        </label>
+                        <section class="sa-modal-section">
+                            <div class="sa-modal-section-header">
+                                <p class="sa-modal-section-title">Ubicación</p>
+                                <p class="sa-modal-section-copy">Asegura país, provincia y ciudad para no dejar el perfil incompleto.</p>
+                            </div>
+                            <div class="sa-modal-grid md:grid-cols-3">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    País
+                                    <select id="modal-admin-country-iso" name="admin_country_iso" class="ui-input">
+                                        <option value="">No especificado</option>
+                                        @foreach ($locationCatalog as $countryCode => $countryMeta)
+                                            <option value="{{ $countryCode }}">{{ $countryMeta['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Provincia / estado
-                            <select id="modal-admin-address-state" name="admin_address_state" class="ui-input">
-                                <option value="">Selecciona provincia/estado</option>
-                            </select>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Provincia / estado
+                                    <select id="modal-admin-address-state" name="admin_address_state" class="ui-input">
+                                        <option value="">Selecciona provincia/estado</option>
+                                    </select>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Ciudad
-                            <select id="modal-admin-address-city" name="admin_address_city" class="ui-input">
-                                <option value="">Selecciona ciudad</option>
-                            </select>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Ciudad
+                                    <select id="modal-admin-address-city" name="admin_address_city" class="ui-input">
+                                        <option value="">Selecciona ciudad</option>
+                                    </select>
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-3">
-                            Dirección (línea)
-                            <input id="modal-admin-address-line" type="text" name="admin_address_line" class="ui-input" value="{{ old('admin_address_line') }}" placeholder="Barrio, avenida, referencia">
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-3">
+                                    Dirección (línea)
+                                    <input id="modal-admin-address-line" type="text" name="admin_address_line" class="ui-input" value="{{ old('admin_address_line') }}" placeholder="Barrio, avenida, referencia">
+                                </label>
+                            </div>
+                        </section>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Código de teléfono
-                            <input id="modal-admin-phone-country-dial" type="text" name="admin_phone_country_dial" class="ui-input" value="{{ old('admin_phone_country_dial') }}" placeholder="+593">
-                        </label>
+                        <section class="sa-modal-section">
+                            <div class="sa-modal-section-header">
+                                <p class="sa-modal-section-title">Contacto y foto</p>
+                                <p class="sa-modal-section-copy">Completa el teléfono y sube imagen solo si realmente vas a reemplazar la actual.</p>
+                            </div>
+                            <div class="sa-modal-grid md:grid-cols-3">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Código de teléfono
+                                    <input id="modal-admin-phone-country-dial" type="text" name="admin_phone_country_dial" class="ui-input" value="{{ old('admin_phone_country_dial') }}" placeholder="+593">
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Teléfono
-                            <input id="modal-admin-phone-number" type="text" name="admin_phone_number" class="ui-input" value="{{ old('admin_phone_number') }}" placeholder="0991234567">
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-2">
+                                    Teléfono
+                                    <input id="modal-admin-phone-number" type="text" name="admin_phone_number" class="ui-input" value="{{ old('admin_phone_number') }}" placeholder="0991234567">
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-3">
-                            Foto de perfil (opcional)
-                            <input type="file" name="admin_profile_photo" class="ui-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-                            <p class="ui-muted text-[11px]">JPG/PNG/WEBP, máximo 15MB.</p>
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide md:col-span-3">
+                                    Foto de perfil (opcional)
+                                    <input type="file" name="admin_profile_photo" class="ui-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                                    <p class="sa-form-note">JPG/PNG/WEBP, máximo 15MB.</p>
+                                </label>
+                            </div>
+                        </section>
 
                         @if ($adminEditHasErrors)
-                            <div class="rounded-xl border border-rose-300/60 bg-rose-100/60 px-3 py-2 text-xs font-semibold text-rose-800 dark:border-rose-300/40 dark:bg-rose-300/10 dark:text-rose-200 md:col-span-3">
+                            <div class="sa-modal-error">
                                 @foreach ($errors->getMessages() as $errorKey => $errorMessages)
                                     @if (in_array($errorKey, $adminEditErrorKeys, true))
                                         @foreach ($errorMessages as $errorMessage)
@@ -473,7 +498,7 @@
                             </div>
                         @endif
 
-                        <div class="md:col-span-3 flex justify-end gap-2">
+                        <div class="sa-modal-actions">
                             <button type="button" class="ui-button ui-button-ghost" data-admin-modal-close>Cancelar</button>
                             <x-ui.button type="submit">Guardar cambios</x-ui.button>
                         </div>
@@ -481,36 +506,45 @@
                 </div>
             </div>
 
-            <div id="admin-password-modal" class="fixed inset-0 z-[82] hidden items-center justify-center overflow-y-auto p-4" aria-hidden="true">
-                <div class="absolute inset-0 bg-black/60" data-admin-password-modal-close></div>
-                <div class="relative z-[83] w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="admin-password-modal-title" aria-describedby="admin-password-modal-label" tabindex="-1">
-                    <div class="mb-3 flex items-center justify-between gap-2">
-                        <h3 id="admin-password-modal-title" class="ui-heading text-lg">Restablecer contraseña</h3>
+            <div id="admin-password-modal" class="sa-modal-shell" aria-hidden="true">
+                <div class="sa-modal-backdrop" data-admin-password-modal-close></div>
+                <div class="sa-modal-panel max-w-lg" role="dialog" aria-modal="true" aria-labelledby="admin-password-modal-title" aria-describedby="admin-password-modal-label" tabindex="-1">
+                    <div class="sa-modal-header">
+                        <div>
+                            <h3 id="admin-password-modal-title">Restablecer contraseña</h3>
+                            <p id="admin-password-modal-label" class="sa-modal-copy">
+                                Define una nueva contraseña para el admin del gimnasio y entrégala solo cuando ya esté validada.
+                            </p>
+                        </div>
                         <button type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold" data-admin-password-modal-close>Cerrar</button>
                     </div>
 
-                    <p id="admin-password-modal-label" class="ui-muted text-sm">
-                        Define una nueva contraseña para el admin del gimnasio.
-                    </p>
-
-                    <form id="admin-password-form" method="POST" action="#" class="mt-3 space-y-3">
+                    <form id="admin-password-form" method="POST" action="#" class="sa-modal-body">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" id="modal-reset-password-gym-id" name="reset_password_gym_id" value="{{ (int) old('reset_password_gym_id', 0) }}">
                         <input type="hidden" id="modal-reset-password-user-id" name="reset_password_user_id" value="{{ (int) old('reset_password_user_id', 0) }}">
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Nueva contraseña
-                            <input id="modal-reset-password" type="password" name="reset_password" class="ui-input" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
-                        </label>
+                        <section class="sa-modal-section">
+                            <div class="sa-modal-section-header">
+                                <p class="sa-modal-section-title">Nueva credencial</p>
+                                <p class="sa-modal-section-copy">Usa una contraseña temporal fuerte y compártela por un canal seguro.</p>
+                            </div>
+                            <div class="sa-modal-grid">
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Nueva contraseña
+                                    <input id="modal-reset-password" type="password" name="reset_password" class="ui-input" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                                </label>
 
-                        <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                            Confirmar nueva contraseña
-                            <input id="modal-reset-password-confirmation" type="password" name="reset_password_confirmation" class="ui-input" placeholder="Repite la contraseña" required autocomplete="new-password">
-                        </label>
+                                <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
+                                    Confirmar nueva contraseña
+                                    <input id="modal-reset-password-confirmation" type="password" name="reset_password_confirmation" class="ui-input" placeholder="Repite la contraseña" required autocomplete="new-password">
+                                </label>
+                            </div>
+                        </section>
 
                         @if ($passwordResetHasErrors)
-                            <div class="rounded-xl border border-rose-300/60 bg-rose-100/60 px-3 py-2 text-xs font-semibold text-rose-800 dark:border-rose-300/40 dark:bg-rose-300/10 dark:text-rose-200">
+                            <div class="sa-modal-error">
                                 @foreach ($errors->getMessages() as $errorKey => $errorMessages)
                                     @if (in_array($errorKey, $passwordResetErrorKeys, true))
                                         @foreach ($errorMessages as $errorMessage)
@@ -521,7 +555,7 @@
                             </div>
                         @endif
 
-                        <div class="flex justify-end gap-2">
+                        <div class="sa-modal-actions">
                             <button type="button" class="ui-button ui-button-ghost" data-admin-password-modal-close>Cancelar</button>
                             <x-ui.button type="submit">Guardar contraseña</x-ui.button>
                         </div>
@@ -702,8 +736,7 @@
             setModalValue(modalFields.phoneCountryDial, data.phoneCountryDial || '');
             setModalValue(modalFields.phoneNumber, data.phoneNumber || '');
 
-            adminEditModal.classList.remove('hidden');
-            adminEditModal.classList.add('flex');
+            adminEditModal.classList.add('is-open');
             adminEditModal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('overflow-hidden');
             window.setTimeout(function () {
@@ -713,8 +746,7 @@
 
         function closeAdminModal() {
             if (!adminEditModal) return;
-            adminEditModal.classList.add('hidden');
-            adminEditModal.classList.remove('flex');
+            adminEditModal.classList.remove('is-open');
             adminEditModal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('overflow-hidden');
             if (lastFocusedAdminTrigger && typeof lastFocusedAdminTrigger.focus === 'function') {
@@ -743,8 +775,7 @@
                     : 'Define una nueva contraseña para el admin del gimnasio.';
             }
 
-            adminPasswordModal.classList.remove('hidden');
-            adminPasswordModal.classList.add('flex');
+            adminPasswordModal.classList.add('is-open');
             adminPasswordModal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('overflow-hidden');
             passwordModalFields.password?.focus();
@@ -752,8 +783,7 @@
 
         function closePasswordModal() {
             if (!adminPasswordModal) return;
-            adminPasswordModal.classList.add('hidden');
-            adminPasswordModal.classList.remove('flex');
+            adminPasswordModal.classList.remove('is-open');
             adminPasswordModal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('overflow-hidden');
             if (lastFocusedPasswordTrigger && typeof lastFocusedPasswordTrigger.focus === 'function') {
@@ -762,7 +792,7 @@
         }
 
         function trapFocus(modalRoot, dialog, event) {
-            if (!modalRoot || !dialog || modalRoot.classList.contains('hidden')) {
+            if (!modalRoot || !dialog || !modalRoot.classList.contains('is-open')) {
                 return false;
             }
 

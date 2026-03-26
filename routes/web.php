@@ -393,25 +393,25 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                     ->name('clients.card.pdf');
 
                 Route::get('/staff', [GymStaffController::class, 'index'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.index');
                 Route::post('/staff/cashiers', [GymStaffController::class, 'storeCashier'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.store');
                 Route::patch('/staff/cashiers/{cashier}/permissions', [GymStaffController::class, 'updateCashierPermissions'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.permissions.update');
                 Route::patch('/staff/cashiers/{cashier}/password', [GymStaffController::class, 'updateCashierPassword'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.password.update');
                 Route::patch('/staff/cashiers/{cashier}/disable', [GymStaffController::class, 'disableCashier'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.disable');
                 Route::patch('/staff/cashiers/{cashier}/activate', [GymStaffController::class, 'activateCashier'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.activate');
                 Route::delete('/staff/cashiers/{cashier}', [GymStaffController::class, 'destroyCashier'])
-                    ->middleware('role:owner')
+                    ->middleware(['role:owner', 'plan.feature:cashiers'])
                     ->name('staff.cashiers.destroy');
 
                 Route::get('/plans', [PlanController::class, 'index'])
@@ -533,9 +533,11 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::patch('/products/{product}/toggle', [ProductController::class, 'toggle'])
                     ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
                     ->name('products.toggle');
-                Route::post('/products/{product}/stock', [ProductController::class, 'adjustStock'])
+                Route::post('/products/stock', [ProductController::class, 'adjustStock'])
                     ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory'])
                     ->name('products.stock');
+                Route::post('/products/{product}/stock', [ProductController::class, 'adjustStock'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:sales_inventory']);
 
                 Route::get('/sucursales', [BranchController::class, 'index'])
                     ->middleware(['role:owner', 'not.branch:manage_branches', 'plan.feature:multi_branch'])

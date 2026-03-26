@@ -97,6 +97,13 @@ class ReceptionCheckInController extends Controller
         $latestSyncPayload = is_array($latestSyncEvent['payload'] ?? null)
             ? $latestSyncEvent['payload']
             : null;
+        $canManageClientAccounts = $this->planAccessService->canForGym((int) $gymId, 'client_accounts');
+        $canManageCashiers = $this->planAccessService->canForGym((int) $gymId, 'cashiers');
+        $canUseSalesInventory = $this->planAccessService->canForGym((int) $gymId, 'sales_inventory');
+        $isPlanControlReception = ! $canManageClientAccounts && ! $canManageCashiers && ! $canUseSalesInventory;
+        $todayAttendancesCount = (int) $recentAttendances
+            ->filter(static fn (Attendance $attendance): bool => $attendance->date?->isToday() ?? false)
+            ->count();
         $attendanceHistoryStart = now()->subMonthsNoOverflow(2)->toDateString();
         $attendanceHistoryBaseQuery = Attendance::query()
             ->forGym($gymId)
@@ -124,7 +131,9 @@ class ReceptionCheckInController extends Controller
             'latestSyncEventId' => (string) ($latestSyncEvent['id'] ?? ''),
             'latestSyncEventPublishedAt' => (int) ($latestSyncEvent['published_at_ms'] ?? 0),
             'gymAvatarUrls' => $this->gymAvatarUrls($request, $gym),
-            'canManageClientAccounts' => $this->planAccessService->canForGym((int) $gymId, 'client_accounts'),
+            'canManageClientAccounts' => $canManageClientAccounts,
+            'isPlanControlReception' => $isPlanControlReception,
+            'receptionTodayCount' => $todayAttendancesCount,
         ]);
     }
 

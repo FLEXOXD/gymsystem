@@ -60,6 +60,9 @@
     --pp-mini-text: #1e293b;
     --pp-mini-hover-bg: #cbd5e1;
     --pp-mini-hover-border: #64748b;
+    --pp-preview-border: rgb(16 185 129 / .24);
+    --pp-preview-bg: radial-gradient(circle at top right, rgb(16 185 129 / .18), transparent 34%), linear-gradient(150deg, rgb(15 23 42 / .96), rgb(30 41 59 / .84));
+    --pp-preview-shadow: 0 20px 42px rgb(15 23 42 / .22);
     --pp-inline-bg: #ffffff;
     --pp-inline-border: #cbd5e1;
     --pp-inline-text: #0f172a;
@@ -245,17 +248,308 @@
     text-align: center;
     background: rgb(15 23 42 / .22);
 }
+.plans-page .plans-surface-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border-color: rgb(148 163 184 / .22);
+    background: linear-gradient(162deg, rgb(255 255 255 / .98), rgb(248 250 252 / .95));
+    box-shadow: 0 24px 44px -34px rgb(15 23 42 / .28), inset 0 1px 0 rgb(255 255 255 / .82);
+    backdrop-filter: blur(10px);
+}
+.theme-dark .plans-page .plans-surface-card,
+.dark .plans-page .plans-surface-card {
+    border-color: rgb(71 85 105 / .76);
+    background: linear-gradient(165deg, rgb(15 23 42 / .92), rgb(2 6 23 / .84));
+    box-shadow: 0 28px 46px -34px rgb(2 8 23 / .88), inset 0 1px 0 rgb(255 255 255 / .04);
+}
+.plans-page .plans-surface-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, rgb(255 255 255 / .78), transparent 74%);
+    opacity: .9;
+    pointer-events: none;
+}
+.theme-dark .plans-page .plans-surface-card::before,
+.dark .plans-page .plans-surface-card::before {
+    background: linear-gradient(90deg, rgb(255 255 255 / .08), transparent 74%);
+}
+.plans-page .plans-surface-card > * {
+    position: relative;
+    z-index: 1;
+}
+.plans-page .plans-form-shell,
+.plans-page .plans-toolbar-shell,
+.plans-page .plans-table-shell,
+.plans-page .plans-readonly-shell,
+.plans-page .plans-modal-section {
+    border: 1px solid rgb(148 163 184 / .18);
+    border-radius: 1rem;
+    background: linear-gradient(160deg, rgb(255 255 255 / .76), rgb(241 245 249 / .84));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .72);
+}
+.theme-dark .plans-page .plans-form-shell,
+.theme-dark .plans-page .plans-toolbar-shell,
+.theme-dark .plans-page .plans-table-shell,
+.theme-dark .plans-page .plans-readonly-shell,
+.theme-dark .plans-page .plans-modal-section,
+.dark .plans-page .plans-form-shell,
+.dark .plans-page .plans-toolbar-shell,
+.dark .plans-page .plans-table-shell,
+.dark .plans-page .plans-readonly-shell,
+.dark .plans-page .plans-modal-section {
+    border-color: rgb(71 85 105 / .54);
+    background: linear-gradient(165deg, rgb(15 23 42 / .62), rgb(2 6 23 / .56));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .04);
+}
+.plans-page .plans-form-shell,
+.plans-page .plans-readonly-shell {
+    padding: 1rem;
+}
+.plans-page .plans-toolbar-shell {
+    padding: .85rem;
+}
+.plans-page .plans-table-shell {
+    overflow: auto;
+}
+.plans-page .plans-table-shell .plans-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: rgb(241 245 249 / .94);
+    backdrop-filter: blur(4px);
+}
+.theme-dark .plans-page .plans-table-shell .plans-table thead th,
+.dark .plans-page .plans-table-shell .plans-table thead th {
+    background: rgb(15 23 42 / .94);
+}
+.plans-page .plans-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    font-weight: 700;
+    color: rgb(100 116 139);
+}
+.theme-dark .plans-page .plans-empty-state,
+.dark .plans-page .plans-empty-state {
+    color: rgb(148 163 184);
+}
+.plans-page .plans-promo-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .85rem;
+}
+.plans-page .plans-modal-form {
+    display: grid;
+    gap: 1rem;
+}
+.plans-page .plans-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .65rem;
+    padding-top: .8rem;
+    border-top: 1px solid rgb(148 163 184 / .16);
+}
+.theme-dark .plans-page .plans-modal-actions,
+.dark .plans-page .plans-modal-actions {
+    border-top-color: rgb(71 85 105 / .46);
+}
+.plans-page .plans-control-shell {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgb(163 230 53 / .22);
+    border-radius: 1.22rem;
+    background:
+        radial-gradient(circle at top right, rgb(163 230 53 / .16), transparent 34%),
+        linear-gradient(150deg, rgb(255 255 255 / .99), rgb(248 250 252 / .95));
+    box-shadow: 0 28px 56px -40px rgb(15 23 42 / .5);
+    backdrop-filter: blur(14px);
+    padding: 1.05rem;
+}
+.theme-dark .plans-page .plans-control-shell {
+    border-color: rgb(163 230 53 / .24);
+    background:
+        radial-gradient(circle at top right, rgb(163 230 53 / .14), transparent 34%),
+        linear-gradient(160deg, rgb(2 6 23 / .84), rgb(15 23 42 / .62));
+    box-shadow: 0 30px 58px -42px rgb(2 8 23 / .92);
+}
+.plans-page .plans-control-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / .72), transparent);
+    opacity: .8;
+    pointer-events: none;
+}
+.plans-page .plans-control-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(95deg, transparent, rgb(163 230 53 / .05), transparent);
+}
+.plans-page .plans-control-grid {
+    display: grid;
+    gap: 1.05rem;
+    position: relative;
+    z-index: 1;
+}
+.plans-page .plans-control-copy {
+    max-width: 48rem;
+}
+.plans-page .plans-control-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+    color: rgb(77 124 15 / .94);
+}
+.theme-dark .plans-page .plans-control-kicker {
+    color: rgb(217 249 157 / .94);
+}
+.plans-page .plans-control-kicker::before {
+    content: '';
+    width: .52rem;
+    height: .52rem;
+    border-radius: 999px;
+    background: rgb(132 204 22 / .94);
+    box-shadow: 0 0 0 6px rgb(132 204 22 / .12);
+}
+.plans-page .plans-control-heading {
+    margin-top: .78rem;
+    font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+    line-height: 1.08;
+    letter-spacing: -.035em;
+    font-weight: 900;
+    color: rgb(15 23 42 / .97);
+}
+.theme-dark .plans-page .plans-control-heading {
+    color: rgb(241 245 249 / .98);
+}
+.plans-page .plans-control-summary {
+    margin-top: .5rem;
+    font-size: .88rem;
+    line-height: 1.58;
+    color: rgb(71 85 105 / .92);
+}
+.theme-dark .plans-page .plans-control-summary {
+    color: rgb(148 163 184 / .9);
+}
+.plans-page .plans-control-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem;
+    align-items: center;
+}
+.plans-page .plans-control-actions .ui-button {
+    min-height: 2.72rem;
+}
+.plans-page .plans-control-priority-grid {
+    display: grid;
+    gap: .75rem;
+}
+.plans-page .plans-control-priority {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.05rem;
+    border: 1px solid rgb(148 163 184 / .24);
+    background: linear-gradient(180deg, rgb(255 255 255 / .9), rgb(248 250 252 / .74));
+    box-shadow: 0 18px 30px -28px rgb(15 23 42 / .28);
+    min-height: 7rem;
+    padding: .9rem .95rem;
+}
+.theme-dark .plans-page .plans-control-priority {
+    border-color: rgb(148 163 184 / .18);
+    background: linear-gradient(160deg, rgb(15 23 42 / .74), rgb(15 23 42 / .54));
+    box-shadow: 0 20px 34px -28px rgb(2 8 23 / .9);
+}
+.plans-page .plans-control-priority::before {
+    content: '';
+    position: absolute;
+    left: .9rem;
+    right: .9rem;
+    top: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: rgb(148 163 184 / .22);
+}
+.plans-page .plans-control-priority[data-tone='warning']::before {
+    background: linear-gradient(90deg, rgb(245 158 11 / .9), rgb(245 158 11 / .24));
+}
+.plans-page .plans-control-priority[data-tone='success']::before {
+    background: linear-gradient(90deg, rgb(16 185 129 / .9), rgb(16 185 129 / .24));
+}
+.plans-page .plans-control-priority[data-tone='info']::before {
+    background: linear-gradient(90deg, rgb(6 182 212 / .9), rgb(6 182 212 / .24));
+}
+.plans-page .plans-control-priority-label {
+    font-size: .67rem;
+    font-weight: 900;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgb(71 85 105 / .92);
+}
+.theme-dark .plans-page .plans-control-priority-label {
+    color: rgb(148 163 184 / .9);
+}
+.plans-page .plans-control-priority-value {
+    margin-top: .42rem;
+    font-size: 1.46rem;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -.03em;
+    color: rgb(15 23 42 / .97);
+}
+.theme-dark .plans-page .plans-control-priority-value {
+    color: rgb(248 250 252 / .98);
+}
+.plans-page .plans-control-priority-note {
+    margin-top: .4rem;
+    font-size: .75rem;
+    line-height: 1.45;
+    color: rgb(71 85 105 / .9);
+}
+.theme-dark .plans-page .plans-control-priority-note {
+    color: rgb(148 163 184 / .88);
+}
 .theme-light .plans-page .plan-promo-empty {
     background: rgb(248 250 252 / .85);
+}
+@media (min-width: 768px) {
+    .plans-page .plans-control-priority-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 @media (max-width: 1279px) {
     .plans-page .plan-preview-sticky {
         position: static;
     }
 }
+@media (min-width: 1280px) {
+    .plans-page .plans-control-grid {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+    .plans-page .plans-control-priority-grid {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
 @media (max-width: 640px) {
+    .plans-page .plans-control-actions .ui-button,
     .plans-page .plan-create-actions .ui-button,
-    .plans-page .plans-filter-grid #plans-clear-filters {
+    .plans-page .plans-filter-grid #plans-clear-filters,
+    .plans-page .plans-modal-actions .ui-button {
         width: 100%;
     }
 }
@@ -266,9 +560,12 @@
 @section('content')
 @php
     $planAccessService = app(\App\Services\PlanAccessService::class);
+    $contextGym = (string) request()->route('contextGym');
     $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
     $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
     $isBranchContext = (bool) request()->attributes->get('gym_context_is_branch', false);
+    $routeExtras = request()->query('pwa_mode') === 'standalone' ? ['pwa_mode' => 'standalone'] : [];
+    $plansRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []) + $routeExtras;
     $isReadOnlyScope = $isGlobalScope || $isBranchContext;
     $canManagePromotions = $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'promotions');
     $canViewPromotions = $canManagePromotions || $isReadOnlyScope;
@@ -296,6 +593,10 @@
     $defaultDurationDays = max(1, (int) old('duration_days', 30));
     $defaultDurationMonths = max(1, (int) old('duration_months', 1));
     $defaultDurationLabel = \App\Support\PlanDuration::label($defaultDurationUnit, $defaultDurationDays, $defaultDurationMonths);
+    $planControlPlansDashboard = is_array($planControlPlansDashboard ?? null) ? $planControlPlansDashboard : null;
+    $plansTableSubtitle = $planControlPlansDashboard
+        ? 'Catalogo claro para vender y renovar sin salir de esta pantalla.'
+        : 'Administra tus planes sin salir de esta pantalla.';
 @endphp
 
 <div class="plans-page space-y-5">
@@ -313,8 +614,77 @@
         @endif
     </div>
 
+    @if ($planControlPlansDashboard)
+        @php
+            $topPlanMemberships = (int) ($planControlPlansDashboard['top_plan_memberships'] ?? 0);
+            $plansControlPriorities = [
+                [
+                    'label' => 'Planes activos',
+                    'value' => (string) ($planControlPlansDashboard['active_plans'] ?? 0),
+                    'note' => ((int) ($planControlPlansDashboard['active_plans'] ?? 0)) > 0
+                        ? 'Listos para vender desde recepcion y clientes.'
+                        : 'Activa al menos un plan para empezar a cobrar.',
+                    'tone' => ((int) ($planControlPlansDashboard['active_plans'] ?? 0)) > 0 ? 'success' : 'warning',
+                ],
+                [
+                    'label' => 'Catalogo total',
+                    'value' => (string) ($planControlPlansDashboard['total_plans'] ?? 0),
+                    'note' => ((int) ($planControlPlansDashboard['hidden_plans'] ?? 0)) > 0
+                        ? (int) ($planControlPlansDashboard['hidden_plans'] ?? 0).' oculto(s) listos para futuras ventas.'
+                        : 'No hay planes ocultos ahora mismo.',
+                    'tone' => ((int) ($planControlPlansDashboard['hidden_plans'] ?? 0)) > 0 ? 'info' : 'success',
+                ],
+                [
+                    'label' => 'Precio base',
+                    'value' => $planControlPlansDashboard['base_price'] !== null
+                        ? \App\Support\Currency::format((float) $planControlPlansDashboard['base_price'], $appCurrencyCode)
+                        : 'Sin precio',
+                    'note' => $planControlPlansDashboard['base_price'] !== null
+                        ? 'Es la entrada mas baja visible de tu catalogo.'
+                        : 'Crea tu primer plan para definir el precio de entrada.',
+                    'tone' => $planControlPlansDashboard['base_price'] !== null ? 'info' : 'warning',
+                ],
+                [
+                    'label' => 'Plan con movimiento',
+                    'value' => (string) ($planControlPlansDashboard['top_plan_name'] ?? 'Sin ventas aun'),
+                    'note' => $topPlanMemberships > 0
+                        ? $topPlanMemberships.' membresia(s) asociadas a este plan.'
+                        : 'Todavia no hay membresias registradas en un plan.',
+                    'tone' => $topPlanMemberships > 0 ? 'success' : 'warning',
+                ],
+            ];
+        @endphp
+        <section class="plans-control-shell">
+            <div class="plans-control-grid">
+                <div class="plans-control-copy">
+                    <span class="plans-control-kicker">Plan Control / Planes</span>
+                    <h2 class="plans-control-heading">{{ $planControlPlansDashboard['headline'] ?? 'Catalogo claro y listo para vender desde una sola sede' }}</h2>
+                    <p class="plans-control-summary">{{ $planControlPlansDashboard['summary'] ?? 'Ordena el catalogo para vender y renovar sin ruido.' }}</p>
+                </div>
+
+                <div class="plans-control-actions">
+                    @if (! $isReadOnlyScope)
+                        <x-ui.button href="#create-plan-form" variant="primary">Nuevo plan</x-ui.button>
+                    @endif
+                    <x-ui.button :href="route('clients.index', $plansRouteParams)" variant="{{ $isReadOnlyScope ? 'primary' : 'secondary' }}">Ir a clientes</x-ui.button>
+                    <x-ui.button :href="route('cash.index', $plansRouteParams)" variant="ghost">Ir a caja</x-ui.button>
+                </div>
+
+                <div class="plans-control-priority-grid">
+                    @foreach ($plansControlPriorities as $priority)
+                        <article class="plans-control-priority" data-tone="{{ $priority['tone'] }}">
+                            <p class="plans-control-priority-label">{{ $priority['label'] }}</p>
+                            <p class="plans-control-priority-value">{{ $priority['value'] }}</p>
+                            <p class="plans-control-priority-note">{{ $priority['note'] }}</p>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     @if (! $isReadOnlyScope)
-    <x-ui.card>
+    <x-ui.card class="plans-surface-card">
         <div class="space-y-4">
             <div>
                 <h2 class="ui-heading text-xl font-black">Crear plan</h2>
@@ -443,25 +813,27 @@
         </div>
     </x-ui.card>
     @else
-    <x-ui.card title="Crear plan" subtitle="Modo de solo lectura.">
-        <p class="ui-muted text-sm">
+    <x-ui.card class="plans-surface-card" title="Crear plan" subtitle="Modo de solo lectura.">
+        <div class="plans-readonly-shell">
+            <p class="ui-muted text-sm">
             {{ $isGlobalScope
                 ? 'Para crear o editar planes, cambia el selector de sucursal arriba y entra en una sede específica.'
                 : 'La sede secundaria no puede crear ni editar planes. Esta gestión se realiza desde la sede principal.' }}
-        </p>
+            </p>
+        </div>
     </x-ui.card>
     @endif
 
-    <x-ui.card>
+    <x-ui.card class="plans-surface-card">
             <div class="space-y-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <h2 class="ui-heading text-lg font-black">Planes del gimnasio</h2>
-                        <p class="ui-muted text-sm">Administra tus planes sin salir de esta pantalla.</p>
+                        <p class="ui-muted text-sm">{{ $plansTableSubtitle }}</p>
                     </div>
                 </div>
 
-                <div class="plans-filter-grid">
+                <div class="plans-filter-grid plans-toolbar-shell">
                     <label class="space-y-1 text-sm font-semibold ui-muted">
                         <span class="text-xs uppercase tracking-wide">Buscar plan</span>
                         <input id="plans-search" type="search" class="ui-input" placeholder="Buscar por nombre o ID" aria-label="Buscar planes">
@@ -480,7 +852,7 @@
                     <button id="plans-clear-filters" type="button" class="ui-button ui-button-ghost px-3 py-2 text-xs font-bold">Limpiar filtros</button>
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
+                <div class="plans-table-shell overflow-x-auto rounded-2xl border border-slate-300/30">
                     <table class="plans-table ui-table min-w-[980px] text-sm">
                         <thead>
                             <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
@@ -557,7 +929,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
+                                    <td colspan="{{ $isGlobalScope ? 7 : 6 }}" class="plans-empty-state px-4 py-8 text-center text-sm font-semibold text-slate-400">No hay planes registrados.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -568,9 +940,9 @@
 
     @if ($canViewPromotions)
     @php $promotionRows = ($promotions ?? collect()); @endphp
-    <x-ui.card>
-        <div class="space-y-4">
-            <div class="flex flex-wrap items-start justify-between gap-3">
+    <x-ui.card class="plans-surface-card">
+        <div class="plans-form-shell space-y-4">
+            <div class="plans-promo-toolbar flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 class="ui-heading text-lg font-black">Promociones comerciales</h2>
                     <p class="ui-muted text-sm">Crea promociones fáciles para fechas especiales: San Valentín, 2x1, trae a un amigo y más.</p>
@@ -596,7 +968,7 @@
                     @endif
                 </div>
             @else
-                <div class="overflow-x-auto rounded-2xl border border-slate-300/30">
+                <div class="plans-table-shell overflow-x-auto rounded-2xl border border-slate-300/30">
                     <table class="plans-table ui-table min-w-[1020px] text-sm">
                         <thead>
                         <tr class="border-b border-slate-200/40 text-left text-xs uppercase tracking-wider">
@@ -697,11 +1069,11 @@
                 <button type="button" class="mini-action" data-close-modal="promotion-create-modal" aria-label="Cerrar modal promoción">Cerrar</button>
             </div>
 
-            <form id="promotion-form" method="POST" action="{{ route('plans.promotions.store') }}" class="space-y-4 px-4 py-4">
+            <form id="promotion-form" method="POST" action="{{ route('plans.promotions.store') }}" class="plans-modal-form space-y-4 px-4 py-4">
                 @csrf
                 <input type="hidden" name="promotion_form" value="1">
 
-                <div class="space-y-2">
+                <div class="plans-modal-section space-y-2">
                     <p class="ui-muted text-xs font-bold uppercase tracking-wide">Plantillas rápidas</p>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" class="chip-btn js-promo-template"
@@ -798,7 +1170,7 @@
                     </label>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="plans-modal-actions flex flex-wrap items-center justify-between gap-3">
                     <p class="ui-muted text-xs" id="promo-help-text">Tip: usa nombre claro y vigencia para evitar cobros equivocados.</p>
                     <div class="flex items-center gap-2">
                         <button type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold" data-close-modal="promotion-create-modal">Cancelar</button>
@@ -812,9 +1184,9 @@
         </div>
     </div>
     @endif
-    @else
-    <x-ui.card>
-        <div class="space-y-3">
+    @elseif (! $planControlPlansDashboard)
+    <x-ui.card class="plans-surface-card">
+        <div class="plans-readonly-shell space-y-3">
             <h2 class="ui-heading text-lg font-black">Promociones comerciales</h2>
             <p class="ui-muted text-sm">
                 Este módulo no está disponible en tu plan actual. Para habilitar promociones cambia al Plan profesional o superior.
@@ -829,7 +1201,7 @@
                 <h3 id="plan-edit-title" class="ui-heading text-base font-black">Editar plan</h3>
                 <button type="button" class="mini-action" data-close-modal="plan-edit-modal" aria-label="Cerrar modal editar">Cerrar</button>
             </div>
-            <form id="edit-plan-form" method="POST" action="#" class="space-y-3 px-4 py-4">
+            <form id="edit-plan-form" method="POST" action="#" class="plans-modal-form space-y-3 px-4 py-4">
                 @csrf
                 <input type="hidden" name="_method" value="PUT">
                 <label class="space-y-1 text-sm font-semibold ui-muted">
@@ -864,7 +1236,7 @@
                         <option value="inactive">Oculto</option>
                     </select>
                 </label>
-                <div class="flex justify-end gap-2 pt-2">
+                <div class="plans-modal-actions flex justify-end gap-2 pt-2">
                     <button type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold" data-close-modal="plan-edit-modal">Cancelar</button>
                     <button id="edit-plan-submit" type="submit" class="ui-button ui-button-primary px-4 py-2 text-xs font-black"><span class="js-submit-label">Guardar cambios</span><span class="js-submit-loading hidden">Guardando...</span></button>
                 </div>
@@ -878,11 +1250,11 @@
                 <h3 id="plan-delete-title" class="ui-heading text-base font-black">Eliminar plan</h3>
                 <button type="button" class="mini-action" data-close-modal="plan-delete-modal" aria-label="Cerrar modal eliminar">Cerrar</button>
             </div>
-            <form id="delete-plan-form" method="POST" action="#" class="space-y-4 px-4 py-4">
+            <form id="delete-plan-form" method="POST" action="#" class="plans-modal-form space-y-4 px-4 py-4">
                 @csrf
                 <input type="hidden" name="_method" value="DELETE">
                 <p class="ui-text text-sm">Vas a eliminar <strong id="delete-plan-name" class="text-rose-500">este plan</strong>. Esta acción no se puede deshacer.</p>
-                <div class="flex justify-end gap-2">
+                <div class="plans-modal-actions flex justify-end gap-2">
                     <button type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold" data-close-modal="plan-delete-modal">Cancelar</button>
                     <button id="delete-plan-submit" type="submit" class="ui-button ui-button-danger px-4 py-2 text-xs font-black"><span class="js-submit-label">Eliminar</span><span class="js-submit-loading hidden">Eliminando...</span></button>
                 </div>
@@ -896,12 +1268,12 @@
                 <h3 id="plan-toggle-title" class="ui-heading text-base font-black">Cambiar estado</h3>
                 <button type="button" class="mini-action" data-close-modal="plan-toggle-modal" aria-label="Cerrar modal cambiar estado">Cerrar</button>
             </div>
-            <form id="toggle-plan-form" method="POST" action="#" class="space-y-4 px-4 py-4">
+            <form id="toggle-plan-form" method="POST" action="#" class="plans-modal-form space-y-4 px-4 py-4">
                 @csrf
                 <input type="hidden" name="_method" value="PATCH">
                 <input type="hidden" name="status" id="toggle-plan-status" value="inactive">
                 <p class="ui-text text-sm" id="toggle-plan-message">Confirma actualizar estado del plan.</p>
-                <div class="flex justify-end gap-2">
+                <div class="plans-modal-actions flex justify-end gap-2">
                     <button type="button" class="ui-button ui-button-muted px-3 py-2 text-xs font-bold" data-close-modal="plan-toggle-modal">Cancelar</button>
                     <button id="toggle-plan-submit" type="submit" class="ui-button ui-button-primary px-4 py-2 text-xs font-black"><span class="js-submit-label">Confirmar</span><span class="js-submit-loading hidden">Actualizando...</span></button>
                 </div>
@@ -915,8 +1287,8 @@
                 <h3 id="plan-actions-title" class="ui-heading text-base font-black">Más acciones del plan</h3>
                 <button type="button" class="mini-action" data-close-modal="plan-actions-modal" aria-label="Cerrar modal de acciones">Cerrar</button>
             </div>
-            <div class="space-y-4 px-4 py-4">
-                <div class="plan-actions-modal-summary">
+            <div class="plans-modal-form space-y-4 px-4 py-4">
+                <div class="plan-actions-modal-summary plans-modal-section">
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Plan seleccionado</p>
                     <p id="plan-actions-plan-name" class="mt-1 text-base font-black text-slate-100">Plan</p>
                     <p id="plan-actions-plan-meta" class="mt-1 text-xs text-slate-300">Duración y precio</p>

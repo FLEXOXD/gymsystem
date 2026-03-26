@@ -288,10 +288,15 @@ class ProductController extends Controller
             ->with('status', 'Estado del producto actualizado.');
     }
 
-    public function adjustStock(Request $request, string $contextGym, Product $product): RedirectResponse
+    public function adjustStock(Request $request, string $contextGym, ?Product $product = null): RedirectResponse
     {
         $gymId = $this->resolveGymId($request);
-        $this->assertProductBelongsToGym($product, $gymId);
+
+        if ($product instanceof Product && ! $request->filled('product_id')) {
+            $request->merge([
+                'product_id' => (int) $product->id,
+            ]);
+        }
 
         if (ActiveGymContext::isGlobal($request)) {
             return redirect()
@@ -303,12 +308,25 @@ class ProductController extends Controller
         abort_unless($actor, 403, 'Usuario no autenticado.');
 
         $data = $request->validate([
+            'product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(fn ($query) => $query->where('gym_id', $gymId)),
+            ],
             'movement_type' => ['required', Rule::in(['entry', 'adjustment_add', 'adjustment_remove'])],
             'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['nullable', Rule::in(['cash', 'card', 'transfer'])],
             'note' => ['nullable', 'string', 'max:255'],
         ]);
+
+        $product = Product::query()->forGym($gymId)->find((int) $data['product_id']);
+        if (! $product instanceof Product) {
+            return redirect()
+                ->route('products.index', ['contextGym' => $contextGym])
+                ->withErrors(['product_id' => 'Selecciona un producto valido para mover stock.'])
+                ->withInput();
+        }
 
         $quantity = (int) $data['quantity'];
         $quantityChange = match ((string) $data['movement_type']) {
@@ -329,13 +347,13 @@ class ProductController extends Controller
             );
         } catch (RuntimeException $exception) {
             return redirect()
-                ->route('products.index', ['contextGym' => $contextGym, 'stock_product' => $product->id])
+                ->route('products.index', ['contextGym' => $contextGym])
                 ->withErrors(['stock' => $exception->getMessage()])
                 ->withInput();
         }
 
         return redirect()
-            ->route('products.index', ['contextGym' => $contextGym, 'stock_product' => $product->id])
+            ->route('products.index', ['contextGym' => $contextGym])
             ->with('status', 'Stock actualizado correctamente.');
     }
 

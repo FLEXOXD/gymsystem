@@ -77,10 +77,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Editor comercial</span>
-                    <h2 class="sa-title">Gestiona la landing como un sistema editorial, no como un formulario largo.</h2>
+                    <h2 class="sa-title">Landing comercial con preview y checklist, sin perderte en un formulario largo.</h2>
                     <p class="sa-subtitle">
-                        Reorganicé la experiencia para que primero entiendas estado, cobertura y checklist de publicación.
-                        El editor sigue siendo el mismo en funcionalidad, pero ahora trabaja con mejor contexto, mejor navegación y acceso más directo al preview.
+                        Primero ves estado y cobertura, luego editas por bloques y abres la vista previa desde el mismo flujo.
                     </p>
                     <div class="sa-actions">
                         <button type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="ui-button ui-button-primary">Abrir vista previa</button>
@@ -90,19 +89,19 @@
                 </div>
 
                 <div class="sa-note-card">
-                    <p class="sa-note-label">Flujo editorial recomendado</p>
+                    <p class="sa-note-label">Orden recomendado</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
                             <strong>1. Ajusta narrativa</strong>
-                            <span>Marca, hero y servicios deben contar la propuesta antes de tocar detalles cosméticos.</span>
+                            <span>Marca, hero y servicios primero.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>2. Válida conversión</strong>
-                            <span>WhatsApp, CTA y botones de planes deben quedar listos antes de publicar cambios.</span>
+                            <strong>2. Valida conversion</strong>
+                            <span>WhatsApp, CTA y planes antes de publicar.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>3. Revisa en preview</strong>
-                            <span>Comprueba desktop, tablet y mobile desde la misma vista antes de guardar.</span>
+                            <span>Comprueba desktop y mobile antes de guardar.</span>
                         </div>
                     </div>
                 </div>
@@ -145,8 +144,8 @@
 
         <div class="grid items-start gap-6 2xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.65fr)]">
         <div class="space-y-4">
-            <x-ui.card title="Contenido comercial" subtitle="Editor visual de landing para editar por secciones y ver la vista previa al instante.">
-                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2" aria-describedby="site-content-form-help">
+            <x-ui.card title="Contenido comercial" subtitle="Editor visual de landing para editar por secciones y ver la vista previa al instante." class="sa-form-card">
+                <form id="site-content-form" method="POST" action="{{ route('superadmin.web-page.update') }}" enctype="multipart/form-data" class="sa-form-workbench sa-editor-workbench site-content-editor grid gap-4 text-slate-800 lg:grid-cols-2" aria-describedby="site-content-form-help">
                     @csrf
 
                     <p id="site-content-form-help" class="sr-only">
@@ -401,11 +400,11 @@
                                         <p class="text-xs font-bold uppercase tracking-wide">Botones de la interfaz</p>
                                         <div class="mt-3 grid gap-4 lg:grid-cols-2">
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                                                Texto botÃ³n principal
+                                                Texto boton principal
                                                 <input type="text" name="section_{{ $section }}_cta_label" class="ui-input" value="{{ old('section_'.$section.'_cta_label', $content['section_'.$section.'_cta_label'] ?? '') }}">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide">
-                                                Texto botÃ³n modal
+                                                Texto boton modal
                                                 <input type="text" name="section_{{ $section }}_modal_button_label" class="ui-input" value="{{ old('section_'.$section.'_modal_button_label', $content['section_'.$section.'_modal_button_label'] ?? '') }}">
                                             </label>
                                         </div>
@@ -426,15 +425,15 @@
                                         <p class="text-xs font-bold uppercase tracking-wide">Contenido del modal explicativo</p>
                                         <div class="mt-3 grid gap-4 lg:grid-cols-2">
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                                Etiqueta pequeÃ±a modal
+                                                Etiqueta pequena modal
                                                 <input type="text" name="section_{{ $section }}_modal_badge" class="ui-input" value="{{ old('section_'.$section.'_modal_badge', $content['section_'.$section.'_modal_badge'] ?? '') }}">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                                TÃ­tulo modal
+                                                Titulo modal
                                                 <input type="text" name="section_{{ $section }}_modal_title" class="ui-input" value="{{ old('section_'.$section.'_modal_title', $content['section_'.$section.'_modal_title'] ?? '') }}">
                                             </label>
                                             <label class="space-y-1 text-xs font-bold uppercase tracking-wide lg:col-span-2">
-                                                DescripciÃ³n modal
+                                                Descripcion modal
                                                 <textarea name="section_{{ $section }}_modal_text" class="ui-input min-h-[108px]">{{ old('section_'.$section.'_modal_text', $content['section_'.$section.'_modal_text'] ?? '') }}</textarea>
                                             </label>
                                             @for ($modalItem = 1; $modalItem <= 3; $modalItem++)
@@ -513,7 +512,7 @@
         </div>
 
         <aside class="space-y-4 2xl:sticky 2xl:top-6">
-            <div class="ui-card space-y-4">
+            <div class="ui-card sa-form-review space-y-4">
                 <div>
                     <h3 class="sa-section-title">Checklist de publicación</h3>
                     <p class="sa-section-copy">Estado rápido de los bloques que más afectan percepción y conversión.</p>
@@ -538,7 +537,7 @@
                 </div>
             </div>
 
-            <div class="ui-card space-y-4">
+            <div class="ui-card sa-form-review space-y-4">
                 <div>
                     <h3 class="sa-section-title">Acciones rápidas</h3>
                     <p class="sa-section-copy">Atajos para validar contenido sin perder contexto de edición.</p>
@@ -559,7 +558,7 @@
                 </div>
             </div>
 
-            <div class="ui-card space-y-4">
+            <div class="ui-card sa-form-review space-y-4">
                 <div>
                     <h3 class="sa-section-title">Criterio editorial</h3>
                     <p class="sa-section-copy">Buenas prácticas aplicadas para que la página principal convierta mejor y se mantenga coherente.</p>
@@ -646,7 +645,7 @@
             z-index: 10000;
             display: none;
         }
-        .web-preview-modal.is-open { display: block; }
+        .web-preview-modal.is-open { display: flex; align-items: center; justify-content: center; }
         .web-preview-backdrop {
             position: absolute;
             inset: 0;
@@ -719,10 +718,10 @@
 
     <button id="live-preview-open" type="button" data-open-live-preview aria-haspopup="dialog" aria-controls="live-preview-modal" class="web-preview-fab">Vista previa en vivo</button>
 
-    <div id="live-preview-modal" class="web-preview-modal" aria-hidden="true">
-        <div id="live-preview-backdrop" class="web-preview-backdrop"></div>
-        <div class="web-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="live-preview-title" aria-describedby="live-preview-description" tabindex="-1">
-            <div class="web-preview-head">
+    <div id="live-preview-modal" class="sa-modal-shell web-preview-modal" aria-hidden="true">
+        <div id="live-preview-backdrop" class="sa-modal-backdrop web-preview-backdrop"></div>
+        <div class="sa-modal-panel web-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="live-preview-title" aria-describedby="live-preview-description" tabindex="-1">
+            <div class="sa-modal-header web-preview-head">
                 <div class="web-preview-title">
                     <strong id="live-preview-title">Vista previa en vivo</strong>
                     <span id="live-preview-description">Landing pública en vivo mientras editas</span>
@@ -736,7 +735,7 @@
                     <button type="button" id="live-preview-close" class="web-preview-btn">Cerrar</button>
                 </div>
             </div>
-            <div class="web-preview-body">
+            <div class="sa-modal-body web-preview-body">
                 <div id="preview-modal-viewport" class="web-preview-viewport">
                     <iframe id="landing-preview-modal"
                             src="{{ $landingPreviewUrl }}"

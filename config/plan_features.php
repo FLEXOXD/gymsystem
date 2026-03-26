@@ -17,8 +17,9 @@ return [
 
     'matrix' => [
         'basico' => [
+            'cashiers' => false,
             'promotions' => false,
-            'reports_base' => false,
+            'reports_base' => true,
             'reports_export' => false,
             'multi_branch' => false,
             'pwa_install' => false,
@@ -27,6 +28,7 @@ return [
             'sales_inventory_reports' => false,
         ],
         'profesional' => [
+            'cashiers' => true,
             'promotions' => true,
             'reports_base' => true,
             'reports_export' => true,
@@ -37,6 +39,7 @@ return [
             'sales_inventory_reports' => true,
         ],
         'premium' => [
+            'cashiers' => true,
             'promotions' => true,
             'reports_base' => true,
             'reports_export' => true,
@@ -47,6 +50,7 @@ return [
             'sales_inventory_reports' => true,
         ],
         'sucursales' => [
+            'cashiers' => true,
             'promotions' => true,
             'reports_base' => true,
             'reports_export' => true,

@@ -3,6 +3,8 @@
     use App\Models\GymBranchLink;
     use App\Models\LandingContactMessage;
     use App\Models\PresenceSession;
+    use App\Models\SupportChatConversation;
+    use App\Models\SupportChatMessage;
     use App\Models\Subscription;
     use App\Services\LegalAcceptanceEligibilityService;
     use App\Services\PlanAccessService;
@@ -124,7 +126,7 @@
     if (! $isSuperAdmin && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('gym.contact.index')) {
         $contactUrl = route('gym.contact.index', $gymRouteParams);
     } else {
-        $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@gymsystem.app?subject=Soporte%20GymSystem';
+        $contactUrl = \Illuminate\Support\Facades\Route::has('contact.index') ? route('contact.index') : 'mailto:soporte@flexgym.app?subject=Soporte%20FlexGym';
     }
     $brandHomeUrl = $isSuperAdmin
         ? route('superadmin.dashboard')
@@ -156,18 +158,26 @@
     $headerLiveClientsVisible = ! $isSuperAdmin && $activeGymId > 0;
     $headerLiveClientsCount = 0;
     $headerLiveClientsUrl = null;
+    $headerLiveDate = now()->toDateString();
     if ($headerLiveClientsVisible) {
         $headerLiveClientsCount = PresenceSession::query()
             ->forGym($activeGymId)
             ->open()
+            ->whereDate('check_in_at', $headerLiveDate)
             ->count();
         if (\Illuminate\Support\Facades\Route::has('panel.live-clients') && $activeGymSlug !== '') {
             $headerLiveClientsUrl = route('panel.live-clients', $gymRouteParams);
         }
     }
+    $canManageCashiers = ! $isSuperAdmin
+        && ! $isCashierMode
+        && $activeGymId > 0
+        && $planAccessService->canForGym($activeGymId, 'cashiers');
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
+    $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
+    $usePremiumPanelVisuals = ! $isSuperAdmin && $activeGymId > 0;
     $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
     $pushWebEnabled = (bool) config('services.webpush.enabled', false);
     $pwaUpgradeMessage = 'Sube de plan a Profesional, Premium o Sucursales para usar la app instalable (PWA).';
@@ -178,7 +188,7 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'plans.index', 'cash.index', 'reports.index', 'branches.index', 'staff.index', 'client-portal.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.client-earnings', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
     $showGlobalBranchOption = ! request()->routeIs('client-portal.*');
@@ -271,7 +281,13 @@
             ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
             ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
         ];
-    if (! $isCashierMode && \Illuminate\Support\Facades\Route::has('staff.index')) {
+    if ($canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index')) {
+        $salesNavItem = ['label' => __('ui.nav.sales_inventory'), 'route' => 'sales.index', 'params' => $gymRouteParams, 'active' => 'sales.*', 'icon' => 'sales_inventory'];
+        $productsNavItem = ['label' => __('ui.nav.products'), 'route' => 'products.index', 'params' => $gymRouteParams, 'active' => 'products.*', 'icon' => 'products'];
+
+        array_splice($gymNavItems, 3, 0, [$salesNavItem, $productsNavItem]);
+    }
+    if ($canManageCashiers && \Illuminate\Support\Facades\Route::has('staff.index')) {
         $gymNavItems[] = ['label' => 'Cajeros', 'route' => 'staff.index', 'params' => $gymRouteParams, 'active' => 'staff.*', 'icon' => 'staff'];
     }
     if (! $isCashierMode && $canViewBranches && \Illuminate\Support\Facades\Route::has('branches.index')) {
@@ -313,6 +329,50 @@
           ]
         : $gymNavItems;
 
+    $sectionLabels = [
+        'operation' => 'Operaci&oacute;n',
+        'commercial' => 'Comercial',
+        'management' => 'Administraci&oacute;n',
+        'communication' => 'Comunicaci&oacute;n',
+        'channels' => 'Canales',
+        'platform' => 'Plataforma',
+    ];
+
+    $resolveNavSection = static function (array $item, bool $isSuperAdminMode): string {
+        $icon = (string) ($item['icon'] ?? '');
+
+        if ($isSuperAdminMode) {
+            return match ($icon) {
+                'panel' => 'operation',
+                'quotations', 'inbox', 'notifications', 'suggestions', 'legal_acceptances' => 'communication',
+                'gym_directory', 'subscriptions_admin', 'branches', 'gym_create', 'plans', 'web' => 'management',
+                default => 'platform',
+            };
+        }
+
+        return match ($icon) {
+            'panel', 'reception', 'clients' => 'operation',
+            'sales_inventory', 'products', 'plans', 'cash' => 'commercial',
+            'staff', 'branches', 'reports' => 'management',
+            'client_portal' => 'channels',
+            default => 'platform',
+        };
+    };
+
+    $navSectionsMap = [];
+    foreach ($navItems as $navItem) {
+        $sectionKey = $resolveNavSection($navItem, $isSuperAdmin);
+        if (! isset($navSectionsMap[$sectionKey])) {
+            $navSectionsMap[$sectionKey] = [
+                'key' => $sectionKey,
+                'label' => $sectionLabels[$sectionKey] ?? 'M&oacute;dulos',
+                'items' => [],
+            ];
+        }
+        $navSectionsMap[$sectionKey]['items'][] = $navItem;
+    }
+    $navSections = array_values($navSectionsMap);
+
     $statusVariant = match ($gymSubscriptionStatus) {
         'active' => 'success',
         'grace' => 'warning',
@@ -324,6 +384,8 @@
         : '#';
     $headerContactUnread = 0;
     $headerContactItems = collect();
+    $supportChatUnread = 0;
+    $supportChatUnreadCountUrl = null;
     if ($isSuperAdmin && \Illuminate\Support\Facades\Schema::hasTable('landing_contact_messages')) {
         try {
             $headerContactUnread = LandingContactMessage::query()->withinBellWindow()->whereNull('read_at')->count();
@@ -338,6 +400,34 @@
             $headerContactItems = collect();
         }
     }
+    if (
+        $isSuperAdmin
+        && \Illuminate\Support\Facades\Schema::hasTable('support_chat_conversations')
+        && \Illuminate\Support\Facades\Schema::hasTable('support_chat_messages')
+    ) {
+        try {
+            $supportChatUnread = SupportChatConversation::query()
+                ->whereIn('status', [
+                    SupportChatConversation::STATUS_BOT,
+                    SupportChatConversation::STATUS_WAITING_AGENT,
+                    SupportChatConversation::STATUS_ACTIVE,
+                ])
+                ->whereHas('messages', static function (\Illuminate\Database\Eloquent\Builder $query): void {
+                    $query
+                        ->whereIn('sender_type', [SupportChatMessage::SENDER_VISITOR, SupportChatMessage::SENDER_GYM])
+                        ->whereNull('read_by_superadmin_at');
+                })
+                ->count();
+        } catch (\Throwable $exception) {
+            $supportChatUnread = 0;
+        }
+    }
+    if ($isSuperAdmin && \Illuminate\Support\Facades\Route::has('superadmin.support-chat.unread-count')) {
+        $supportChatUnreadCountUrl = route('superadmin.support-chat.unread-count');
+    }
+    $showGymSupportChatWidget = ! $isSuperAdmin
+        && $activeGymSlug !== ''
+        && \Illuminate\Support\Facades\Route::has('support-chat.gym.state');
     $isDemoMode = (bool) ($demo_mode ?? false);
     $demoSessionToken = (string) ($demo_session_token ?? '');
     $demoExpiresAt = $demo_expires_at ?? null;
@@ -345,7 +435,7 @@
     $demoServerNowIso = trim((string) ($demo_server_now_iso ?? ''));
     $demoGuideSteps = is_array($demo_guide_steps ?? null) ? array_values($demo_guide_steps) : [];
     $demoExpiresLabel = $demoExpiresAt ? $demoExpiresAt->timezone(config('app.timezone'))->format('d/m/Y H:i') : null;
-    $legalCurrentVersion = LegalTerms::Versión;
+    $legalCurrentVersion = LegalTerms::VERSION;
     $acceptedVersion = trim((string) ($user?->legal_accepted_version ?? ''));
     $legalAcceptanceColumnsReady = \Illuminate\Support\Facades\Schema::hasColumns('users', ['legal_accepted_at', 'legal_accepted_version']);
     $canAcceptLegalTerms = app(LegalAcceptanceEligibilityService::class)->canUserAccept($user);
@@ -402,15 +492,18 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlexGym">
     <?php if($canInstallPwa): ?>
-        <link rel="manifest" href="<?php echo e(asset('manifest.webmanifest')); ?>">
+        <link rel="manifest" href="<?php echo e(asset('manifest.webmanifest?v=20260317')); ?>">
     <?php endif; ?>
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
-    <link rel="shortcut icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+    <link rel="icon" href="<?php echo e(asset('favicon.ico?v=20260317')); ?>" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('pwa/fg-favicon-32.png?v=20260317')); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo e(asset('pwa/fg-favicon-16.png?v=20260317')); ?>">
+    <link rel="shortcut icon" href="<?php echo e(asset('pwa/fg-favicon-32.png?v=20260317')); ?>">
     <?php if($canInstallPwa): ?>
-        <link rel="apple-touch-icon" href="<?php echo e(asset('pwa/favicon-brand.png?v=20260302')); ?>">
+        <link rel="apple-touch-icon" href="<?php echo e(asset('pwa/fg-favicon-180.png?v=20260317')); ?>">
     <?php endif; ?>
-    <title><?php echo e($pageTitle); ?> - <?php echo e(config('app.name', 'GymSystem')); ?></title>
+    <title><?php echo e($pageTitle); ?> - <?php echo e(config('app.name', 'FlexGym')); ?></title>
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <style>
         .smart-list-wrap {
@@ -473,6 +566,34 @@
             #user-menu-dropdown,
             #header-bell-dropdown {
                 width: min(92vw, 20rem);
+                max-height: min(70vh, 30rem);
+            }
+        }
+        .panel-premium-mode {
+            --panel-shell-max-width: 88rem;
+        }
+        .panel-premium-mode #panel-header-shell,
+        .panel-premium-mode .panel-view {
+            max-width: min(var(--panel-shell-max-width), calc(100vw - 1.25rem));
+        }
+        .panel-premium-mode .panel-view {
+            padding-top: 1.35rem;
+            padding-bottom: 1.8rem;
+        }
+        .panel-view.panel-view-has-support-chat {
+            padding-bottom: max(6.2rem, 1.8rem);
+        }
+        @media (max-width: 1023px) {
+            .panel-premium-mode #panel-header-shell,
+            .panel-premium-mode .panel-view {
+                max-width: 100%;
+            }
+            .panel-premium-mode .panel-view {
+                padding-top: 1.1rem;
+                padding-bottom: calc(1.35rem + env(safe-area-inset-bottom));
+            }
+            .panel-view.panel-view-has-support-chat {
+                padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
             }
         }
         #panel-sidebar {
@@ -539,26 +660,86 @@
         #panel-sidebar.sidebar-collapsed #brand-logo-badge > img.brand-logo-media.brand-logo-media-contain {
             object-fit: contain;
         }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.95rem;
+        }
+        .sidebar-nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.32rem;
+        }
+        .sidebar-section-label {
+            margin: 0;
+            padding-left: 0.65rem;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--sidebar-section-text) !important;
+            opacity: 0.9;
+        }
         .sidebar-nav-item {
             position: relative;
-            overflow: visible;
+            overflow: hidden;
+            min-height: 2.7rem;
+            border-radius: 0.85rem;
+        }
+        .sidebar-nav-item .sidebar-icon {
+            width: 1.95rem;
+            height: 1.95rem;
+            min-width: 1.95rem;
+            min-height: 1.95rem;
+            border-radius: 0.6rem;
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+        .sidebar-nav-item .sidebar-link-badge {
+            line-height: 1;
+        }
+        .sidebar-chat-badge {
+            border-color: color-mix(in srgb, #f59e0b 52%, var(--sidebar-border));
+            background: color-mix(in srgb, #f59e0b 22%, var(--sidebar));
+            color: color-mix(in srgb, var(--sidebar-text) 96%, #fff3d4);
         }
         #panel-sidebar.sidebar-collapsed nav {
             overflow-x: visible;
         }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav {
+            gap: 0.65rem;
+        }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav-section {
+            gap: 0.25rem;
+        }
+        #panel-sidebar.sidebar-collapsed .sidebar-section-label {
+            display: none;
+        }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item {
             justify-content: center;
             gap: 0;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
         }
-        #panel-sidebar.sidebar-collapsed .sidebar-nav-item .theme-nav-dot,
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-link-badge {
             display: none;
         }
+        #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-link-badge.sidebar-chat-badge {
+            display: inline-flex;
+            position: absolute;
+            top: 0.18rem;
+            right: 0.18rem;
+            min-width: 0.88rem;
+            min-height: 0.88rem;
+            border-radius: 9999px;
+            padding: 0;
+            font-size: 0;
+            line-height: 0;
+        }
         #panel-sidebar.sidebar-collapsed .sidebar-nav-item .sidebar-icon {
-            width: 1.2rem;
-            height: 1.2rem;
+            width: 2.05rem;
+            height: 2.05rem;
+            min-width: 2.05rem;
+            min-height: 2.05rem;
         }
         #sidebar-collapsed-tooltip {
             position: fixed;
@@ -677,6 +858,9 @@
             text-transform: uppercase;
             color: color-mix(in srgb, var(--muted) 92%, #ffffff);
         }
+        .theme-light .panel-header-kicker {
+            color: color-mix(in srgb, var(--accent) 34%, #475569);
+        }
         .panel-header-kicker::before {
             content: '';
             width: 0.44rem;
@@ -704,6 +888,12 @@
             justify-content: flex-end;
             gap: 0.5rem;
             flex-wrap: nowrap;
+            overflow: visible;
+        }
+        #user-menu-root,
+        #header-bell-root {
+            position: relative;
+            z-index: 45;
         }
         .header-live-pill {
             display: inline-flex;
@@ -773,23 +963,20 @@
             text-shadow: none;
         }
         .theme-nav-link.nav-link-highlight {
-            border: 1px solid color-mix(in srgb, #22c55e 52%, var(--border));
-            background: linear-gradient(132deg, rgb(16 185 129 / 0.2), rgb(6 78 59 / 0.08));
-            color: color-mix(in srgb, var(--text) 98%, #ffffff);
-            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 10px 22px rgb(16 185 129 / 0.18);
+            border-color: color-mix(in srgb, #22c55e 40%, var(--sidebar-border));
+            background: color-mix(in srgb, #22c55e 16%, var(--sidebar));
+            color: color-mix(in srgb, var(--sidebar-text) 94%, #ecfdf5);
+            box-shadow: none;
         }
         .theme-nav-link.nav-link-highlight:hover {
-            background: linear-gradient(132deg, rgb(16 185 129 / 0.3), rgb(6 78 59 / 0.16));
-            border-color: color-mix(in srgb, #34d399 66%, var(--border));
+            background: color-mix(in srgb, #22c55e 24%, var(--sidebar));
+            border-color: color-mix(in srgb, #34d399 56%, var(--sidebar-border));
         }
         .theme-nav-active.nav-link-highlight {
-            background: linear-gradient(132deg, #16a34a, #06b6d4);
-            color: #ecfdf5;
-            box-shadow: 0 12px 28px rgb(16 185 129 / 0.3);
-        }
-        .theme-nav-dot.theme-nav-dot-highlight {
-            background: #34d399;
-            box-shadow: 0 0 0 5px rgb(16 185 129 / 0.22), 0 0 14px rgb(52 211 153 / 0.6);
+            background: color-mix(in srgb, #22c55e 26%, var(--sidebar));
+            border-color: color-mix(in srgb, #22c55e 62%, var(--sidebar-border));
+            color: var(--sidebar-active-text);
+            box-shadow: inset 3px 0 0 color-mix(in srgb, #34d399 70%, #ffffff);
         }
         .theme-nav-mobile-link.theme-nav-mobile-highlight {
             border: 1px solid color-mix(in srgb, #22c55e 42%, var(--border));
@@ -905,58 +1092,95 @@
             box-shadow: 0 14px 36px rgb(2 6 23 / 0.35);
         }
         .ui-loading-overlay {
+            --ui-loading-neon: #dcff3f;
+            --ui-loading-neon-soft: #86efac;
             position: fixed;
             inset: 0;
             z-index: 170;
             display: none;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at 20% 20%, rgb(34 197 94 / 0.12), transparent 40%), rgb(2 6 23 / 0.72);
-            backdrop-filter: blur(4px);
+            padding: 1.25rem;
+            background:
+                radial-gradient(circle at center, rgb(15 23 42 / 0.06) 0%, rgb(2 6 23 / 0.22) 28%, rgb(2 6 23 / 0.74) 100%),
+                linear-gradient(180deg, rgb(2 6 23 / 0.42), rgb(2 6 23 / 0.78));
+            backdrop-filter: blur(10px) saturate(0.88);
         }
         .ui-loading-overlay[data-open="1"] {
             display: flex;
         }
         .ui-loading-card {
-            width: min(92vw, 19rem);
-            border: 1px solid rgb(34 197 94 / 0.45);
-            border-radius: 1rem;
-            background: linear-gradient(165deg, rgb(2 6 23 / 0.94), rgb(3 14 10 / 0.96));
-            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 18px 56px rgb(0 0 0 / 0.45), 0 0 30px rgb(34 197 94 / 0.2);
-            padding: 1rem 1.1rem;
-            color: #f8fafc;
+            position: relative;
+            width: min(88vw, 18.5rem);
+            padding: 1.5rem 1rem 1.15rem;
             display: grid;
             justify-items: center;
-            gap: 0.62rem;
+            gap: 1rem;
+            isolation: isolate;
+        }
+        .ui-loading-card::before {
+            content: '';
+            position: absolute;
+            inset: -0.2rem;
+            z-index: -1;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgb(15 23 42 / 0.72) 0%, rgb(15 23 42 / 0.28) 58%, transparent 82%);
+            filter: blur(22px);
         }
         .ui-loading-spin {
-            width: 3.1rem;
-            height: 3.1rem;
+            position: relative;
+            width: 4.85rem;
+            height: 4.85rem;
             border-radius: 9999px;
-            border: 3px solid rgb(255 255 255 / 0.2);
-            border-top-color: #22c55e;
-            border-right-color: #86efac;
+            border: 5px solid rgb(255 255 255 / 0.14);
+            border-top-color: var(--ui-loading-neon);
+            border-right-color: var(--ui-loading-neon-soft);
             border-bottom-color: #ffffff;
-            animation: ui-spin-rotate 0.9s linear infinite;
-            box-shadow: 0 0 18px rgb(34 197 94 / 0.5);
+            animation: ui-spin-rotate 0.82s linear infinite;
+            box-shadow:
+                0 0 0 1px rgb(255 255 255 / 0.04),
+                0 0 18px rgb(220 255 63 / 0.22),
+                0 0 34px rgb(134 239 172 / 0.16);
         }
-        .ui-loading-title {
-            margin: 0;
-            font-size: 0.9rem;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #86efac;
+        .ui-loading-spin::before {
+            content: '';
+            position: absolute;
+            inset: 0.48rem;
+            border-radius: inherit;
+            border: 4px solid transparent;
+            border-top-color: rgb(220 255 63 / 0.92);
+            border-left-color: rgb(255 255 255 / 0.34);
+            opacity: 0.72;
+            animation: ui-spin-rotate 1.15s linear infinite reverse;
         }
         .ui-loading-message {
             margin: 0;
             text-align: center;
-            font-size: 0.82rem;
-            line-height: 1.35;
-            color: rgb(248 250 252 / 0.92);
+            font-size: 1.02rem;
+            line-height: 1.4;
+            font-weight: 900;
+            color: var(--ui-loading-neon);
+            text-shadow:
+                0 0 8px rgb(220 255 63 / 0.88),
+                0 0 22px rgb(134 239 172 / 0.4),
+                0 2px 14px rgb(2 6 23 / 0.65);
+            letter-spacing: 0.02em;
+        }
+        .ui-loading-message::after {
+            content: '...';
+            display: inline-block;
+            width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            vertical-align: bottom;
+            animation: ui-loading-dots 1.15s steps(4, end) infinite;
         }
         @keyframes ui-spin-rotate {
             to { transform: rotate(360deg); }
+        }
+        @keyframes ui-loading-dots {
+            from { width: 0; }
+            to { width: 3ch; }
         }
         .demo-header-badge {
             display: inline-flex;
@@ -1245,6 +1469,24 @@
                 font-size: clamp(1.24rem, 1rem + 0.55vw, 1.5rem);
             }
 
+            #panel-header-right {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 0.42rem;
+            }
+
+            #panel-header-right > * {
+                flex: 0 0 auto;
+            }
+
+            .header-live-pill {
+                min-height: 2.12rem;
+                padding: 0.34rem 0.7rem 0.34rem 0.62rem;
+                font-size: 0.64rem;
+                letter-spacing: 0.11em;
+            }
+
             #user-menu-button {
                 max-width: min(76vw, 15.5rem);
                 min-height: 2.7rem;
@@ -1274,12 +1516,27 @@
             }
             #panel-header-right {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-start;
                 flex-wrap: wrap;
-                row-gap: 0.45rem;
+                gap: 0.42rem;
+                overflow: visible;
             }
             #panel-header-right > * {
-                flex-shrink: 0;
+                flex: 0 0 auto;
+            }
+            #user-menu-root,
+            #header-bell-root {
+                position: static;
+            }
+            #user-menu-button {
+                min-width: 3.5rem;
+                justify-content: space-between;
+                gap: 0.55rem;
+            }
+            #user-menu-dropdown,
+            #header-bell-dropdown {
+                border-radius: 1.1rem;
+                box-shadow: 0 22px 50px rgb(2 6 23 / 0.42);
             }
             .panel-header-main {
                 font-size: clamp(1.15rem, 0.98rem + 0.5vw, 1.38rem);
@@ -1294,7 +1551,7 @@
     </style>
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
-<body class="theme-body h-full ui-text">
+<body class="<?php echo \Illuminate\Support\Arr::toCssClasses(['theme-body h-full ui-text', 'panel-premium-mode' => $usePremiumPanelVisuals]); ?>">
 <div class="min-h-screen overflow-x-clip lg:flex">
     <aside id="panel-sidebar" class="theme-sidebar relative z-40 hidden shrink-0 border-r transition-all lg:flex lg:w-64 lg:flex-col">
         <a id="brand-home-link"
@@ -1325,29 +1582,31 @@
                 <?php endif; ?>
             </div>
             <div class="sidebar-label">
-                <p class="ui-muted text-xs font-bold uppercase tracking-widest">GymSystem</p>
+                <p class="ui-muted text-xs font-bold uppercase tracking-widest"><?php echo e(config('app.name', 'FlexGym')); ?></p>
                 <p class="ui-heading text-base"><?php echo e($gymName); ?></p>
             </div>
         </a>
 
-        <nav class="space-y-1 px-3 py-4">
-            <?php $__currentLoopData = $navItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <?php
-                    $activePatterns = explode('|', $item['active']);
-                    $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
-                    $isHighlight = (bool) ($item['highlight'] ?? false);
-                    $navClass = $isActive ? 'theme-nav-active' : 'theme-nav-link';
-                    if ($isHighlight) {
-                        $navClass .= ' nav-link-highlight';
-                    }
-                ?>
-                <a href="<?php echo e(route($item['route'], $item['params'] ?? [])); ?>"
-                   data-tour="nav-<?php echo e($item['icon'] ?? 'item'); ?>"
-                   data-sidebar-label="<?php echo e($item['label']); ?>"
-                   aria-label="<?php echo e($item['label']); ?>"
-                   class="sidebar-nav-item flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition <?php echo e($navClass); ?>">
-                    <span class="theme-nav-dot inline-flex h-2.5 w-2.5 rounded-full <?php echo e($isActive ? 'bg-white' : ($isHighlight ? 'theme-nav-dot-highlight' : '')); ?>"></span>
-                    <span class="sidebar-icon inline-flex h-4 w-4 items-center justify-center">
+        <nav class="sidebar-nav px-3 py-4">
+            <?php $__currentLoopData = $navSections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <section class="sidebar-nav-section" data-sidebar-section="<?php echo e($section['key']); ?>">
+                    <p class="sidebar-section-label sidebar-label"><?php echo $section['label']; ?></p>
+                    <?php $__currentLoopData = $section['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
+                            $activePatterns = explode('|', $item['active']);
+                            $isActive = collect($activePatterns)->contains(fn ($pattern) => request()->routeIs($pattern));
+                            $isHighlight = (bool) ($item['highlight'] ?? false);
+                            $navClass = $isActive ? 'theme-nav-active' : 'theme-nav-link';
+                            if ($isHighlight) {
+                                $navClass .= ' nav-link-highlight';
+                            }
+                        ?>
+                        <a href="<?php echo e(route($item['route'], $item['params'] ?? [])); ?>"
+                           data-tour="nav-<?php echo e($item['icon'] ?? 'item'); ?>"
+                           data-sidebar-label="<?php echo e($item['label']); ?>"
+                           aria-label="<?php echo e($item['label']); ?>"
+                           class="sidebar-nav-item flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold transition <?php echo e($navClass); ?>">
+                            <span class="sidebar-icon inline-flex items-center justify-center">
                         <?php switch($item['icon'] ?? ''):
                             case ('panel'): ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1465,6 +1724,19 @@
                                     <path d="M3.8 10h2.3M18 10h2.2M5.3 6.3 6.9 7.9M18.7 6.3 17.1 7.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                 </svg>
                                 <?php break; ?>
+                            <?php case ('sales_inventory'): ?>
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 18.5h16M7.5 15V9.5M12 15V6.5M16.5 15v-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M6 5.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <?php break; ?>
+                            <?php case ('products'): ?>
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 3 4.5 7 12 11l7.5-4L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <path d="M4.5 7v10L12 21l7.5-4V7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                    <path d="M12 11v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                <?php break; ?>
                             <?php default: ?>
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
@@ -1472,19 +1744,29 @@
                         <?php endswitch; ?>
                     </span>
                     <span class="sidebar-label"><?php echo e($item['label']); ?></span>
+                    <?php if($isSuperAdmin && (($item['icon'] ?? '') === 'inbox')): ?>
+                        <span data-support-chat-badge
+                              data-count="<?php echo e((int) $supportChatUnread); ?>"
+                              class="sidebar-link-badge sidebar-chat-badge ml-auto rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] <?php echo e($supportChatUnread > 0 ? '' : 'hidden'); ?>">
+                            Chat <?php echo e(min(99, (int) $supportChatUnread)); ?>
+
+                        </span>
+                    <?php endif; ?>
                     <?php if($isHighlight): ?>
                         <span class="sidebar-link-badge ml-auto rounded-full border border-emerald-300/45 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100">
                             Link
                         </span>
                     <?php endif; ?>
                 </a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </section>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </nav>
 
     </aside>
     <div id="sidebar-collapsed-tooltip" data-open="0" aria-hidden="true"></div>
 
-    <div class="flex-1 pb-16 lg:pb-0">
+    <div class="flex-1 pb-24 md:pb-20 lg:pb-0">
         <header class="theme-header theme-divider sticky top-0 z-20 border-b backdrop-blur">
             <div id="panel-header-shell" class="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:px-6 lg:px-8">
                 <div id="panel-header-left">
@@ -1694,7 +1976,7 @@
             </div>
         </header>
 
-        <main class="panel-view mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
+        <main class="panel-view <?php echo e($showGymSupportChatWidget ? 'panel-view-has-support-chat' : ''); ?> mx-auto w-full max-w-7xl space-y-4 overflow-x-clip px-4 py-6 md:px-6 lg:px-8">
             <?php if($isDemoMode): ?>
                 <div id="demo-countdown-source"
                      class="hidden"
@@ -1852,6 +2134,221 @@
 
             <?php echo $__env->yieldContent('content'); ?>
         </main>
+
+        <?php if($showGymSupportChatWidget): ?>
+            <?php if (isset($component)) { $__componentOriginal04474778c8c646ac87f3ca31d08f2e87 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal04474778c8c646ac87f3ca31d08f2e87 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.support-chat.widget','data' => ['context' => 'gym_panel','stateUrl' => route('support-chat.gym.state', $gymRouteParams),'restartUrl' => route('support-chat.gym.restart', $gymRouteParams),'quickReplyUrl' => route('support-chat.gym.quick-reply', $gymRouteParams),'messageUrl' => route('support-chat.gym.message', $gymRouteParams),'csrfToken' => csrf_token(),'gymName' => $gymName,'gymLogoUrl' => $gymLogo,'leadCapture' => false,'compactLauncher' => true,'launcherTitle' => 'Soporte SuperAdmin']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('support-chat.widget'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['context' => 'gym_panel','state-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('support-chat.gym.state', $gymRouteParams)),'restart-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('support-chat.gym.restart', $gymRouteParams)),'quick-reply-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('support-chat.gym.quick-reply', $gymRouteParams)),'message-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('support-chat.gym.message', $gymRouteParams)),'csrf-token' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(csrf_token()),'gym-name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($gymName),'gym-logo-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($gymLogo),'lead-capture' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false),'compact-launcher' => true,'launcher-title' => 'Soporte SuperAdmin']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal04474778c8c646ac87f3ca31d08f2e87)): ?>
+<?php $attributes = $__attributesOriginal04474778c8c646ac87f3ca31d08f2e87; ?>
+<?php unset($__attributesOriginal04474778c8c646ac87f3ca31d08f2e87); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal04474778c8c646ac87f3ca31d08f2e87)): ?>
+<?php $component = $__componentOriginal04474778c8c646ac87f3ca31d08f2e87; ?>
+<?php unset($__componentOriginal04474778c8c646ac87f3ca31d08f2e87); ?>
+<?php endif; ?>
+
+            <?php if(false): ?>
+                (function () {
+                    const widgetRoot = document.querySelector('.gs-support-chat-root[data-context-type="gym_panel"]');
+                    if (!(widgetRoot instanceof HTMLElement)) {
+                        return;
+                    }
+
+                    function normalizeText(value) {
+                        return String(value || '').toLowerCase();
+                    }
+
+                    function isBusyHelper(helperText) {
+                        return helperText.includes('enviando')
+                            || helperText.includes('procesando')
+                            || helperText.includes('iniciando nueva');
+                    }
+
+                    function isLiveConversation(helperText) {
+                        return helperText.includes('conversacion activa')
+                            || helperText.includes('conversación activa')
+                            || helperText.includes('representante conectado')
+                            || helperText.includes('caso en cola');
+                    }
+
+                    function enforceSupportChatInteraction() {
+                        const helper = widgetRoot.querySelector('[data-chat-helper]');
+                        const helperText = normalizeText(helper ? helper.textContent : '');
+                        const input = widgetRoot.querySelector('[data-chat-input]');
+                        const sendButton = widgetRoot.querySelector('[data-chat-send]');
+                        const quickWrap = widgetRoot.querySelector('[data-chat-quick]');
+                        const restartButton = widgetRoot.querySelector('[data-chat-restart]');
+
+                        if (restartButton instanceof HTMLButtonElement) {
+                            restartButton.hidden = true;
+                            restartButton.disabled = true;
+                            restartButton.style.display = 'none';
+                        }
+
+                        if (!isBusyHelper(helperText)) {
+                            if (input instanceof HTMLInputElement && input.disabled) {
+                                input.disabled = false;
+                            }
+                            if (sendButton instanceof HTMLButtonElement && sendButton.disabled) {
+                                sendButton.disabled = false;
+                            }
+                        }
+
+                        if (quickWrap instanceof HTMLElement) {
+                            quickWrap.style.display = isLiveConversation(helperText) ? 'none' : 'flex';
+                        }
+                    }
+
+                    const observer = new MutationObserver(function () {
+                        enforceSupportChatInteraction();
+                    });
+
+                    observer.observe(widgetRoot, {
+                        subtree: true,
+                        childList: true,
+                        characterData: true,
+                        attributes: true,
+                    });
+
+                    window.setInterval(enforceSupportChatInteraction, 350);
+                    document.addEventListener('visibilitychange', function () {
+                        if (!document.hidden) {
+                            enforceSupportChatInteraction();
+                        }
+                    });
+
+                    enforceSupportChatInteraction();
+                })();
+            <?php endif; ?>
+
+            <script>
+                (function () {
+                    const rootSelector = '.gs-support-chat-root[data-context-type="gym_panel"]';
+
+                    function unlockChat(root) {
+                        if (!(root instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        const panel = root.querySelector('[data-chat-panel]');
+                        if (!(panel instanceof HTMLElement) || panel.hidden) {
+                            return;
+                        }
+
+                        const helper = root.querySelector('[data-chat-helper]');
+                        const helperText = String(helper ? helper.textContent : '').toLowerCase();
+                        const isBusyHelper = helperText.includes('enviando')
+                            || helperText.includes('procesando')
+                            || helperText.includes('iniciando nueva');
+
+                        const input = root.querySelector('[data-chat-input]');
+                        const sendButton = root.querySelector('[data-chat-send]');
+                        let inputWasDisabled = false;
+
+                        if (input instanceof HTMLInputElement && input.disabled) {
+                            input.disabled = false;
+                            inputWasDisabled = true;
+                        }
+                        if (sendButton instanceof HTMLButtonElement && sendButton.disabled) {
+                            sendButton.disabled = false;
+                        }
+
+                        if (input instanceof HTMLInputElement && !isBusyHelper) {
+                            const wantsFocus = root.getAttribute('data-chat-should-focus') === '1'
+                                || String(input.value || '').trim() !== '';
+
+                            if ((inputWasDisabled || wantsFocus) && document.activeElement !== input) {
+                                const cursorAt = input.value.length;
+                                input.focus({ preventScroll: true });
+                                try {
+                                    input.setSelectionRange(cursorAt, cursorAt);
+                                } catch (error) {
+                                }
+                            }
+                        }
+                    }
+
+                    function bindRoot(root) {
+                        if (!(root instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        if (root.getAttribute('data-chat-unlock-bound') === '1') {
+                            unlockChat(root);
+                            return;
+                        }
+                        root.setAttribute('data-chat-unlock-bound', '1');
+
+                        const input = root.querySelector('[data-chat-input]');
+                        const sendButton = root.querySelector('[data-chat-send]');
+                        if (input instanceof HTMLInputElement) {
+                            input.addEventListener('focus', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                            input.addEventListener('input', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                            input.addEventListener('blur', function () {
+                                if (!input.disabled) {
+                                    root.setAttribute('data-chat-should-focus', '0');
+                                }
+                            });
+                        }
+                        if (sendButton instanceof HTMLButtonElement) {
+                            sendButton.addEventListener('click', function () {
+                                root.setAttribute('data-chat-should-focus', '1');
+                            });
+                        }
+
+                        const observer = new MutationObserver(function () {
+                            unlockChat(root);
+                        });
+
+                        observer.observe(root, {
+                            subtree: true,
+                            childList: true,
+                            attributes: true,
+                            attributeFilter: ['disabled', 'hidden', 'class'],
+                        });
+
+                        window.setInterval(function () {
+                            unlockChat(root);
+                        }, 90);
+
+                        unlockChat(root);
+                    }
+
+                    function bootstrap() {
+                        document.querySelectorAll(rootSelector).forEach(bindRoot);
+                    }
+
+                    const pageObserver = new MutationObserver(bootstrap);
+                    pageObserver.observe(document.body, {
+                        subtree: true,
+                        childList: true,
+                    });
+
+                    document.addEventListener('visibilitychange', function () {
+                        if (!document.hidden) {
+                            bootstrap();
+                        }
+                    });
+                    window.addEventListener('focus', bootstrap);
+
+                    bootstrap();
+                })();
+            </script>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -1861,8 +2358,7 @@
 <div id="ui-loading-overlay" class="ui-loading-overlay" data-open="0" aria-hidden="true">
     <div class="ui-loading-card" role="status" aria-live="polite">
         <span class="ui-loading-spin" aria-hidden="true"></span>
-        <p class="ui-loading-title">Cargando</p>
-        <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud...</p>
+        <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud</p>
     </div>
 </div>
 
@@ -1949,6 +2445,299 @@
         });
     })();
 </script>
+
+<?php if($isSuperAdmin && \Illuminate\Support\Facades\Route::has('superadmin.support-chat.heartbeat')): ?>
+    <script>
+        (function () {
+            const heartbeatUrl = <?php echo json_encode(route('superadmin.support-chat.heartbeat'), 15, 512) ?>;
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrf ? String(csrf.getAttribute('content') || '').trim() : '';
+            if (heartbeatUrl === '' || csrfToken === '') {
+                return;
+            }
+
+            let inFlight = false;
+            const beat = async function () {
+                if (inFlight) {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    await fetch(heartbeatUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ heartbeat: true }),
+                    });
+                } catch (error) {
+                    // Ignore transient network errors.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            beat();
+            const timer = window.setInterval(beat, 25000);
+            window.addEventListener('beforeunload', function () {
+                clearInterval(timer);
+            });
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    beat();
+                }
+            });
+        })();
+    </script>
+<?php endif; ?>
+
+<?php if(! $isSuperAdmin && ! $isCashierMode && $user?->isOwner() && $activeGymSlug !== '' && \Illuminate\Support\Facades\Route::has('panel.owner-activity.heartbeat')): ?>
+    <script>
+        (function () {
+            const activityUrl = <?php echo json_encode(route('panel.owner-activity.heartbeat', $gymRouteParams), 512) ?>;
+            const currentRouteName = <?php echo json_encode((string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? ''), 15, 512) ?>;
+            const ownerAccessRemembered = <?php echo json_encode((bool) \Illuminate\Support\Facades\Auth::viaRemember(), 15, 512) ?>;
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrf ? String(csrf.getAttribute('content') || '').trim() : '';
+            if (activityUrl === '' || csrfToken === '') {
+                return;
+            }
+
+            const resolveChannel = function () {
+                const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                    || (window.navigator && window.navigator.standalone === true);
+
+                return isStandalone ? 'app_instalada' : 'web';
+            };
+
+            let inFlight = false;
+            const beat = async function (signal) {
+                const resolvedSignal = String(signal || 'heartbeat').trim() || 'heartbeat';
+                if (inFlight) {
+                    return;
+                }
+                if (document.hidden && resolvedSignal === 'heartbeat') {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    await fetch(activityUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            signal: resolvedSignal,
+                            channel: resolveChannel(),
+                            route_name: currentRouteName,
+                            path: [window.location.pathname, window.location.search].join(''),
+                            remembered: ownerAccessRemembered,
+                        }),
+                    });
+                } catch (_error) {
+                    // Ignore transient failures.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            beat('page_open');
+            const timer = window.setInterval(function () {
+                beat('heartbeat');
+            }, 75000);
+
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    beat('visibility_resume');
+                }
+            });
+
+            window.addEventListener('focus', function () {
+                beat('window_focus');
+            });
+
+            window.addEventListener('beforeunload', function () {
+                clearInterval(timer);
+            });
+        })();
+    </script>
+<?php endif; ?>
+
+<?php if($isSuperAdmin && $supportChatUnreadCountUrl): ?>
+    <script>
+        (function () {
+            const unreadUrl = <?php echo json_encode($supportChatUnreadCountUrl, 15, 512) ?>;
+            if (typeof unreadUrl !== 'string' || unreadUrl.trim() === '') {
+                return;
+            }
+
+            const badgeSelector = '[data-support-chat-badge]';
+            const pollEveryMs = Math.max(5000, <?php echo e((int) max(5, (int) config('support_chat.polling_interval_seconds', 7))); ?> * 1000);
+            let lastUnread = 0;
+            let hasFirstServerSync = false;
+            let inFlight = false;
+            let audioContext = null;
+            let userInteracted = false;
+
+            const parseCount = function (value) {
+                const parsed = Number.parseInt(String(value || '0'), 10);
+                return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+            };
+
+            const currentClientCount = function () {
+                let maxCount = 0;
+                document.querySelectorAll(badgeSelector).forEach(function (badge) {
+                    const badgeCount = parseCount(badge.getAttribute('data-count'));
+                    if (badgeCount > maxCount) {
+                        maxCount = badgeCount;
+                    }
+                });
+
+                return maxCount;
+            };
+
+            const renderBadges = function (count) {
+                const normalized = parseCount(count);
+                document.querySelectorAll(badgeSelector).forEach(function (badge) {
+                    badge.setAttribute('data-count', String(normalized));
+                    badge.classList.toggle('hidden', normalized <= 0);
+                    if (normalized <= 0) {
+                        return;
+                    }
+
+                    const labelCount = normalized > 99 ? '99+' : String(normalized);
+                    if (badge.classList.contains('sidebar-chat-badge')) {
+                        badge.textContent = 'Chat ' + labelCount;
+                        return;
+                    }
+
+                    badge.textContent = labelCount;
+                });
+            };
+
+            const ensureAudioReady = function () {
+                if (audioContext) {
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume().catch(function () {});
+                    }
+                    return;
+                }
+
+                const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextCtor) {
+                    return;
+                }
+
+                audioContext = new AudioContextCtor();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().catch(function () {});
+                }
+            };
+
+            const playNotificationSound = function () {
+                if (!userInteracted) {
+                    return;
+                }
+
+                try {
+                    ensureAudioReady();
+                    if (!audioContext) {
+                        return;
+                    }
+
+                    const now = audioContext.currentTime;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(840, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(620, now + 0.2);
+
+                    gainNode.gain.setValueAtTime(0.0001, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.09, now + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.24);
+                } catch (error) {
+                    // Ignore audio permission or WebAudio runtime failures.
+                }
+            };
+
+            const markInteraction = function () {
+                userInteracted = true;
+                ensureAudioReady();
+            };
+
+            window.addEventListener('pointerdown', markInteraction, { passive: true, once: true });
+            window.addEventListener('keydown', markInteraction, { once: true });
+
+            const pollUnreadCount = async function () {
+                if (inFlight) {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    const response = await fetch(unreadUrl, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    const nextUnread = parseCount(payload && payload.unread);
+                    renderBadges(nextUnread);
+
+                    if (hasFirstServerSync && nextUnread > lastUnread) {
+                        playNotificationSound();
+                    }
+
+                    lastUnread = nextUnread;
+                    hasFirstServerSync = true;
+                } catch (error) {
+                    // Ignore transient request failures.
+                } finally {
+                    inFlight = false;
+                }
+            };
+
+            lastUnread = currentClientCount();
+            renderBadges(lastUnread);
+            pollUnreadCount();
+
+            const timer = window.setInterval(pollUnreadCount, pollEveryMs);
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    pollUnreadCount();
+                }
+            });
+
+            window.addEventListener('beforeunload', function () {
+                window.clearInterval(timer);
+            });
+        })();
+    </script>
+<?php endif; ?>
 
 <?php echo $__env->make('layouts.partials.panel-inline-scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php echo $__env->yieldPushContent('scripts'); ?>

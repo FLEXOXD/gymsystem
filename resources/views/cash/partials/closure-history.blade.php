@@ -4,7 +4,7 @@
     $currencyCode = $currencyCode ?? ($appCurrencyCode ?? null);
 @endphp
 
-<div class="overflow-x-auto">
+<div class="cash-table-shell overflow-x-auto">
     <table class="ui-table min-w-[980px]">
         <thead>
         <tr>

@@ -5,12 +5,134 @@
 
 @push('styles')
 <style>
+    .report-client-earnings .report-client-surface-card {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border-color: rgb(148 163 184 / 0.22);
+        background: linear-gradient(162deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.95));
+        box-shadow: 0 24px 42px -34px rgb(15 23 42 / 0.28), inset 0 1px 0 rgb(255 255 255 / 0.82);
+        backdrop-filter: blur(10px);
+    }
+
+    .theme-dark .report-client-earnings .report-client-surface-card,
+    .dark .report-client-earnings .report-client-surface-card {
+        border-color: rgb(71 85 105 / 0.76);
+        background: linear-gradient(165deg, rgb(15 23 42 / 0.92), rgb(2 6 23 / 0.84));
+        box-shadow: 0 28px 46px -34px rgb(2 8 23 / 0.88), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
+    .report-client-earnings .report-client-surface-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, rgb(255 255 255 / 0.78), transparent 74%);
+        opacity: 0.9;
+        pointer-events: none;
+    }
+
+    .theme-dark .report-client-earnings .report-client-surface-card::before,
+    .dark .report-client-earnings .report-client-surface-card::before {
+        background: linear-gradient(90deg, rgb(255 255 255 / 0.08), transparent 74%);
+    }
+
+    .report-client-earnings .report-client-surface-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
     .report-client-earnings .filter-grid {
         align-items: end;
     }
 
+    .report-client-earnings .report-client-filter-shell,
+    .report-client-earnings .report-client-table-shell,
+    .report-client-earnings .report-client-top-shell,
+    .report-client-earnings .report-client-pagination-shell {
+        border: 1px solid rgb(148 163 184 / 0.18);
+        border-radius: 1rem;
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.76), rgb(241 245 249 / 0.84));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
+    }
+
+    .theme-dark .report-client-earnings .report-client-filter-shell,
+    .theme-dark .report-client-earnings .report-client-table-shell,
+    .theme-dark .report-client-earnings .report-client-top-shell,
+    .theme-dark .report-client-earnings .report-client-pagination-shell,
+    .dark .report-client-earnings .report-client-filter-shell,
+    .dark .report-client-earnings .report-client-table-shell,
+    .dark .report-client-earnings .report-client-top-shell,
+    .dark .report-client-earnings .report-client-pagination-shell {
+        border-color: rgb(71 85 105 / 0.54);
+        background: linear-gradient(165deg, rgb(15 23 42 / 0.62), rgb(2 6 23 / 0.56));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
+    .report-client-earnings .report-client-filter-shell,
+    .report-client-earnings .report-client-top-shell {
+        padding: 0.9rem;
+    }
+
+    .report-client-earnings .report-client-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 2.85rem;
+        padding: 0.72rem 0.8rem;
+        border: 1px solid rgb(148 163 184 / 0.18);
+        border-radius: 1rem;
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.72), rgb(241 245 249 / 0.82));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
+    }
+
+    .theme-dark .report-client-earnings .report-client-filter-actions,
+    .dark .report-client-earnings .report-client-filter-actions {
+        border-color: rgb(71 85 105 / 0.52);
+        background: linear-gradient(165deg, rgb(15 23 42 / 0.62), rgb(2 6 23 / 0.56));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
     .report-client-earnings .metric-card {
         min-height: 100%;
+        position: relative;
+        overflow: hidden;
+        border-color: rgb(148 163 184 / 0.22);
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.92));
+        box-shadow: 0 20px 34px -30px rgb(15 23 42 / 0.24), inset 0 1px 0 rgb(255 255 255 / 0.8);
+    }
+
+    .theme-dark .report-client-earnings .metric-card,
+    .dark .report-client-earnings .metric-card {
+        border-color: rgb(71 85 105 / 0.72);
+        background: linear-gradient(165deg, rgb(15 23 42 / 0.9), rgb(2 6 23 / 0.82));
+        box-shadow: 0 24px 38px -32px rgb(2 8 23 / 0.82), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
+    .report-client-earnings .metric-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 3px;
+        border-radius: 999px;
+        background: rgb(148 163 184 / 0.24);
+    }
+
+    .report-client-earnings .metric-card[data-tone='clients']::before {
+        background: linear-gradient(90deg, rgb(59 130 246 / 0.92), rgb(59 130 246 / 0.24));
+    }
+
+    .report-client-earnings .metric-card[data-tone='revenue']::before {
+        background: linear-gradient(90deg, rgb(16 185 129 / 0.92), rgb(16 185 129 / 0.24));
+    }
+
+    .report-client-earnings .metric-card[data-tone='operations']::before {
+        background: linear-gradient(90deg, rgb(6 182 212 / 0.92), rgb(6 182 212 / 0.24));
+    }
+
+    .report-client-earnings .metric-card[data-tone='average']::before {
+        background: linear-gradient(90deg, rgb(139 92 246 / 0.92), rgb(139 92 246 / 0.24));
     }
 
     .report-client-earnings .top-client-wrap {
@@ -22,12 +144,12 @@
 
     .report-client-earnings .detail-table-wrap {
         border-radius: 0.85rem;
-        border: 1px solid rgb(203 213 225);
         overflow: auto;
     }
 
-    .theme-dark .report-client-earnings .detail-table-wrap {
-        border-color: rgb(51 65 85 / 0.85);
+    .report-client-earnings .report-client-pagination-shell {
+        margin-top: 1rem;
+        padding: 0.72rem 0.85rem;
     }
 
     .report-client-earnings .detail-table-wrap .ui-table thead th {
@@ -40,6 +162,18 @@
 
     .theme-dark .report-client-earnings .detail-table-wrap .ui-table thead th {
         background: rgb(30 41 59 / 0.95);
+    }
+
+    .report-client-earnings .report-client-empty-state {
+        padding: 2rem 1rem;
+        text-align: center;
+        font-weight: 700;
+        color: rgb(100 116 139);
+    }
+
+    .theme-dark .report-client-earnings .report-client-empty-state,
+    .dark .report-client-earnings .report-client-empty-state {
+        color: rgb(148 163 184);
     }
 
     @media (max-width: 640px) {
@@ -56,6 +190,10 @@
         .report-client-earnings .filter-grid {
             grid-template-columns: minmax(0, 1fr);
             gap: 0.65rem;
+        }
+
+        .report-client-earnings .report-client-filter-actions .ui-button {
+            width: 100%;
         }
     }
 </style>
@@ -83,8 +221,8 @@
     @endphp
 
     <div class="report-client-earnings space-y-4">
-        <x-ui.card title="Filtro de facturación por cliente" subtitle="Analiza cuánto se ha facturado por cliente en el rango seleccionado.">
-            <form method="GET" action="{{ route('reports.client-earnings', ['contextGym' => $contextGym]) }}" class="filter-grid grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <x-ui.card class="report-client-surface-card" title="Filtro de facturación por cliente" subtitle="Analiza cuánto se ha facturado por cliente en el rango seleccionado.">
+            <form method="GET" action="{{ route('reports.client-earnings', ['contextGym' => $contextGym]) }}" class="report-client-filter-shell filter-grid grid gap-3 md:grid-cols-2 xl:grid-cols-6">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
                 @endif
@@ -140,7 +278,7 @@
                     </select>
                 </label>
 
-                <div class="xl:col-span-5 flex flex-wrap gap-2 items-end">
+                <div class="report-client-filter-actions xl:col-span-5">
                     <x-ui.button type="submit" variant="secondary">Aplicar</x-ui.button>
                     <x-ui.button :href="route('reports.client-earnings', $resetFilterParams)" variant="ghost">Limpiar filtros</x-ui.button>
                     <x-ui.button :href="route('reports.index', $panelParams)" variant="ghost">Panel reportes</x-ui.button>
@@ -150,43 +288,45 @@
         </x-ui.card>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card" data-tone="clients">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Clientes facturados</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($summary['billed_clients'] ?? 0) }}</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card" data-tone="revenue">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Total facturado</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($summary['total_billed'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card" data-tone="operations">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Operaciones</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($summary['operations_count'] ?? 0) }}</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card" data-tone="average">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Promedio por cliente</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($summary['average_per_client'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Cliente con mayor facturación">
+        <x-ui.card class="report-client-surface-card" title="Cliente con mayor facturación">
             @if ($topClient)
-                <div class="top-client-wrap">
-                    <div>
-                        <p class="text-lg font-black">{{ (string) ($topClient->client_name ?? 'Cliente') }}</p>
-                        <p class="text-sm ui-muted">Documento: {{ (string) ($topClient->document_number ?? '-') }}</p>
-                        @if ($showGymColumn)
-                            <p class="text-sm ui-muted">Sede: {{ (string) ($topClient->gym_name ?? '-') }}</p>
-                        @endif
-                        <p class="text-sm ui-muted">Última facturación: {{ $topClient->last_billed_at ? \Carbon\Carbon::parse((string) $topClient->last_billed_at)->format('Y-m-d H:i') : '-' }}</p>
+                <div class="report-client-top-shell">
+                    <div class="top-client-wrap">
+                        <div>
+                            <p class="text-lg font-black">{{ (string) ($topClient->client_name ?? 'Cliente') }}</p>
+                            <p class="text-sm ui-muted">Documento: {{ (string) ($topClient->document_number ?? '-') }}</p>
+                            @if ($showGymColumn)
+                                <p class="text-sm ui-muted">Sede: {{ (string) ($topClient->gym_name ?? '-') }}</p>
+                            @endif
+                            <p class="text-sm ui-muted">Última facturación: {{ $topClient->last_billed_at ? \Carbon\Carbon::parse((string) $topClient->last_billed_at)->format('Y-m-d H:i') : '-' }}</p>
+                        </div>
+                        <x-ui.badge variant="success">{{ $currencyFormatter::format((float) ($topClient->total_billed ?? 0), $appCurrencyCode) }}</x-ui.badge>
                     </div>
-                    <x-ui.badge variant="success">{{ $currencyFormatter::format((float) ($topClient->total_billed ?? 0), $appCurrencyCode) }}</x-ui.badge>
                 </div>
             @else
-                <p class="ui-muted">No hay clientes facturados con los filtros actuales.</p>
+                <p class="report-client-empty-state ui-muted">No hay clientes facturados con los filtros actuales.</p>
             @endif
         </x-ui.card>
 
-        <x-ui.card title="Detalle por cliente">
+        <x-ui.card class="report-client-surface-card" title="Detalle por cliente">
             <p class="mb-3 text-sm ui-muted">
                 Mostrando
                 <strong>{{ $clients->firstItem() ?? 0 }}</strong>
@@ -197,7 +337,7 @@
                 registros (50 por página).
             </p>
 
-            <div class="detail-table-wrap table-mobile-stack">
+            <div class="report-client-table-shell detail-table-wrap table-mobile-stack">
                 <table class="ui-table w-full min-w-[1080px] text-sm">
                     <thead>
                     <tr>
@@ -229,14 +369,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $showGymColumn ? 8 : 7 }}" class="py-8 text-center ui-muted">No hay datos para el rango y filtros seleccionados.</td>
+                            <td colspan="{{ $showGymColumn ? 8 : 7 }}" class="report-client-empty-state py-8 text-center ui-muted">No hay datos para el rango y filtros seleccionados.</td>
                         </tr>
                     @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <div class="mt-4">
+            <div class="report-client-pagination-shell mt-4">
                 {{ $clients->links() }}
             </div>
         </x-ui.card>

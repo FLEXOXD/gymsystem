@@ -86,10 +86,10 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Cartera global</span>
-                    <h2 class="sa-title">Administra renovaciones y riesgo sin perder contexto por gimnasio.</h2>
+                    <h2 class="sa-title">Cartera global clara para renovar, suspender o mover planes sin perder contexto.</h2>
                     <p class="sa-subtitle">
-                        La vista se reorganizo para priorizar: lectura de salud comercial, filtros rapidos,
-                        detalle claro por gimnasio y formularios de renovación solo cuando realmente los necesitas.
+                        Separo lectura comercial, filtros rapidos y acciones por gimnasio para que la tabla sirva de trabajo,
+                        no de ruido.
                     </p>
 
                     <div class="sa-actions">
@@ -100,16 +100,16 @@
                 </div>
 
                 <aside class="sa-note-card">
-                    <p class="sa-note-label">Atencion inmediata</p>
+                    <p class="sa-note-label">Atencion hoy</p>
                     <div class="sa-note-list">
                         @forelse ($attentionPreview as $preview)
                             @php
                                 $previewEnd = ! empty($preview->ends_at) ? \Carbon\Carbon::parse($preview->ends_at) : null;
                                 $previewStatus = (string) ($preview->status ?? '');
                                 $previewMessage = match ($previewStatus) {
-                                    'grace' => ((int) ($preview->grace_left ?? 0)).' días de gracia restantes',
-                                    'suspended' => 'Suscripción suspendida',
-                                    default => $previewEnd ? 'Vence '.$previewEnd->toDateString() : 'Requiere revisión',
+                                    'grace' => ((int) ($preview->grace_left ?? 0)).' dias de gracia',
+                                    'suspended' => 'Suscripcion suspendida',
+                                    default => $previewEnd ? 'Vence '.$previewEnd->toDateString() : 'Requiere revision',
                                 };
                             @endphp
                             <div class="sa-note-item">
@@ -118,8 +118,8 @@
                             </div>
                         @empty
                             <div class="sa-note-item">
-                                <strong>Sin alertas críticas hoy</strong>
-                                <span>La cartera no tiene vencimientos cercanos ni estados de gracia visibles.</span>
+                                <strong>Sin alertas criticas hoy</strong>
+                                <span>La cartera no tiene vencimientos cercanos visibles.</span>
                             </div>
                         @endforelse
                     </div>
@@ -131,41 +131,41 @@
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Gimnasios visibles</p>
                 <p class="sa-stat-value">{{ $totalGyms }}</p>
-                <p class="sa-stat-meta">Solo sedes principales e independientes para mantener la lectura limpia.</p>
+                <p class="sa-stat-meta">Solo sedes principales e independientes.</p>
             </article>
             <article class="sa-stat-card is-success">
                 <p class="sa-stat-label">Activos</p>
                 <p class="sa-stat-value">{{ $activeGyms }}</p>
-                <p class="sa-stat-meta">{{ $portfolioHealth }}% de la cartera está operando sin alertas.</p>
+                <p class="sa-stat-meta">{{ $portfolioHealth }}% de la cartera esta operando.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">En gracia</p>
                 <p class="sa-stat-value">{{ $graceGyms }}</p>
-                <p class="sa-stat-meta">Seguimiento comercial prioritario para evitar suspensiones.</p>
+                <p class="sa-stat-meta">Seguimiento prioritario para evitar suspensiones.</p>
             </article>
             <article class="sa-stat-card is-danger">
                 <p class="sa-stat-label">Suspendidos</p>
                 <p class="sa-stat-value">{{ $suspendedGyms }}</p>
-                <p class="sa-stat-meta">Casos que necesitan reactivación o cierre del ciclo comercial.</p>
+                <p class="sa-stat-meta">Casos que necesitan reactivacion o cierre.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">MRR estimado</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format((float) $estimatedMrr, $appCurrencyCode) }}</p>
-                <p class="sa-stat-meta">Ingreso mensual proyectado sobre cartera activa o en gracia.</p>
+                <p class="sa-stat-meta">Ingreso mensual proyectado sobre cartera activa.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">Vencen en 7 días</p>
                 <p class="sa-stat-value">{{ $expiringSoon }}</p>
-                <p class="sa-stat-meta">Renovaciones que ya requieren una acción visible en la UI.</p>
+                <p class="sa-stat-meta">Renovaciones que ya requieren accion.</p>
             </article>
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Operación multisede</p>
                 <p class="sa-stat-value">{{ $multiSiteGyms }}</p>
-                <p class="sa-stat-meta">Gimnasios con estructura de sucursales o plan multi sede.</p>
+                <p class="sa-stat-meta">Gimnasios con estructura multisede.</p>
             </article>
         </section>
 
-        <x-ui.card title="Gestión de suscripciones" subtitle="Menos columnas, mejor jerarquia visual y acciones agrupadas por contexto.">
+        <x-ui.card title="Suscripciones" subtitle="Filtros rapidos, menos ruido y acciones agrupadas por gimnasio.">
             @if ($errors->has('subscription'))
                 <div class="ui-alert ui-alert-warning mb-4 text-sm font-semibold">
                     {{ $errors->first('subscription') }}
@@ -217,11 +217,11 @@
                     </div>
                 </div>
                 <p id="gym-filter-help" class="sa-filter-note mt-3">
-                    Los filtros se aplican en tiempo real. Si una fila deja de coincidir, también se cierran sus paneles abiertos para evitar acciones fuera de contexto.
+                    Los filtros se aplican en tiempo real y cierran paneles abiertos cuando una fila sale del contexto.
                 </p>
             </div>
 
-            <div class="overflow-x-auto superadmin-gym-table">
+            <div class="sa-table-shell overflow-x-auto superadmin-gym-table">
                 <table class="ui-table min-w-[1100px]" aria-describedby="gym-filter-help gym-table-help">
                     <caption id="gym-table-help" class="sr-only">
                         Tabla de gimnasios con filtros por texto, estado y modelo operativo.
@@ -250,11 +250,11 @@
                                     $linkedManagedBranches->map(fn ($branch) => (string) ($branch->gym_name ?? ''))->implode(' '),
                                 ]))));
                                 $statusClasses = [
-                                    'active' => 'ui-badge ui-badge-success',
-                                    'grace' => 'ui-badge ui-badge-warning',
-                                    'suspended' => 'ui-badge ui-badge-danger',
+                                    'active' => 'sa-status-chip is-success',
+                                    'grace' => 'sa-status-chip is-warning',
+                                    'suspended' => 'sa-status-chip is-danger',
                                 ];
-                                $badgeClass = $statusClasses[$gym->status] ?? 'ui-badge ui-badge-muted';
+                                $badgeClass = $statusClasses[$gym->status] ?? 'sa-status-chip is-neutral';
                                 $endDate = \Carbon\Carbon::parse($gym->ends_at);
                                 $lastPaymentLabel = match ($gym->last_payment_method) {
                                     'cash' => 'Efectivo',
@@ -290,7 +290,7 @@
                                                     <button type="button"
                                                             data-branches-toggle="{{ (int) $gym->gym_id }}"
                                                             aria-expanded="false"
-                                                            class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800 transition hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                                                            class="sa-status-chip is-neutral transition">
                                                         <span>Sucursales ({{ $linkedBranchCount }})</span>
                                                         <svg data-branches-caret="{{ (int) $gym->gym_id }}" class="h-3.5 w-3.5 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
@@ -300,10 +300,10 @@
                                             </div>
                                         </div>
 
-                                        <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                                        <p class="sa-inline-note">
                                             {{ $isMultiBranchPlan
-                                                ? ($linkedBranchCount > 0 ? $linkedBranchCount.' sucursal(es) vinculadas y gestión centralizada.' : 'Plan multi sede activo, todavía sin sucursales vinculadas.')
-                                                : 'Operación independiente con una sola sede.' }}
+                                                ? ($linkedBranchCount > 0 ? $linkedBranchCount.' sucursal(es) vinculadas.' : 'Plan multisede sin sucursales aun.')
+                                                : 'Operacion independiente.' }}
                                         </p>
                                     </div>
                                 </td>
@@ -347,7 +347,7 @@
                                             </summary>
                                             <div class="space-y-3 p-4">
                                                 <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                                                    Abre este panel solo cuando necesites renovar o migrar de plan. Así evitamos una tabla saturada.
+                                                    Abre este panel solo cuando necesites renovar o mover plan.
                                                 </p>
                                                 @php
                                                     $currentPlanTemplate = collect($planTemplates ?? collect())->first(function ($template) use ($gym) {

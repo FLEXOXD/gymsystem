@@ -139,7 +139,7 @@
                                      variant="secondary">Exportar CSV</x-ui.button>
                     @else
                         <p class="self-center text-xs font-semibold text-amber-700 dark:text-amber-300">
-                            {{ $isBranchContext ? 'Sucursal secundaria: exportación bloqueada (solo lectura).' : 'Exportación disponible en plan Premium o Sucursales.' }}
+                            {{ $isBranchContext ? 'Sucursal secundaria: exportación bloqueada (solo lectura).' : 'Exportación disponible en planes Profesional, Premium o Sucursales.' }}
                         </p>
                     @endif
                     <x-ui.button :href="route('reports.index', request()->query())" variant="ghost">Volver al panel</x-ui.button>

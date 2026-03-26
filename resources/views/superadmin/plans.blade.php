@@ -47,9 +47,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Catalogo comercial</span>
-                    <h2 class="sa-title">Mantén tus planes base y asigna promociones solo cuando quieras.</h2>
+                    <h2 class="sa-title">Catalogo base y promociones en un solo tablero.</h2>
                     <p class="sa-subtitle">
-                        Los 4 planes base se mantienen fijos. Puedes poner texto de oferta directo en cada plan base o crear una promocion abajo para que la landing y el cobro se recalculen automaticamente.
+                        Ajusta precios base y activa promociones sin perder de vista lo que se publica y lo que se cobra.
                     </p>
 
                     <div class="sa-actions">
@@ -59,19 +59,19 @@
                 </div>
 
                 <aside class="sa-note-card">
-                    <p class="sa-note-label">Resumen</p>
+                    <p class="sa-note-label">Lectura rapida</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
                             <strong>Base</strong>
-                            <span>{{ $basePlans->count() }} slots funcionales conectados con la landing.</span>
+                            <span>{{ $basePlans->count() }} slots base conectados con la landing.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>Planes base</strong>
-                            <span>{{ $activeBasePlans }} activos con precio base editable.</span>
+                            <span>{{ $activeBasePlans }} activos con precio editable.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>Oferta</strong>
-                            <span>La landing prioriza una promocion activa; si no hay, usa el texto de oferta que pongas en el plan base.</span>
+                            <span>La landing prioriza una promocion activa y, si no hay, usa la oferta del plan base.</span>
                         </div>
                     </div>
                 </aside>
@@ -121,7 +121,7 @@
             </article>
         </section>
 
-        <x-ui.card title="Planes base conectados con la landing" subtitle="Aqui mantienes el precio base de cada plan y ves si tiene una promoción activa.">
+        <x-ui.card title="Planes base conectados con la landing" subtitle="Aqui mantienes el precio base de cada plan y ves si tiene una promoción activa." class="sa-form-card">
             @if (! $schemaReady)
                 <div class="ui-alert ui-alert-danger mb-4 text-sm font-semibold">
                     Falta la migracion del catalogo comercial. Ejecuta <code>php artisan migrate</code> antes de editar esta seccion.
@@ -136,7 +136,7 @@
                         $isActive = (string) ($plan->status ?? '') === 'active';
                         $activePromotion = $activePromotionsByPlanId->get((int) $plan->id);
                     @endphp
-                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                    <article class="sa-form-panel is-solid">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="sa-pill {{ $isActive ? 'is-success' : 'is-neutral' }}">{{ $isActive ? 'Activo' : 'Inactivo' }}</span>
                             <span class="sa-pill is-info">Base funcional</span>
@@ -160,7 +160,7 @@
                             @csrf
                             @method('PATCH')
 
-                            <div class="rounded-[1.2rem] border border-dashed border-slate-300/80 bg-slate-50/70 p-4 text-xs leading-6 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                            <div class="sa-form-panel text-xs leading-6 text-slate-600 dark:text-slate-300">
                                 @if ($activePromotion)
                                     Promocion activa: <strong>{{ $activePromotion->name }}</strong>.
                                     {{ trim((string) ($activePromotion->description ?? '')) !== '' ? $activePromotion->description : 'La landing y el cobro mostraran esta oferta automaticamente cuando aplique.' }}
@@ -203,16 +203,16 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Promociones comerciales" subtitle="Aqui solo creas promociones. Luego las aplicas donde quieras al renovar.">
+        <x-ui.card title="Promociones comerciales" subtitle="Aqui solo creas promociones. Luego las aplicas donde quieras al renovar." class="sa-form-card">
             <div class="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                <section class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                <section class="sa-form-panel is-solid">
                     <div class="flex flex-col gap-1">
                         <p class="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">Crear promocion</p>
                         <h3 class="text-lg font-black text-slate-900 dark:text-slate-50">Nueva promocion comercial</h3>
                         <p class="text-sm text-slate-600 dark:text-slate-300">Crea la promocion una sola vez. En renovaciones la combinas con cualquier plan base.</p>
                     </div>
 
-                    <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.promotions.store') : '#' }}" class="mt-4 grid gap-3">
+                    <form method="POST" action="{{ $schemaReady ? route('superadmin.plan-templates.promotions.store') : '#' }}" class="sa-form-workbench mt-4 grid gap-3">
                         @csrf
                         <label class="space-y-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                             Nombre promocion
@@ -249,7 +249,7 @@
                             </label>
                         </div>
 
-                        <div class="rounded-[1rem] border border-dashed border-slate-300/70 bg-slate-50/70 p-3 text-xs leading-5 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                        <div class="sa-form-panel text-xs leading-5 text-slate-600 dark:text-slate-300">
                             Si quieres una prueba de 5 dias, elige <strong>Dias</strong> + <strong>5</strong>.
                             Esta promocion queda disponible para combinarla con cualquier plan base desde "Gimnasios y Suscripciones".
                         </div>
@@ -283,7 +283,7 @@
                             </label>
                         </div>
 
-                        <div class="rounded-[1.2rem] border border-dashed border-slate-300/80 bg-slate-50/70 p-4 text-xs leading-6 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                        <div class="sa-form-panel text-xs leading-6 text-slate-600 dark:text-slate-300">
                             Ejemplos:
                             "30% de descuento" = tipo <strong>Porcentaje</strong> + valor <strong>30</strong>.
                             "Prueba 5 dias sin costo" = unidad <strong>Dias</strong> + duracion <strong>5</strong> + tipo <strong>Precio final</strong> + valor <strong>0</strong>.
@@ -316,7 +316,7 @@
                                 ? $promotion->durationLabel()
                                 : (((int) ($promotion->duration_months ?? 1)).' '.(((int) ($promotion->duration_months ?? 1)) === 1 ? 'mes' : 'meses'));
                         @endphp
-                        <article class="rounded-[1.5rem] border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                        <article class="sa-form-panel is-solid">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="sa-pill {{ $promotionStatus ? 'is-success' : 'is-neutral' }}">{{ $promotionStatus ? 'Activa' : 'Inactiva' }}</span>
                                 <span class="sa-pill is-info">{{ $linkedBasePlan?->name ?? 'Global' }}</span>

@@ -1,10 +1,136 @@
 @extends('layouts.panel')
 
-@section('title', 'Recepción')
-@section('page-title', 'Modo recepción PRO')
+@section('title', 'Recepcion')
+@section('page-title', 'Recepcion')
 
 @push('styles')
 <style>
+    .reception-hero-shell {
+        display: grid;
+        gap: 1.05rem;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+        border-radius: 1.22rem;
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 12%, transparent), transparent 34%),
+            linear-gradient(150deg, color-mix(in srgb, var(--card) 98%, white), color-mix(in srgb, var(--card-2) 76%, transparent));
+        box-shadow: 0 28px 56px -40px rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(14px);
+        padding: 1.05rem;
+    }
+
+    .reception-hero-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    .reception-hero-shell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(95deg, transparent, color-mix(in srgb, var(--primary) 8%, transparent), transparent);
+    }
+
+    .reception-control-copy {
+        max-width: 48rem;
+    }
+
+    .reception-control-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--primary) 78%, var(--text));
+    }
+
+    .reception-control-kicker::before {
+        content: '';
+        width: 0.52rem;
+        height: 0.52rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--primary) 86%, #84cc16);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+
+    .reception-control-heading {
+        margin-top: 0.78rem;
+        font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        font-weight: 900;
+        color: color-mix(in srgb, var(--text) 96%, #fff);
+    }
+
+    .reception-control-summary {
+        margin-top: 0.5rem;
+        font-size: 0.88rem;
+        line-height: 1.58;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    .reception-control-stats {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .reception-control-stat {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+        border-radius: 1.05rem;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 94%, white), color-mix(in srgb, var(--card-2) 74%, transparent));
+        box-shadow: 0 18px 30px -28px rgba(15, 23, 42, 0.28);
+        min-height: 7rem;
+        padding: 0.9rem 0.95rem;
+    }
+
+    .reception-control-stat::before {
+        content: '';
+        position: absolute;
+        left: 0.95rem;
+        right: 0.95rem;
+        top: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 86%, #84cc16), color-mix(in srgb, var(--primary) 18%, transparent));
+    }
+
+    .reception-control-stat-label {
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    .reception-control-stat-value {
+        margin-top: 0.45rem;
+        font-size: 1.46rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: color-mix(in srgb, var(--text) 97%, #fff);
+    }
+
+    .reception-control-stat-note {
+        margin-top: 0.35rem;
+        font-size: 0.76rem;
+        line-height: 1.45;
+        color: color-mix(in srgb, var(--muted) 88%, #fff);
+    }
+
     .reception-command-grid {
         display: grid;
         gap: 1rem;
@@ -19,9 +145,10 @@
 
     .reception-action-card {
         border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-        border-radius: 0.85rem;
-        background: color-mix(in srgb, var(--card) 88%, transparent);
-        padding: 0.65rem;
+        border-radius: 1.05rem;
+        background: linear-gradient(150deg, color-mix(in srgb, var(--card) 94%, transparent), color-mix(in srgb, var(--card-2) 74%, transparent));
+        padding: 0.9rem;
+        box-shadow: 0 18px 34px -28px rgba(15, 23, 42, 0.55);
     }
 
     .reception-action-title {
@@ -38,6 +165,72 @@
         flex-wrap: wrap;
         gap: 0.45rem;
         align-items: center;
+    }
+
+    .reception-entry-panel {
+        border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+        border-radius: 1.18rem;
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 12%, transparent), transparent 38%),
+            linear-gradient(155deg, color-mix(in srgb, var(--card) 98%, transparent), color-mix(in srgb, var(--card-2) 74%, transparent));
+        padding: 1rem;
+        box-shadow: 0 24px 44px -34px rgba(15, 23, 42, 0.72);
+    }
+
+    .reception-entry-label {
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--muted) 88%, #fff);
+    }
+
+    .reception-entry-panel .ui-input {
+        margin-top: 0.55rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 24px -24px rgba(15, 23, 42, 0.88);
+    }
+
+    .reception-status-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.7rem;
+        margin-top: 0.85rem;
+    }
+
+    .reception-inline-note {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    .reception-action-rail {
+        display: grid;
+        gap: 0.85rem;
+        align-content: start;
+    }
+
+    .reception-ops-note {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 1.05rem;
+        background: color-mix(in srgb, var(--card) 88%, transparent);
+        padding: 0.95rem;
+    }
+
+    .reception-ops-note-title {
+        font-size: 0.74rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--primary) 78%, var(--text));
+    }
+
+    .reception-ops-note-copy {
+        margin-top: 0.45rem;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        color: color-mix(in srgb, var(--muted) 88%, #fff);
     }
 
     .reception-shortcut-chip {
@@ -121,6 +314,250 @@
         color: color-mix(in srgb, var(--muted) 90%, #fff);
     }
 
+    .reception-result-shell,
+    .reception-history-shell {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 8%, transparent), transparent 34%),
+            linear-gradient(158deg, color-mix(in srgb, var(--card) 98%, transparent), color-mix(in srgb, var(--card-2) 78%, transparent));
+        box-shadow: 0 28px 50px -40px rgba(15, 23, 42, 0.45);
+    }
+
+    .reception-result-shell::before,
+    .reception-history-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    .reception-result-shell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(110deg, transparent, color-mix(in srgb, var(--primary) 7%, transparent), transparent);
+    }
+
+    .reception-result-stage,
+    .reception-history-stage {
+        position: relative;
+        z-index: 1;
+    }
+
+    .reception-result-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .reception-result-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: color-mix(in srgb, var(--card) 90%, transparent);
+        padding: 0.32rem 0.78rem;
+        font-size: 0.66rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--text) 92%, #fff);
+        line-height: 1;
+    }
+
+    .reception-result-photo-shell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.75rem;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 94%, transparent), color-mix(in srgb, var(--card-2) 76%, transparent));
+        box-shadow: 0 24px 42px -34px rgba(15, 23, 42, 0.62);
+    }
+
+    .reception-result-placeholder {
+        background:
+            radial-gradient(circle at top, color-mix(in srgb, var(--primary) 12%, transparent), transparent 42%),
+            linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--card-2) 72%, transparent));
+    }
+
+    .reception-result-stat-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .reception-result-metric {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card-2) 76%, transparent));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 18px 28px -26px rgba(15, 23, 42, 0.44);
+        padding: 0.78rem 0.82rem;
+    }
+
+    .reception-result-state {
+        border-radius: 1rem;
+        border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 12%, transparent), transparent 42%),
+            color-mix(in srgb, var(--card) 92%, transparent);
+        box-shadow: 0 18px 30px -28px rgba(15, 23, 42, 0.34);
+    }
+
+    .reception-history-intro {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: color-mix(in srgb, var(--muted) 90%, #fff);
+    }
+
+    .reception-history-tools label {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card-2) 78%, transparent));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+        padding: 0.72rem 0.78rem;
+    }
+
+    .reception-modal-panel {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 10%, transparent), transparent 34%),
+            linear-gradient(158deg, color-mix(in srgb, var(--card) 98%, transparent), color-mix(in srgb, var(--card-2) 80%, transparent));
+        box-shadow: 0 34px 62px -38px rgba(15, 23, 42, 0.48);
+        padding: 1.1rem;
+    }
+
+    .reception-modal-panel::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+        opacity: 0.82;
+        pointer-events: none;
+    }
+
+    .reception-modal-panel::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent, color-mix(in srgb, var(--primary) 6%, transparent), transparent);
+    }
+
+    .reception-modal-head,
+    .reception-modal-grid,
+    .reception-modal-foot {
+        position: relative;
+        z-index: 1;
+    }
+
+    .reception-modal-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--primary) 78%, var(--text));
+    }
+
+    .reception-modal-kicker::before {
+        content: '';
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--primary) 84%, #22c55e);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+
+    .reception-modal-close {
+        min-height: 2.7rem;
+        border-radius: 0.9rem;
+    }
+
+    .reception-scanner-video-shell {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: linear-gradient(180deg, rgb(2 6 23 / 0.96), rgb(15 23 42 / 0.88));
+        box-shadow: 0 24px 42px -30px rgba(15, 23, 42, 0.72);
+    }
+
+    .reception-scanner-video-shell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 22%, transparent 78%, rgb(2 6 23 / 0.28));
+    }
+
+    .reception-modal-card {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card-2) 78%, transparent));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 20px 30px -28px rgba(15, 23, 42, 0.38);
+        padding: 0.9rem;
+    }
+
+    .reception-modal-note {
+        line-height: 1.55;
+    }
+
+    #reception-mobile-scanner-status,
+    #reception-mobile-scanner-feedback {
+        border-radius: 1rem;
+        box-shadow: 0 18px 30px -28px rgba(15, 23, 42, 0.3);
+    }
+
+    #reception-mobile-mode-checkin-card,
+    #reception-mobile-mode-checkout-card {
+        min-height: 3rem;
+        border-radius: 0.95rem;
+        letter-spacing: 0.08em;
+        transition: transform 160ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
+    #reception-mobile-mode-checkin-card:hover,
+    #reception-mobile-mode-checkout-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 28px -24px rgba(15, 23, 42, 0.28);
+    }
+
+    .reception-history-modal-table {
+        position: relative;
+        z-index: 1;
+        border-radius: 1rem;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card-2) 82%, transparent));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 22px 34px -30px rgba(15, 23, 42, 0.36);
+        overflow-x: auto;
+    }
+
+    .reception-history-modal-table .ui-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        backdrop-filter: blur(10px);
+    }
+
+    #recent-attendances-wrap {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card-2) 82%, transparent));
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    }
+
     #recent-attendances-wrap table thead th {
         position: sticky;
         top: 0;
@@ -141,7 +578,239 @@
         color: color-mix(in srgb, var(--muted) 90%, #fff);
     }
 
+    .theme-light .reception-hero-shell {
+        border-color: rgb(191 219 254 / 0.62);
+        background:
+            radial-gradient(circle at top right, rgb(14 165 233 / 0.12), transparent 34%),
+            linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(241 245 249 / 0.96));
+        box-shadow: 0 30px 52px -42px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light .reception-control-heading,
+    .theme-light .reception-control-stat-value,
+    .theme-light .reception-shortcut-chip,
+    .theme-light .reception-ops-note-title {
+        color: rgb(15 23 42 / 0.96);
+    }
+
+    .theme-light .reception-control-summary,
+    .theme-light .reception-control-stat-note,
+    .theme-light .reception-inline-note,
+    .theme-light .reception-ops-note-copy,
+    .theme-light .reception-status-subtext,
+    .theme-light .reception-history-summary,
+    .theme-light #recent-attendances-empty-filter {
+        color: rgb(71 85 105 / 0.94);
+    }
+
+    .theme-light .reception-control-stat,
+    .theme-light .reception-action-card,
+    .theme-light .reception-entry-panel,
+    .theme-light .reception-ops-note {
+        border-color: rgb(203 213 225 / 0.82);
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.94));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.84),
+            0 18px 32px -30px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light .reception-result-shell,
+    .theme-light .reception-history-shell {
+        border-color: rgb(191 219 254 / 0.62);
+        background:
+            radial-gradient(circle at top right, rgb(14 165 233 / 0.1), transparent 34%),
+            linear-gradient(158deg, rgb(255 255 255 / 0.99), rgb(241 245 249 / 0.96));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.92),
+            0 30px 52px -42px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light .reception-result-pill {
+        border-color: rgb(191 219 254 / 0.74);
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(239 246 255 / 0.92));
+        color: rgb(15 23 42 / 0.94);
+    }
+
+    .theme-light .reception-result-photo-shell {
+        border-color: rgb(191 219 254 / 0.74);
+        background: linear-gradient(180deg, rgb(248 250 252 / 0.98), rgb(226 232 240 / 0.92));
+        box-shadow: 0 24px 40px -34px rgb(15 23 42 / 0.14);
+    }
+
+    .theme-light .reception-result-placeholder {
+        background:
+            radial-gradient(circle at top, rgb(14 165 233 / 0.12), transparent 42%),
+            linear-gradient(180deg, rgb(248 250 252 / 0.98), rgb(226 232 240 / 0.9));
+    }
+
+    .theme-light .reception-result-metric,
+    .theme-light .reception-history-tools label {
+        border-color: rgb(203 213 225 / 0.82);
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.97), rgb(248 250 252 / 0.94));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.9),
+            0 18px 30px -28px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light .reception-modal-panel {
+        border-color: rgb(191 219 254 / 0.66);
+        background:
+            radial-gradient(circle at top right, rgb(14 165 233 / 0.12), transparent 34%),
+            linear-gradient(158deg, rgb(255 255 255 / 0.99), rgb(241 245 249 / 0.96));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.92),
+            0 34px 60px -40px rgb(15 23 42 / 0.16);
+    }
+
+    .theme-light .reception-modal-kicker {
+        color: rgb(14 116 144 / 0.94);
+    }
+
+    .theme-light .reception-scanner-video-shell {
+        border-color: rgb(191 219 254 / 0.72);
+        box-shadow: 0 24px 40px -30px rgb(15 23 42 / 0.18);
+    }
+
+    .theme-light .reception-modal-card,
+    .theme-light .reception-history-modal-table {
+        border-color: rgb(203 213 225 / 0.82);
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.97), rgb(248 250 252 / 0.94));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.9),
+            0 18px 30px -28px rgb(15 23 42 / 0.12);
+    }
+
+    .theme-light #reception-mobile-scanner-status,
+    .theme-light #reception-mobile-scanner-feedback {
+        box-shadow: 0 18px 28px -28px rgb(15 23 42 / 0.14);
+    }
+
+    .theme-light .reception-modal-note {
+        color: rgb(71 85 105 / 0.94);
+    }
+
+    .theme-light .reception-result-state {
+        border-color: rgb(125 211 252 / 0.74);
+        background:
+            radial-gradient(circle at top right, rgb(14 165 233 / 0.12), transparent 42%),
+            linear-gradient(180deg, rgb(239 246 255 / 0.98), rgb(224 242 254 / 0.9));
+        box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.1);
+    }
+
+    .theme-light .reception-history-intro {
+        color: rgb(71 85 105 / 0.94);
+    }
+
+    .theme-light .reception-entry-label,
+    .theme-light .reception-control-stat-label,
+    .theme-light .reception-action-title {
+        color: rgb(51 65 85 / 0.88);
+    }
+
+    .theme-light .reception-shortcut-chip,
+    .theme-light .reception-shortcut-chip kbd {
+        border-color: rgb(203 213 225 / 0.84);
+        background: rgb(255 255 255 / 0.84);
+    }
+
+    .theme-light #recent-attendances-wrap {
+        border-color: rgb(203 213 225 / 0.82) !important;
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.95));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.88),
+            0 20px 34px -34px rgb(15 23 42 / 0.1);
+    }
+
+    .theme-light #recent-attendances-wrap table thead th {
+        background:
+            linear-gradient(180deg, rgb(248 250 252 / 0.98), rgb(241 245 249 / 0.95));
+        color: rgb(71 85 105 / 0.9);
+    }
+
+    .theme-light #recent-attendances-wrap table tbody td {
+        color: rgb(15 23 42 / 0.94);
+    }
+
+    .theme-dark .reception-hero-shell,
+    .dark .reception-hero-shell {
+        border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 11%, transparent), transparent 34%),
+            linear-gradient(150deg, rgb(15 23 42 / 0.98), rgb(17 24 39 / 0.94));
+    }
+
+    .theme-dark .reception-control-stat,
+    .theme-dark .reception-action-card,
+    .theme-dark .reception-entry-panel,
+    .theme-dark .reception-ops-note,
+    .theme-dark .reception-result-metric,
+    .theme-dark .reception-history-tools label,
+    .dark .reception-control-stat,
+    .dark .reception-action-card,
+    .dark .reception-entry-panel,
+    .dark .reception-ops-note,
+    .dark .reception-result-metric,
+    .dark .reception-history-tools label {
+        border-color: rgb(51 65 85 / 0.84);
+        background:
+            linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(17 24 39 / 0.88));
+    }
+
+    .theme-dark .reception-modal-panel,
+    .dark .reception-modal-panel {
+        border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 10%, transparent), transparent 34%),
+            linear-gradient(158deg, rgb(15 23 42 / 0.96), rgb(17 24 39 / 0.92));
+    }
+
+    .theme-dark .reception-modal-card,
+    .theme-dark .reception-history-modal-table,
+    .dark .reception-modal-card,
+    .dark .reception-history-modal-table {
+        border-color: rgb(51 65 85 / 0.84);
+        background: linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(17 24 39 / 0.88));
+    }
+
+    .theme-dark .reception-modal-note,
+    .dark .reception-modal-note {
+        color: rgb(148 163 184 / 0.92);
+    }
+
+    .theme-dark .reception-result-shell,
+    .theme-dark .reception-history-shell,
+    .dark .reception-result-shell,
+    .dark .reception-history-shell {
+        border-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 9%, transparent), transparent 34%),
+            linear-gradient(158deg, rgb(15 23 42 / 0.96), rgb(17 24 39 / 0.92));
+    }
+
+    .theme-dark .reception-result-pill,
+    .dark .reception-result-pill {
+        border-color: rgb(51 65 85 / 0.84);
+        background: rgb(15 23 42 / 0.82);
+        color: rgb(226 232 240 / 0.96);
+    }
+
+    .theme-dark .reception-result-photo-shell,
+    .dark .reception-result-photo-shell {
+        border-color: rgb(51 65 85 / 0.84);
+    }
+
+    .theme-dark #recent-attendances-wrap,
+    .dark #recent-attendances-wrap {
+        border-color: rgb(51 65 85 / 0.82) !important;
+        background: linear-gradient(180deg, rgb(15 23 42 / 0.96), rgb(17 24 39 / 0.9));
+    }
+
     @media (min-width: 768px) {
+        .reception-control-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .reception-actions-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -152,6 +821,11 @@
     }
 
     @media (min-width: 1280px) {
+        .reception-hero-shell {
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.86fr);
+            align-items: start;
+        }
+
         .reception-command-grid {
             grid-template-columns: minmax(320px, 1.2fr) minmax(340px, 1fr);
         }
@@ -180,29 +854,89 @@
 @endpush
 
 @section('content')
-    <x-ui.card title="Ingreso unificado" subtitle="Escanea RFID/QR o escribe documento. Soporta autoenvío por lector tipo teclado.">
-        <div class="reception-command-grid">
-            <div class="space-y-3">
-                <label class="space-y-2 text-sm font-semibold ui-muted">
-                    <span>Valor de entrada</span>
-                    <input id="value" name="value" type="text" inputmode="text" autocomplete="off" autofocus
-                           placeholder="RFID, QR o documento"
-                           class="ui-input h-16 rounded-xl border-2 px-4 text-2xl font-black tracking-wide md:h-20 md:text-3xl">
-                </label>
+    @php
+        $isPlanControlReception = (bool) ($isPlanControlReception ?? false);
+        $receptionTodayCount = (int) ($receptionTodayCount ?? 0);
+        $receptionModeLabel = $isPlanControlReception ? 'Plan Control / 1 sede' : 'Recepcion activa';
+        $receptionHeadline = $isPlanControlReception
+            ? 'Documento, QR o RFID desde una sola cabina operativa'
+            : 'Escanea RFID, QR o documento desde una sola vista';
+        $receptionSummary = $isPlanControlReception
+            ? 'El basico gana valor aqui: validar acceso, registrar salida y dejar clara la siguiente accion sin llenar la pantalla de bloques extra.'
+            : 'Registra ingresos, salidas y soporte de escaneo desde la misma recepcion.';
+        $receptionSupportValue = ! empty($canManageClientAccounts) ? 'QR movil + RFID' : 'RFID + QR local';
+        $receptionSupportNote = ! empty($canManageClientAccounts)
+            ? 'Portal cliente y QR temporal disponibles.'
+            : 'Documento local incluido para operar sin extras.';
+    @endphp
 
-                <p id="status-chip" class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
-                    {{ __('messages.reception.ready_to_scan') }}
-                </p>
-                <p id="status-detail" class="reception-status-subtext">
-                    Atajos: Enter registra ingreso, F3 registra salida y F2 limpia el campo.
-                </p>
+    <x-ui.card title="{{ $isPlanControlReception ? 'Recepcion Control' : 'Ingreso unificado' }}" subtitle="{{ $isPlanControlReception ? 'Acceso rapido para una sola sede, sin ruido visual.' : 'Escanea RFID/QR o escribe documento. Soporta autoenvio por lector tipo teclado.' }}">
+        <div class="reception-hero-shell">
+            <div class="space-y-4">
+                <div class="reception-control-copy">
+                    <span class="reception-control-kicker">{{ $receptionModeLabel }}</span>
+                    <h2 class="reception-control-heading">{{ $receptionHeadline }}</h2>
+                    <p class="reception-control-summary">{{ $receptionSummary }}</p>
+                </div>
+
+                @if ($isPlanControlReception)
+                    <div class="reception-control-stats">
+                        <article class="reception-control-stat">
+                            <p class="reception-control-stat-label">Accesos hoy</p>
+                            <p class="reception-control-stat-value">{{ $receptionTodayCount }}</p>
+                            <p class="reception-control-stat-note">{{ $receptionTodayCount > 0 ? 'Ya existe movimiento registrado hoy.' : 'Listo para el primer acceso del dia.' }}</p>
+                        </article>
+                        <article class="reception-control-stat">
+                            <p class="reception-control-stat-label">Soporte activo</p>
+                            <p class="reception-control-stat-value">{{ $receptionSupportValue }}</p>
+                            <p class="reception-control-stat-note">{{ $receptionSupportNote }}</p>
+                        </article>
+                        <article class="reception-control-stat">
+                            <p class="reception-control-stat-label">Flujo rapido</p>
+                            <p class="reception-control-stat-value">Entrada / salida</p>
+                            <p class="reception-control-stat-note">Enter registra ingreso, F3 marca salida y F2 limpia.</p>
+                        </article>
+                    </div>
+                @endif
+
+                <div class="reception-entry-panel">
+                    <label class="space-y-2 text-sm font-semibold ui-muted">
+                        <span class="reception-entry-label">Valor de entrada</span>
+                        <input id="value" name="value" type="text" inputmode="text" autocomplete="off" autofocus
+                               placeholder="RFID, QR o documento"
+                               class="ui-input h-16 rounded-xl border-2 px-4 text-2xl font-black tracking-wide md:h-20 md:text-3xl">
+                    </label>
+
+                    <div class="reception-status-row">
+                        <p id="status-chip" class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200">
+                            {{ __('messages.reception.ready_to_scan') }}
+                        </p>
+                        <p id="status-detail" class="reception-inline-note">
+                            Atajos: Enter registra ingreso, F3 registra salida y F2 limpia el campo.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="reception-shortcuts">
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
+                        Autoescaneo
+                    </label>
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
+                        Sonido
+                    </label>
+                    <span class="reception-shortcut-chip"><kbd>F2</kbd>Limpiar</span>
+                    <span class="reception-shortcut-chip"><kbd>F3</kbd>Salida</span>
+                    <span class="reception-shortcut-chip"><kbd>Ctrl+K</kbd>Enfocar</span>
+                </div>
             </div>
 
-            <div class="space-y-3">
+            <div class="reception-action-rail">
                 <div class="reception-action-card">
-                    <p class="reception-action-title">Registro principal</p>
+                    <p class="reception-action-title">{{ $isPlanControlReception ? 'Ingreso y salida' : 'Registro principal' }}</p>
                     <div class="reception-actions-grid">
-                        <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 w-full">Enviar</x-ui.button>
+                        <x-ui.button id="send-btn" type="button" variant="primary" size="lg" class="h-14 w-full">Registrar ingreso</x-ui.button>
                         <x-ui.button id="checkout-btn" type="button" variant="ghost" size="lg" class="h-14 w-full">
                             Registrar salida
                         </x-ui.button>
@@ -221,19 +955,14 @@
                     </div>
                 </div>
 
-                <div class="reception-shortcuts">
-                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                        <input id="auto-submit-enabled" type="checkbox" class="h-4 w-4" checked>
-                        Autoescaneo
-                    </label>
-                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                        <input id="sound-enabled" type="checkbox" class="h-4 w-4" checked>
-                        Sonido
-                    </label>
-                    <span class="reception-shortcut-chip"><kbd>F2</kbd>Limpiar</span>
-                    <span class="reception-shortcut-chip"><kbd>F3</kbd>Salida</span>
-                    <span class="reception-shortcut-chip"><kbd>Ctrl+K</kbd>Enfocar</span>
-                </div>
+                @if ($isPlanControlReception)
+                    <div class="reception-ops-note">
+                        <p class="reception-ops-note-title">Recepcion lista para operar</p>
+                        <p class="reception-ops-note-copy">
+                            Esta cabina cubre documento, QR local y RFID sin pasos extra. Si el cliente llega vencido, el siguiente movimiento natural es clientes o caja, no otra pantalla encima.
+                        </p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -286,15 +1015,9 @@
                 </div>
             </div>
         </x-ui.card>
-    @else
-        <div class="ui-alert ui-alert-warning lg:col-span-3">
-            <strong>QR dinamico no habilitado en este plan.</strong>
-            Puedes seguir operando con RFID, documento y lector QR local desde esta pantalla.
-            El QR movil temporal se habilita en planes Premium y Sucursales.
-        </div>
     @endif
 
-    <x-ui.card id="result-panel" class="reception-toggle-card reception-panel-expanded relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
+    <x-ui.card id="result-panel" class="reception-toggle-card reception-result-shell reception-panel-expanded relative overflow-hidden border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900" title="Resultado">
         <div class="reception-panel-toggle-bar relative z-10 flex justify-end">
             <button id="toggle-result-panel"
                     type="button"
@@ -305,12 +1028,11 @@
             </button>
         </div>
         <div id="result-panel-content" class="reception-collapsible-content">
-            <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-amber-400/10"></div>
-            <div class="relative grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+            <div class="reception-result-stage grid gap-4 md:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] md:items-start xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
             <div class="w-full max-w-sm md:max-w-none">
-                <div class="relative overflow-hidden rounded-[1.75rem] border border-slate-300/70 bg-slate-900/20 shadow-2xl dark:border-slate-700/80">
+                <div class="reception-result-photo-shell">
                     <img id="result-photo" src="" alt="Foto del cliente" class="hidden h-64 w-full object-cover object-top sm:h-72 md:h-[22rem] xl:h-[26rem]">
-                    <div id="result-photo-placeholder" class="flex h-64 w-full flex-col items-center justify-center gap-2 bg-slate-50/80 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 sm:h-72 md:h-[22rem] xl:h-[26rem]">
+                    <div id="result-photo-placeholder" class="reception-result-placeholder flex h-64 w-full flex-col items-center justify-center gap-2 text-sm font-medium text-slate-500 dark:bg-slate-800/70 dark:text-slate-300 sm:h-72 md:h-[22rem] xl:h-[26rem]">
                         <span id="result-avatar-initials" class="text-5xl font-black tracking-wider text-slate-400 dark:text-slate-300">--</span>
                         <span class="text-xs uppercase tracking-[0.24em]">Avatar gym</span>
                     </div>
@@ -319,14 +1041,14 @@
             </div>
 
             <div class="space-y-4">
-                <div class="flex flex-wrap items-center gap-2">
-                    <p id="result-method" class="inline-flex rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                <div class="reception-result-pills">
+                    <p id="result-method" class="reception-result-pill">
                         Método: -
                     </p>
-                    <span id="result-days-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                    <span id="result-days-pill" class="reception-result-pill">
                         Días restantes: -
                     </span>
-                    <span id="result-month-pill" class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                    <span id="result-month-pill" class="reception-result-pill">
                         Visitas mes: -
                     </span>
                 </div>
@@ -334,26 +1056,26 @@
                 <p id="result-message" class="pr-1 text-[clamp(1.5rem,4.2vw,2.5rem)] font-black break-words [overflow-wrap:anywhere] text-slate-800 dark:text-slate-100">Esperando lectura...</p>
                 <p id="result-name" class="text-[clamp(1.2rem,3.8vw,2rem)] font-bold text-slate-900 dark:text-slate-100">-</p>
 
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                <div class="reception-result-stat-grid sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="reception-result-metric">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fin membresía</p>
                         <p id="result-membership" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                    <div class="reception-result-metric">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Fecha check-in</p>
                         <p id="result-checkin-date" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                    <div class="reception-result-metric">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Hora check-in</p>
                         <p id="result-checkin-time" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
-                    <div class="rounded-xl border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
+                    <div class="reception-result-metric">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">Visitas del mes</p>
                         <p id="result-month-visits" class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">-</p>
                     </div>
                 </div>
 
-                <div id="result-motivation" class="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-900 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100">
+                <div id="result-motivation" class="reception-result-state px-3 py-2 text-sm font-semibold text-cyan-900 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100">
                     Listo para recibir al cliente.
                 </div>
             </div>
@@ -361,7 +1083,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Últimos 10 ingresos">
+    <x-ui.card title="Últimos 10 ingresos" class="reception-history-shell">
         <div class="reception-panel-toggle-bar flex justify-end">
             <button id="toggle-recent-panel"
                     type="button"
@@ -371,9 +1093,9 @@
                 Ocultar
             </button>
         </div>
-        <div id="recent-panel-content" class="reception-collapsible-content">
+        <div id="recent-panel-content" class="reception-collapsible-content reception-history-stage">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs text-slate-500 dark:text-slate-300">Historial detallado disponible para los últimos 2 meses.</p>
+            <p class="reception-history-intro">Historial detallado disponible para los últimos 2 meses.</p>
             <button id="reception-open-history" type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-xs" data-open-attendance-history>
                 Ver asistencias (2 meses)
             </button>
@@ -456,22 +1178,23 @@
     </div>
 
     <div id="reception-mobile-scanner-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receptionMobileScannerTitle">
-        <div class="ui-modal-panel max-w-6xl">
-            <div class="flex items-start justify-between gap-3">
-                <div>
+        <div class="ui-modal-panel reception-modal-panel max-w-6xl">
+            <div class="reception-modal-head flex items-start justify-between gap-3">
+                <div class="space-y-2">
+                    <p class="reception-modal-kicker">Recepcion / Escaner</p>
                     <h3 id="receptionMobileScannerTitle" class="ui-heading text-lg">Escanear QR desde mi celular</h3>
                     <p class="mt-1 text-sm ui-muted">
                         Cámara en modal para ingreso y salida sin abrir otra pantalla.
                     </p>
                 </div>
-                <button type="button" class="ui-button ui-button-ghost px-3 py-1.5 text-sm" data-close-mobile-scanner aria-label="Cerrar escáner">
+                <button type="button" class="ui-button ui-button-ghost reception-modal-close px-3 py-1.5 text-sm" data-close-mobile-scanner aria-label="Cerrar escáner">
                     Cerrar
                 </button>
             </div>
 
-            <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div class="reception-modal-grid mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <section class="space-y-3">
-                    <div class="rounded-2xl border border-slate-300 bg-slate-950/90 p-2 dark:border-slate-700">
+                    <div class="reception-scanner-video-shell rounded-2xl border border-slate-300 bg-slate-950/90 p-2 dark:border-slate-700">
                         <video id="reception-mobile-scanner-video" class="h-[300px] w-full rounded-xl bg-black object-cover sm:h-[420px]" autoplay muted playsinline></video>
                     </div>
                     <p id="reception-mobile-scanner-status" class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-100">
@@ -488,7 +1211,7 @@
                         <x-ui.button id="reception-mobile-scanner-stop" type="button" variant="ghost" class="w-full" disabled>Detener</x-ui.button>
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+                    <div class="reception-modal-card rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
                         <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">Modo de registro</p>
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <label id="reception-mobile-mode-checkin-card" class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-2 text-xs font-black text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/20 dark:text-emerald-100">
@@ -502,7 +1225,7 @@
                         </div>
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+                    <div class="reception-modal-card rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
                         <label class="space-y-2 text-sm font-semibold ui-muted">
                             <span>Código manual (fallback)</span>
                             <input id="reception-mobile-scanner-input" type="text" inputmode="text" autocomplete="off" placeholder="RFID, QR o documento" class="ui-input">
@@ -512,7 +1235,7 @@
                         </x-ui.button>
                     </div>
 
-                    <p class="text-xs text-slate-500 dark:text-slate-300">
+                    <p class="reception-modal-note text-xs text-slate-500 dark:text-slate-300">
                         Si el cliente vuelve a escanear y ya tenía ingreso activo, se registrará salida automáticamente.
                     </p>
                 </aside>
@@ -521,16 +1244,17 @@
     </div>
 
     <div id="attendance-history-modal" class="ui-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="attendanceHistoryTitle">
-        <div class="ui-modal-panel max-w-6xl">
-            <div class="flex items-start justify-between gap-3">
-                <div>
+        <div class="ui-modal-panel reception-modal-panel max-w-6xl">
+            <div class="reception-modal-head flex items-start justify-between gap-3">
+                <div class="space-y-2">
+                    <p class="reception-modal-kicker">Recepcion / Historial</p>
                     <h3 id="attendanceHistoryTitle" class="ui-heading text-lg">Asistencias de los últimos 2 meses</h3>
                     <p class="mt-1 text-sm ui-muted">
                         Desde {{ $attendanceHistoryStart }}.
                         <strong>{{ (int) ($attendanceHistoryTotal ?? 0) }}</strong> registros en ventana operativa.
                     </p>
                 </div>
-                <button type="button" class="ui-button ui-button-ghost px-2 py-1" data-close-attendance-history aria-label="Cerrar">X</button>
+                <button type="button" class="ui-button ui-button-ghost reception-modal-close px-2 py-1" data-close-attendance-history aria-label="Cerrar">X</button>
             </div>
 
             @if (!empty($attendanceHistoryTruncated))
@@ -539,7 +1263,7 @@
                 </p>
             @endif
 
-            <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+            <div class="reception-history-modal-table mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                 <table class="ui-table min-w-[980px]">
                     <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -577,7 +1301,7 @@
                 </table>
             </div>
 
-            <div class="mt-4 flex justify-end">
+            <div class="reception-modal-foot mt-4 flex justify-end">
                 <button type="button" class="ui-button ui-button-ghost" data-close-attendance-history>Cerrar</button>
             </div>
         </div>
@@ -1678,7 +2402,7 @@
         }
 
         function basePanelClasses() {
-            return 'reception-toggle-card '
+            return 'reception-toggle-card reception-result-shell '
                 + currentResultPanelStateClass()
                 + ' relative overflow-hidden rounded-2xl border p-5 shadow-sm';
         }
@@ -2866,7 +3590,7 @@
             if (checkoutBtn) {
                 checkoutBtn.removeAttribute('disabled');
             }
-            sendBtn.textContent = 'Enviar';
+            sendBtn.textContent = 'Registrar ingreso';
             if (checkoutBtn) {
                 checkoutBtn.textContent = receptionI18n.register_checkout;
             }

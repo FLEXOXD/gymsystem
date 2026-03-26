@@ -64,10 +64,9 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">Alta de gimnasio</span>
-                    <h2 class="sa-title">Crea una nueva cuenta con mejor contexto y menos errores de captura.</h2>
+                    <h2 class="sa-title">Alta de gimnasio lista para capturar bien a la primera.</h2>
                     <p class="sa-subtitle">
-                        Reordene el flujo en bloques de negocio: primero sede, después operación, luego plan y por último admin.
-                        Así reduces omisiones y es más fácil revisar antes de guardar.
+                        El flujo prioriza sede, operacion, plan y admin para reducir omisiones y revisar rapido antes de guardar.
                     </p>
 
                     <div class="sa-actions">
@@ -77,26 +76,26 @@
                 </div>
 
                 <aside class="sa-note-card">
-                    <p class="sa-note-label">Se creara automáticamente</p>
+                    <p class="sa-note-label">Este flujo crea</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
-                            <strong>Slug público</strong>
-                            <span>Se genera desde el nombre del gimnasio y se usa en rutas como /mi-gym/panel.</span>
+                            <strong>Slug publico</strong>
+                            <span>Se arma desde el nombre del gimnasio.</span>
                         </div>
                         <div class="sa-note-item">
                             <strong>Admin principal</strong>
-                            <span>Se crea con acceso inicial para operar el panel desde el primer ingreso.</span>
+                            <span>Queda listo para entrar al panel desde el primer acceso.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>Suscripción inicial</strong>
-                            <span>El plan elegido define precio, alcance operativo y experiencia de inicio.</span>
+                            <strong>Suscripcion inicial</strong>
+                            <span>El plan elegido define precio y alcance operativo.</span>
                         </div>
                     </div>
                 </aside>
             </div>
         </section>
 
-        <form method="POST" action="{{ route('superadmin.gyms.store') }}" enctype="multipart/form-data" class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]" aria-describedby="gym-create-form-help">
+        <form method="POST" action="{{ route('superadmin.gyms.store') }}" enctype="multipart/form-data" class="sa-form-workbench grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]" aria-describedby="gym-create-form-help">
             @csrf
 
             <p id="gym-create-form-help" class="sr-only">
@@ -115,7 +114,7 @@
             @endif
 
             <div class="space-y-5">
-                <x-ui.card title="1. Datos del gimnasio" subtitle="Ubicación y datos base de la sede principal.">
+                <x-ui.card title="1. Datos del gimnasio" subtitle="Ubicación y datos base de la sede principal." class="sa-form-card">
                     <div class="grid gap-3 lg:grid-cols-3">
                         <div class="lg:col-span-2">
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Nombre del gimnasio</label>
@@ -181,7 +180,7 @@
                     </div>
                 </x-ui.card>
 
-                <x-ui.card title="2. Operación base" subtitle="Zona horaria, moneda e idioma para operar desde el primer día.">
+                <x-ui.card title="2. Operación base" subtitle="Zona horaria, moneda e idioma para operar desde el primer día." class="sa-form-card">
                     <div class="grid gap-4">
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Zona horaria</label>
@@ -229,7 +228,7 @@
                         </div>
                     </div>
                 </x-ui.card>
-                <x-ui.card title="3. Oferta inicial" subtitle="Define el paquete comercial y la oferta con la que nacerá la cuenta.">
+                <x-ui.card title="3. Oferta inicial" subtitle="Define el paquete comercial y la oferta con la que nacerá la cuenta." class="sa-form-card">
                     <div class="space-y-4">
                         <div class="grid gap-3 md:grid-cols-2">
                             @forelse ($planTemplates as $template)
@@ -369,7 +368,7 @@
                     </div>
                 </x-ui.card>
 
-                <x-ui.card title="4. Admin principal" subtitle="Datos de la persona que recibirá el acceso inicial del gimnasio.">
+                <x-ui.card title="4. Admin principal" subtitle="Datos de la persona que recibirá el acceso inicial del gimnasio." class="sa-form-card">
                     <div class="grid gap-3 lg:grid-cols-3">
                         <div>
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Nombre del admin</label>
@@ -456,7 +455,7 @@
                         </div>
                     </div>
                 </x-ui.card>
-                <x-ui.card title="5. Seguridad de acceso" subtitle="Credenciales iniciales para el primer ingreso del administrador.">
+                <x-ui.card title="5. Seguridad de acceso" subtitle="Credenciales iniciales para el primer ingreso del administrador." class="sa-form-card">
                     <div class="grid gap-3 md:grid-cols-2">
                         <div>
                             <label class="ui-muted mb-1 block text-xs font-bold uppercase tracking-wide">Contraseña del admin</label>
@@ -475,7 +474,7 @@
             </div>
 
             <aside class="space-y-5">
-                <x-ui.card title="Resumen operativo" subtitle="Puntos a revisar antes de confirmar la creacion.">
+                <x-ui.card title="Resumen operativo" subtitle="Puntos a revisar antes de confirmar la creacion." class="sa-form-review">
                     <ul class="sa-check-list">
                         <li>Verifica país, ciudad y zona horaria antes de crear el slug y la operación inicial.</li>
                         <li>Confirma la oferta comercial inicial y el total que se cobrará en el alta.</li>

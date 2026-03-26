@@ -10,16 +10,21 @@
         }
 
         .client-hero-card {
+            border: 1px solid rgb(148 163 184 / 0.22);
             background:
                 radial-gradient(circle at top right, rgb(14 165 233 / 0.14), transparent 34%),
                 linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.98));
+            box-shadow: 0 28px 46px -36px rgb(15 23 42 / 0.34), inset 0 1px 0 rgb(255 255 255 / 0.78);
+            backdrop-filter: blur(10px);
         }
 
-        .theme-dark .client-hero-card {
+        .theme-dark .client-hero-card,
+        .dark .client-hero-card {
             border-color: rgb(51 65 85 / 0.9);
             background:
                 radial-gradient(circle at top right, rgb(34 211 238 / 0.18), transparent 34%),
                 linear-gradient(180deg, rgb(2 6 23 / 0.96), rgb(15 23 42 / 0.9));
+            box-shadow: 0 30px 48px -36px rgb(2 8 23 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.04);
         }
 
         .client-hero-stat {
@@ -27,11 +32,14 @@
             background: rgb(255 255 255 / 0.7);
             border-radius: 1rem;
             padding: 0.8rem 0.9rem;
+            box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.64);
         }
 
-        .theme-dark .client-hero-stat {
+        .theme-dark .client-hero-stat,
+        .dark .client-hero-stat {
             border-color: rgb(148 163 184 / 0.18);
             background: rgb(15 23 42 / 0.62);
+            box-shadow: 0 20px 32px -28px rgb(2 8 23 / 0.82), inset 0 1px 0 rgb(255 255 255 / 0.04);
         }
 
         .client-hero-stat-label {
@@ -71,6 +79,746 @@
         .client-hero-status {
             display: flex;
             justify-content: flex-start;
+        }
+
+        .client-control-shell {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1px solid rgb(163 230 53 / 0.22);
+            border-radius: 1.22rem;
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.16), transparent 34%),
+                linear-gradient(152deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.95));
+            box-shadow: 0 28px 56px -40px rgb(15 23 42 / 0.5);
+            backdrop-filter: blur(14px);
+            padding: 1.05rem;
+        }
+
+        .theme-dark .client-control-shell {
+            border-color: rgb(163 230 53 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.14), transparent 34%),
+                linear-gradient(160deg, rgb(2 6 23 / 0.86), rgb(15 23 42 / 0.68));
+            box-shadow: 0 30px 58px -42px rgb(2 8 23 / 0.92);
+        }
+
+        .client-control-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .client-control-shell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(95deg, transparent, rgb(163 230 53 / 0.05), transparent);
+        }
+
+        .client-control-grid {
+            display: grid;
+            gap: 1.05rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .client-control-copy {
+            max-width: 48rem;
+        }
+
+        .client-control-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+            color: rgb(77 124 15 / 0.94);
+        }
+
+        .theme-dark .client-control-kicker {
+            color: rgb(217 249 157 / 0.94);
+        }
+
+        .client-control-kicker::before {
+            content: '';
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            background: rgb(132 204 22 / 0.94);
+            box-shadow: 0 0 0 6px rgb(132 204 22 / 0.12);
+        }
+
+        .client-control-heading {
+            margin-top: 0.78rem;
+            font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            font-weight: 900;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .theme-dark .client-control-heading {
+            color: rgb(241 245 249 / 0.98);
+        }
+
+        .client-control-summary {
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.58;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .theme-dark .client-control-summary {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .client-control-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+        }
+
+        .client-control-actions .ui-button {
+            min-height: 2.72rem;
+        }
+
+        .client-control-priority-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .client-control-priority {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.05rem;
+            border: 1px solid rgb(148 163 184 / 0.24);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+            box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.28);
+            min-height: 7rem;
+            padding: 0.9rem 0.95rem;
+        }
+
+        .theme-dark .client-control-priority {
+            border-color: rgb(148 163 184 / 0.18);
+            background: linear-gradient(160deg, rgb(15 23 42 / 0.74), rgb(15 23 42 / 0.54));
+            box-shadow: 0 20px 34px -28px rgb(2 8 23 / 0.9);
+        }
+
+        .client-control-priority::before {
+            content: '';
+            position: absolute;
+            left: 0.9rem;
+            right: 0.9rem;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgb(148 163 184 / 0.22);
+        }
+
+        .client-control-priority[data-tone='warning']::before {
+            background: linear-gradient(90deg, rgb(245 158 11 / 0.9), rgb(245 158 11 / 0.24));
+        }
+
+        .client-control-priority[data-tone='success']::before {
+            background: linear-gradient(90deg, rgb(16 185 129 / 0.9), rgb(16 185 129 / 0.24));
+        }
+
+        .client-control-priority[data-tone='info']::before {
+            background: linear-gradient(90deg, rgb(6 182 212 / 0.9), rgb(6 182 212 / 0.24));
+        }
+
+        .client-control-priority-label {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .theme-dark .client-control-priority-label {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .client-control-priority-value {
+            margin-top: 0.42rem;
+            font-size: 1.46rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .theme-dark .client-control-priority-value {
+            color: rgb(248 250 252 / 0.98);
+        }
+
+        .client-control-priority-note {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .theme-dark .client-control-priority-note {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .client-pro-shell {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1px solid rgb(34 211 238 / 0.2);
+            border-radius: 1.22rem;
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.12), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.1), transparent 28%),
+                linear-gradient(152deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.95));
+            box-shadow: 0 28px 56px -40px rgb(15 23 42 / 0.5);
+            backdrop-filter: blur(14px);
+            padding: 1.05rem;
+        }
+
+        .theme-dark .client-pro-shell,
+        .dark .client-pro-shell {
+            border-color: rgb(34 211 238 / 0.22);
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.11), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.08), transparent 28%),
+                linear-gradient(155deg, rgb(4 10 28 / 0.94), rgb(11 18 32 / 0.88));
+            box-shadow: 0 30px 58px -42px rgb(2 8 23 / 0.9);
+        }
+
+        .client-pro-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .client-pro-shell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(95deg, transparent, rgb(34 211 238 / 0.04), transparent);
+        }
+
+        .client-pro-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .client-pro-copy {
+            max-width: 50rem;
+        }
+
+        .client-pro-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+            color: rgb(8 145 178 / 0.96);
+        }
+
+        .theme-dark .client-pro-kicker,
+        .dark .client-pro-kicker {
+            color: rgb(165 243 252 / 0.94);
+        }
+
+        .client-pro-kicker::before {
+            content: '';
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            background: rgb(34 211 238 / 0.96);
+            box-shadow: 0 0 0 6px rgb(34 211 238 / 0.14);
+        }
+
+        .client-pro-heading {
+            margin-top: 0.78rem;
+            font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            font-weight: 900;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .theme-dark .client-pro-heading,
+        .dark .client-pro-heading {
+            color: rgb(241 245 249 / 0.98);
+        }
+
+        .client-pro-summary {
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.58;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .theme-dark .client-pro-summary,
+        .dark .client-pro-summary {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .client-pro-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-radius: 999px;
+            border: 1px solid rgb(34 211 238 / 0.22);
+            background: rgb(236 254 255 / 0.84);
+            padding: 0.44rem 0.78rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgb(8 145 178 / 0.96);
+        }
+
+        .theme-dark .client-pro-badge,
+        .dark .client-pro-badge {
+            border-color: rgb(34 211 238 / 0.26);
+            background: rgb(8 145 178 / 0.12);
+            color: rgb(165 243 252 / 0.95);
+        }
+
+        .client-pro-metrics {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .client-pro-metric {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.02rem;
+            border: 1px solid rgb(148 163 184 / 0.24);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+            box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.28);
+            min-height: 6.7rem;
+            padding: 0.9rem 0.95rem;
+        }
+
+        .theme-dark .client-pro-metric,
+        .dark .client-pro-metric {
+            border-color: rgb(148 163 184 / 0.16);
+            background: linear-gradient(160deg, rgb(15 23 42 / 0.74), rgb(15 23 42 / 0.54));
+            box-shadow: 0 20px 34px -28px rgb(2 8 23 / 0.9);
+        }
+
+        .client-pro-metric::before {
+            content: '';
+            position: absolute;
+            left: 0.9rem;
+            right: 0.9rem;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgb(148 163 184 / 0.22);
+        }
+
+        .client-pro-metric[data-tone='success']::before {
+            background: linear-gradient(90deg, rgb(16 185 129 / 0.9), rgb(16 185 129 / 0.24));
+        }
+
+        .client-pro-metric[data-tone='info']::before {
+            background: linear-gradient(90deg, rgb(34 211 238 / 0.9), rgb(34 211 238 / 0.24));
+        }
+
+        .client-pro-metric[data-tone='warning']::before {
+            background: linear-gradient(90deg, rgb(245 158 11 / 0.9), rgb(245 158 11 / 0.24));
+        }
+
+        .client-pro-metric[data-tone='accent']::before {
+            background: linear-gradient(90deg, rgb(168 85 247 / 0.9), rgb(168 85 247 / 0.24));
+        }
+
+        .client-pro-metric-label {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .theme-dark .client-pro-metric-label,
+        .dark .client-pro-metric-label {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .client-pro-metric-value {
+            margin-top: 0.42rem;
+            font-size: 1.46rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .theme-dark .client-pro-metric-value,
+        .dark .client-pro-metric-value {
+            color: rgb(248 250 252 / 0.98);
+        }
+
+        .client-pro-metric-note {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .theme-dark .client-pro-metric-note,
+        .dark .client-pro-metric-note {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .client-pro-insights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .client-pro-chip {
+            min-width: min(100%, 14rem);
+            flex: 1 1 14rem;
+            border-radius: 0.95rem;
+            border: 1px solid rgb(148 163 184 / 0.2);
+            background: rgb(255 255 255 / 0.66);
+            padding: 0.78rem 0.85rem;
+            box-shadow: 0 16px 28px -30px rgb(15 23 42 / 0.32);
+        }
+
+        .theme-dark .client-pro-chip,
+        .dark .client-pro-chip {
+            border-color: rgb(148 163 184 / 0.14);
+            background: rgb(15 23 42 / 0.58);
+            box-shadow: 0 20px 30px -30px rgb(2 8 23 / 0.9);
+        }
+
+        .client-pro-chip[data-tone='warning'] {
+            border-color: rgb(245 158 11 / 0.22);
+            background: rgb(255 251 235 / 0.9);
+        }
+
+        .client-pro-chip[data-tone='danger'] {
+            border-color: rgb(244 63 94 / 0.2);
+            background: rgb(255 241 242 / 0.9);
+        }
+
+        .client-pro-chip[data-tone='success'] {
+            border-color: rgb(16 185 129 / 0.22);
+            background: rgb(236 253 245 / 0.9);
+        }
+
+        .client-pro-chip[data-tone='info'] {
+            border-color: rgb(34 211 238 / 0.22);
+            background: rgb(236 254 255 / 0.9);
+        }
+
+        .theme-dark .client-pro-chip[data-tone='warning'],
+        .dark .client-pro-chip[data-tone='warning'] {
+            background: rgb(120 53 15 / 0.18);
+        }
+
+        .theme-dark .client-pro-chip[data-tone='danger'],
+        .dark .client-pro-chip[data-tone='danger'] {
+            background: rgb(127 29 29 / 0.18);
+        }
+
+        .theme-dark .client-pro-chip[data-tone='success'],
+        .dark .client-pro-chip[data-tone='success'] {
+            background: rgb(6 78 59 / 0.18);
+        }
+
+        .theme-dark .client-pro-chip[data-tone='info'],
+        .dark .client-pro-chip[data-tone='info'] {
+            background: rgb(8 145 178 / 0.14);
+        }
+
+        .client-pro-chip-title {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgb(30 41 59 / 0.92);
+        }
+
+        .theme-dark .client-pro-chip-title,
+        .dark .client-pro-chip-title {
+            color: rgb(226 232 240 / 0.96);
+        }
+
+        .client-pro-chip-copy {
+            margin-top: 0.35rem;
+            font-size: 0.76rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .theme-dark .client-pro-chip-copy,
+        .dark .client-pro-chip-copy {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .client-pro-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+        }
+
+        .client-pro-actions .ui-button {
+            min-height: 2.72rem;
+        }
+
+        .client-elite-shell.client-pro-shell {
+            border-color: rgb(234 179 8 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.18), transparent 36%),
+                radial-gradient(circle at bottom left, rgb(16 185 129 / 0.1), transparent 30%),
+                linear-gradient(150deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.97));
+            box-shadow:
+                0 34px 68px -44px rgb(120 53 15 / 0.24),
+                inset 0 1px 0 rgb(255 255 255 / 0.9);
+            padding: 1.2rem;
+        }
+
+        .theme-dark .client-elite-shell.client-pro-shell,
+        .dark .client-elite-shell.client-pro-shell {
+            border-color: rgb(234 179 8 / 0.28);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.16), transparent 36%),
+                radial-gradient(circle at bottom left, rgb(16 185 129 / 0.11), transparent 30%),
+                linear-gradient(155deg, rgb(10 12 24 / 0.96), rgb(17 24 39 / 0.92));
+            box-shadow:
+                0 36px 72px -46px rgb(2 8 23 / 0.92),
+                inset 0 1px 0 rgb(255 255 255 / 0.05);
+        }
+
+        .client-elite-shell.client-pro-shell::after {
+            background: linear-gradient(100deg, transparent 8%, rgb(234 179 8 / 0.08), transparent 74%);
+        }
+
+        .client-elite-shell .client-pro-grid {
+            gap: 0.82rem;
+        }
+
+        .client-elite-shell .client-elite-head {
+            align-items: end;
+            gap: 1rem;
+        }
+
+        .client-elite-shell .client-pro-copy {
+            max-width: 48rem;
+        }
+
+        .client-elite-shell .client-pro-kicker {
+            color: rgb(161 98 7 / 0.96);
+            letter-spacing: 0.15em;
+        }
+
+        .theme-dark .client-elite-shell .client-pro-kicker,
+        .dark .client-elite-shell .client-pro-kicker {
+            color: rgb(253 224 71 / 0.94);
+        }
+
+        .client-elite-shell .client-pro-kicker::before {
+            background: rgb(234 179 8 / 0.96);
+            box-shadow: 0 0 0 6px rgb(234 179 8 / 0.14);
+        }
+
+        .client-elite-shell .client-pro-badge {
+            border-color: rgb(234 179 8 / 0.24);
+            background: rgb(254 249 195 / 0.84);
+            color: rgb(161 98 7 / 0.96);
+            padding: 0.48rem 0.92rem;
+            box-shadow: 0 14px 30px -24px rgb(161 98 7 / 0.28);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-badge,
+        .dark .client-elite-shell .client-pro-badge {
+            border-color: rgb(234 179 8 / 0.26);
+            background: rgb(161 98 7 / 0.12);
+            color: rgb(253 224 71 / 0.95);
+            box-shadow: 0 14px 32px -24px rgb(234 179 8 / 0.2);
+        }
+
+        .client-elite-shell .client-pro-heading {
+            margin-top: 0.42rem;
+            max-width: 24ch;
+            font-size: clamp(1.08rem, 1.55vw, 1.36rem);
+            line-height: 1.04;
+        }
+
+        .client-elite-shell .client-pro-summary {
+            max-width: 36rem;
+            margin-top: 0.38rem;
+            font-size: 0.82rem;
+            line-height: 1.42;
+            color: rgb(71 85 105 / 0.96);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-summary,
+        .dark .client-elite-shell .client-pro-summary {
+            color: rgb(203 213 225 / 0.82);
+        }
+
+        .client-elite-shell .client-pro-metrics {
+            gap: 0.68rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .client-elite-shell .client-pro-metric {
+            min-height: auto;
+            padding: 0.82rem 0.92rem;
+            border-color: rgb(234 179 8 / 0.16);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(248 250 252 / 0.82));
+            box-shadow:
+                0 20px 34px -28px rgb(120 53 15 / 0.14),
+                inset 0 1px 0 rgb(255 255 255 / 0.86);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-metric,
+        .dark .client-elite-shell .client-pro-metric {
+            border-color: rgb(234 179 8 / 0.14);
+            background:
+                linear-gradient(165deg, rgb(15 23 42 / 0.82), rgb(15 23 42 / 0.62));
+            box-shadow:
+                0 22px 38px -30px rgb(2 8 23 / 0.9),
+                inset 0 1px 0 rgb(255 255 255 / 0.04);
+        }
+
+        .client-elite-shell .client-pro-metric:first-child {
+            border-color: rgb(234 179 8 / 0.26);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.18), transparent 44%),
+                linear-gradient(180deg, rgb(255 251 235 / 0.96), rgb(255 255 255 / 0.84));
+            grid-column: span 1;
+        }
+
+        .theme-dark .client-elite-shell .client-pro-metric:first-child,
+        .dark .client-elite-shell .client-pro-metric:first-child {
+            border-color: rgb(234 179 8 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.15), transparent 44%),
+                linear-gradient(165deg, rgb(31 41 55 / 0.9), rgb(15 23 42 / 0.74));
+        }
+
+        .client-elite-shell .client-pro-metric-label {
+            color: rgb(120 53 15 / 0.86);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-metric-label,
+        .dark .client-elite-shell .client-pro-metric-label {
+            color: rgb(253 224 71 / 0.8);
+        }
+
+        .client-elite-shell .client-pro-metric-value {
+            margin-top: 0.42rem;
+            font-size: clamp(1.32rem, 2vw, 1.72rem);
+            line-height: 1;
+        }
+
+        .client-elite-shell .client-pro-chip {
+            border-color: rgb(234 179 8 / 0.16);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.84), rgb(255 255 255 / 0.7));
+            box-shadow:
+                0 18px 30px -28px rgb(120 53 15 / 0.12),
+                inset 0 1px 0 rgb(255 255 255 / 0.82);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-chip,
+        .dark .client-elite-shell .client-pro-chip {
+            border-color: rgb(234 179 8 / 0.12);
+            background:
+                linear-gradient(165deg, rgb(15 23 42 / 0.72), rgb(15 23 42 / 0.54));
+            box-shadow:
+                0 20px 34px -28px rgb(2 8 23 / 0.84),
+                inset 0 1px 0 rgb(255 255 255 / 0.04);
+        }
+
+        .client-elite-shell .client-pro-chip-title {
+            color: rgb(120 53 15 / 0.9);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-chip-title,
+        .dark .client-elite-shell .client-pro-chip-title {
+            color: rgb(253 224 71 / 0.82);
+        }
+
+        .client-elite-shell .client-pro-actions {
+            gap: 0.55rem;
+            align-items: center;
+            padding-top: 0.72rem;
+            border-top: 1px solid rgb(234 179 8 / 0.18);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-actions,
+        .dark .client-elite-shell .client-pro-actions {
+            border-top-color: rgb(234 179 8 / 0.12);
+        }
+
+        .client-elite-shell .client-pro-actions .ui-button {
+            min-height: 2.6rem;
+            border-radius: 0.98rem;
+            box-shadow: 0 16px 28px -24px rgb(15 23 42 / 0.32);
+        }
+
+        .client-elite-shell .client-pro-actions .ui-button:first-child {
+            border-color: rgb(234 179 8 / 0.42);
+            background: linear-gradient(135deg, rgb(250 204 21), rgb(16 185 129));
+            color: rgb(6 23 18);
+            box-shadow: 0 20px 36px -24px rgb(16 185 129 / 0.38);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-actions .ui-button:first-child,
+        .dark .client-elite-shell .client-pro-actions .ui-button:first-child {
+            color: rgb(4 12 16);
+        }
+
+        .client-elite-shell .client-pro-actions .ui-button:not(:first-child) {
+            background: rgb(255 255 255 / 0.54);
+            border-color: rgb(234 179 8 / 0.14);
+        }
+
+        .theme-dark .client-elite-shell .client-pro-actions .ui-button:not(:first-child),
+        .dark .client-elite-shell .client-pro-actions .ui-button:not(:first-child) {
+            background: rgb(15 23 42 / 0.42);
+            border-color: rgb(234 179 8 / 0.12);
+        }
+
+        .client-elite-shell .client-pro-insights {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .client-elite-shell .client-pro-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .client-elite-shell .client-pro-metrics {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
 
         .client-detail-shell {
@@ -133,9 +881,11 @@
             border: 1px solid rgb(148 163 184 / 0.28);
             background: linear-gradient(156deg, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.94));
             box-shadow: 0 22px 38px -34px rgb(15 23 42 / 0.56);
+            backdrop-filter: blur(8px);
         }
 
-        .theme-dark .client-tab-panel .ui-card {
+        .theme-dark .client-tab-panel .ui-card,
+        .dark .client-tab-panel .ui-card {
             border-color: rgb(148 163 184 / 0.18);
             background: linear-gradient(160deg, rgb(2 6 23 / 0.86), rgb(15 23 42 / 0.7));
             box-shadow: 0 24px 40px -30px rgb(2 8 23 / 0.88);
@@ -146,12 +896,13 @@
         }
 
         .client-tab-panel .ui-card > header .ui-heading {
-            letter-spacing: -0.015em;
+            letter-spacing: -0.025em;
         }
 
         .client-tab-panel .ui-card > header .ui-muted {
             margin-top: 0.3rem;
             font-size: 0.86rem;
+            max-width: 42rem;
         }
 
         .client-tab-panel .ui-table thead tr {
@@ -290,6 +1041,24 @@
             .client-hero-actions {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .client-control-priority-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .client-pro-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 639px) {
+            .client-control-actions .ui-button {
+                width: 100%;
+            }
+
+            .client-pro-actions .ui-button {
+                width: 100%;
+            }
         }
 
         @media (min-width: 1280px) {
@@ -308,6 +1077,15 @@
 
             .client-hero-status {
                 justify-content: flex-end;
+            }
+
+            .client-control-grid {
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: start;
+            }
+
+            .client-pro-metrics {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
 
@@ -614,6 +1392,17 @@
                 || old('extra_days') !== null
                 || old('notes') !== null
             );
+        $contextGym = trim((string) request()->route('contextGym'));
+        $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $clientRouteParams = ['contextGym' => $contextGym, 'client' => $client->id] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $moduleRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $clientReportRouteParams = [
+            'contextGym' => $contextGym,
+            'search' => $client->document_number,
+        ] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $planControlClientDashboard = is_array($planControlClientDashboard ?? null) ? $planControlClientDashboard : null;
+        $professionalClientDashboard = is_array($professionalClientDashboard ?? null) ? $professionalClientDashboard : null;
+        $premiumClientDashboard = is_array($premiumClientDashboard ?? null) ? $premiumClientDashboard : null;
     @endphp
 
     <div x-data="clientShowPage({
@@ -626,6 +1415,10 @@
             adjustmentReasonOptions: @js($adjustmentReasonOptions),
             adjustmentReasonMap: @js($adjustmentReasonMap),
             initialAdjustmentMembershipId: @js($initialAdjustmentMembershipId ? (int) $initialAdjustmentMembershipId : null),
+            membershipDefaults: @js([
+                'currentPlanId' => $professionalClientDashboard['current_plan_id'] ?? ($latestMembership?->plan_id !== null ? (int) $latestMembership->plan_id : null),
+                'suggestedPromotionId' => $professionalClientDashboard['suggested_promotion_id'] ?? null,
+            ]),
             oldAdjustmentInput: @js($oldAdjustmentInput),
             hasAdjustmentOldInput: @js($hasAdjustmentOldInput),
          })"
@@ -648,6 +1441,196 @@
             'progressTabUrl' => $progressTabUrl,
             'canShowProgress' => $canShowProgress,
         ])
+
+        @if ($planControlClientDashboard)
+            <section class="client-control-shell">
+                <div class="client-control-grid">
+                    <div class="client-control-copy">
+                        <span class="client-control-kicker">Plan Control / Ficha</span>
+                        <h2 class="client-control-heading">{{ $planControlClientDashboard['headline'] ?? 'Ficha lista para cobrar y operar' }}</h2>
+                        <p class="client-control-summary">{{ $planControlClientDashboard['summary'] ?? 'Usa esta vista para revisar estado, ultimo cobro y asistencia sin perder limpieza visual.' }}</p>
+                    </div>
+
+                    <div class="client-control-actions">
+                        <x-ui.button type="button" variant="primary" x-on:click="{{ ! empty($planControlClientDashboard['current_plan_id']) ? 'openRenewalModal()' : 'openMembershipModal()' }}">
+                            {{ $planControlClientDashboard['renewal_action_label'] ?? 'Cobrar membresia' }}
+                        </x-ui.button>
+                        <x-ui.button :href="route('reception.index', $moduleRouteParams)" variant="secondary">Ir a recepcion</x-ui.button>
+                        <x-ui.button :href="route('cash.index', $moduleRouteParams)" variant="ghost">Ir a caja</x-ui.button>
+                        @if (! empty($canViewReports))
+                            <x-ui.button :href="route('reports.client-earnings', $clientReportRouteParams)" variant="ghost">Reporte del cliente</x-ui.button>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="client-control-priority-grid mt-4">
+                    <article class="client-control-priority" data-tone="{{ $planControlClientDashboard['status_tone'] ?? 'neutral' }}">
+                        <p class="client-control-priority-label">Estado de membresia</p>
+                        <p class="client-control-priority-value">{{ $planControlClientDashboard['status_value'] ?? 'Sin membresia' }}</p>
+                        <p class="client-control-priority-note">{{ $planControlClientDashboard['status_note'] ?? '' }}</p>
+                    </article>
+
+                    <article class="client-control-priority" data-tone="success">
+                        <p class="client-control-priority-label">Ultimo cobro</p>
+                        <p class="client-control-priority-value">{{ \App\Support\Currency::format((float) ($planControlClientDashboard['last_payment_amount'] ?? 0), $appCurrencyCode) }}</p>
+                        <p class="client-control-priority-note">{{ $planControlClientDashboard['last_payment_label'] ?? 'Sin cobro registrado.' }}</p>
+                    </article>
+
+                    <article class="client-control-priority" data-tone="{{ $planControlClientDashboard['attendance_tone'] ?? 'neutral' }}">
+                        <p class="client-control-priority-label">Ultima asistencia</p>
+                        <p class="client-control-priority-value">{{ $planControlClientDashboard['attendance_value'] ?? 'Sin registro' }}</p>
+                        <p class="client-control-priority-note">{{ $planControlClientDashboard['attendance_note'] ?? '' }}</p>
+                    </article>
+                </div>
+            </section>
+        @endif
+
+        @if ($professionalClientDashboard)
+            @php
+                $professionalClientAlerts = collect($professionalClientDashboard['alerts'] ?? [])->values();
+                $professionalClientMetrics = [
+                    [
+                        'label' => 'Ultimo cobro',
+                        'value' => \App\Support\Currency::format((float) ($professionalClientDashboard['last_payment_amount'] ?? 0), $appCurrencyCode),
+                        'note' => $professionalClientDashboard['last_payment_label'] ?? 'Sin cobro registrado',
+                        'tone' => 'success',
+                    ],
+                    [
+                        'label' => 'Facturacion membresias',
+                        'value' => \App\Support\Currency::format((float) ($professionalClientDashboard['total_membership_revenue'] ?? 0), $appCurrencyCode),
+                        'note' => 'Historial acumulado de pagos de membresia.',
+                        'tone' => 'info',
+                    ],
+                    [
+                        'label' => 'Promo',
+                        'value' => $professionalClientDashboard['promotion_title'] ?? 'Sin promo',
+                        'note' => $professionalClientDashboard['promotion_subtitle'] ?? '',
+                        'tone' => 'accent',
+                    ],
+                    [
+                        'label' => 'Productos',
+                        'value' => \App\Support\Currency::format((float) ($professionalClientDashboard['product_sales_revenue'] ?? 0), $appCurrencyCode),
+                        'note' => (int) ($professionalClientDashboard['product_sales_count'] ?? 0).' ticket(s) | '.($professionalClientDashboard['last_product_sale_label'] ?? 'Sin ventas'),
+                        'tone' => 'warning',
+                    ],
+                ];
+            @endphp
+            <section class="client-pro-shell">
+                <div class="client-pro-grid">
+                    <div class="client-elite-head flex flex-wrap items-start justify-between gap-3">
+                        <div class="client-pro-copy">
+                            <span class="client-pro-kicker">Plan Profesional / Cliente</span>
+                            <h2 class="client-pro-heading">{{ $professionalClientDashboard['headline'] ?? 'Foco comercial del cliente' }}</h2>
+                            <p class="client-pro-summary">{{ $professionalClientDashboard['summary'] ?? 'Renovacion, promo y venta adicional en una sola lectura compacta.' }}</p>
+                        </div>
+                        <span class="client-pro-badge">Profesional</span>
+                    </div>
+
+                    <div class="client-pro-metrics">
+                        @foreach ($professionalClientMetrics as $metric)
+                            <article class="client-pro-metric" data-tone="{{ $metric['tone'] }}">
+                                <p class="client-pro-metric-label">{{ $metric['label'] }}</p>
+                                <p class="client-pro-metric-value">{{ $metric['value'] }}</p>
+                                <p class="client-pro-metric-note">{{ $metric['note'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <div class="client-pro-insights">
+                        <article class="client-pro-chip" data-tone="info">
+                            <p class="client-pro-chip-title">Asistencia</p>
+                            <p class="client-pro-chip-copy">{{ $professionalClientDashboard['attendance_label'] ?? 'Sin asistencia registrada' }}</p>
+                        </article>
+                        @foreach ($professionalClientAlerts as $alert)
+                            <article class="client-pro-chip" data-tone="{{ $alert['tone'] ?? 'info' }}">
+                                <p class="client-pro-chip-title">{{ $alert['title'] ?? 'Alerta' }}</p>
+                                <p class="client-pro-chip-copy">{{ $alert['description'] ?? '' }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <div class="client-pro-actions">
+                        <x-ui.button type="button" variant="primary" x-on:click="openRenewalModal()">
+                            {{ ! empty($professionalClientDashboard['current_plan_id']) ? 'Renovar mismo plan' : 'Cobrar membresia' }}
+                        </x-ui.button>
+                        @if (! empty($professionalClientDashboard['suggested_promotion_id']))
+                            <x-ui.button type="button" variant="secondary" x-on:click="openPromotionRenewalModal()">Renovar con promo</x-ui.button>
+                        @elseif (! empty($canUseSalesInventory))
+                            <x-ui.button :href="route('sales.index', $moduleRouteParams)" variant="secondary">Registrar venta</x-ui.button>
+                        @endif
+                        @if (! empty($canViewReports))
+                            <x-ui.button :href="route('reports.client-earnings', $clientReportRouteParams)" variant="ghost">Reporte del cliente</x-ui.button>
+                        @endif
+                        @if (! empty($canManagePromotions))
+                            <x-ui.button :href="route('plans.index', $moduleRouteParams)" variant="ghost">Planes y promos</x-ui.button>
+                        @elseif (! empty($canShowProgress) && ! empty($progressTabUrl))
+                            <x-ui.button :href="$progressTabUrl" variant="ghost">Ver progreso</x-ui.button>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        @endif
+
+        @if ($premiumClientDashboard)
+            @php
+                $premiumClientMetrics = [
+                    [
+                        'label' => 'Acceso app',
+                        'value' => $premiumClientDashboard['app_access_value'] ?? 'Pendiente',
+                        'note' => $premiumClientDashboard['app_access_note'] ?? 'Usuario listo o pendiente.',
+                        'tone' => ! empty($premiumClientDashboard['app_access_ready']) ? 'success' : 'warning',
+                    ],
+                    [
+                        'label' => 'Ultimo cobro',
+                        'value' => \App\Support\Currency::format((float) ($premiumClientDashboard['last_payment_amount'] ?? 0), $appCurrencyCode),
+                        'note' => $premiumClientDashboard['last_payment_label'] ?? 'Sin cobro registrado',
+                        'tone' => 'info',
+                    ],
+                    [
+                        'label' => 'Facturacion',
+                        'value' => \App\Support\Currency::format((float) ($premiumClientDashboard['total_membership_revenue'] ?? 0), $appCurrencyCode),
+                        'note' => 'Total acumulado de membresia.',
+                        'tone' => 'accent',
+                    ],
+                ];
+            @endphp
+            <section class="client-pro-shell client-elite-shell">
+                <div class="client-pro-grid">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="client-pro-copy">
+                            <span class="client-pro-kicker">Plan Elite / Cliente</span>
+                            <h2 class="client-pro-heading">Estado premium del cliente</h2>
+                            <p class="client-pro-summary">Acceso app y cobro en un resumen corto.</p>
+                        </div>
+                        <span class="client-pro-badge">Premium</span>
+                    </div>
+
+                    <div class="client-pro-metrics">
+                        @foreach ($premiumClientMetrics as $metric)
+                            <article class="client-pro-metric" data-tone="{{ $metric['tone'] }}">
+                                <p class="client-pro-metric-label">{{ $metric['label'] }}</p>
+                                <p class="client-pro-metric-value">{{ $metric['value'] }}</p>
+                                <p class="client-pro-metric-note">{{ $metric['note'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <div class="client-pro-actions">
+                        @if (! empty($premiumClientDashboard['app_access_ready']) && ! empty($canManageClientAccounts) && \Illuminate\Support\Facades\Route::has('client-portal.index'))
+                            <x-ui.button :href="route('client-portal.index', $moduleRouteParams)" variant="primary">Portal cliente</x-ui.button>
+                        @elseif (! empty($canManageClientAccounts))
+                            <x-ui.button :href="route('clients.show', array_merge($clientRouteParams, ['tab' => 'app_access']))" variant="primary">Configurar acceso app</x-ui.button>
+                        @endif
+                        @if (! empty($canViewReports))
+                            <x-ui.button :href="route('reports.client-earnings', $clientReportRouteParams)" variant="secondary">Reporte del cliente</x-ui.button>
+                        @endif
+                        @if (! empty($canShowProgress) && ! empty($progressTabUrl))
+                            <x-ui.button :href="$progressTabUrl" variant="ghost">Ver progreso</x-ui.button>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        @endif
 
         @include('clients.partials._tabs', [
             'canShowProgress' => $canShowProgress,
@@ -767,6 +1750,7 @@
                 adjustmentTypeHelp: config.adjustmentTypeHelp || {},
                 adjustmentReasonOptions: Array.isArray(config.adjustmentReasonOptions) ? config.adjustmentReasonOptions : [],
                 adjustmentReasonMap: config.adjustmentReasonMap || {},
+                membershipDefaults: config.membershipDefaults || {},
                 selectedAdjustmentMembershipId: config.initialAdjustmentMembershipId || null,
                 hasAdjustmentOldInput: Boolean(config.hasAdjustmentOldInput),
                 adjustmentForm: {
@@ -813,7 +1797,42 @@
                 openMembershipModal() {
                     this.membershipModalOpen = true;
                     this.actionsOpen = false;
+                    this.activeTab = 'membership';
                     this.$nextTick(() => this.$refs.membershipPlanInput?.focus());
+                },
+
+                openRenewalModal() {
+                    this.openMembershipModalWithDefaults({
+                        planId: this.membershipDefaults.currentPlanId || null,
+                        promotionId: '',
+                    });
+                },
+
+                openPromotionRenewalModal() {
+                    this.openMembershipModalWithDefaults({
+                        planId: this.membershipDefaults.currentPlanId || null,
+                        promotionId: this.membershipDefaults.suggestedPromotionId || '',
+                    });
+                },
+
+                openMembershipModalWithDefaults(options = {}) {
+                    this.membershipModalOpen = true;
+                    this.actionsOpen = false;
+                    this.activeTab = 'membership';
+                    this.$nextTick(() => {
+                        if (Object.prototype.hasOwnProperty.call(options, 'planId') && options.planId && this.$refs.membershipPlanInput) {
+                            this.$refs.membershipPlanInput.value = String(options.planId);
+                        }
+
+                        if (this.$refs.membershipPromotionInput) {
+                            const promotionValue = Object.prototype.hasOwnProperty.call(options, 'promotionId')
+                                ? String(options.promotionId || '')
+                                : '';
+                            this.$refs.membershipPromotionInput.value = promotionValue;
+                        }
+
+                        this.$refs.membershipPlanInput?.focus();
+                    });
                 },
 
                 closeMembershipModal() {

@@ -45,10 +45,10 @@
             <div class="sa-hero-grid">
                 <div>
                     <span class="sa-kicker">SuperAdmin SaaS</span>
-                    <h2 class="sa-title">Ve cobros, descuentos y crecimiento sin adivinar numeros.</h2>
+                    <h2 class="sa-title">Panel global para cobrar, seguir cartera y detectar riesgo rapido.</h2>
                     <p class="sa-subtitle">
-                        Este panel ahora separa lo que ya cobraste, lo que proyecta tu cartera activa y los nuevos gimnasios
-                        que entran al sistema. Asi puedes leer mejor promociones, pagos adelantados y salud comercial.
+                        Deja arriba solo lo que mueve decisiones: cartera activa, ingresos del ciclo, renovaciones cercanas
+                        y actividad real de admins.
                     </p>
 
                     <div class="sa-actions">
@@ -59,19 +59,19 @@
                 </div>
 
                 <aside class="sa-note-card">
-                    <p class="sa-note-label">Lectura rapida</p>
+                    <p class="sa-note-label">Hoy</p>
                     <div class="sa-note-list">
                         <div class="sa-note-item">
-                            <strong>{{ \App\Support\Currency::format($currentMonthRevenue, $appCurrencyCode) }} cobrados este mes</strong>
-                            <span>{{ $chargeCountMonth }} movimientos registrados con descuentos ya aplicados.</span>
+                            <strong>{{ \App\Support\Currency::format($currentMonthRevenue, $appCurrencyCode) }} cobrados</strong>
+                            <span>{{ $chargeCountMonth }} cobros registrados este mes.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>{{ $newGymsMonth }} gimnasios nuevos este mes</strong>
-                            <span>{{ $newGymsYear }} altas acumuladas en el a&ntilde;o para medir crecimiento comercial.</span>
+                            <strong>{{ $newGymsMonth }} altas nuevas</strong>
+                            <span>{{ $newGymsYear }} gimnasios creados en el anio.</span>
                         </div>
                         <div class="sa-note-item">
-                            <strong>{{ $discountedSubscriptions }} suscripciones con descuento vigente</strong>
-                            <span>{{ \App\Support\Currency::format($currentCycleDiscount, $appCurrencyCode) }} descontados en la cartera activa actual.</span>
+                            <strong>{{ $discountedSubscriptions }} cuentas con descuento</strong>
+                            <span>{{ \App\Support\Currency::format($currentCycleDiscount, $appCurrencyCode) }} descontados en el ciclo vigente.</span>
                         </div>
                     </div>
                 </aside>
@@ -82,75 +82,75 @@
             <article class="sa-stat-card is-neutral">
                 <p class="sa-stat-label">Total gimnasios</p>
                 <p class="sa-stat-value">{{ $totalGyms }}</p>
-                <p class="sa-stat-meta">Base total instalada dentro del sistema.</p>
+                <p class="sa-stat-meta">Base total instalada.</p>
             </article>
             <article class="sa-stat-card is-success">
                 <p class="sa-stat-label">Activos</p>
                 <p class="sa-stat-value">{{ $activeGyms }}</p>
-                <p class="sa-stat-meta">{{ $healthRate }}% de la cartera sigue operando sin corte.</p>
+                <p class="sa-stat-meta">{{ $healthRate }}% de la cartera sigue operando.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">En gracia</p>
                 <p class="sa-stat-value">{{ $graceGyms }}</p>
-                <p class="sa-stat-meta">{{ $graceToday }} requieren seguimiento inmediato hoy.</p>
+                <p class="sa-stat-meta">{{ $graceToday }} requieren seguimiento hoy.</p>
             </article>
             <article class="sa-stat-card is-danger">
                 <p class="sa-stat-label">Suspendidos</p>
                 <p class="sa-stat-value">{{ $suspendedGyms }}</p>
-                <p class="sa-stat-meta">Casos fuera de operacion comercial.</p>
+                <p class="sa-stat-meta">Casos fuera de operacion.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Cobro ciclo vigente</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format($currentCycleRevenue, $appCurrencyCode) }}</p>
-                <p class="sa-stat-meta">Total del ciclo activo, respetando meses pagados y descuentos del cobro actual.</p>
+                <p class="sa-stat-meta">Lectura del ciclo activo con descuentos aplicados.</p>
             </article>
             <article class="sa-stat-card is-success">
                 <p class="sa-stat-label">Cobrado este mes</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format($currentMonthRevenue, $appCurrencyCode) }}</p>
-                <p class="sa-stat-meta">Ingreso registrado en el mes actual.</p>
+                <p class="sa-stat-meta">Ingreso registrado este mes.</p>
             </article>
             <article class="sa-stat-card is-info">
                 <p class="sa-stat-label">Cobrado este a&ntilde;o</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format($currentYearRevenue, $appCurrencyCode) }}</p>
-                <p class="sa-stat-meta">Acumulado anual segun historial de altas y renovaciones.</p>
+                <p class="sa-stat-meta">Acumulado anual.</p>
             </article>
             <article class="sa-stat-card is-warning">
                 <p class="sa-stat-label">Proyeccion anual</p>
                 <p class="sa-stat-value text-2xl">{{ \App\Support\Currency::format($annualRunRate, $appCurrencyCode) }}</p>
-                <p class="sa-stat-meta">MRR base de la cartera actual multiplicado por 12.</p>
+                <p class="sa-stat-meta">MRR actual proyectado a 12 meses.</p>
             </article>
         </section>
 
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
-            <x-ui.card title="Reporte comercial" subtitle="Resumen de ingresos, descuentos y altas para que el panel sea util de verdad.">
+            <x-ui.card title="Reporte comercial" subtitle="Ingreso, descuento y altas en una sola lectura.">
                 <div class="sa-mini-grid">
                     <article class="sa-mini-card">
                         <strong>{{ \App\Support\Currency::format($currentMonthDiscount, $appCurrencyCode) }} en descuentos del mes</strong>
-                        <span>Te muestra cuanto cediste comercialmente en promociones activas durante este mes.</span>
+                        <span>Margen cedido por promociones activas del mes.</span>
                     </article>
                     <article class="sa-mini-card">
                         <strong>{{ \App\Support\Currency::format($currentYearDiscount, $appCurrencyCode) }} en descuentos del a&ntilde;o</strong>
-                        <span>Lectura anual para no perder margen cuando ofreces planes por 3, 6 o 12 meses.</span>
+                        <span>Lectura anual para vigilar margen comercial.</span>
                     </article>
                     <article class="sa-mini-card">
                         <strong>{{ $chargeCountYear }} cobros registrados este a&ntilde;o</strong>
-                        <span>Incluye altas y renovaciones que quedaron guardadas como eventos comerciales.</span>
+                        <span>Altas y renovaciones guardadas en historial.</span>
                     </article>
                     <article class="sa-mini-card">
                         <strong>{{ \App\Support\Currency::format($avgTicketMonth, $appCurrencyCode) }} ticket promedio del mes</strong>
-                        <span>Ayuda a leer si estan entrando planes mas grandes o pagos por varios meses.</span>
+                        <span>Referencia rapida del valor medio por cobro.</span>
                     </article>
                     <article class="sa-mini-card">
                         <strong>{{ \App\Support\Currency::format($recurringMrr, $appCurrencyCode) }} MRR base</strong>
-                        <span>Mensualidad recurrente proyectada despues de promociones temporales.</span>
+                        <span>Mensualidad recurrente de la cartera actual.</span>
                     </article>
                     <article class="sa-mini-card">
                         <strong>{{ $renewalsSoon }} renovaciones cercanas</strong>
-                        <span>Gimnasios que vencen en los proximos 7 dias y ya merecen seguimiento.</span>
+                        <span>Renovaciones que ya merecen seguimiento.</span>
                     </article>
                 </div>
 
-                <div class="mt-5 overflow-x-auto">
+                <div class="sa-table-shell mt-5 overflow-x-auto">
                     <table class="ui-table min-w-[760px]">
                         <thead>
                             <tr>
@@ -180,14 +180,13 @@
                 </div>
             </x-ui.card>
 
-            <x-ui.card title="Alertas y crecimiento" subtitle="Indicadores rapidos para revisar cartera, altas nuevas y margen comercial.">
+            <x-ui.card title="Alertas y crecimiento" subtitle="Atajos rapidos para revisar cartera y operaciones clave.">
                 <ul class="sa-check-list">
-                    <li>{{ $newGymsMonth }} gimnasios nuevos este mes.</li>
-                    <li>{{ $newGymsYear }} gimnasios nuevos acumulados este a&ntilde;o.</li>
-                    <li>{{ $chargeCountMonth }} cobros registrados durante el mes actual.</li>
-                    <li>{{ \App\Support\Currency::format($currentCycleDiscount, $appCurrencyCode) }} descontados dentro del ciclo vigente.</li>
-                    <li>{{ $discountedSubscriptions }} cuentas activas estan operando con descuento en este momento.</li>
-                    <li>{{ $renewalsSoon }} renovaciones proximas y {{ $graceToday }} cuentas hoy en gracia.</li>
+                    <li>{{ $renewalsSoon }} renovaciones cercanas.</li>
+                    <li>{{ $graceToday }} cuentas hoy en gracia.</li>
+                    <li>{{ $newGymsMonth }} altas nuevas este mes.</li>
+                    <li>{{ $chargeCountMonth }} cobros registrados este mes.</li>
+                    <li>{{ \App\Support\Currency::format($currentCycleDiscount, $appCurrencyCode) }} descontados en el ciclo vigente.</li>
                 </ul>
 
                 <div class="mt-4 flex flex-wrap gap-2">
@@ -198,19 +197,19 @@
             </x-ui.card>
         </div>
 
-        <x-ui.card title="Actividad de admins principales" subtitle="Solo se muestran los duenos/admins de cada gimnasio. No incluye SuperAdmin ni cajeros.">
+        <x-ui.card title="Actividad de admins principales" subtitle="Solo admins principales. No incluye SuperAdmin ni cajeros.">
             <div class="mb-4 sa-mini-grid">
                 <article class="sa-mini-card">
                     <strong>{{ $ownersOnlineNow }} activos ahora mismo</strong>
-                    <span>Se consideran activos si registraron actividad dentro de los ultimos 5 minutos.</span>
+                        <span>Activos si registraron uso en los ultimos 5 minutos.</span>
                 </article>
                 <article class="sa-mini-card">
                     <strong>{{ $ownerActivityRows->count() }} gimnasios monitoreados</strong>
-                    <span>La tabla mezcla login real y uso del panel para cubrir web, Recuerdame y app instalada.</span>
+                        <span>Login y uso real del panel en una sola tabla.</span>
                 </article>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="sa-table-shell overflow-x-auto">
                 <table class="ui-table min-w-[1240px]">
                     <thead>
                         <tr>
@@ -241,7 +240,7 @@
                                 <td class="font-semibold text-slate-800 dark:text-slate-100">{{ $row['gym_name'] ?? 'Gym' }}</td>
                                 <td>{{ $row['user_name'] ?? 'Admin principal' }}</td>
                                 <td>
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusIsOnline ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
+                                    <span class="{{ $statusIsOnline ? 'sa-status-chip is-success' : 'sa-status-chip is-neutral' }}">
                                         {{ $row['status_label'] ?? 'Inactivo' }}
                                     </span>
                                 </td>
@@ -277,23 +276,23 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Conteo por plan" subtitle="Cuantos gimnasios hay hoy en cada uno de tus 4 planes comerciales.">
+        <x-ui.card title="Conteo por plan" subtitle="Distribucion actual de la cartera por plan.">
             <div class="sa-mini-grid">
                 @forelse ($planMix as $row)
                     <article class="sa-mini-card">
                         <strong>{{ $row['name'] }}: {{ (int) ($row['count'] ?? 0) }}</strong>
-                        <span>Gimnasios que hoy operan con este plan base.</span>
+                        <span>Gimnasios operando con este plan hoy.</span>
                     </article>
                 @empty
                     <article class="sa-mini-card">
                         <strong>Sin datos</strong>
-                        <span>Todavia no hay cartera suficiente para agrupar por plan.</span>
+                        <span>Aun no hay cartera suficiente para agrupar.</span>
                     </article>
                 @endforelse
             </div>
         </x-ui.card>
 
-        <x-ui.card title="Scanner pagina" subtitle="QR fijo para abrir tu pagina publica y descargarlo cuando lo necesites.">
+        <x-ui.card title="QR de pagina" subtitle="Enlace fijo para abrir o descargar el acceso publico.">
             <div class="sa-page-scanner-grid">
                 <div class="sa-page-scanner-copy">
                     <p class="sa-page-scanner-label">Enlace fijo</p>

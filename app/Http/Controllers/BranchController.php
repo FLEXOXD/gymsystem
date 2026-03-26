@@ -37,6 +37,8 @@ class BranchController extends Controller
                 'slug',
                 'timezone',
                 'currency_code',
+                'address',
+                'address_line',
                 'address_country_code',
                 'address_state',
                 'address_city',
@@ -74,13 +76,28 @@ class BranchController extends Controller
                     'subscriptions.price',
                 ]);
             }])
-            ->get(['id', 'name', 'slug', 'timezone', 'currency_code'])
+            ->get(['id', 'name', 'slug', 'timezone', 'currency_code', 'address', 'address_state', 'address_city', 'address_line'])
             ->sortBy(function (Gym $gym) use ($hubGymId): string {
                 $priority = (int) ($gym->id !== $hubGymId);
 
                 return $priority.'|'.mb_strtolower((string) $gym->name);
             })
             ->values();
+
+        $formatGymAddress = static function (Gym $gym): string {
+            $address = trim((string) ($gym->address ?? ''));
+            if ($address !== '') {
+                return $address;
+            }
+
+            $parts = collect([
+                trim((string) ($gym->address_line ?? '')),
+                trim((string) ($gym->address_city ?? '')),
+                trim((string) ($gym->address_state ?? '')),
+            ])->filter()->values();
+
+            return $parts->isNotEmpty() ? $parts->implode(', ') : '-';
+        };
 
         $clientsTotals = Client::query()
             ->whereIn('gym_id', $gymIds)
@@ -131,7 +148,8 @@ class BranchController extends Controller
             $checkinsTodayTotals,
             $income30dTotals,
             $expense30dTotals,
-            $linkIdByBranchGymId
+            $linkIdByBranchGymId,
+            $formatGymAddress
         ): array {
             $gymId = (int) $gym->id;
             $income30d = (float) ($income30dTotals[$gymId] ?? 0);
@@ -142,6 +160,7 @@ class BranchController extends Controller
                 'is_hub' => $gymId === $hubGymId,
                 'name' => (string) $gym->name,
                 'slug' => (string) $gym->slug,
+                'address' => $formatGymAddress($gym),
                 'plan_name' => (string) ($gym->latestSubscription?->plan_name ?? '-'),
                 'subscription_status' => (string) ($gym->latestSubscription?->status ?? '-'),
                 'clients_total' => (int) ($clientsTotals[$gymId] ?? 0),

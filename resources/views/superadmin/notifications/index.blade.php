@@ -4,6 +4,69 @@
 @section('page-title', 'Notificaciones pendientes')
 
 @section('content')
+    @php
+        $pushCampaigns = $pushCampaigns ?? collect();
+        $pushSentCount = $pushCampaigns->where('status', 'sent')->count();
+        $pushProblemCount = $pushCampaigns->filter(fn ($campaign) => in_array((string) ($campaign->status ?? ''), ['partial', 'failed'], true))->count();
+        $pendingNotificationCount = $notifications->count();
+    @endphp
+    <div class="sa-shell">
+        <section class="sa-hero">
+            <div class="sa-hero-grid">
+                <div>
+                    <span class="sa-kicker">Notificaciones</span>
+                    <h2 class="sa-title">Campanas push y recordatorios en una lectura mas ordenada.</h2>
+                    <p class="sa-subtitle">
+                        Tienes campañas manuales arriba y pendientes automaticos abajo, con conteo rapido para actuar sin revisar toda la tabla.
+                    </p>
+                    <div class="sa-actions">
+                        <a href="#pending-notifications" class="ui-button ui-button-secondary">Ver pendientes</a>
+                        <a href="{{ route('superadmin.notifications.history') }}" class="ui-button ui-button-ghost">Ver historial</a>
+                    </div>
+                </div>
+
+                <aside class="sa-note-card">
+                    <p class="sa-note-label">Lectura rapida</p>
+                    <div class="sa-note-list">
+                        <div class="sa-note-item">
+                            <strong>Push manual</strong>
+                            <span>Lanza campañas segmentadas por gimnasio y audiencia.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>Pendientes del dia</strong>
+                            <span>Los avisos automáticos quedan listos para marcar enviados u omitidos.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>Historial separado</strong>
+                            <span>Los registros enviados u omitidos ya tienen su vista propia.</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="sa-stat-grid">
+            <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Campanas push</p>
+                <p class="sa-stat-value">{{ $pushCampaigns->count() }}</p>
+                <p class="sa-stat-meta">Ultimas campanas registradas en el panel.</p>
+            </article>
+            <article class="sa-stat-card is-success">
+                <p class="sa-stat-label">Enviadas</p>
+                <p class="sa-stat-value">{{ $pushSentCount }}</p>
+                <p class="sa-stat-meta">Campanas completadas sin accion adicional.</p>
+            </article>
+            <article class="sa-stat-card is-warning">
+                <p class="sa-stat-label">Con problema</p>
+                <p class="sa-stat-value">{{ $pushProblemCount }}</p>
+                <p class="sa-stat-meta">Campanas parciales o fallidas para revisar.</p>
+            </article>
+            <article class="sa-stat-card is-info">
+                <p class="sa-stat-label">Pendientes</p>
+                <p class="sa-stat-value">{{ $pendingNotificationCount }}</p>
+                <p class="sa-stat-meta">Avisos automaticos pendientes para la fecha elegida.</p>
+            </article>
+        </section>
     <x-ui.card title="Campañas push" subtitle="Envio segmentado de notificaciones push a gimnasios y roles operativos.">
         <form method="POST"
               action="{{ route('superadmin.notifications.push-campaigns.send') }}"
@@ -55,7 +118,7 @@
             </div>
         </form>
 
-        <div class="mt-4 overflow-x-auto">
+        <div class="sa-table-shell mt-4 overflow-x-auto">
             <table class="ui-table min-w-[1100px]">
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -73,12 +136,12 @@
                 @forelse (($pushCampaigns ?? collect()) as $campaign)
                     @php
                         $statusVariant = match ((string) ($campaign->status ?? 'queued')) {
-                            'sent' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-                            'partial' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-                            'failed' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-                            'skipped' => 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-100',
-                            'sending' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-200',
-                            default => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                            'sent' => 'sa-status-chip is-success',
+                            'partial' => 'sa-status-chip is-warning',
+                            'failed' => 'sa-status-chip is-danger',
+                            'skipped' => 'sa-status-chip is-neutral',
+                            'sending' => 'sa-status-chip is-info',
+                            default => 'sa-status-chip is-indigo',
                         };
                         $audienceLabel = match ((string) ($campaign->audience ?? 'owners')) {
                             'staff' => 'Duenos y cajeros',
@@ -86,23 +149,23 @@
                             default => 'Solo duenos',
                         };
                     @endphp
-                    <tr data-push-campaign-status="{{ (string) ($campaign->status ?? 'queued') }}" class="border-b border-slate-100 text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $campaign->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $campaign->gym?->name ?? 'Todos' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $audienceLabel }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $campaign->title }}</td>
-                        <td class="px-3 py-3">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusVariant }}">
+                    <tr data-push-campaign-status="{{ (string) ($campaign->status ?? 'queued') }}">
+                        <td class="dark:text-slate-200">{{ $campaign->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                        <td class="font-semibold dark:text-slate-100">{{ $campaign->gym?->name ?? 'Todos' }}</td>
+                        <td class="dark:text-slate-200">{{ $audienceLabel }}</td>
+                        <td class="dark:text-slate-200">{{ $campaign->title }}</td>
+                        <td>
+                            <span class="{{ $statusVariant }}">
                                 {{ $campaign->status }}
                             </span>
                         </td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->sent_count ?? 0) }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->failed_count ?? 0) }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ (int) ($campaign->skipped_count ?? 0) }}</td>
+                        <td class="dark:text-slate-200">{{ (int) ($campaign->sent_count ?? 0) }}</td>
+                        <td class="dark:text-slate-200">{{ (int) ($campaign->failed_count ?? 0) }}</td>
+                        <td class="dark:text-slate-200">{{ (int) ($campaign->skipped_count ?? 0) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                        <td colspan="8" class="sa-empty-row">
                             Aún no se han enviado campañas push.
                         </td>
                     </tr>
@@ -112,7 +175,7 @@
         </div>
     </x-ui.card>
 
-    <x-ui.card title="Bandeja de notificaciones" subtitle="Avisos automaticos por vencimiento y días de gracia.">
+    <x-ui.card id="pending-notifications" title="Bandeja de notificaciones" subtitle="Avisos automaticos por vencimiento y días de gracia.">
         <form method="GET" action="{{ route('superadmin.notifications.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
                 Fecha
@@ -122,7 +185,7 @@
         </form>
 
         <div class="mb-3 text-sm text-slate-600 dark:text-slate-300">Pendientes para {{ $selectedDate }}: <strong>{{ $notifications->count() }}</strong></div>
-        <div class="overflow-x-auto">
+        <div class="sa-table-shell overflow-x-auto">
             <table class="ui-table min-w-[1100px]">
                 <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -139,8 +202,8 @@
                 @forelse ($notifications as $notification)
                     @php
                         $typeClass = str_starts_with($notification->type, 'grace_')
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
-                            : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200';
+                            ? 'sa-status-chip is-warning'
+                            : 'sa-status-chip is-indigo';
                         $typeLabel = match ($notification->type) {
                             'expires_7' => 'Vence en 7 días',
                             'expires_3' => 'Vence en 3 días',
@@ -151,23 +214,23 @@
                             default => str_replace('_', ' ', $notification->type),
                         };
                     @endphp
-                    <tr class="border-b border-slate-100 align-top text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
-                        <td class="px-3 py-3">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $typeClass }}">
+                    <tr>
+                        <td>
+                            <span class="{{ $typeClass }}">
                                 {{ $typeLabel }}
                             </span>
                         </td>
-                        <td class="px-3 py-3 font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/D' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $notification->subscription?->plan_name ?? '-' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $notification->subscription?->ends_at?->toDateString() ?? '-' }}</td>
-                        <td class="px-3 py-3 dark:text-slate-200">{{ $notification->channel }}</td>
-                        <td class="px-3 py-3">
+                        <td class="font-semibold dark:text-slate-100">{{ $notification->gym?->name ?? 'N/D' }}</td>
+                        <td class="dark:text-slate-200">{{ $notification->subscription?->plan_name ?? '-' }}</td>
+                        <td class="dark:text-slate-200">{{ $notification->subscription?->ends_at?->toDateString() ?? '-' }}</td>
+                        <td class="dark:text-slate-200">{{ $notification->channel }}</td>
+                        <td>
                             <p id="msg-{{ $notification->id }}" class="max-w-md whitespace-pre-wrap break-words text-xs text-slate-700 dark:text-slate-200">{{ $notification->message_snapshot }}</p>
                         </td>
-                        <td class="px-3 py-3">
-                            <div class="flex flex-wrap gap-2">
+                        <td>
+                            <div class="sa-action-row">
                                 <button type="button"
-                                        class="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-600"
+                                        class="ui-button ui-button-muted"
                                         data-copy-target="msg-{{ $notification->id }}">
                                     Copiar mensaje
                                 </button>
@@ -184,7 +247,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                        <td colspan="7" class="sa-empty-row">
                             No hay notificaciones pendientes para esta fecha.
                         </td>
                     </tr>
@@ -193,6 +256,7 @@
             </table>
         </div>
     </x-ui.card>
+    </div>
 @endsection
 
 @push('scripts')

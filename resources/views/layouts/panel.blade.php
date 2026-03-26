@@ -169,11 +169,23 @@
             $headerLiveClientsUrl = route('panel.live-clients', $gymRouteParams);
         }
     }
+    $canManageCashiers = ! $isSuperAdmin
+        && ! $isCashierMode
+        && $activeGymId > 0
+        && $planAccessService->canForGym($activeGymId, 'cashiers');
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
     $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
     $usePremiumPanelVisuals = ! $isSuperAdmin && $activeGymId > 0;
+    $floatingButtonsVisible = ! $isSuperAdmin
+        && ! $isGlobalScope
+        && $activeGymId > 0
+        && $activeGymSlug !== ''
+        && ! request()->routeIs('client-portal.*');
+    $showFloatingClientSetting = $floatingButtonsVisible && \Illuminate\Support\Facades\Route::has('clients.store');
+    $showFloatingSaleSetting = $floatingButtonsVisible && $canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.store');
+    $showFloatingButtonsMenu = $showFloatingClientSetting || $showFloatingSaleSetting;
     $pushVapidPublicKey = trim((string) config('services.webpush.vapid.public_key', ''));
     $pushWebEnabled = (bool) config('services.webpush.enabled', false);
     $pwaUpgradeMessage = 'Sube de plan a Profesional, Premium o Sucursales para usar la app instalable (PWA).';
@@ -209,6 +221,7 @@
     };
 
     $branchContextOptions = collect();
+    $linkedBranches = collect();
     if (! $isSuperAdmin && $canUseMultiBranch && $hubGymId > 0 && $hubGymSlug !== '') {
         $linkedBranches = GymBranchLink::query()
             ->where('hub_gym_id', $hubGymId)
@@ -222,15 +235,33 @@
             ->filter(fn ($branchGym) => $branchGym instanceof Gym)
             ->values();
 
+        if ($gym instanceof Gym) {
+            $branchContextOptions->push([
+                'gym_id' => (int) $gym->id,
+                'slug' => $hubGymSlug,
+                'name' => (string) ($gym->name ?? 'Sede principal'),
+                'address' => $buildGymAddress($gym),
+                'summary' => 'Opera la sede principal con permisos completos para clientes, caja y planes.',
+                'url' => route($baseSwitcherRoute, [
+                    'contextGym' => $hubGymSlug,
+                ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])),
+                'kind' => 'hub',
+                'kind_label' => 'Sede principal',
+            ]);
+        }
+
         foreach ($linkedBranches as $branchGym) {
             $branchContextOptions->push([
                 'gym_id' => (int) $branchGym->id,
                 'slug' => (string) $branchGym->slug,
                 'name' => (string) $branchGym->name,
                 'address' => $buildGymAddress($branchGym),
+                'summary' => 'Abre el contexto operativo de esta sucursal para trabajar sin mezclar toda la red.',
                 'url' => route($baseSwitcherRoute, [
                     'contextGym' => (string) $branchGym->slug,
                 ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])),
+                'kind' => 'branch',
+                'kind_label' => 'Sucursal',
             ]);
         }
 
@@ -243,7 +274,7 @@
         && $canUseMultiBranch
         && $hubGymId > 0
         && $hubGymSlug !== ''
-        && $branchContextOptions->count() > 0
+        && $branchContextOptions->count() > 1
         && ! request()->routeIs('branches.*');
     $activeBranchContextSlug = $activeGymSlug !== '' ? $activeGymSlug : $hubGymSlug;
     $activeBranchContext = $branchContextOptions
@@ -252,10 +283,13 @@
     $isAdminGlobalContext = ! $isSuperAdmin && $isGlobalScope;
     $activeBranchContextTitle = $isAdminGlobalContext
         ? 'Admin global'
-        : ((int) $activeGymId === $hubGymId ? 'Sede principal' : (string) ($activeBranchContext['name'] ?? 'Sucursal'));
+        : (string) ($activeBranchContext['name'] ?? ($gym?->name ?? 'Sucursal'));
     $activeBranchContextAddress = $isAdminGlobalContext
         ? 'Consolidado de todas las sucursales (solo lectura)'
-        : ((int) $activeGymId === $hubGymId ? $buildGymAddress($gym) : (string) ($activeBranchContext['address'] ?? '-'));
+        : (string) ($activeBranchContext['address'] ?? $buildGymAddress($gym));
+    $activeBranchContextBadge = $isAdminGlobalContext
+        ? 'Solo lectura'
+        : (string) ($activeBranchContext['kind_label'] ?? ((int) $activeGymId === $hubGymId ? 'Sede principal' : 'Sucursal'));
     $globalContextUrl = $hubGymSlug !== '' && \Illuminate\Support\Facades\Route::has($baseSwitcherRoute)
         ? route($baseSwitcherRoute, [
             'contextGym' => $hubGymSlug,
@@ -283,7 +317,7 @@
 
         array_splice($gymNavItems, 3, 0, [$salesNavItem, $productsNavItem]);
     }
-    if (! $isCashierMode && \Illuminate\Support\Facades\Route::has('staff.index')) {
+    if ($canManageCashiers && \Illuminate\Support\Facades\Route::has('staff.index')) {
         $gymNavItems[] = ['label' => 'Cajeros', 'route' => 'staff.index', 'params' => $gymRouteParams, 'active' => 'staff.*', 'icon' => 'staff'];
     }
     if (! $isCashierMode && $canViewBranches && \Illuminate\Support\Facades\Route::has('branches.index')) {
@@ -499,42 +533,504 @@
     @if ($canInstallPwa)
         <link rel="apple-touch-icon" href="{{ asset('pwa/fg-favicon-180.png?v=20260317') }}">
     @endif
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>{{ $pageTitle }} - {{ config('app.name', 'FlexGym') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        :root {
+            --panel-plan-heading-font: "Manrope", "Segoe UI", system-ui, sans-serif;
+            --panel-plan-body-font: "Manrope", "Segoe UI", system-ui, sans-serif;
+        }
+        .panel-view .ui-card {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+        }
+        .panel-view .ui-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        .theme-light .panel-view .ui-card {
+            border: 1px solid color-mix(in srgb, var(--accent) 10%, rgb(203 213 225));
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 9%, transparent), transparent 34%),
+                linear-gradient(162deg, rgb(255 255 255 / 0.985), color-mix(in srgb, white 94%, var(--accent) 6%));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.92),
+                0 26px 46px -38px rgb(15 23 42 / 0.18);
+        }
+        .theme-light .panel-view .ui-card::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, rgb(255 255 255 / 0.96), transparent 72%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .theme-light .panel-view .ui-card:hover {
+            border-color: color-mix(in srgb, var(--accent) 18%, rgb(148 163 184));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.94),
+                0 28px 48px -40px rgb(15 23 42 / 0.22);
+        }
+        .theme-light .panel-view .ui-card .ui-heading {
+            color: rgb(15 23 42 / 0.97);
+        }
+        .theme-light .panel-view .ui-card .ui-muted {
+            color: rgb(71 85 105 / 0.92);
+        }
+        .panel-view :is(
+            .panel-control-shell,
+            .panel-pro-shell,
+            .clients-control-shell,
+            .clients-pro-shell,
+            .client-control-shell,
+            .client-pro-shell,
+            .report-control-shell,
+            .report-pro-shell,
+            .cash-control-shell,
+            .plans-control-shell,
+            .reception-hero-shell
+        ) {
+            font-family: var(--panel-plan-body-font);
+            border-radius: 1.28rem;
+            padding: 1.14rem 1.16rem;
+        }
+        .panel-view :is(
+            .panel-control-grid,
+            .panel-pro-grid,
+            .clients-control-grid,
+            .clients-pro-grid,
+            .client-control-grid,
+            .client-pro-grid,
+            .report-control-grid,
+            .report-pro-grid,
+            .cash-control-grid,
+            .plans-control-grid
+        ) {
+            gap: 1.12rem;
+        }
+        .panel-view :is(
+            .panel-control-copy,
+            .panel-pro-copy,
+            .clients-control-copy,
+            .clients-pro-copy,
+            .client-control-copy,
+            .client-pro-copy,
+            .report-control-copy,
+            .report-pro-copy,
+            .cash-control-copy,
+            .plans-control-copy,
+            .reception-control-copy
+        ) {
+            max-width: 52rem;
+        }
+        .panel-view :is(
+            .panel-control-heading,
+            .panel-pro-heading,
+            .clients-control-heading,
+            .clients-pro-heading,
+            .client-control-heading,
+            .client-pro-heading,
+            .report-control-heading,
+            .report-pro-heading,
+            .cash-control-heading,
+            .plans-control-heading,
+            .reception-control-heading
+        ) {
+            font-family: var(--panel-plan-heading-font);
+            font-size: clamp(1.18rem, 1.55vw, 1.52rem);
+            line-height: 1.08;
+            letter-spacing: -0.028em;
+            font-weight: 800;
+            text-wrap: balance;
+        }
+        .panel-view :is(
+            .panel-control-kicker,
+            .panel-pro-kicker,
+            .clients-control-kicker,
+            .clients-pro-kicker,
+            .client-control-kicker,
+            .client-pro-kicker,
+            .report-control-kicker,
+            .report-pro-kicker,
+            .cash-control-kicker,
+            .plans-control-kicker,
+            .reception-control-kicker,
+            .panel-control-progress,
+            .panel-pro-badge,
+            .clients-pro-badge,
+            .client-pro-badge,
+            .report-pro-badge,
+            .panel-control-priority-label,
+            .panel-pro-metric-label,
+            .panel-pro-chip-title,
+            .clients-control-priority-label,
+            .clients-pro-metric-label,
+            .clients-pro-chip-title,
+            .client-control-priority-label,
+            .client-pro-metric-label,
+            .client-pro-chip-title,
+            .report-control-priority-label,
+            .report-pro-metric-label,
+            .report-pro-chip-title,
+            .cash-control-priority-label,
+            .plans-control-priority-label,
+            .reception-control-stat-label,
+            .reception-action-title,
+            .reception-entry-label,
+            .reception-ops-note-title,
+            .panel-control-check-title,
+            .panel-control-check-badge
+        ) {
+            font-family: var(--panel-plan-heading-font);
+            letter-spacing: 0.08em;
+            font-weight: 800;
+        }
+        .panel-view :is(
+            .panel-control-priority-value,
+            .panel-pro-metric-value,
+            .clients-control-priority-value,
+            .clients-pro-metric-value,
+            .client-control-priority-value,
+            .client-pro-metric-value,
+            .report-control-priority-value,
+            .report-pro-metric-value,
+            .cash-control-priority-value,
+            .plans-control-priority-value,
+            .reception-control-stat-value
+        ) {
+            font-family: var(--panel-plan-heading-font);
+            letter-spacing: -0.03em;
+            line-height: 1;
+            font-weight: 800;
+        }
+        .panel-view :is(
+            .panel-control-summary,
+            .panel-pro-summary,
+            .clients-control-summary,
+            .clients-pro-summary,
+            .client-control-summary,
+            .client-pro-summary,
+            .report-control-summary,
+            .report-pro-summary,
+            .cash-control-summary,
+            .plans-control-summary,
+            .reception-control-summary,
+            .panel-control-priority-note,
+            .panel-pro-metric-note,
+            .panel-pro-chip-copy,
+            .clients-control-priority-note,
+            .clients-pro-metric-note,
+            .clients-pro-chip-copy,
+            .client-control-priority-note,
+            .client-pro-metric-note,
+            .client-pro-chip-copy,
+            .report-control-priority-note,
+            .report-pro-metric-note,
+            .report-pro-chip-copy,
+            .cash-control-priority-note,
+            .plans-control-priority-note,
+            .reception-control-stat-note,
+            .reception-ops-note-copy,
+            .panel-control-check-copy
+        ) {
+            font-family: var(--panel-plan-body-font);
+            line-height: 1.62;
+        }
+        .theme-light .panel-view :is(
+            .panel-control-summary,
+            .panel-pro-summary,
+            .clients-control-summary,
+            .clients-pro-summary,
+            .client-control-summary,
+            .client-pro-summary,
+            .report-control-summary,
+            .report-pro-summary,
+            .cash-control-summary,
+            .plans-control-summary,
+            .reception-control-summary,
+            .panel-control-priority-note,
+            .panel-pro-metric-note,
+            .panel-pro-chip-copy,
+            .clients-control-priority-note,
+            .clients-pro-metric-note,
+            .clients-pro-chip-copy,
+            .client-control-priority-note,
+            .client-pro-metric-note,
+            .client-pro-chip-copy,
+            .report-control-priority-note,
+            .report-pro-metric-note,
+            .report-pro-chip-copy,
+            .cash-control-priority-note,
+            .plans-control-priority-note,
+            .reception-control-stat-note,
+            .reception-ops-note-copy,
+            .panel-control-check-copy
+        ) {
+            color: rgb(71 85 105 / 0.97) !important;
+        }
+        .theme-dark .panel-view :is(
+            .panel-control-summary,
+            .panel-pro-summary,
+            .clients-control-summary,
+            .clients-pro-summary,
+            .client-control-summary,
+            .client-pro-summary,
+            .report-control-summary,
+            .report-pro-summary,
+            .cash-control-summary,
+            .plans-control-summary,
+            .reception-control-summary,
+            .panel-control-priority-note,
+            .panel-pro-metric-note,
+            .panel-pro-chip-copy,
+            .clients-control-priority-note,
+            .clients-pro-metric-note,
+            .clients-pro-chip-copy,
+            .client-control-priority-note,
+            .client-pro-metric-note,
+            .client-pro-chip-copy,
+            .report-control-priority-note,
+            .report-pro-metric-note,
+            .report-pro-chip-copy,
+            .cash-control-priority-note,
+            .plans-control-priority-note,
+            .reception-control-stat-note,
+            .reception-ops-note-copy,
+            .panel-control-check-copy
+        ) {
+            color: rgb(203 213 225 / 0.92) !important;
+        }
+        .theme-light .panel-view :is(
+            .panel-control-heading,
+            .panel-pro-heading,
+            .clients-control-heading,
+            .clients-pro-heading,
+            .client-control-heading,
+            .client-pro-heading,
+            .report-control-heading,
+            .report-pro-heading,
+            .cash-control-heading,
+            .plans-control-heading,
+            .reception-control-heading,
+            .panel-control-priority-value,
+            .panel-pro-metric-value,
+            .clients-control-priority-value,
+            .clients-pro-metric-value,
+            .client-control-priority-value,
+            .client-pro-metric-value,
+            .report-control-priority-value,
+            .report-pro-metric-value,
+            .cash-control-priority-value,
+            .plans-control-priority-value,
+            .reception-control-stat-value
+        ) {
+            color: rgb(15 23 42 / 0.985) !important;
+        }
+        .theme-light .panel-view :is(
+            .panel-control-kicker,
+            .panel-pro-kicker,
+            .clients-control-kicker,
+            .clients-pro-kicker,
+            .client-control-kicker,
+            .client-pro-kicker,
+            .report-control-kicker,
+            .report-pro-kicker,
+            .cash-control-kicker,
+            .plans-control-kicker,
+            .reception-control-kicker,
+            .panel-control-priority-label,
+            .panel-pro-metric-label,
+            .panel-pro-chip-title,
+            .clients-control-priority-label,
+            .clients-pro-metric-label,
+            .clients-pro-chip-title,
+            .client-control-priority-label,
+            .client-pro-metric-label,
+            .client-pro-chip-title,
+            .report-control-priority-label,
+            .report-pro-metric-label,
+            .report-pro-chip-title,
+            .cash-control-priority-label,
+            .plans-control-priority-label,
+            .reception-control-stat-label,
+            .reception-action-title,
+            .reception-entry-label,
+            .reception-ops-note-title
+        ) {
+            color: rgb(51 65 85 / 0.96) !important;
+        }
+        .panel-view :is(
+            .panel-control-priority,
+            .panel-pro-metric,
+            .panel-pro-chip,
+            .clients-control-priority,
+            .clients-pro-metric,
+            .clients-pro-chip,
+            .client-control-priority,
+            .client-pro-metric,
+            .client-pro-chip,
+            .report-control-priority,
+            .report-pro-metric,
+            .report-pro-chip,
+            .cash-control-priority,
+            .plans-control-priority,
+            .panel-control-check-item,
+            .reception-control-stat,
+            .reception-action-card,
+            .reception-entry-panel,
+            .reception-ops-note
+        ) {
+            border-radius: 1.08rem;
+            padding: 1rem 1.02rem;
+        }
+        .panel-view :is(
+            .panel-control-actions,
+            .panel-pro-actions,
+            .clients-control-actions,
+            .clients-pro-actions,
+            .client-control-actions,
+            .client-pro-actions,
+            .report-control-actions,
+            .report-pro-actions,
+            .cash-control-actions,
+            .plans-control-actions
+        ) {
+            gap: 0.65rem;
+        }
+        .panel-view :is(
+            .panel-control-actions,
+            .panel-pro-actions,
+            .clients-control-actions,
+            .clients-pro-actions,
+            .client-control-actions,
+            .client-pro-actions,
+            .report-control-actions,
+            .report-pro-actions,
+            .cash-control-actions,
+            .plans-control-actions,
+            .reception-actions-grid
+        ) .ui-button {
+            min-height: 2.82rem;
+            font-family: var(--panel-plan-body-font);
+            font-weight: 700;
+        }
         .smart-list-wrap {
             max-height: min(68vh, 720px);
             overflow: auto;
-            border-radius: 0.75rem;
+            border-radius: 1.1rem;
+            border: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--card) 92%, transparent));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.04),
+                0 20px 44px -34px rgb(2 8 23 / 0.58);
+            scrollbar-gutter: stable both-edges;
+        }
+        .theme-light .smart-list-wrap {
+            border-color: rgb(203 213 225 / 0.8);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.94));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.88),
+                0 20px 36px -32px rgb(15 23 42 / 0.12);
         }
         .smart-list-toolbar {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.85rem;
             align-items: end;
             justify-content: space-between;
             flex-wrap: wrap;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.9rem;
         }
         .smart-list-toolbar label {
             min-width: 240px;
             flex: 1 1 280px;
         }
         .smart-list-counter {
-            font-size: 0.875rem;
-            color: rgb(71 85 105);
+            font-family: var(--panel-plan-body-font);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: rgb(71 85 105 / 0.9);
         }
         .theme-dark .smart-list-counter {
-            color: rgb(148 163 184);
+            color: rgb(148 163 184 / 0.9);
         }
+        .panel-view .ui-table {
+            font-family: var(--panel-plan-body-font);
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .panel-view .ui-table thead tr {
+            background: transparent;
+        }
+        .panel-view .ui-table thead th,
         .smart-list-wrap .ui-table thead th {
             position: sticky;
             top: 0;
             z-index: 6;
-            background: rgb(241 245 249 / 0.95);
-            backdrop-filter: blur(3px);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgb(203 213 225 / 0.72);
+            background:
+                linear-gradient(180deg, rgb(248 250 252 / 0.96), rgb(241 245 249 / 0.93));
+            backdrop-filter: blur(10px);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: rgb(71 85 105 / 0.92);
         }
+        .theme-dark .panel-view .ui-table thead th,
         .theme-dark .smart-list-wrap .ui-table thead th {
-            background: rgb(30 41 59 / 0.95);
+            border-bottom-color: rgb(51 65 85 / 0.88);
+            background:
+                linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(15 23 42 / 0.9));
+            color: rgb(148 163 184 / 0.94);
+        }
+        .panel-view .ui-table th:first-child,
+        .panel-view .ui-table td:first-child {
+            padding-left: 1rem;
+        }
+        .panel-view .ui-table th:last-child,
+        .panel-view .ui-table td:last-child {
+            padding-right: 1rem;
+        }
+        .panel-view .ui-table tbody tr {
+            background: transparent;
+        }
+        .panel-view .ui-table tbody td {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgb(226 232 240 / 0.78);
+            vertical-align: middle;
+            color: rgb(15 23 42 / 0.96);
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+        .theme-dark .panel-view .ui-table tbody td {
+            border-bottom-color: rgb(51 65 85 / 0.58);
+            color: rgb(226 232 240 / 0.96);
+        }
+        .panel-view .ui-table tbody tr:hover td {
+            background: rgb(14 165 233 / 0.06);
+            border-bottom-color: rgb(56 189 248 / 0.28);
+        }
+        .theme-dark .panel-view .ui-table tbody tr:hover td {
+            background: rgb(30 41 59 / 0.92);
+            border-bottom-color: rgb(56 189 248 / 0.24);
+        }
+        .panel-view .ui-table tbody tr:hover td:first-child {
+            border-top-left-radius: 0.88rem;
+            border-bottom-left-radius: 0.88rem;
+        }
+        .panel-view .ui-table tbody tr:hover td:last-child {
+            border-top-right-radius: 0.88rem;
+            border-bottom-right-radius: 0.88rem;
         }
         .theme-dark .ui-table .text-emerald-700 {
             color: rgb(74 222 128) !important;
@@ -854,6 +1350,9 @@
             text-transform: uppercase;
             color: color-mix(in srgb, var(--muted) 92%, #ffffff);
         }
+        .theme-light .panel-header-kicker {
+            color: color-mix(in srgb, var(--accent) 34%, #475569);
+        }
         .panel-header-kicker::before {
             content: '';
             width: 0.44rem;
@@ -1033,6 +1532,509 @@
         #header-bell-dropdown {
             width: min(92vw, 22rem);
         }
+        .theme-body {
+            font-family: var(--panel-plan-body-font);
+        }
+        .theme-body :is(input, button, select, textarea) {
+            font-family: inherit;
+        }
+        #panel-sidebar {
+            border-color: color-mix(in srgb, var(--sidebar-border) 82%, rgb(15 23 42 / 0.48));
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--sidebar) 96%, rgb(2 6 23)) 0%, color-mix(in srgb, var(--sidebar) 92%, rgb(2 6 23)) 100%);
+            box-shadow: inset -1px 0 0 rgb(255 255 255 / 0.03);
+        }
+        .theme-light #panel-sidebar {
+            border-color: color-mix(in srgb, var(--sidebar) 16%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, white 90%, var(--sidebar) 10%) 0%,
+                    color-mix(in srgb, white 93%, var(--accent) 7%) 52%,
+                    color-mix(in srgb, white 88%, var(--sidebar) 12%) 100%
+                );
+            box-shadow:
+                inset -1px 0 0 rgb(255 255 255 / 0.76),
+                18px 0 38px -34px color-mix(in srgb, var(--sidebar) 24%, transparent);
+        }
+        #brand-home-link {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-bottom-color: color-mix(in srgb, var(--sidebar-border) 78%, transparent);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.01), transparent);
+        }
+        .theme-light #brand-home-link {
+            border-bottom-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.9) 0%,
+                    color-mix(in srgb, white 92%, var(--accent) 8%) 100%
+                );
+        }
+        #brand-home-link .sidebar-label .ui-muted {
+            font-family: var(--panel-plan-body-font);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            opacity: 0.86;
+        }
+        .theme-light #brand-home-link .sidebar-label .ui-muted {
+            color: color-mix(in srgb, var(--accent) 36%, rgb(71 85 105)) !important;
+            opacity: 1;
+        }
+        #brand-home-link .sidebar-label .ui-heading {
+            font-family: var(--panel-plan-body-font);
+            font-size: 1.14rem;
+            line-height: 1.08;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+        .theme-light #brand-home-link .sidebar-label .ui-heading {
+            color: color-mix(in srgb, var(--sidebar) 54%, rgb(15 23 42)) !important;
+        }
+        .sidebar-nav {
+            gap: 1rem;
+        }
+        .sidebar-nav-section {
+            gap: 0.4rem;
+        }
+        .sidebar-section-label {
+            padding-left: 0.72rem;
+            font-family: var(--panel-plan-body-font);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            opacity: 0.78;
+        }
+        .theme-light .sidebar-section-label {
+            color: color-mix(in srgb, var(--accent) 34%, rgb(71 85 105)) !important;
+            opacity: 1;
+        }
+        .sidebar-nav-item {
+            min-height: 2.85rem;
+            border: 1px solid transparent;
+            border-radius: 1rem;
+            padding-left: 0.72rem;
+            padding-right: 0.72rem;
+            padding-top: 0.62rem;
+            padding-bottom: 0.62rem;
+            font-family: var(--panel-plan-body-font);
+            font-size: 0.94rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: color-mix(in srgb, var(--sidebar-text) 92%, #ffffff);
+            transition: border-color 160ms ease, background-color 160ms ease, box-shadow 180ms ease, color 160ms ease, transform 180ms ease;
+        }
+        .theme-light .sidebar-nav-item {
+            color: color-mix(in srgb, var(--sidebar) 46%, rgb(30 41 59));
+        }
+        .sidebar-nav-item.theme-nav-link {
+            border-color: transparent;
+            background: transparent;
+        }
+        .theme-light .sidebar-nav-item.theme-nav-link {
+            border-color: rgb(255 255 255 / 0.48);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.56), rgb(248 250 252 / 0.42));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.88);
+        }
+        .sidebar-nav-item.theme-nav-link:hover {
+            border-color: color-mix(in srgb, var(--sidebar-border) 58%, transparent);
+            background: color-mix(in srgb, var(--sidebar-active-bg) 34%, transparent);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+            color: color-mix(in srgb, var(--sidebar-text) 98%, #ffffff);
+            transform: translateX(2px);
+        }
+        .theme-light .sidebar-nav-item.theme-nav-link:hover {
+            border-color: color-mix(in srgb, var(--accent) 24%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, var(--accent) 14%, white),
+                    color-mix(in srgb, var(--sidebar) 6%, white)
+                );
+            box-shadow:
+                0 14px 24px -24px color-mix(in srgb, var(--sidebar) 20%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.86);
+            color: color-mix(in srgb, var(--sidebar) 58%, rgb(15 23 42));
+        }
+        .sidebar-nav-item.theme-nav-active {
+            color: color-mix(in srgb, var(--sidebar-text) 99%, #ffffff);
+            border-color: color-mix(in srgb, var(--sidebar-active-border) 78%, transparent);
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--sidebar-active-bg) 92%, transparent), color-mix(in srgb, var(--primary) 10%, transparent));
+            box-shadow: 0 18px 28px -22px rgb(2 8 23 / 0.55);
+        }
+        .sidebar-nav-item.theme-nav-active::before {
+            content: '';
+            position: absolute;
+            top: 0.55rem;
+            bottom: 0.55rem;
+            left: 0.35rem;
+            width: 0.22rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--sidebar-active-border) 92%, white);
+            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+        }
+        .theme-light .sidebar-nav-item.theme-nav-active {
+            color: color-mix(in srgb, var(--sidebar) 60%, rgb(15 23 42));
+            border-color: color-mix(in srgb, var(--accent) 30%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, var(--accent) 18%, white),
+                    color-mix(in srgb, var(--sidebar) 8%, white)
+                );
+            box-shadow:
+                0 16px 28px -24px color-mix(in srgb, var(--sidebar) 22%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.88);
+        }
+        .theme-light .sidebar-nav-item.theme-nav-active::before {
+            background: color-mix(in srgb, var(--accent) 72%, var(--primary));
+            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.72);
+        }
+        .sidebar-nav-item .sidebar-icon {
+            border: 1px solid color-mix(in srgb, var(--sidebar-border) 54%, transparent);
+            background: color-mix(in srgb, var(--sidebar-active-bg) 22%, transparent);
+        }
+        .theme-light .sidebar-nav-item .sidebar-icon {
+            border-color: color-mix(in srgb, var(--sidebar) 12%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.9),
+                    color-mix(in srgb, var(--accent) 10%, white)
+                );
+            color: color-mix(in srgb, var(--sidebar) 52%, rgb(30 41 59));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.92);
+        }
+        .sidebar-nav-item .sidebar-label {
+            min-width: 0;
+            flex: 1 1 auto;
+            font-size: 0.93rem;
+            line-height: 1.18;
+            color: inherit;
+        }
+        .sidebar-nav-item.theme-nav-link:hover .sidebar-icon {
+            border-color: color-mix(in srgb, var(--sidebar-active-border) 62%, transparent);
+            background: color-mix(in srgb, var(--sidebar-active-bg) 44%, transparent);
+        }
+        .theme-light .sidebar-nav-item.theme-nav-link:hover .sidebar-icon {
+            border-color: color-mix(in srgb, var(--accent) 34%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, var(--accent) 16%, white),
+                    color-mix(in srgb, var(--sidebar) 4%, white)
+                );
+            color: color-mix(in srgb, var(--primary) 70%, rgb(15 23 42));
+        }
+        .sidebar-nav-item.theme-nav-active .sidebar-icon {
+            border-color: color-mix(in srgb, var(--sidebar-active-border) 76%, transparent);
+            background: color-mix(in srgb, var(--sidebar-active-bg) 56%, transparent);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+        }
+        .theme-light .sidebar-nav-item.theme-nav-active .sidebar-icon {
+            border-color: color-mix(in srgb, var(--accent) 40%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, var(--accent) 18%, white),
+                    color-mix(in srgb, var(--sidebar) 6%, white)
+                );
+            color: color-mix(in srgb, var(--primary) 72%, rgb(15 23 42));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9);
+        }
+        .sidebar-link-badge {
+            font-family: var(--panel-plan-body-font);
+            font-weight: 800;
+        }
+        .theme-light .sidebar-chat-badge {
+            border-color: color-mix(in srgb, #f59e0b 30%, rgb(148 163 184));
+            background: color-mix(in srgb, #f59e0b 12%, white);
+            color: rgb(120 53 15);
+        }
+        .sidebar-nav-item.nav-link-highlight {
+            border-color: color-mix(in srgb, #10b981 42%, var(--sidebar-border));
+            background: linear-gradient(135deg, color-mix(in srgb, #10b981 18%, transparent), transparent);
+        }
+        .theme-light .theme-nav-link.nav-link-highlight {
+            border-color: color-mix(in srgb, #10b981 28%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, #10b981 18%, white),
+                    color-mix(in srgb, var(--sidebar) 6%, white)
+                );
+            color: color-mix(in srgb, #065f46 62%, rgb(15 23 42));
+        }
+        .theme-light .theme-nav-link.nav-link-highlight:hover {
+            border-color: color-mix(in srgb, #10b981 38%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, #10b981 24%, white),
+                    color-mix(in srgb, var(--sidebar) 7%, white)
+                );
+            color: color-mix(in srgb, #065f46 68%, rgb(15 23 42));
+        }
+        .theme-light .theme-nav-active.nav-link-highlight {
+            border-color: color-mix(in srgb, #10b981 42%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, #10b981 26%, white),
+                    color-mix(in srgb, var(--sidebar) 8%, white)
+                );
+            color: color-mix(in srgb, #065f46 70%, rgb(15 23 42));
+            box-shadow:
+                0 16px 26px -24px color-mix(in srgb, #10b981 20%, transparent),
+                inset 3px 0 0 color-mix(in srgb, #10b981 78%, white),
+                inset 0 1px 0 rgb(255 255 255 / 0.88);
+        }
+        header.theme-header {
+            border-bottom-color: color-mix(in srgb, var(--border) 74%, transparent);
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, rgb(2 6 23)) 0%, color-mix(in srgb, var(--card) 84%, rgb(2 6 23)) 100%);
+            box-shadow: 0 10px 30px -26px rgb(2 8 23 / 0.72);
+        }
+        .theme-light header.theme-header {
+            border-bottom-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.97) 0%,
+                    color-mix(in srgb, white 94%, var(--accent) 6%) 56%,
+                    color-mix(in srgb, white 90%, var(--sidebar) 10%) 100%
+                );
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.76),
+                0 16px 32px -28px color-mix(in srgb, var(--sidebar) 18%, transparent);
+        }
+        #panel-header-shell {
+            padding-top: 0.82rem;
+            padding-bottom: 0.82rem;
+            gap: 0.9rem;
+        }
+        #panel-header-left {
+            gap: 0.85rem;
+        }
+        .panel-menu-trigger {
+            min-height: 2.78rem;
+            border-radius: 0.96rem;
+            font-family: var(--panel-plan-body-font);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .theme-light .panel-menu-trigger {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 48%, rgb(30 41 59));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.92),
+                0 14px 26px -24px color-mix(in srgb, var(--sidebar) 18%, transparent);
+        }
+        .theme-light .panel-menu-trigger:hover {
+            border-color: color-mix(in srgb, var(--accent) 28%, rgb(148 163 184));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.94),
+                0 18px 30px -24px color-mix(in srgb, var(--sidebar) 20%, transparent);
+        }
+        .theme-light .panel-menu-trigger-icon {
+            border-color: color-mix(in srgb, var(--accent) 32%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--accent) 18%, white),
+                    color-mix(in srgb, var(--sidebar) 8%, white)
+                );
+            color: color-mix(in srgb, var(--primary) 72%, rgb(15 23 42));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.92);
+        }
+        .panel-header-title-stack {
+            gap: 0.18rem;
+        }
+        .panel-header-kicker {
+            font-family: var(--panel-plan-body-font);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            opacity: 0.84;
+        }
+        .panel-header-main {
+            font-family: var(--panel-plan-body-font);
+            font-size: clamp(1.26rem, 1.02rem + 0.46vw, 1.7rem);
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            font-weight: 800;
+        }
+        .theme-light .panel-header-main {
+            color: color-mix(in srgb, var(--sidebar) 58%, rgb(15 23 42)) !important;
+        }
+        #panel-header-right {
+            gap: 0.58rem;
+        }
+        #panel-header-right form .ui-input {
+            width: 13rem;
+            min-height: 2.78rem;
+            border-radius: 0.95rem;
+            background: color-mix(in srgb, var(--card) 88%, transparent);
+        }
+        .theme-light #panel-header-right form .ui-input {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 50%, rgb(15 23 42));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.94),
+                0 14px 24px -24px color-mix(in srgb, var(--sidebar) 16%, transparent);
+        }
+        .theme-light #panel-header-right form .ui-input::placeholder {
+            color: color-mix(in srgb, var(--accent) 18%, rgb(100 116 139));
+        }
+        .theme-light #panel-header-right form .ui-input:hover {
+            border-color: color-mix(in srgb, var(--accent) 24%, rgb(148 163 184));
+        }
+        .theme-light #panel-header-right form .ui-input:focus {
+            border-color: color-mix(in srgb, var(--accent) 36%, rgb(148 163 184));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.96),
+                0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent),
+                0 18px 30px -24px color-mix(in srgb, var(--sidebar) 18%, transparent);
+        }
+        #panel-header-right form .ui-button {
+            min-height: 2.78rem;
+            border-radius: 0.95rem;
+            font-family: var(--panel-plan-body-font);
+            font-weight: 700;
+        }
+        .theme-light #panel-header-right form .ui-button.ui-button-primary {
+            border-color: color-mix(in srgb, var(--accent) 42%, var(--primary));
+            background:
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, var(--primary) 88%, white),
+                    color-mix(in srgb, var(--accent) 82%, white)
+                );
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.2),
+                0 18px 28px -22px color-mix(in srgb, var(--accent) 34%, transparent);
+        }
+        .theme-light #panel-header-right form .ui-button.ui-button-primary:hover {
+            border-color: color-mix(in srgb, var(--accent) 48%, var(--primary));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.24),
+                0 22px 32px -24px color-mix(in srgb, var(--accent) 38%, transparent);
+        }
+        .header-live-pill,
+        #user-menu-button,
+        #header-bell-button,
+        #pwa-install-button,
+        #panel-header-right .ui-badge,
+        #panel-header-right .ui-button {
+            font-family: var(--panel-plan-body-font);
+        }
+        .header-live-pill {
+            min-height: 2.5rem;
+            padding: 0.42rem 0.88rem 0.42rem 0.78rem;
+            letter-spacing: 0.1em;
+        }
+        #user-menu-button {
+            min-height: 2.9rem;
+            border-radius: 1rem;
+            padding-left: 0.52rem;
+            padding-right: 0.7rem;
+        }
+        .theme-light :is(#user-menu-button, #header-bell-button, #pwa-install-button) {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.98),
+                    color-mix(in srgb, white 93%, var(--accent) 7%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 48%, rgb(30 41 59));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.92),
+                0 14px 24px -24px color-mix(in srgb, var(--sidebar) 16%, transparent);
+        }
+        .theme-light :is(#user-menu-button, #header-bell-button, #pwa-install-button):hover {
+            border-color: color-mix(in srgb, var(--accent) 26%, rgb(148 163 184));
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, white 97%, var(--accent) 3%),
+                    color-mix(in srgb, white 91%, var(--accent) 9%)
+                );
+            color: color-mix(in srgb, var(--sidebar) 56%, rgb(15 23 42));
+        }
+        #user-menu-button .panel-user-avatar {
+            width: 2.46rem;
+            height: 2.46rem;
+            min-width: 2.46rem;
+            min-height: 2.46rem;
+        }
+        .theme-light #user-menu-button .panel-user-avatar {
+            border: 1px solid color-mix(in srgb, var(--accent) 22%, rgb(203 213 225));
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, white 96%, var(--accent) 4%),
+                    color-mix(in srgb, white 90%, var(--accent) 10%)
+                );
+            color: color-mix(in srgb, var(--primary) 72%, rgb(15 23 42));
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9);
+        }
+        #user-menu-button > span.hidden {
+            font-weight: 700;
+            letter-spacing: -0.015em;
+        }
+        .theme-light #user-menu-button > span.hidden {
+            color: color-mix(in srgb, var(--sidebar) 54%, rgb(15 23 42));
+        }
+        .theme-light #user-menu-button svg,
+        .theme-light #header-bell-button svg {
+            color: color-mix(in srgb, var(--sidebar) 44%, rgb(71 85 105));
+        }
+        .theme-light #panel-header-right .ui-badge {
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.82),
+                0 12px 22px -22px color-mix(in srgb, var(--sidebar) 14%, transparent);
+        }
+        #user-menu-dropdown {
+            border-radius: 1.1rem;
+        }
+        .theme-light :is(#user-menu-dropdown, #header-bell-dropdown) {
+            border-color: color-mix(in srgb, var(--sidebar) 14%, rgb(203 213 225)) !important;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.985),
+                    color-mix(in srgb, white 94%, var(--accent) 6%)
+                ) !important;
+            box-shadow:
+                0 26px 44px -28px color-mix(in srgb, var(--sidebar) 20%, transparent),
+                inset 0 1px 0 rgb(255 255 255 / 0.92) !important;
+        }
+        .theme-light #user-menu-dropdown > div:first-child,
+        .theme-light #header-bell-dropdown > div:first-child {
+            border-bottom-color: color-mix(in srgb, var(--sidebar) 12%, rgb(226 232 240)) !important;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.92),
+                    color-mix(in srgb, white 95%, var(--accent) 5%)
+                );
+        }
         .header-bell-item {
             display: block;
             border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
@@ -1040,13 +2042,37 @@
             padding: 0.62rem 0.7rem;
             transition: background-color 0.18s ease, border-color 0.18s ease;
         }
+        .theme-light .header-bell-item {
+            border-color: color-mix(in srgb, var(--sidebar) 12%, rgb(226 232 240));
+            background:
+                linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 0.86),
+                    color-mix(in srgb, white 95%, var(--accent) 5%)
+                );
+        }
         .header-bell-item:hover {
             background: color-mix(in srgb, var(--card) 80%, var(--accent) 20%);
             border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
         }
+        .theme-light .header-bell-item:hover {
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in srgb, white 96%, var(--accent) 4%),
+                    color-mix(in srgb, white 89%, var(--accent) 11%)
+                );
+            border-color: color-mix(in srgb, var(--accent) 26%, rgb(148 163 184));
+        }
         .header-bell-item.is-unread {
             border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+        }
+        .theme-light .header-bell-item.is-unread {
+            border-color: color-mix(in srgb, var(--accent) 32%, rgb(148 163 184));
+            box-shadow:
+                inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent),
+                0 14px 24px -24px color-mix(in srgb, var(--accent) 18%, transparent);
         }
         .header-bell-name {
             margin: 0;
@@ -1055,11 +2081,17 @@
             color: color-mix(in srgb, var(--text) 92%, #fff);
             line-height: 1.25;
         }
+        .theme-light .header-bell-name {
+            color: color-mix(in srgb, var(--sidebar) 56%, rgb(15 23 42));
+        }
         .header-bell-mail {
             margin: 0.1rem 0 0;
             font-size: 0.73rem;
             color: color-mix(in srgb, var(--muted) 92%, #fff);
             line-height: 1.25;
+        }
+        .theme-light .header-bell-mail {
+            color: color-mix(in srgb, var(--accent) 18%, rgb(71 85 105));
         }
         .header-bell-time {
             margin: 0.16rem 0 0;
@@ -1068,6 +2100,9 @@
             text-transform: uppercase;
             letter-spacing: 0.06em;
             color: color-mix(in srgb, var(--muted) 78%, #fff);
+        }
+        .theme-light .header-bell-time {
+            color: color-mix(in srgb, var(--accent) 24%, rgb(100 116 139));
         }
         .panel-toast-stack {
             position: fixed;
@@ -1085,58 +2120,97 @@
             box-shadow: 0 14px 36px rgb(2 6 23 / 0.35);
         }
         .ui-loading-overlay {
+            --ui-loading-neon: #d9ff43;
+            --ui-loading-neon-soft: #98ff74;
             position: fixed;
             inset: 0;
             z-index: 170;
             display: none;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at 20% 20%, rgb(34 197 94 / 0.12), transparent 40%), rgb(2 6 23 / 0.72);
-            backdrop-filter: blur(4px);
+            padding: 1.25rem;
+            background:
+                radial-gradient(circle at center, rgb(217 255 67 / 0.06) 0%, rgb(217 255 67 / 0.03) 10%, rgb(0 0 0 / 0.48) 34%, rgb(0 0 0 / 0.92) 100%),
+                linear-gradient(180deg, rgb(4 6 9 / 0.84), rgb(0 0 0 / 0.96));
+            backdrop-filter: blur(20px) saturate(0.8) brightness(0.72);
         }
         .ui-loading-overlay[data-open="1"] {
             display: flex;
         }
         .ui-loading-card {
-            width: min(92vw, 19rem);
-            border: 1px solid rgb(34 197 94 / 0.45);
-            border-radius: 1rem;
-            background: linear-gradient(165deg, rgb(2 6 23 / 0.94), rgb(3 14 10 / 0.96));
-            box-shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 18px 56px rgb(0 0 0 / 0.45), 0 0 30px rgb(34 197 94 / 0.2);
-            padding: 1rem 1.1rem;
-            color: #f8fafc;
+            position: relative;
+            width: min(88vw, 17.25rem);
+            padding: 1.22rem 1rem 1rem;
             display: grid;
             justify-items: center;
-            gap: 0.62rem;
+            gap: 0.82rem;
+            isolation: isolate;
+        }
+        .ui-loading-card::before {
+            content: '';
+            position: absolute;
+            inset: -0.05rem;
+            z-index: -1;
+            border-radius: 999px;
+            background:
+                radial-gradient(circle, rgb(0 0 0 / 0.98) 0%, rgb(5 7 6 / 0.92) 40%, rgb(217 255 67 / 0.08) 66%, transparent 84%);
+            filter: blur(28px);
         }
         .ui-loading-spin {
-            width: 3.1rem;
-            height: 3.1rem;
+            position: relative;
+            width: 4.2rem;
+            height: 4.2rem;
             border-radius: 9999px;
-            border: 3px solid rgb(255 255 255 / 0.2);
-            border-top-color: #22c55e;
-            border-right-color: #86efac;
+            border: 4px solid rgb(255 255 255 / 0.1);
+            border-top-color: var(--ui-loading-neon);
+            border-right-color: var(--ui-loading-neon-soft);
             border-bottom-color: #ffffff;
             animation: ui-spin-rotate 0.9s linear infinite;
-            box-shadow: 0 0 18px rgb(34 197 94 / 0.5);
+            box-shadow:
+                0 0 0 1px rgb(255 255 255 / 0.03),
+                0 0 12px rgb(217 255 67 / 0.18),
+                0 0 22px rgb(217 255 67 / 0.11),
+                0 10px 28px rgb(0 0 0 / 0.24);
         }
-        .ui-loading-title {
-            margin: 0;
-            font-size: 0.9rem;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #86efac;
+        .ui-loading-spin::before {
+            content: '';
+            position: absolute;
+            inset: 0.4rem;
+            border-radius: inherit;
+            border: 3px solid transparent;
+            border-top-color: rgb(217 255 67 / 0.74);
+            border-left-color: rgb(255 255 255 / 0.22);
+            opacity: 0.72;
+            animation: ui-spin-rotate 1.25s linear infinite reverse;
         }
         .ui-loading-message {
             margin: 0;
             text-align: center;
-            font-size: 0.82rem;
+            font-size: 0.94rem;
             line-height: 1.35;
-            color: rgb(248 250 252 / 0.92);
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow:
+                0 0 1px rgb(255 255 255 / 0.08),
+                0 0 10px rgb(217 255 67 / 0.08),
+                0 2px 12px rgb(0 0 0 / 0.72);
+            letter-spacing: 0.02em;
+        }
+        .ui-loading-message::after {
+            content: '...';
+            display: inline-block;
+            width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            vertical-align: bottom;
+            animation: ui-loading-dots 1.15s steps(4, end) infinite;
         }
         @keyframes ui-spin-rotate {
             to { transform: rotate(360deg); }
+        }
+        @keyframes ui-loading-dots {
+            from { width: 0; }
+            to { width: 3ch; }
         }
         .demo-header-badge {
             display: inline-flex;
@@ -1878,6 +2952,118 @@
                                 @if (! $isCashierMode)
                                     <a href="{{ $profileUrl }}" class="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.view_profile') }}</a>
                                     <a href="{{ $settingsUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.settings') }}</a>
+                                    @if ($showFloatingButtonsMenu)
+                                        <button id="user-menu-floating-actions-toggle"
+                                                type="button"
+                                                class="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                aria-expanded="false"
+                                                aria-controls="user-menu-floating-actions-panel">
+                                            <span class="inline-flex items-center gap-2">
+                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M6.75 7.5A2.25 2.25 0 0 1 9 5.25h6A2.25 2.25 0 0 1 17.25 7.5v9A2.25 2.25 0 0 1 15 18.75H9a2.25 2.25 0 0 1-2.25-2.25v-9Z" stroke="currentColor" stroke-width="1.6"/>
+                                                    <path d="M9.5 9.25h5M9.5 12h5M9.5 14.75h3.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                </svg>
+                                                <span>Botones flotantes</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-2">
+                                                <span id="user-menu-floating-actions-state"
+                                                      class="inline-flex items-center rounded-full border border-slate-300/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                                                    Activos
+                                                </span>
+                                                <svg id="user-menu-floating-actions-chevron" class="h-4 w-4 text-slate-500 transition-transform dark:text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </span>
+                                        </button>
+
+                                        <div id="user-menu-floating-actions-panel"
+                                             class="mt-2 hidden rounded-2xl border border-slate-200 bg-slate-50/85 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                                            <label class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/85 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70">
+                                                <span class="min-w-0">
+                                                    <span class="block text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Visibilidad</span>
+                                                    <span class="mt-0.5 block text-sm font-semibold text-slate-800 dark:text-slate-100">Activar botones flotantes</span>
+                                                </span>
+                                                <button id="user-menu-floating-actions-enabled"
+                                                        type="button"
+                                                        class="floating-menu-switch"
+                                                        data-floating-toggle="all"
+                                                        data-switch-tone="primary"
+                                                        role="switch"
+                                                        aria-checked="true"
+                                                        aria-label="Activar botones flotantes">
+                                                    <span class="floating-menu-switch__track">
+                                                        <span class="floating-menu-switch__text floating-menu-switch__text--on">ON</span>
+                                                        <span class="floating-menu-switch__text floating-menu-switch__text--off">OFF</span>
+                                                        <span class="floating-menu-switch__thumb" aria-hidden="true"></span>
+                                                    </span>
+                                                </button>
+                                            </label>
+
+                                            <div class="mt-3 grid gap-2">
+                                                @if ($showFloatingClientSetting)
+                                                    <label class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/85 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70">
+                                                        <span class="inline-flex min-w-0 items-center gap-2">
+                                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
+                                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                                    <path d="M12 12a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 12 12Z" stroke="currentColor" stroke-width="1.7"/>
+                                                                    <path d="M5.5 19a6.5 6.5 0 0 1 13 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                                                    <path d="M18.5 6.5v4m2-2h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                                                </svg>
+                                                            </span>
+                                                            <span class="min-w-0">
+                                                                <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Clientes</span>
+                                                                <span class="block text-xs text-slate-500 dark:text-slate-400">Abrir alta rápida</span>
+                                                            </span>
+                                                        </span>
+                                                        <button type="button"
+                                                                class="floating-menu-switch"
+                                                                data-floating-toggle="client"
+                                                                data-switch-tone="client"
+                                                                role="switch"
+                                                                aria-checked="true"
+                                                                aria-label="Mostrar boton flotante de clientes">
+                                                            <span class="floating-menu-switch__track">
+                                                                <span class="floating-menu-switch__text floating-menu-switch__text--on">ON</span>
+                                                                <span class="floating-menu-switch__text floating-menu-switch__text--off">OFF</span>
+                                                                <span class="floating-menu-switch__thumb" aria-hidden="true"></span>
+                                                            </span>
+                                                        </button>
+                                                    </label>
+                                                @endif
+
+                                                @if ($showFloatingSaleSetting)
+                                                    <label class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/85 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70">
+                                                        <span class="inline-flex min-w-0 items-center gap-2">
+                                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200">
+                                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                                    <path d="M7.5 8.5V7a2.5 2.5 0 0 1 5 0v1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                                                    <path d="M5.5 8.5h9l-.75 8.25A1.75 1.75 0 0 1 12 18.5H8a1.75 1.75 0 0 1-1.74-1.75L5.5 8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                                                    <path d="m16 10.5 1.5-1.5 3 3-4.75 4.75H13v-2.75L16 10.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                                                </svg>
+                                                            </span>
+                                                            <span class="min-w-0">
+                                                                <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Ventas</span>
+                                                                <span class="block text-xs text-slate-500 dark:text-slate-400">Abrir venta rápida</span>
+                                                            </span>
+                                                        </span>
+                                                        <button type="button"
+                                                                class="floating-menu-switch"
+                                                                data-floating-toggle="sale"
+                                                                data-switch-tone="sale"
+                                                                role="switch"
+                                                                aria-checked="true"
+                                                                aria-label="Mostrar boton flotante de ventas">
+                                                            <span class="floating-menu-switch__track">
+                                                                <span class="floating-menu-switch__text floating-menu-switch__text--on">ON</span>
+                                                                <span class="floating-menu-switch__text floating-menu-switch__text--off">OFF</span>
+                                                                <span class="floating-menu-switch__thumb" aria-hidden="true"></span>
+                                                            </span>
+                                                        </button>
+                                                    </label>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
                                     <a href="{{ $contactUrl }}" class="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('ui.contact') }}</a>
                                 @endif
 
@@ -2207,14 +3393,14 @@
     </div>
 </div>
 
+@include('layouts.partials.panel.quick-actions')
 @include('layouts.partials.panel.mobile-nav')
 
 @include('layouts.partials.panel.legal-acceptance-modal')
 <div id="ui-loading-overlay" class="ui-loading-overlay" data-open="0" aria-hidden="true">
     <div class="ui-loading-card" role="status" aria-live="polite">
         <span class="ui-loading-spin" aria-hidden="true"></span>
-        <p class="ui-loading-title">Cargando</p>
-        <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud...</p>
+        <p id="ui-loading-message" class="ui-loading-message">Procesando solicitud</p>
     </div>
 </div>
 

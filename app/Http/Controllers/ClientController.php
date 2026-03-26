@@ -15,6 +15,7 @@ use App\Models\GymBranchLink;
 use App\Models\Membership;
 use App\Models\MembershipAdjustment;
 use App\Models\Plan;
+use App\Models\ProductSale;
 use App\Models\Promotion;
 use App\Models\User;
 use App\Services\CashSessionService;
@@ -30,6 +31,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use RuntimeException;
@@ -51,6 +53,10 @@ class ClientController extends Controller
     {
         $gymId = $this->resolveGymId($request);
         $gymIds = ActiveGymContext::ids($request);
+        $activePlanKey = $this->planAccessService->currentPlanKeyForGym($gymId);
+        $isPlanControl = $activePlanKey === 'basico';
+        $isPlanProfessional = $activePlanKey === 'profesional';
+        $isPlanPremium = $activePlanKey === 'premium';
         $canManagePromotions = $this->planAccessService->canForGym($gymId, 'promotions');
         $canManageClientAccounts = $this->planAccessService->canForGym($gymId, 'client_accounts');
         $clientAccountsAccessByGym = $this->planAccessService->canForGyms($gymIds, 'client_accounts');
@@ -147,6 +153,38 @@ class ClientController extends Controller
                     ->select('attendances.time'),
                 'last_attendance_time'
             );
+
+        $professionalBaseQuery = clone $clientsQuery;
+        $professionalStats = $this->buildStats(clone $professionalBaseQuery, $todayDate, $expiringLimitDate);
+
+        $clientsWithPromotionBase = clone $professionalBaseQuery;
+        $this->applyActiveMembershipConstraint($clientsWithPromotionBase, $todayDate);
+        $clientsWithPromotionCount = (clone $clientsWithPromotionBase)
+            ->whereNotNull('lm.promotion_name')
+            ->count('clients.id');
+
+        $attendedTodayBase = clone $professionalBaseQuery;
+        $this->applyQuickFilter($attendedTodayBase, 'attended_today', $todayDate, $expiringLimitDate, $gymIds);
+        $attendedTodayCount = $attendedTodayBase->count('clients.id');
+
+        $clientsWithAppAccessCount = 0;
+        $activeClientsWithAppAccessCount = 0;
+        $activeClientsWithoutAppAccessCount = 0;
+        if ($isPlanPremium) {
+            $clientsWithAppAccessCount = (clone $professionalBaseQuery)
+                ->whereNotNull('clients.app_username')
+                ->where('clients.app_username', '!=', '')
+                ->count('clients.id');
+
+            $activeClientsWithAppAccessBase = clone $professionalBaseQuery;
+            $this->applyActiveMembershipConstraint($activeClientsWithAppAccessBase, $todayDate);
+            $activeClientsWithAppAccessCount = (clone $activeClientsWithAppAccessBase)
+                ->whereNotNull('clients.app_username')
+                ->where('clients.app_username', '!=', '')
+                ->count('clients.id');
+
+            $activeClientsWithoutAppAccessCount = max(0, (int) ($professionalStats['active'] ?? 0) - $activeClientsWithAppAccessCount);
+        }
 
         $this->applyQuickFilter($clientsQuery, $quickFilter, $todayDate, $expiringLimitDate, $gymIds);
 
@@ -263,6 +301,30 @@ class ClientController extends Controller
             ? collect($createModalErrorKeys)->contains(static fn (string $key): bool => $errorBag->has($key))
             : false;
         $openCreateModal = (bool) old('_open_create_modal', false) || $hasCreateErrors;
+        $professionalClientsDashboard = $this->buildPlanProfessionalClientsDashboard(
+            isPlanProfessional: $isPlanProfessional,
+            canManagePromotions: $canManagePromotions,
+            stats: $professionalStats,
+            activePromotionsCount: (int) $promotions->count(),
+            clientsWithPromotionCount: $clientsWithPromotionCount,
+            attendedTodayCount: $attendedTodayCount
+        );
+        $premiumClientsDashboard = $this->buildPlanPremiumClientsDashboard(
+            isPlanPremium: $isPlanPremium,
+            stats: $professionalStats,
+            clientsWithAppAccessCount: $clientsWithAppAccessCount,
+            activeClientsWithAppAccessCount: $activeClientsWithAppAccessCount,
+            activeClientsWithoutAppAccessCount: $activeClientsWithoutAppAccessCount,
+            attendedTodayCount: $attendedTodayCount
+        );
+        $planControlClientsDashboard = $this->buildPlanControlClientsDashboard(
+            isPlanControl: $isPlanControl,
+            stats: $professionalStats,
+            attendedTodayCount: $attendedTodayCount,
+            quickFilter: $quickFilter,
+            hasSearch: $search !== '',
+            isGlobalScope: ActiveGymContext::isGlobal($request)
+        );
 
         return view('clients.index', [
             'clients' => $clients,
@@ -274,6 +336,9 @@ class ClientController extends Controller
             'canManagePromotions' => $canManagePromotions,
             'canManageClientAccounts' => $canManageClientAccounts,
             'openCreateModal' => $openCreateModal,
+            'planControlClientsDashboard' => $planControlClientsDashboard,
+            'professionalClientsDashboard' => $professionalClientsDashboard,
+            'premiumClientsDashboard' => $premiumClientsDashboard,
         ]);
     }
 
@@ -282,9 +347,9 @@ class ClientController extends Controller
      */
     public function store(StoreClientRequest $request): RedirectResponse
     {
+        $redirectParams = $this->panelRouteParams($request);
         if (ActiveGymContext::isGlobal($request)) {
-            return redirect()
-                ->route('clients.index')
+            return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
                 ->withErrors(['clients' => 'Selecciona una sucursal específica para crear clientes.']);
         }
 
@@ -296,22 +361,19 @@ class ClientController extends Controller
         $createAppAccount = (bool) ($data['create_app_account'] ?? false);
 
         if ($startsMembership && ! $this->cashSessionService->getOpenSession($gymId)) {
-            return redirect()
-                ->route('clients.index')
+            return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
                 ->withErrors(['cash' => 'Debe abrir caja para registrar una membresía.'])
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
         if ($startsMembership && ! $canManagePromotions && ! empty($data['promotion_id'])) {
-            return redirect()
-                ->route('clients.index')
+            return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
                 ->withErrors(['promotion_id' => 'Tu plan actual no incluye promociones.'])
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
         if ($createAppAccount && ! $canManageClientAccounts) {
-            return redirect()
-                ->route('clients.index')
+            return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
                 ->withErrors(['app_username' => 'Tu plan actual no incluye cuentas cliente con usuario y contraseña.'])
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
@@ -331,15 +393,41 @@ class ClientController extends Controller
                 canManageClientAccounts: $canManageClientAccounts
             );
         } catch (RuntimeException $exception) {
-            return redirect()
-                ->route('clients.index')
+            return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
                 ->withErrors(['cash' => $exception->getMessage()])
                 ->withInput(array_merge($request->except('photo'), ['_open_create_modal' => 1]));
         }
 
-        return redirect()
-            ->route('clients.index')
+        return $this->redirectToPanelTarget($request, 'clients.index', $redirectParams)
             ->with('status', 'Cliente creado correctamente.');
+    }
+
+    private function redirectToPanelTarget(Request $request, string $fallbackRoute, array $fallbackParams = []): RedirectResponse
+    {
+        $redirectTo = trim((string) $request->input('redirect_to', ''));
+        if ($redirectTo !== '' && str_starts_with($redirectTo, '/') && ! str_starts_with($redirectTo, '//')) {
+            return redirect()->to($redirectTo);
+        }
+
+        return redirect()->route($fallbackRoute, $fallbackParams);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function panelRouteParams(Request $request): array
+    {
+        $params = [];
+        $contextGym = trim((string) $request->route('contextGym'));
+        if ($contextGym !== '') {
+            $params['contextGym'] = $contextGym;
+        }
+
+        if (strtolower(trim((string) $request->query('pwa_mode', ''))) === 'standalone') {
+            $params['pwa_mode'] = 'standalone';
+        }
+
+        return $params;
     }
 
     public function updateBasic(Request $request, string $contextGym, int $client): RedirectResponse
@@ -576,6 +664,14 @@ class ClientController extends Controller
 
         $canManagePromotions = $this->planAccessService->canForGym($clientGymId, 'promotions');
         $canManageClientAccounts = $this->planAccessService->canForGym($clientGymId, 'client_accounts');
+        $canUseSalesInventory = $this->planAccessService->canForGym($clientGymId, 'sales_inventory');
+        $canViewReports = $request->user() instanceof User
+            && $request->user()->isOwner()
+            && $this->planAccessService->canForGym($clientGymId, 'reports_base');
+        $activePlanKey = $this->planAccessService->currentPlanKeyForGym($clientGymId);
+        $isPlanControl = $activePlanKey === 'basico';
+        $isPlanProfessional = $activePlanKey === 'profesional';
+        $isPlanPremium = $activePlanKey === 'premium';
         $canShowProgress = $canManageClientAccounts;
         $canAdjustMemberships = $request->user() instanceof User && $request->user()->isOwner();
 
@@ -646,8 +742,19 @@ class ClientController extends Controller
             };
         }
 
+        $suggestedPromotion = null;
+        if ($canManagePromotions && $promotions->isNotEmpty()) {
+            $currentPlanId = (int) ($latestMembership?->plan_id ?? 0);
+            $suggestedPromotion = $promotions->first(function (Promotion $promotion) use ($currentPlanId): bool {
+                $promotionPlanId = $promotion->plan_id !== null ? (int) $promotion->plan_id : null;
+
+                return $promotionPlanId === null || $promotionPlanId === $currentPlanId;
+            }) ?? $promotions->first();
+        }
+
         $recentMembershipPayments = collect();
         $membershipIds = $clientModel->memberships->pluck('id')->filter()->values();
+        $totalMembershipRevenue = 0.0;
         if ($membershipIds->isNotEmpty()) {
             $recentMembershipPayments = CashMovement::query()
                 ->forGym($clientGymId)
@@ -672,7 +779,15 @@ class ClientController extends Controller
                 ->orderByDesc('occurred_at')
                 ->limit(10)
                 ->get();
+
+            $totalMembershipRevenue = (float) CashMovement::query()
+                ->forGym($clientGymId)
+                ->whereIn('membership_id', $membershipIds)
+                ->where('type', 'income')
+                ->sum('amount');
         }
+
+        $lastMembershipPayment = $recentMembershipPayments->first();
 
         $membershipAdjustments = collect();
         if ($membershipIds->isNotEmpty()) {
@@ -705,6 +820,27 @@ class ClientController extends Controller
                 ->get();
         }
 
+        $productSalesCount = 0;
+        $productSalesRevenue = 0.0;
+        $lastProductSale = null;
+        if ($canUseSalesInventory && Schema::hasTable('product_sales')) {
+            $productSalesAggregate = ProductSale::query()
+                ->forGym($clientGymId)
+                ->where('client_id', (int) $clientModel->id)
+                ->selectRaw('COUNT(*) as total_sales')
+                ->selectRaw('COALESCE(SUM(total_amount), 0) as total_revenue')
+                ->first();
+
+            $productSalesCount = (int) ($productSalesAggregate->total_sales ?? 0);
+            $productSalesRevenue = (float) ($productSalesAggregate->total_revenue ?? 0);
+
+            $lastProductSale = ProductSale::query()
+                ->forGym($clientGymId)
+                ->where('client_id', (int) $clientModel->id)
+                ->orderByDesc('sold_at')
+                ->first(['id', 'sold_at', 'total_amount']);
+        }
+
         $progressOverview = $canShowProgress
             ? $this->clientProgressOverviewService->build(
                 client: $clientModel,
@@ -714,6 +850,42 @@ class ClientController extends Controller
             : [];
 
         $clientTimezone = trim((string) ($clientModel->gym?->timezone ?? ''));
+        $lastAttendanceDate = $clientModel->attendances->first()?->date?->copy()->startOfDay();
+        $daysSinceLastAttendance = $lastAttendanceDate
+            ? $lastAttendanceDate->diffInDays(now()->copy()->startOfDay(), false)
+            : null;
+        $planControlClientDashboard = $this->buildPlanControlClientDetailDashboard(
+            isPlanControl: $isPlanControl,
+            membershipState: $membershipState,
+            latestMembership: $latestMembership,
+            lastMembershipPayment: $lastMembershipPayment,
+            daysSinceLastAttendance: $daysSinceLastAttendance
+        );
+        $professionalClientDashboard = $this->buildPlanProfessionalClientDetailDashboard(
+            isPlanProfessional: $isPlanProfessional,
+            membershipState: $membershipState,
+            latestMembership: $latestMembership,
+            lastMembershipPayment: $lastMembershipPayment,
+            totalMembershipRevenue: $totalMembershipRevenue,
+            suggestedPromotion: $suggestedPromotion,
+            currentPromotionName: trim((string) ($latestMembership?->promotion_name ?? '')),
+            productSalesCount: $productSalesCount,
+            productSalesRevenue: $productSalesRevenue,
+            lastProductSale: $lastProductSale,
+            daysSinceLastAttendance: $daysSinceLastAttendance
+        );
+        $premiumClientDashboard = $this->buildPlanPremiumClientDetailDashboard(
+            isPlanPremium: $isPlanPremium,
+            membershipState: $membershipState,
+            latestMembership: $latestMembership,
+            lastMembershipPayment: $lastMembershipPayment,
+            totalMembershipRevenue: $totalMembershipRevenue,
+            productSalesCount: $productSalesCount,
+            productSalesRevenue: $productSalesRevenue,
+            lastProductSale: $lastProductSale,
+            daysSinceLastAttendance: $daysSinceLastAttendance,
+            appUsername: trim((string) ($clientModel->app_username ?? ''))
+        );
 
         return view('clients.show', [
             'client' => $clientModel,
@@ -727,9 +899,14 @@ class ClientController extends Controller
             'promotions' => $promotions,
             'canManagePromotions' => $canManagePromotions,
             'canManageClientAccounts' => $canManageClientAccounts,
+            'canUseSalesInventory' => $canUseSalesInventory,
+            'canViewReports' => $canViewReports,
             'canShowProgress' => $canShowProgress,
             'canAdjustMemberships' => $canAdjustMemberships,
             'progressOverview' => $progressOverview,
+            'planControlClientDashboard' => $planControlClientDashboard,
+            'professionalClientDashboard' => $professionalClientDashboard,
+            'premiumClientDashboard' => $premiumClientDashboard,
             'clientCreationAudit' => $this->buildClientAuditSummary(
                 nameSnapshot: (string) ($clientModel->created_by_name_snapshot ?? ''),
                 roleSnapshot: (string) ($clientModel->created_by_role_snapshot ?? ''),
@@ -991,6 +1168,579 @@ class ClientController extends Controller
             'active' => $active,
             'expiring' => $expiring,
             'expired' => $expired,
+        ];
+    }
+
+    /**
+     * @param array{total:int,active:int,expiring:int,expired:int} $stats
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanProfessionalClientsDashboard(
+        bool $isPlanProfessional,
+        bool $canManagePromotions,
+        array $stats,
+        int $activePromotionsCount,
+        int $clientsWithPromotionCount,
+        int $attendedTodayCount
+    ): ?array {
+        if (! $isPlanProfessional) {
+            return null;
+        }
+
+        $renewalOpportunities = max(0, (int) ($stats['expiring'] ?? 0) + (int) ($stats['expired'] ?? 0));
+        $alerts = [];
+
+        if ($renewalOpportunities > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Renovaciones por mover',
+                'description' => 'Hay '.$renewalOpportunities.' cliente(s) entre por vencer y vencidos. Esta es la cola comercial mas cercana para cobrar.',
+            ];
+        }
+
+        if ((int) ($stats['expired'] ?? 0) > 0) {
+            $alerts[] = [
+                'tone' => 'danger',
+                'title' => 'Clientes por recuperar',
+                'description' => 'Tienes '.(int) $stats['expired'].' cliente(s) vencidos. Atenderlos rapido evita que se enfrien.',
+            ];
+        }
+
+        if ($canManagePromotions && $activePromotionsCount === 0 && $renewalOpportunities > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Promo recomendada',
+                'description' => 'Activa una promo corta para acelerar renovaciones y recuperar vencidos desde esta misma base.',
+            ];
+        } elseif ($clientsWithPromotionCount > 0) {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Promos en movimiento',
+                'description' => 'Ya tienes '.$clientsWithPromotionCount.' cliente(s) con promo aplicada en membresias activas.',
+            ];
+        }
+
+        if ($attendedTodayCount === 0 && (int) ($stats['active'] ?? 0) > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Sin movimiento hoy',
+                'description' => 'Todavia no registras asistencias hoy. Cruza recepcion con clientes para empujar renovacion y uso real.',
+            ];
+        }
+
+        if ($alerts === []) {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Base comercial estable',
+                'description' => 'Clientes, promos y renovaciones estan en una buena posicion para seguir creciendo.',
+            ];
+        }
+
+        return [
+            'headline' => 'Foco comercial sobre tu base de clientes',
+            'summary' => 'Usa esta vista para detectar renovaciones, mover promos y no dejar clientes frios dentro del plan Profesional.',
+            'renewal_opportunities' => $renewalOpportunities,
+            'expired_count' => (int) ($stats['expired'] ?? 0),
+            'active_promotions_count' => $activePromotionsCount,
+            'clients_with_promotion_count' => $clientsWithPromotionCount,
+            'attended_today_count' => $attendedTodayCount,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @param array{total:int,active:int,expiring:int,expired:int} $stats
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanPremiumClientsDashboard(
+        bool $isPlanPremium,
+        array $stats,
+        int $clientsWithAppAccessCount,
+        int $activeClientsWithAppAccessCount,
+        int $activeClientsWithoutAppAccessCount,
+        int $attendedTodayCount
+    ): ?array {
+        if (! $isPlanPremium) {
+            return null;
+        }
+
+        $renewalPipeline = max(0, (int) ($stats['expiring'] ?? 0) + (int) ($stats['expired'] ?? 0));
+        $alerts = [];
+
+        if ($activeClientsWithoutAppAccessCount > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Accesos app pendientes',
+                'description' => 'Hay '.$activeClientsWithoutAppAccessCount.' cliente(s) activos sin usuario app. Ese es el upgrade premium mas visible dentro de esta base.',
+            ];
+        }
+
+        if ($clientsWithAppAccessCount > 0) {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Portal cliente listo',
+                'description' => 'Ya tienes '.$clientsWithAppAccessCount.' cliente(s) con acceso listo para portal y app.',
+            ];
+        } else {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Primer acceso premium por activar',
+                'description' => 'Crear el primer usuario cliente vuelve visible la diferencia real entre Profesional y Premium.',
+            ];
+        }
+
+        if ($renewalPipeline > 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Renovaciones premium por mover',
+                'description' => 'Tienes '.$renewalPipeline.' cliente(s) entre por vencer y vencidos. Puedes cerrarlos con una experiencia mucho mas completa.',
+            ];
+        }
+
+        if ($attendedTodayCount === 0 && (int) ($stats['active'] ?? 0) > 0) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Sin uso hoy',
+                'description' => 'Hay clientes activos premium sin movimiento en recepcion hoy. Conviene revisar si ya usan la experiencia cliente.',
+            ];
+        }
+
+        return [
+            'headline' => 'Base premium lista para activar acceso cliente y renovar mejor',
+            'summary' => 'Cruza renovaciones, usuarios app y actividad real sin convertir esta pantalla en otro dashboard separado.',
+            'renewal_pipeline' => $renewalPipeline,
+            'clients_with_app_access_count' => $clientsWithAppAccessCount,
+            'active_clients_with_app_access_count' => $activeClientsWithAppAccessCount,
+            'active_clients_without_app_access_count' => $activeClientsWithoutAppAccessCount,
+            'attended_today_count' => $attendedTodayCount,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @param array{total:int,active:int,expiring:int,expired:int} $stats
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanControlClientsDashboard(
+        bool $isPlanControl,
+        array $stats,
+        int $attendedTodayCount,
+        string $quickFilter,
+        bool $hasSearch,
+        bool $isGlobalScope
+    ): ?array {
+        if (! $isPlanControl) {
+            return null;
+        }
+
+        $renewalPipeline = max(0, (int) ($stats['expiring'] ?? 0) + (int) ($stats['expired'] ?? 0));
+        $activeCount = (int) ($stats['active'] ?? 0);
+        $expiredCount = (int) ($stats['expired'] ?? 0);
+        $expiringCount = (int) ($stats['expiring'] ?? 0);
+
+        $headline = $renewalPipeline > 0
+            ? 'Tu base ya tiene clientes listos para renovar y cobrar'
+            : 'Clientes ordenados para recepcion, caja y seguimiento diario';
+
+        $summary = $renewalPipeline > 0
+            ? 'Usa esta vista para moverte rapido entre por vencer, vencidos y clientes activos sin convertir el basico en otro dashboard.'
+            : 'Mantiene una sola lectura limpia: buscar, filtrar, cobrar y revisar vencimientos desde la misma tabla.';
+
+        if ($isGlobalScope) {
+            $summary = 'Vista consolidada de clientes por sede. Puedes revisar vencimientos y actividad, pero las altas y cambios quedan para una sucursal puntual.';
+        } elseif ($hasSearch) {
+            $summary = 'La tabla esta filtrada por busqueda. Mantienes arriba la lectura completa del pipeline para no perder el contexto.';
+        } elseif ($quickFilter !== 'all') {
+            $summary = 'Estas trabajando sobre el filtro "'.$quickFilter.'". La lectura superior mantiene el pipeline completo para seguir cobrando sin perder foco.';
+        }
+
+        $priorities = [
+            [
+                'label' => 'Pipeline de renovacion',
+                'value' => (string) $renewalPipeline,
+                'note' => $renewalPipeline > 0
+                    ? 'Por vencer + vencidos listos para cobrar.'
+                    : 'Hoy no tienes renovaciones urgentes en cola.',
+                'tone' => $renewalPipeline > 0 ? 'warning' : 'neutral',
+            ],
+            [
+                'label' => 'Clientes activos',
+                'value' => (string) $activeCount,
+                'note' => $activeCount > 0
+                    ? 'Base vigente que puede seguir entrando hoy.'
+                    : 'Todavia no hay membresias vigentes.',
+                'tone' => $activeCount > 0 ? 'success' : 'neutral',
+            ],
+            [
+                'label' => 'Asistieron hoy',
+                'value' => (string) $attendedTodayCount,
+                'note' => $attendedTodayCount > 0
+                    ? 'Recepcion ya registra movimiento real.'
+                    : 'Recepcion aun no marca accesos hoy.',
+                'tone' => $attendedTodayCount > 0 ? 'info' : 'neutral',
+            ],
+        ];
+
+        $primaryAction = $expiredCount > 0
+            ? ['label' => 'Ver vencidos', 'filter' => 'expired']
+            : ($expiringCount > 0
+                ? ['label' => 'Ver por vencer', 'filter' => 'expiring']
+                : ['label' => 'Ver activos', 'filter' => 'active']);
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'priorities' => $priorities,
+            'primary_action' => $primaryAction,
+            'renewal_pipeline' => $renewalPipeline,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanProfessionalClientDetailDashboard(
+        bool $isPlanProfessional,
+        string $membershipState,
+        ?Membership $latestMembership,
+        ?CashMovement $lastMembershipPayment,
+        float $totalMembershipRevenue,
+        ?Promotion $suggestedPromotion,
+        string $currentPromotionName,
+        int $productSalesCount,
+        float $productSalesRevenue,
+        ?ProductSale $lastProductSale,
+        ?int $daysSinceLastAttendance
+    ): ?array {
+        if (! $isPlanProfessional) {
+            return null;
+        }
+
+        $headline = match ($membershipState) {
+            'expired', 'cancelled' => 'Recupera este cliente con una renovacion rapida',
+            'scheduled' => 'Cliente listo para iniciar en fecha programada',
+            'active' => 'Mantiene al cliente activo y cerca de una nueva venta',
+            default => 'Activa una primera membresia y empieza a mover valor',
+        };
+
+        $summary = match ($membershipState) {
+            'expired', 'cancelled' => 'La ficha ya concentra la renovacion, la promo sugerida y el seguimiento para no dejarlo caer.',
+            'scheduled' => 'Usa esta vista para confirmar arranque, asistencia y siguiente cobro sin perder contexto.',
+            'active' => 'Cruza membresia, promo y ventas de productos desde una sola lectura comercial.',
+            default => 'Puedes usar esta ficha para cobrar, activar promo y llevar el seguimiento desde el dia uno.',
+        };
+
+        $lastPaymentLabel = 'Sin cobro registrado';
+        $lastPaymentAmount = 0.0;
+        if ($lastMembershipPayment) {
+            $lastPaymentAmount = (float) ($lastMembershipPayment->amount ?? 0);
+            $lastPaymentLabel = $lastMembershipPayment->occurred_at?->format('Y-m-d H:i') ?? 'Cobro sin fecha';
+        }
+
+        $promotionTitle = 'Sin promo sugerida';
+        $promotionSubtitle = 'Puedes renovar sin promo o crear una desde Planes.';
+        $suggestedPromotionId = null;
+        if ($currentPromotionName !== '') {
+            $promotionTitle = $currentPromotionName;
+            $promotionSubtitle = 'Ya existe una promo aplicada en la membresia mas reciente.';
+        } elseif ($suggestedPromotion) {
+            $promotionTitle = (string) $suggestedPromotion->name;
+            $promotionSubtitle = 'Sugerida para renovar este cliente sin salir de la ficha.';
+            $suggestedPromotionId = (int) $suggestedPromotion->id;
+        }
+
+        $lastProductSaleLabel = 'Sin ventas de productos';
+        if ($lastProductSale) {
+            $lastProductSaleLabel = $lastProductSale->sold_at?->format('Y-m-d H:i') ?? 'Venta sin fecha';
+        }
+
+        $attendanceLabel = 'Sin asistencias registradas';
+        if ($daysSinceLastAttendance !== null) {
+            if ($daysSinceLastAttendance <= 0) {
+                $attendanceLabel = 'Asistio hoy';
+            } elseif ($daysSinceLastAttendance === 1) {
+                $attendanceLabel = 'Ultima asistencia hace 1 dia';
+            } else {
+                $attendanceLabel = 'Ultima asistencia hace '.$daysSinceLastAttendance.' dias';
+            }
+        }
+
+        $alerts = [];
+
+        if (in_array($membershipState, ['expired', 'cancelled'], true)) {
+            $alerts[] = [
+                'tone' => 'danger',
+                'title' => 'Renovacion prioritaria',
+                'description' => 'El cliente ya no esta cubierto. Cobrar hoy es la accion comercial mas urgente.',
+            ];
+        } elseif ($membershipState === 'active' && $latestMembership?->ends_at !== null) {
+            $daysLeft = now()->copy()->startOfDay()->diffInDays($latestMembership->ends_at->copy()->startOfDay(), false);
+            if ($daysLeft <= 7) {
+                $alerts[] = [
+                    'tone' => 'warning',
+                    'title' => 'Ventana de cierre abierta',
+                    'description' => 'La membresia vence pronto. Aprovecha esta ficha para renovar antes de que caiga en vencido.',
+                ];
+            }
+        }
+
+        if ($currentPromotionName !== '') {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Promo ya aplicada',
+                'description' => 'La ultima membresia ya uso una promo. Puedes apoyarte en ese historial para la siguiente renovacion.',
+            ];
+        } elseif ($suggestedPromotion) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Promo disponible',
+                'description' => 'Tienes una promo activa compatible con este cliente para cerrar renovacion con menos friccion.',
+            ];
+        }
+
+        if ($daysSinceLastAttendance !== null && $daysSinceLastAttendance >= 7 && $membershipState === 'active') {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Uso reciente bajo',
+                'description' => 'El cliente sigue vigente pero no ha venido en varios dias. Conviene reactivarlo antes de la siguiente renovacion.',
+            ];
+        }
+
+        if ($productSalesCount === 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Cross-sell pendiente',
+                'description' => 'Aun no hay compras de productos. Esta ficha ya puede empujar una venta extra desde el plan Profesional.',
+            ];
+        } else {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Cliente con venta adicional',
+                'description' => 'Este cliente ya compro productos. Repetir esa venta puede subir el ticket sin cambiar de flujo.',
+            ];
+        }
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'current_plan_id' => $latestMembership?->plan_id !== null ? (int) $latestMembership->plan_id : null,
+            'last_payment_amount' => round($lastPaymentAmount, 2),
+            'last_payment_label' => $lastPaymentLabel,
+            'total_membership_revenue' => round($totalMembershipRevenue, 2),
+            'promotion_title' => $promotionTitle,
+            'promotion_subtitle' => $promotionSubtitle,
+            'suggested_promotion_id' => $suggestedPromotionId,
+            'product_sales_count' => $productSalesCount,
+            'product_sales_revenue' => round($productSalesRevenue, 2),
+            'last_product_sale_label' => $lastProductSaleLabel,
+            'attendance_label' => $attendanceLabel,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanPremiumClientDetailDashboard(
+        bool $isPlanPremium,
+        string $membershipState,
+        ?Membership $latestMembership,
+        ?CashMovement $lastMembershipPayment,
+        float $totalMembershipRevenue,
+        int $productSalesCount,
+        float $productSalesRevenue,
+        ?ProductSale $lastProductSale,
+        ?int $daysSinceLastAttendance,
+        string $appUsername
+    ): ?array {
+        if (! $isPlanPremium) {
+            return null;
+        }
+
+        $headline = match ($membershipState) {
+            'expired', 'cancelled' => 'Recupera al cliente y completa su experiencia premium',
+            'scheduled' => 'Cliente premium listo para arrancar con acceso y seguimiento',
+            'active' => 'Cliente listo para renovar, usar app y sostener valor',
+            default => 'Activa membresia y acceso cliente desde esta misma ficha',
+        };
+
+        $summary = match ($membershipState) {
+            'expired', 'cancelled' => 'No solo toca renovar: tambien conviene dejar listo su acceso app para que el premium se note de inmediato.',
+            'scheduled' => 'La ficha ya puede dejar listo el cobro, la asistencia y el acceso cliente antes del arranque.',
+            'active' => 'Cruza cobro, acceso app, asistencia y venta adicional dentro de una sola cabecera premium.',
+            default => 'Esta ficha puede encender la primera membresia y el primer acceso cliente sin romper el flujo.',
+        };
+
+        $hasAppAccess = $appUsername !== '';
+        $lastPaymentLabel = 'Sin cobro registrado';
+        $lastPaymentAmount = 0.0;
+        if ($lastMembershipPayment) {
+            $lastPaymentAmount = (float) ($lastMembershipPayment->amount ?? 0);
+            $lastPaymentLabel = $lastMembershipPayment->occurred_at?->format('Y-m-d H:i') ?? 'Cobro sin fecha';
+        }
+
+        $lastProductSaleLabel = 'Sin ventas de productos';
+        if ($lastProductSale) {
+            $lastProductSaleLabel = $lastProductSale->sold_at?->format('Y-m-d H:i') ?? 'Venta sin fecha';
+        }
+
+        $appAccessValue = $hasAppAccess ? $appUsername : 'Pendiente';
+        $appAccessNote = $hasAppAccess
+            ? 'Portal y app listos para este cliente.'
+            : 'Todavia no tiene usuario app configurado.';
+
+        $attendanceLabel = 'Sin asistencias registradas';
+        if ($daysSinceLastAttendance !== null) {
+            if ($daysSinceLastAttendance <= 0) {
+                $attendanceLabel = 'Asistio hoy';
+            } elseif ($daysSinceLastAttendance === 1) {
+                $attendanceLabel = 'Ultima asistencia hace 1 dia';
+            } else {
+                $attendanceLabel = 'Ultima asistencia hace '.$daysSinceLastAttendance.' dias';
+            }
+        }
+
+        $alerts = [];
+
+        if (! $hasAppAccess) {
+            $alerts[] = [
+                'tone' => 'warning',
+                'title' => 'Acceso app pendiente',
+                'description' => 'Este cliente aun no tiene usuario app. Activarlo hace visible la experiencia premium sin cambiar de pantalla.',
+            ];
+        } else {
+            $alerts[] = [
+                'tone' => 'success',
+                'title' => 'Acceso premium listo',
+                'description' => 'El cliente ya tiene usuario app. Portal y experiencia movil quedan listos para operar.',
+            ];
+        }
+
+        if (in_array($membershipState, ['expired', 'cancelled'], true)) {
+            $alerts[] = [
+                'tone' => 'danger',
+                'title' => 'Renovacion prioritaria',
+                'description' => 'La cobertura del cliente ya cayo. Conviene renovar y dejar resuelta tambien la parte digital.',
+            ];
+        } elseif ($membershipState === 'active' && $daysSinceLastAttendance !== null && $daysSinceLastAttendance >= 7) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Uso premium por reactivar',
+                'description' => 'El cliente sigue activo pero lleva varios dias sin venir. Reforzar su uso de app y asistencia ayuda a la siguiente renovacion.',
+            ];
+        }
+
+        if ($productSalesCount === 0) {
+            $alerts[] = [
+                'tone' => 'info',
+                'title' => 'Venta adicional pendiente',
+                'description' => 'Aun no hay compras de productos en esta ficha. El premium tambien puede subir valor por cliente.',
+            ];
+        }
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'current_plan_id' => $latestMembership?->plan_id !== null ? (int) $latestMembership->plan_id : null,
+            'last_payment_amount' => round($lastPaymentAmount, 2),
+            'last_payment_label' => $lastPaymentLabel,
+            'total_membership_revenue' => round($totalMembershipRevenue, 2),
+            'app_access_ready' => $hasAppAccess,
+            'app_access_value' => $appAccessValue,
+            'app_access_note' => $appAccessNote,
+            'product_sales_count' => $productSalesCount,
+            'product_sales_revenue' => round($productSalesRevenue, 2),
+            'last_product_sale_label' => $lastProductSaleLabel,
+            'attendance_label' => $attendanceLabel,
+            'alerts' => array_slice($alerts, 0, 3),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildPlanControlClientDetailDashboard(
+        bool $isPlanControl,
+        string $membershipState,
+        ?Membership $latestMembership,
+        ?CashMovement $lastMembershipPayment,
+        ?int $daysSinceLastAttendance
+    ): ?array {
+        if (! $isPlanControl) {
+            return null;
+        }
+
+        $headline = match ($membershipState) {
+            'expired', 'cancelled' => 'Cliente listo para recuperar desde esta misma ficha',
+            'scheduled' => 'Cliente programado y listo para arrancar en fecha',
+            'active' => 'Ficha lista para renovar, cobrar y mandar a recepcion',
+            default => 'Activa su primera membresia y deja esta ficha operativa',
+        };
+
+        $summary = match ($membershipState) {
+            'expired', 'cancelled' => 'La accion correcta aqui es directa: revisar vencimiento, cobrar y devolverlo a operacion sin pasos extra.',
+            'scheduled' => 'Esta ficha mantiene claro el arranque, el vencimiento y el siguiente cobro sin cargar de ruido la pantalla.',
+            'active' => 'Cruza estado, ultimo cobro y asistencia reciente desde una sola lectura limpia para una sede.',
+            default => 'Todavia no hay membresia activa. Puedes cobrar la primera y dejar listo el acceso desde aqui mismo.',
+        };
+
+        $statusValue = match ($membershipState) {
+            'expired' => 'Vencida',
+            'cancelled' => 'Cancelada',
+            'scheduled' => 'Programada',
+            'active' => 'Activa',
+            default => 'Sin membresia',
+        };
+
+        $statusTone = match ($membershipState) {
+            'expired', 'cancelled' => 'warning',
+            'active' => 'success',
+            default => 'neutral',
+        };
+
+        $statusNote = $latestMembership?->ends_at
+            ? 'Vence '.$latestMembership->ends_at->format('Y-m-d')
+            : 'Sin fecha de vencimiento registrada.';
+
+        $lastPaymentAmount = 0.0;
+        $lastPaymentLabel = 'Sin cobro registrado todavia.';
+        if ($lastMembershipPayment) {
+            $lastPaymentAmount = (float) ($lastMembershipPayment->amount ?? 0);
+            $lastPaymentLabel = $lastMembershipPayment->occurred_at?->format('Y-m-d H:i') ?? 'Cobro sin fecha';
+        }
+
+        $attendanceValue = 'Sin registro';
+        $attendanceNote = 'Aun no hay ingresos registrados.';
+        $attendanceTone = 'neutral';
+        if ($daysSinceLastAttendance !== null) {
+            if ($daysSinceLastAttendance <= 0) {
+                $attendanceValue = 'Hoy';
+                $attendanceNote = 'Ya tuvo movimiento de recepcion hoy.';
+                $attendanceTone = 'info';
+            } elseif ($daysSinceLastAttendance === 1) {
+                $attendanceValue = 'Ayer';
+                $attendanceNote = 'Ultimo ingreso hace 1 dia.';
+                $attendanceTone = 'info';
+            } else {
+                $attendanceValue = $daysSinceLastAttendance.' dias';
+                $attendanceNote = 'Ultimo ingreso registrado en recepcion.';
+                $attendanceTone = $daysSinceLastAttendance >= 7 ? 'warning' : 'info';
+            }
+        }
+
+        return [
+            'headline' => $headline,
+            'summary' => $summary,
+            'current_plan_id' => $latestMembership?->plan_id !== null ? (int) $latestMembership->plan_id : null,
+            'renewal_action_label' => $latestMembership ? 'Renovar membresia' : 'Cobrar membresia',
+            'status_value' => $statusValue,
+            'status_note' => $statusNote,
+            'status_tone' => $statusTone,
+            'last_payment_amount' => round($lastPaymentAmount, 2),
+            'last_payment_label' => $lastPaymentLabel,
+            'attendance_value' => $attendanceValue,
+            'attendance_note' => $attendanceNote,
+            'attendance_tone' => $attendanceTone,
         ];
     }
 

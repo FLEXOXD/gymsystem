@@ -44,6 +44,148 @@
             width: 100%;
         }
     }
+
+    .sales-page .sales-surface-card {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgb(148 163 184 / 0.26);
+        background:
+            radial-gradient(circle at top right, rgb(6 182 212 / 0.08), transparent 26%),
+            linear-gradient(160deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.95));
+        box-shadow: 0 26px 44px -38px rgb(15 23 42 / 0.2);
+    }
+
+    .sales-page .sales-surface-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.76), transparent);
+        opacity: 0.82;
+        pointer-events: none;
+    }
+
+    .sales-page .sales-surface-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .sales-page .sales-surface-card > header .ui-heading {
+        font-size: clamp(1.16rem, 1.4vw, 1.42rem);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+    }
+
+    .sales-page .sales-surface-card > header .ui-muted {
+        margin-top: 0.35rem;
+        font-size: 0.88rem;
+    }
+
+    .sales-page .sales-kpi-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgb(148 163 184 / 0.24);
+        box-shadow: 0 18px 28px -30px rgb(15 23 42 / 0.2);
+    }
+
+    .sales-page .sales-kpi-card::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        right: 1rem;
+        top: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: rgb(148 163 184 / 0.22);
+    }
+
+    .sales-page .sales-form-shell,
+    .sales-page .sales-filter-shell {
+        border: 1px solid rgb(148 163 184 / 0.22);
+        border-radius: 1rem;
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(248 250 252 / 0.74));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.8),
+            0 18px 32px -34px rgb(15 23 42 / 0.16);
+    }
+
+    .sales-page .sales-form-shell {
+        padding: 1rem;
+    }
+
+    .sales-page .sales-filter-shell {
+        padding: 0.95rem 1rem;
+    }
+
+    .sales-page .sales-table-shell {
+        border: 1px solid rgb(148 163 184 / 0.24);
+        border-radius: 1rem;
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(248 250 252 / 0.88));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.82),
+            0 18px 32px -34px rgb(15 23 42 / 0.16);
+    }
+
+    .sales-page .sales-modal-panel,
+    .sales-page .sales-history-panel {
+        border-color: rgb(56 189 248 / 0.24);
+        background:
+            radial-gradient(circle at top right, rgb(6 182 212 / 0.08), transparent 26%),
+            linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.94));
+        box-shadow: 0 32px 58px -42px rgb(15 23 42 / 0.3);
+    }
+
+    .sales-page .sales-register-shell {
+        border-color: rgb(148 163 184 / 0.22);
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.84));
+    }
+
+    .sales-page .sales-empty-state {
+        padding-top: 2.4rem;
+        padding-bottom: 2.4rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .theme-light .sales-page .sales-surface-card,
+    .theme-light .sales-page .sales-kpi-card,
+    .theme-light .sales-page .sales-form-shell,
+    .theme-light .sales-page .sales-filter-shell,
+    .theme-light .sales-page .sales-table-shell,
+    .theme-light .sales-page .sales-register-shell {
+        border-color: rgb(203 213 225 / 0.82);
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.9),
+            0 18px 30px -32px rgb(15 23 42 / 0.1);
+    }
+
+    .theme-dark .sales-page .sales-surface-card,
+    .dark .sales-page .sales-surface-card,
+    .theme-dark .sales-page .sales-kpi-card,
+    .dark .sales-page .sales-kpi-card,
+    .theme-dark .sales-page .sales-form-shell,
+    .dark .sales-page .sales-form-shell,
+    .theme-dark .sales-page .sales-filter-shell,
+    .dark .sales-page .sales-filter-shell,
+    .theme-dark .sales-page .sales-table-shell,
+    .dark .sales-page .sales-table-shell,
+    .theme-dark .sales-page .sales-modal-panel,
+    .dark .sales-page .sales-modal-panel,
+    .theme-dark .sales-page .sales-history-panel,
+    .dark .sales-page .sales-history-panel,
+    .theme-dark .sales-page .sales-register-shell,
+    .dark .sales-page .sales-register-shell {
+        border-color: rgb(51 65 85 / 0.74);
+        background:
+            linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(17 24 39 / 0.9));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.04),
+            0 18px 30px -32px rgb(2 8 23 / 0.74);
+    }
 </style>
 @endpush
 
@@ -99,7 +241,7 @@
         })->values();
     @endphp
 
-    <div class="space-y-5">
+    <div class="sales-page space-y-5">
         <div class="space-y-2">
             @if (session('status'))
                 <div class="ui-alert ui-alert-success">{{ session('status') }}</div>
@@ -121,7 +263,7 @@
             @endif
         </div>
 
-        <x-ui.card title="Centro comercial del gimnasio" subtitle="Separa ganancias, clientes y productos para que la operacion no quede mezclada.">
+        <x-ui.card title="Centro comercial del gimnasio" subtitle="Separa ganancias, clientes y productos para que la operacion no quede mezclada." class="sales-surface-card">
             <div class="flex flex-wrap gap-2">
                 <x-ui.button :href="route('panel.index', $indexRouteParams)" variant="ghost">Ganancias del gimnasio</x-ui.button>
                 <x-ui.button :href="route('clients.index', $indexRouteParams)" variant="ghost">Panel de clientes</x-ui.button>
@@ -134,32 +276,32 @@
         </x-ui.card>
 
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ventas hoy</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($todaySummary['total_sales'] ?? 0) }}</p>
                 <p class="ui-muted mt-2 text-sm">{{ (int) ($todaySummary['units_sold'] ?? 0) }} unidades vendidas.</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ingreso hoy</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($todaySummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="ui-muted mt-2 text-sm">Ticket promedio {{ $currencyFormatter::format((float) ($todaySummary['average_ticket'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Utilidad hoy</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($todaySummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="ui-muted mt-2 text-sm">Costo {{ $currencyFormatter::format((float) ($todaySummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ventas de la semana</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($weekSummary['total_sales'] ?? 0) }}</p>
                 <p class="ui-muted mt-2 text-sm">{{ (int) ($weekSummary['units_sold'] ?? 0) }} unidades esta semana.</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Ingreso del mes</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($monthSummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="ui-muted mt-2 text-sm">{{ (int) ($monthSummary['total_sales'] ?? 0) }} ventas registradas.</p>
             </x-ui.card>
-            <x-ui.card>
+            <x-ui.card class="sales-kpi-card" data-tone="neutral">
                 <p class="ui-muted text-xs font-bold uppercase tracking-wider">Utilidad del mes</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($monthSummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="ui-muted mt-2 text-sm">Costo {{ $currencyFormatter::format((float) ($monthSummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
@@ -170,7 +312,7 @@
             <div id="sales-register-modal"
                  data-auto-open="{{ $openSalesRegisterModal ? '1' : '0' }}"
                  class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/80 p-4">
-                <div class="sales-register-panel w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
+                <div class="sales-register-panel sales-modal-panel w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
                     <div class="sales-register-head flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
                         <div>
                             <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Venta rápida</p>
@@ -180,7 +322,7 @@
                         <button type="button" id="close-sales-register-modal" class="ui-button ui-button-ghost px-2.5 py-1.5 text-sm font-semibold sm:px-3 sm:py-2">Cerrar</button>
                     </div>
                     <div class="sales-register-body p-5">
-                        <x-ui.card class="border border-slate-800/80 bg-slate-900/65 shadow-inner">
+                        <x-ui.card class="sales-register-shell sales-surface-card border border-slate-800/80 bg-slate-900/65 shadow-inner">
                 @if (! $schemaReady)
                     <p class="ui-alert ui-alert-warning">El formulario se activara despues de correr las migraciones del modulo.</p>
                 @elseif ($isGlobalScope)
@@ -196,7 +338,7 @@
                         <x-ui.button :href="route('products.index', ['contextGym' => $contextGym])" variant="secondary">Ir a productos</x-ui.button>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-2 md:gap-4" id="sales-form">
+                    <form method="POST" action="{{ route('sales.store', ['contextGym' => $contextGym]) }}" class="sales-form-shell grid gap-3 md:grid-cols-2 md:gap-4" id="sales-form">
                         @csrf
                         <input type="hidden" name="open_sales_register_modal" value="1">
                         <input type="hidden" name="sale_items_payload" id="sale-items-payload" value="{{ old('sale_items_payload', '') }}">
@@ -294,25 +436,25 @@
                 </div>
             </div>
 
-            <x-ui.card title="Control rapido de inventario" subtitle="Lectura operativa del mes actual para reponer a tiempo.">
+            <x-ui.card title="Control rapido de inventario" subtitle="Lectura operativa del mes actual para reponer a tiempo." class="sales-surface-card">
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75">
+                    <article class="sales-kpi-card rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/75" data-tone="neutral">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos del mes</p>
                         <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
                     </article>
-                    <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                    <article class="sales-kpi-card rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15" data-tone="success">
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Unidades que entraron</p>
                         <p class="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-100">{{ (int) ($inventorySummary['units_in'] ?? 0) }}</p>
                     </article>
-                    <article class="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15">
+                    <article class="sales-kpi-card rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-400/40 dark:bg-rose-500/15" data-tone="danger">
                         <p class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">Unidades que salieron</p>
                         <p class="mt-2 text-2xl font-black text-rose-800 dark:text-rose-100">{{ (int) ($inventorySummary['units_out'] ?? 0) }}</p>
                     </article>
-                    <article class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15">
+                    <article class="sales-kpi-card rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-400/40 dark:bg-amber-500/15" data-tone="warning">
                         <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200">Ajustes manuales</p>
                         <p class="mt-2 text-2xl font-black text-amber-800 dark:text-amber-100">{{ (int) ($inventorySummary['manual_adjustments'] ?? 0) }}</p>
                     </article>
-                    <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                    <article class="sales-kpi-card rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15" data-tone="info">
                         <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Productos con stock bajo</p>
                         <p class="mt-2 text-2xl font-black text-cyan-800 dark:text-cyan-100">{{ $lowStockProducts->count() }}</p>
                     </article>
@@ -321,13 +463,13 @@
         </section>
 
         <section class="grid gap-4 xl:grid-cols-2">
-            <x-ui.card title="Productos mas vendidos del mes" subtitle="Los articulos que mas estan empujando ingresos.">
+            <x-ui.card title="Productos mas vendidos del mes" subtitle="Los articulos que mas estan empujando ingresos." class="sales-surface-card">
                 @if ($topProducts->isEmpty())
-                    <div class="rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
+                    <div class="sales-empty-state rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
                         Aún no hay ventas registradas en este periodo.
                     </div>
                 @else
-                    <div class="smart-list-wrap">
+                    <div class="sales-table-shell smart-list-wrap">
                         <table class="ui-table w-full min-w-[720px] text-sm">
                             <thead>
                                 <tr>
@@ -360,13 +502,13 @@
                 @endif
             </x-ui.card>
 
-            <x-ui.card title="Stock bajo o crítico" subtitle="Productos activos que ya llegaron al mínimo.">
+            <x-ui.card title="Stock bajo o crítico" subtitle="Productos activos que ya llegaron al mínimo." class="sales-surface-card">
                 @if ($lowStockProducts->isEmpty())
-                    <div class="rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
+                    <div class="sales-empty-state rounded-2xl border border-dashed border-slate-300/70 bg-slate-50/55 px-4 py-8 text-center ui-muted dark:border-slate-700 dark:bg-slate-900/35">
                         No hay productos en alerta de stock.
                     </div>
                 @else
-                    <div class="smart-list-wrap">
+                    <div class="sales-table-shell smart-list-wrap">
                         <table class="ui-table w-full min-w-[660px] text-sm">
                             <thead>
                                 <tr>
@@ -398,13 +540,13 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Últimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos.">
+        <x-ui.card title="Últimas ventas registradas" subtitle="Historial operativo reciente de productos vendidos." class="sales-surface-card">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <p class="text-xs ui-muted">Esta vista muestra solo las últimas 12 ventas.</p>
                 <x-ui.button type="button" id="open-sales-history-modal" variant="ghost" size="sm">Ver todas por fecha</x-ui.button>
             </div>
 
-            <div class="smart-list-wrap">
+            <div class="sales-table-shell smart-list-wrap">
                 <table class="ui-table w-full min-w-[1120px] text-sm">
                     <thead>
                         <tr>
@@ -443,7 +585,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">Todavía no hay ventas de productos registradas.</td>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="sales-empty-state py-8 text-center ui-muted">Todavía no hay ventas de productos registradas.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -454,7 +596,7 @@
         <div id="sales-history-modal"
              data-auto-open="{{ $openSalesHistoryModal ? '1' : '0' }}"
              class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-950/80 p-4">
-            <div class="w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
+            <div class="sales-history-panel w-full max-w-7xl max-h-[90vh] overflow-hidden rounded-3xl border border-cyan-500/35 bg-slate-950 shadow-2xl">
                 <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/70 p-5">
                     <div>
                         <p class="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Historial completo</p>
@@ -470,7 +612,7 @@
                 </div>
 
                 <div class="space-y-4 p-5">
-                    <form method="GET" action="{{ route('sales.index', ['contextGym' => $contextGym]) }}" class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto] md:items-end">
+                    <form method="GET" action="{{ route('sales.index', ['contextGym' => $contextGym]) }}" class="sales-filter-shell grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto] md:items-end">
                         @if ($isGlobalScope)
                             <input type="hidden" name="scope" value="global">
                         @endif
@@ -510,7 +652,7 @@
                         <x-ui.button :href="route('sales.index', ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []) + ['sales_history_open' => 1])" variant="ghost">Limpiar</x-ui.button>
                     </form>
 
-                    <div class="smart-list-wrap max-h-[56vh]">
+                    <div class="sales-table-shell smart-list-wrap max-h-[56vh]">
                         <table class="ui-table w-full min-w-[1240px] text-sm">
                             <thead>
                                 <tr>
@@ -549,7 +691,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">No hay ventas en ese filtro.</td>
+                                        <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="sales-empty-state py-8 text-center ui-muted">No hay ventas en ese filtro.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

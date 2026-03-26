@@ -58,6 +58,146 @@
             height: 220px;
         }
     }
+
+    .report-sales-inventory .report-surface-card {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgb(148 163 184 / 0.26);
+        background:
+            radial-gradient(circle at top right, rgb(6 182 212 / 0.08), transparent 26%),
+            linear-gradient(160deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.95));
+        box-shadow: 0 26px 44px -38px rgb(15 23 42 / 0.18);
+    }
+
+    .report-sales-inventory .report-surface-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.76), transparent);
+        opacity: 0.82;
+        pointer-events: none;
+    }
+
+    .report-sales-inventory .report-surface-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .report-sales-inventory .report-surface-card > header .ui-heading {
+        font-size: clamp(1.16rem, 1.4vw, 1.42rem);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+    }
+
+    .report-sales-inventory .report-surface-card > header .ui-muted {
+        margin-top: 0.35rem;
+        font-size: 0.88rem;
+    }
+
+    .report-sales-inventory .report-filter-shell,
+    .report-sales-inventory .report-pagination-shell {
+        border: 1px solid rgb(148 163 184 / 0.22);
+        border-radius: 1rem;
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(248 250 252 / 0.74));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.8),
+            0 18px 32px -34px rgb(15 23 42 / 0.14);
+    }
+
+    .report-sales-inventory .report-filter-shell {
+        padding: 0.95rem 1rem;
+    }
+
+    .report-sales-inventory .report-pagination-shell {
+        padding: 0.85rem 1rem;
+    }
+
+    .report-sales-inventory .report-filter-shell .ui-button {
+        border-radius: 0.92rem;
+    }
+
+    .report-sales-inventory .report-metric-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 100%;
+        border: 1px solid rgb(148 163 184 / 0.24);
+        box-shadow: 0 18px 28px -30px rgb(15 23 42 / 0.18);
+    }
+
+    .report-sales-inventory .report-metric-card::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        right: 1rem;
+        top: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: rgb(148 163 184 / 0.22);
+    }
+
+    .report-sales-inventory .report-chart-card .chart-shell {
+        border: 1px solid rgb(148 163 184 / 0.2);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.7), rgb(248 250 252 / 0.55));
+        padding: 0.85rem;
+    }
+
+    .report-sales-inventory .report-action-card {
+        border-radius: 1rem;
+        box-shadow: 0 18px 28px -30px rgb(15 23 42 / 0.16);
+    }
+
+    .report-sales-inventory .report-table-shell {
+        border-radius: 1rem;
+        border: 1px solid rgb(148 163 184 / 0.24);
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(248 250 252 / 0.9));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.82),
+            0 18px 32px -34px rgb(15 23 42 / 0.15);
+    }
+
+    .report-sales-inventory .report-empty-state {
+        padding-top: 2.3rem;
+        padding-bottom: 2.3rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .theme-light .report-sales-inventory .report-surface-card,
+    .theme-light .report-sales-inventory .report-filter-shell,
+    .theme-light .report-sales-inventory .report-pagination-shell,
+    .theme-light .report-sales-inventory .report-metric-card,
+    .theme-light .report-sales-inventory .report-chart-card .chart-shell,
+    .theme-light .report-sales-inventory .report-table-shell {
+        border-color: rgb(203 213 225 / 0.82);
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.9),
+            0 18px 30px -32px rgb(15 23 42 / 0.1);
+    }
+
+    .theme-dark .report-sales-inventory .report-surface-card,
+    .dark .report-sales-inventory .report-surface-card,
+    .theme-dark .report-sales-inventory .report-filter-shell,
+    .dark .report-sales-inventory .report-filter-shell,
+    .theme-dark .report-sales-inventory .report-pagination-shell,
+    .dark .report-sales-inventory .report-pagination-shell,
+    .theme-dark .report-sales-inventory .report-metric-card,
+    .dark .report-sales-inventory .report-metric-card,
+    .theme-dark .report-sales-inventory .report-chart-card .chart-shell,
+    .dark .report-sales-inventory .report-chart-card .chart-shell,
+    .theme-dark .report-sales-inventory .report-table-shell,
+    .dark .report-sales-inventory .report-table-shell {
+        border-color: rgb(51 65 85 / 0.74);
+        background:
+            linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(17 24 39 / 0.9));
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.04),
+            0 18px 30px -32px rgb(2 8 23 / 0.74);
+    }
 </style>
 @endpush
 
@@ -93,8 +233,8 @@
             <div class="ui-alert ui-alert-warning">Falta ejecutar <code>php artisan migrate</code> para habilitar el reporte de ventas e inventario.</div>
         @endif
 
-        <x-ui.card title="Filtro del módulo" subtitle="Lee rendimiento comercial y rotación de inventario por período.">
-            <form method="GET" action="{{ route('reports.sales-inventory', ['contextGym' => $contextGym]) }}" class="filter-form grid gap-3 md:grid-cols-5">
+        <x-ui.card title="Filtro del módulo" subtitle="Lee rendimiento comercial y rotación de inventario por período." class="report-surface-card">
+            <form method="GET" action="{{ route('reports.sales-inventory', ['contextGym' => $contextGym]) }}" class="report-filter-shell filter-form grid gap-3 md:grid-cols-5">
                 @if ($isGlobalScope)
                     <input type="hidden" name="scope" value="global">
                 @endif
@@ -123,42 +263,42 @@
         </x-ui.card>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ventas</p>
                 <p class="mt-2 text-3xl font-black text-slate-900 dark:text-slate-100">{{ (int) ($salesSummary['total_sales'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ (int) ($salesSummary['units_sold'] ?? 0) }} unidades vendidas</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ingreso total</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $currencyFormatter::format((float) ($salesSummary['total_revenue'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ticket promedio {{ $currencyFormatter::format((float) ($salesSummary['average_ticket'] ?? 0), $appCurrencyCode) }}</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Costo total</p>
                 <p class="mt-2 text-3xl font-black text-rose-700 dark:text-rose-300">{{ $currencyFormatter::format((float) ($salesSummary['total_cost'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Base para utilidad real</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Utilidad</p>
                 <p class="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{{ $currencyFormatter::format((float) ($salesSummary['total_profit'] ?? 0), $appCurrencyCode) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ingreso menos costo</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Movimientos de stock</p>
                 <p class="mt-2 text-3xl font-black text-cyan-700 dark:text-cyan-300">{{ (int) ($inventorySummary['movement_count'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Rotación del período</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Unidades que entraron</p>
                 <p class="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ (int) ($inventorySummary['units_in'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Reposicion y carga inicial</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Unidades que salieron</p>
                 <p class="mt-2 text-3xl font-black text-rose-700 dark:text-rose-300">{{ (int) ($inventorySummary['units_out'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Ventas y ajustes negativos</p>
             </x-ui.card>
-            <x-ui.card class="metric-card">
+            <x-ui.card class="metric-card report-metric-card">
                 <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">Ajustes manuales</p>
                 <p class="mt-2 text-3xl font-black text-amber-700 dark:text-amber-300">{{ (int) ($inventorySummary['manual_adjustments'] ?? 0) }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Correcciones de inventario</p>
@@ -166,29 +306,29 @@
         </section>
 
         <section class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-            <x-ui.card title="Comportamiento diario" subtitle="Ingreso y utilidad generados por ventas de productos.">
+            <x-ui.card title="Comportamiento diario" subtitle="Ingreso y utilidad generados por ventas de productos." class="report-surface-card report-chart-card">
                 <div class="chart-shell">
                     <canvas id="salesInventoryChart"></canvas>
                 </div>
             </x-ui.card>
 
-            <x-ui.card title="Atajos del módulo" subtitle="Accesos directos para operación rápida.">
+            <x-ui.card title="Atajos del módulo" subtitle="Accesos directos para operación rápida." class="report-surface-card">
                 <div class="space-y-3">
-                    <article class="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
+                    <article class="report-action-card rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-400/40 dark:bg-cyan-500/15">
                         <p class="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-200">Panel comercial</p>
                         <p class="mt-1 text-sm text-cyan-800 dark:text-cyan-100">Vuelve al centro operativo para registrar ventas nuevas.</p>
                         <div class="mt-3">
                             <x-ui.button :href="route('sales.index', $routeParams)" variant="secondary">Abrir ventas e inventario</x-ui.button>
                         </div>
                     </article>
-                    <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
+                    <article class="report-action-card rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-400/40 dark:bg-emerald-500/15">
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">Productos</p>
                         <p class="mt-1 text-sm text-emerald-800 dark:text-emerald-100">Ajusta stock, precios y catalogo sin mezclarlo con clientes.</p>
                         <div class="mt-3">
                             <x-ui.button :href="route('products.index', $routeParams)" variant="ghost">Ir a productos</x-ui.button>
                         </div>
                     </article>
-                    <article class="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
+                    <article class="report-action-card rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-400/40 dark:bg-violet-500/15">
                         <p class="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-200">Alertas activas</p>
                         <p class="mt-2 text-2xl font-black text-violet-800 dark:text-violet-100">{{ $lowStockProducts->count() }}</p>
                         <p class="text-xs text-violet-700 dark:text-violet-200">Productos activos en stock bajo.</p>
@@ -198,8 +338,8 @@
         </section>
 
         <section class="grid gap-4 xl:grid-cols-2">
-            <x-ui.card title="Top productos" subtitle="Artículos con mejor salida y mejor ingreso del período.">
-                <div class="table-wrap table-mobile-stack">
+            <x-ui.card title="Top productos" subtitle="Artículos con mejor salida y mejor ingreso del período." class="report-surface-card">
+                <div class="report-table-shell table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[720px] text-sm">
                         <thead>
                         <tr>
@@ -227,7 +367,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="py-8 text-center ui-muted">No hay ventas de productos en este rango.</td>
+                                <td colspan="{{ $showGymColumn ? 6 : 5 }}" class="report-empty-state py-8 text-center ui-muted">No hay ventas de productos en este rango.</td>
                             </tr>
                         @endforelse
                         </tbody>
@@ -235,8 +375,8 @@
                 </div>
             </x-ui.card>
 
-            <x-ui.card title="Stock bajo" subtitle="Productos activos que necesitan reposicion.">
-                <div class="table-wrap table-mobile-stack">
+            <x-ui.card title="Stock bajo" subtitle="Productos activos que necesitan reposicion." class="report-surface-card">
+                <div class="report-table-shell table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[660px] text-sm">
                         <thead>
                         <tr>
@@ -262,7 +402,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="py-8 text-center ui-muted">No hay alertas de stock bajo.</td>
+                                <td colspan="{{ $showGymColumn ? 5 : 4 }}" class="report-empty-state py-8 text-center ui-muted">No hay alertas de stock bajo.</td>
                             </tr>
                         @endforelse
                         </tbody>
@@ -271,9 +411,9 @@
             </x-ui.card>
         </section>
 
-        <x-ui.card title="Detalle de ventas del período">
+        <x-ui.card title="Detalle de ventas del período" class="report-surface-card">
             @if ($recentSales)
-                <div class="table-wrap table-mobile-stack">
+                <div class="report-table-shell table-wrap table-mobile-stack">
                     <table class="ui-table w-full min-w-[1180px] text-sm">
                         <thead>
                         <tr>
@@ -312,7 +452,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="py-8 text-center ui-muted">No hay ventas dentro del rango seleccionado.</td>
+                                <td colspan="{{ $showGymColumn ? 10 : 9 }}" class="report-empty-state py-8 text-center ui-muted">No hay ventas dentro del rango seleccionado.</td>
                             </tr>
                         @endforelse
                         </tbody>

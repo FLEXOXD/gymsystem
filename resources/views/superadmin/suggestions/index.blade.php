@@ -4,6 +4,68 @@
 @section('page-title', 'Sugerencias de gimnasios')
 
 @section('content')
+    @php
+        $suggestionItems = method_exists($suggestions, 'getCollection') ? $suggestions->getCollection() : collect($suggestions);
+        $suggestionTotal = method_exists($suggestions, 'total') ? $suggestions->total() : $suggestionItems->count();
+        $pendingSuggestionCount = $suggestionItems->where('status', 'pending')->count();
+        $reviewedSuggestionCount = $suggestionItems->where('status', 'reviewed')->count();
+        $reactivationSuggestionCount = $suggestionItems
+            ->filter(fn ($suggestion) => mb_strtolower(trim((string) ($suggestion->subject ?? ''))) === 'solicitud de reactivacion de suscripcion')
+            ->count();
+    @endphp
+    <div class="sa-shell">
+        <section class="sa-hero">
+            <div class="sa-hero-grid">
+                <div>
+                    <span class="sa-kicker">Feedback de gimnasios</span>
+                    <h2 class="sa-title">Sugerencias y reactivaciones en una bandeja mas util para decidir rapido.</h2>
+                    <p class="sa-subtitle">
+                        Filtras por estado, gimnasio o texto y ves de inmediato que requiere respuesta, comprobante o revision interna.
+                    </p>
+                </div>
+
+                <aside class="sa-note-card">
+                    <p class="sa-note-label">Lectura rapida</p>
+                    <div class="sa-note-list">
+                        <div class="sa-note-item">
+                            <strong>Pendientes primero</strong>
+                            <span>Las solicitudes por atender quedan visibles con su estado.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>Reactivaciones detectadas</strong>
+                            <span>Las peticiones de reactivacion se distinguen rapido dentro del listado.</span>
+                        </div>
+                        <div class="sa-note-item">
+                            <strong>Comprobante cuando exista</strong>
+                            <span>Si llega evidencia, la tabla deja el acceso directo al archivo.</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="sa-stat-grid">
+            <article class="sa-stat-card is-neutral">
+                <p class="sa-stat-label">Total sugerencias</p>
+                <p class="sa-stat-value">{{ $suggestionTotal }}</p>
+                <p class="sa-stat-meta">Registros visibles bajo el filtro actual.</p>
+            </article>
+            <article class="sa-stat-card is-warning">
+                <p class="sa-stat-label">Pendientes</p>
+                <p class="sa-stat-value">{{ $pendingSuggestionCount }}</p>
+                <p class="sa-stat-meta">Casos por revisar en esta pagina.</p>
+            </article>
+            <article class="sa-stat-card is-success">
+                <p class="sa-stat-label">Revisadas</p>
+                <p class="sa-stat-value">{{ $reviewedSuggestionCount }}</p>
+                <p class="sa-stat-meta">Registros ya atendidos en la vista actual.</p>
+            </article>
+            <article class="sa-stat-card is-info">
+                <p class="sa-stat-label">Reactivaciones</p>
+                <p class="sa-stat-value">{{ $reactivationSuggestionCount }}</p>
+                <p class="sa-stat-meta">Solicitudes de reactivacion detectadas en esta pagina.</p>
+            </article>
+        </section>
     <x-ui.card title="Sugerencias de gimnasios" subtitle="Bandeja de mejoras y solicitudes de reactivacion enviadas por gimnasios.">
         <form method="GET" action="{{ route('superadmin.suggestions.index') }}" class="mb-4 flex flex-wrap items-end gap-3">
             <label class="text-sm font-semibold ui-muted">
@@ -37,7 +99,7 @@
             Total: <strong>{{ $suggestions->total() }}</strong>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="sa-table-shell overflow-x-auto">
             <table class="ui-table min-w-[1180px]">
                 <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -98,56 +160,58 @@
                                 $displayMessage = preg_replace('/Comprobante:\s*(https?:\/\/\S+|\/storage\/\S+)/u', $normalizedLine, $message, 1) ?? $message;
                             }
                             $statusClass = $isPending
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/45 dark:text-amber-200'
-                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+                                ? 'sa-status-chip is-warning'
+                                : 'sa-status-chip is-success';
                         @endphp
-                        <tr class="border-b border-slate-100 align-top text-sm odd:bg-white even:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-900 dark:even:bg-slate-950/50">
-                            <td class="px-3 py-3 whitespace-nowrap dark:text-slate-200">
+                        <tr>
+                            <td class="whitespace-nowrap dark:text-slate-200">
                                 {{ $suggestion->created_at?->format('Y-m-d H:i') ?? '-' }}
                             </td>
-                            <td class="px-3 py-3 font-semibold dark:text-slate-100">
+                            <td class="font-semibold dark:text-slate-100">
                                 {{ $suggestion->gym?->name ?? 'N/D' }}
                             </td>
-                            <td class="px-3 py-3 dark:text-slate-200">
+                            <td class="dark:text-slate-200">
                                 <p class="font-semibold">{{ $suggestion->sender?->name ?? 'Usuario eliminado' }}</p>
                                 <p class="text-xs ui-muted">{{ $suggestion->sender?->email ?? '-' }}</p>
                             </td>
-                            <td class="px-3 py-3 dark:text-slate-100">
+                            <td class="dark:text-slate-100">
                                 @if ($isReactivationRequest)
-                                    <span class="mb-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900/45 dark:text-cyan-200">Reactivacion</span>
+                                    <span class="sa-status-chip is-info mb-1">Reactivacion</span>
                                 @endif
                                 <p class="font-semibold">{{ $suggestion->subject }}</p>
                             </td>
-                            <td class="px-3 py-3 dark:text-slate-200">
+                            <td class="dark:text-slate-200">
                                 <p class="max-w-lg whitespace-pre-wrap break-words text-sm">{{ $displayMessage }}</p>
                                 @if (is_string($receiptUrl) && $receiptUrl !== '')
-                                    <a href="{{ $receiptUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-800 hover:bg-cyan-200 dark:bg-cyan-900/45 dark:text-cyan-200 dark:hover:bg-cyan-900/65">
+                                    <a href="{{ $receiptUrl }}" target="_blank" rel="noopener" class="sa-status-chip is-info mt-2">
                                         Ver comprobante
                                     </a>
                                 @endif
                             </td>
-                            <td class="px-3 py-3">
-                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide {{ $statusClass }}">
+                            <td>
+                                <span class="{{ $statusClass }}">
                                     {{ $isPending ? 'Pendiente' : 'Revisada' }}
                                 </span>
                                 @if (! $isPending && $suggestion->reviewedBy)
-                                    <p class="mt-1 text-xs ui-muted">Por {{ $suggestion->reviewedBy->name }}</p>
+                                    <p class="sa-inline-note mt-1">Por {{ $suggestion->reviewedBy->name }}</p>
                                 @endif
                             </td>
-                            <td class="px-3 py-3">
+                            <td>
                                 @if ($isPending)
-                                    <form method="POST" action="{{ route('superadmin.suggestions.reviewed', $suggestion->id) }}">
-                                        @csrf
-                                        <x-ui.button type="submit" size="sm" variant="success">Marcar revisada</x-ui.button>
-                                    </form>
+                                    <div class="sa-action-row">
+                                        <form method="POST" action="{{ route('superadmin.suggestions.reviewed', $suggestion->id) }}">
+                                            @csrf
+                                            <x-ui.button type="submit" size="sm" variant="success">Marcar revisada</x-ui.button>
+                                        </form>
+                                    </div>
                                 @else
-                                    <span class="text-xs ui-muted">Sin acciones</span>
+                                    <span class="sa-inline-note">Sin acciones</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-300">
+                            <td colspan="7" class="sa-empty-row">
                                 No hay sugerencias para los filtros seleccionados.
                             </td>
                         </tr>
@@ -160,4 +224,5 @@
             {{ $suggestions->links() }}
         </div>
     </x-ui.card>
+    </div>
 @endsection

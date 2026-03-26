@@ -131,7 +131,8 @@
 <body>
     @php
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
-        $backToClientUrl = route('clients.show', ['client' => $client->id] + ($isGlobalScope ? ['scope' => 'global'] : []));
+        $contextGym = trim((string) (request()->route('contextGym') ?? ''));
+        $backToClientUrl = route('clients.show', ['contextGym' => $contextGym, 'client' => $client->id] + ($isGlobalScope ? ['scope' => 'global'] : []));
     @endphp
     <div class="toolbar">
         <button class="btn" type="button" onclick="window.print()">Imprimir</button>

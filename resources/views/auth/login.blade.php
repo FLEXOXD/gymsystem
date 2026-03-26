@@ -389,7 +389,10 @@
             min-height: 54px;
             border: 0;
             background: transparent;
+            border-radius: inherit;
             color: var(--login-text);
+            caret-color: var(--login-text);
+            color-scheme: dark;
             padding: 0 16px 0 48px;
             outline: none;
             transition: color 0.18s ease;
@@ -397,6 +400,18 @@
 
         .input::placeholder {
             color: rgba(184, 181, 168, 0.56);
+        }
+
+        .input:-webkit-autofill,
+        .input:-webkit-autofill:hover,
+        .input:-webkit-autofill:focus,
+        .input:-webkit-autofill:active {
+            -webkit-text-fill-color: var(--login-text);
+            caret-color: var(--login-text);
+            border-radius: inherit;
+            -webkit-box-shadow: 0 0 0 1000px rgba(24, 24, 24, 0.96) inset;
+            box-shadow: 0 0 0 1000px rgba(24, 24, 24, 0.96) inset;
+            transition: background-color 9999s ease-out 0s;
         }
 
         .input:focus-visible {

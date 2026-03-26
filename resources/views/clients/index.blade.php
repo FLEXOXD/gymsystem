@@ -13,10 +13,751 @@
             position: relative;
         }
 
+        .clients-control-shell {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1px solid rgb(163 230 53 / 0.22);
+            border-radius: 1.22rem;
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.16), transparent 34%),
+                linear-gradient(150deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.95));
+            box-shadow: 0 28px 56px -40px rgb(15 23 42 / 0.5);
+            backdrop-filter: blur(14px);
+            padding: 1.05rem;
+        }
+
+        .dark .clients-control-shell {
+            border-color: rgb(163 230 53 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.14), transparent 34%),
+                linear-gradient(160deg, rgb(2 6 23 / 0.84), rgb(15 23 42 / 0.62));
+            box-shadow: 0 30px 58px -42px rgb(2 8 23 / 0.92);
+        }
+
+        .clients-control-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .clients-control-shell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(95deg, transparent, rgb(163 230 53 / 0.05), transparent);
+        }
+
+        .clients-control-grid {
+            display: grid;
+            gap: 1.05rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .clients-control-copy {
+            max-width: 48rem;
+        }
+
+        .clients-control-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+            color: rgb(77 124 15 / 0.94);
+        }
+
+        .dark .clients-control-kicker {
+            color: rgb(217 249 157 / 0.94);
+        }
+
+        .clients-control-kicker::before {
+            content: '';
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            background: rgb(132 204 22 / 0.94);
+            box-shadow: 0 0 0 6px rgb(132 204 22 / 0.12);
+        }
+
+        .clients-control-heading {
+            margin-top: 0.78rem;
+            font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            font-weight: 900;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .dark .clients-control-heading {
+            color: rgb(241 245 249 / 0.98);
+        }
+
+        .clients-control-summary {
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.58;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .dark .clients-control-summary {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .clients-control-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+        }
+
+        .clients-control-actions .ui-button {
+            min-height: 2.72rem;
+        }
+
+        .clients-control-priority-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .clients-control-priority {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.05rem;
+            border: 1px solid rgb(148 163 184 / 0.24);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+            box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.28);
+            min-height: 7rem;
+            padding: 0.9rem 0.95rem;
+        }
+
+        .dark .clients-control-priority {
+            border-color: rgb(148 163 184 / 0.18);
+            background: linear-gradient(160deg, rgb(15 23 42 / 0.74), rgb(15 23 42 / 0.54));
+            box-shadow: 0 20px 34px -28px rgb(2 8 23 / 0.9);
+        }
+
+        .clients-control-priority::before {
+            content: '';
+            position: absolute;
+            left: 0.9rem;
+            right: 0.9rem;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgb(148 163 184 / 0.22);
+        }
+
+        .clients-control-priority[data-tone='warning']::before {
+            background: linear-gradient(90deg, rgb(245 158 11 / 0.9), rgb(245 158 11 / 0.24));
+        }
+
+        .clients-control-priority[data-tone='success']::before {
+            background: linear-gradient(90deg, rgb(16 185 129 / 0.9), rgb(16 185 129 / 0.24));
+        }
+
+        .clients-control-priority[data-tone='info']::before {
+            background: linear-gradient(90deg, rgb(6 182 212 / 0.9), rgb(6 182 212 / 0.24));
+        }
+
+        .clients-control-priority-label {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .dark .clients-control-priority-label {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .clients-control-priority-value {
+            margin-top: 0.42rem;
+            font-size: 1.46rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .dark .clients-control-priority-value {
+            color: rgb(248 250 252 / 0.98);
+        }
+
+        .clients-control-priority-note {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .dark .clients-control-priority-note {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .clients-pro-shell {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1px solid rgb(34 211 238 / 0.2);
+            border-radius: 1.22rem;
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.12), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.1), transparent 28%),
+                linear-gradient(150deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.95));
+            box-shadow: 0 28px 56px -40px rgb(15 23 42 / 0.5);
+            backdrop-filter: blur(14px);
+            padding: 1.05rem;
+        }
+
+        .dark .clients-pro-shell {
+            border-color: rgb(34 211 238 / 0.22);
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.11), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.08), transparent 28%),
+                linear-gradient(155deg, rgb(4 10 28 / 0.94), rgb(11 18 32 / 0.88));
+            box-shadow: 0 30px 58px -42px rgb(2 8 23 / 0.9);
+        }
+
+        .clients-pro-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.72), transparent);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .clients-pro-shell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(95deg, transparent, rgb(34 211 238 / 0.04), transparent);
+        }
+
+        .clients-pro-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .clients-pro-copy {
+            max-width: 50rem;
+        }
+
+        .clients-pro-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+            color: rgb(8 145 178 / 0.96);
+        }
+
+        .dark .clients-pro-kicker {
+            color: rgb(165 243 252 / 0.94);
+        }
+
+        .clients-pro-kicker::before {
+            content: '';
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            background: rgb(34 211 238 / 0.96);
+            box-shadow: 0 0 0 6px rgb(34 211 238 / 0.14);
+        }
+
+        .clients-pro-heading {
+            margin-top: 0.78rem;
+            font-size: clamp(1.14rem, 1.85vw, 1.46rem);
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            font-weight: 900;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .dark .clients-pro-heading {
+            color: rgb(241 245 249 / 0.98);
+        }
+
+        .clients-pro-summary {
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.58;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .dark .clients-pro-summary {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .clients-pro-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-radius: 999px;
+            border: 1px solid rgb(34 211 238 / 0.22);
+            background: rgb(236 254 255 / 0.84);
+            padding: 0.44rem 0.78rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgb(8 145 178 / 0.96);
+        }
+
+        .dark .clients-pro-badge {
+            border-color: rgb(34 211 238 / 0.26);
+            background: rgb(8 145 178 / 0.12);
+            color: rgb(165 243 252 / 0.95);
+        }
+
+        .clients-pro-metrics {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .clients-pro-metric {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.02rem;
+            border: 1px solid rgb(148 163 184 / 0.24);
+            background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+            box-shadow: 0 18px 30px -28px rgb(15 23 42 / 0.28);
+            min-height: 6.7rem;
+            padding: 0.9rem 0.95rem;
+        }
+
+        .dark .clients-pro-metric {
+            border-color: rgb(148 163 184 / 0.16);
+            background: linear-gradient(160deg, rgb(15 23 42 / 0.74), rgb(15 23 42 / 0.54));
+            box-shadow: 0 20px 34px -28px rgb(2 8 23 / 0.9);
+        }
+
+        .clients-pro-metric::before {
+            content: '';
+            position: absolute;
+            left: 0.9rem;
+            right: 0.9rem;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgb(148 163 184 / 0.22);
+        }
+
+        .clients-pro-metric[data-tone='warning']::before {
+            background: linear-gradient(90deg, rgb(245 158 11 / 0.9), rgb(245 158 11 / 0.24));
+        }
+
+        .clients-pro-metric[data-tone='danger']::before {
+            background: linear-gradient(90deg, rgb(244 63 94 / 0.9), rgb(244 63 94 / 0.24));
+        }
+
+        .clients-pro-metric[data-tone='info']::before {
+            background: linear-gradient(90deg, rgb(34 211 238 / 0.9), rgb(34 211 238 / 0.24));
+        }
+
+        .clients-pro-metric[data-tone='accent']::before {
+            background: linear-gradient(90deg, rgb(168 85 247 / 0.9), rgb(168 85 247 / 0.24));
+        }
+
+        .clients-pro-metric-label {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .dark .clients-pro-metric-label {
+            color: rgb(148 163 184 / 0.9);
+        }
+
+        .clients-pro-metric-value {
+            margin-top: 0.42rem;
+            font-size: 1.46rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: rgb(15 23 42 / 0.97);
+        }
+
+        .dark .clients-pro-metric-value {
+            color: rgb(248 250 252 / 0.98);
+        }
+
+        .clients-pro-metric-note {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .dark .clients-pro-metric-note {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .clients-pro-insights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .clients-pro-chip {
+            min-width: min(100%, 14rem);
+            flex: 1 1 14rem;
+            border-radius: 0.95rem;
+            border: 1px solid rgb(148 163 184 / 0.2);
+            background: rgb(255 255 255 / 0.66);
+            padding: 0.78rem 0.85rem;
+            box-shadow: 0 16px 28px -30px rgb(15 23 42 / 0.32);
+        }
+
+        .dark .clients-pro-chip {
+            border-color: rgb(148 163 184 / 0.14);
+            background: rgb(15 23 42 / 0.58);
+            box-shadow: 0 20px 30px -30px rgb(2 8 23 / 0.9);
+        }
+
+        .clients-pro-chip[data-tone='warning'] {
+            border-color: rgb(245 158 11 / 0.22);
+            background: rgb(255 251 235 / 0.9);
+        }
+
+        .clients-pro-chip[data-tone='danger'] {
+            border-color: rgb(244 63 94 / 0.2);
+            background: rgb(255 241 242 / 0.9);
+        }
+
+        .clients-pro-chip[data-tone='success'] {
+            border-color: rgb(16 185 129 / 0.22);
+            background: rgb(236 253 245 / 0.9);
+        }
+
+        .clients-pro-chip[data-tone='info'] {
+            border-color: rgb(34 211 238 / 0.22);
+            background: rgb(236 254 255 / 0.9);
+        }
+
+        .dark .clients-pro-chip[data-tone='warning'] {
+            background: rgb(120 53 15 / 0.18);
+        }
+
+        .dark .clients-pro-chip[data-tone='danger'] {
+            background: rgb(127 29 29 / 0.18);
+        }
+
+        .dark .clients-pro-chip[data-tone='success'] {
+            background: rgb(6 78 59 / 0.18);
+        }
+
+        .dark .clients-pro-chip[data-tone='info'] {
+            background: rgb(8 145 178 / 0.14);
+        }
+
+        .clients-pro-chip-title {
+            font-size: 0.67rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgb(30 41 59 / 0.92);
+        }
+
+        .dark .clients-pro-chip-title {
+            color: rgb(226 232 240 / 0.96);
+        }
+
+        .clients-pro-chip-copy {
+            margin-top: 0.35rem;
+            font-size: 0.76rem;
+            line-height: 1.45;
+            color: rgb(71 85 105 / 0.9);
+        }
+
+        .dark .clients-pro-chip-copy {
+            color: rgb(148 163 184 / 0.88);
+        }
+
+        .clients-pro-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+        }
+
+        .clients-pro-actions .ui-button {
+            min-height: 2.72rem;
+        }
+
+        .clients-elite-shell.clients-pro-shell {
+            border-color: rgb(234 179 8 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.18), transparent 36%),
+                radial-gradient(circle at bottom left, rgb(16 185 129 / 0.1), transparent 30%),
+                linear-gradient(148deg, rgb(255 255 255 / 0.99), rgb(248 250 252 / 0.97));
+            box-shadow:
+                0 34px 68px -44px rgb(120 53 15 / 0.24),
+                inset 0 1px 0 rgb(255 255 255 / 0.9);
+            padding: 1.2rem;
+        }
+
+        .dark .clients-elite-shell.clients-pro-shell {
+            border-color: rgb(234 179 8 / 0.28);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.16), transparent 36%),
+                radial-gradient(circle at bottom left, rgb(16 185 129 / 0.11), transparent 30%),
+                linear-gradient(155deg, rgb(10 12 24 / 0.96), rgb(17 24 39 / 0.92));
+            box-shadow:
+                0 36px 72px -46px rgb(2 8 23 / 0.92),
+                inset 0 1px 0 rgb(255 255 255 / 0.05);
+        }
+
+        .clients-elite-shell.clients-pro-shell::after {
+            background: linear-gradient(100deg, transparent 8%, rgb(234 179 8 / 0.08), transparent 74%);
+        }
+
+        .clients-elite-shell .clients-pro-grid {
+            gap: 0.82rem;
+        }
+
+        .clients-elite-shell .clients-elite-head {
+            align-items: end;
+            gap: 1rem;
+        }
+
+        .clients-elite-shell .clients-pro-copy {
+            max-width: 48rem;
+        }
+
+        .clients-elite-shell .clients-pro-kicker {
+            color: rgb(161 98 7 / 0.96);
+            letter-spacing: 0.15em;
+        }
+
+        .dark .clients-elite-shell .clients-pro-kicker {
+            color: rgb(253 224 71 / 0.94);
+        }
+
+        .clients-elite-shell .clients-pro-kicker::before {
+            background: rgb(234 179 8 / 0.96);
+            box-shadow: 0 0 0 6px rgb(234 179 8 / 0.14);
+        }
+
+        .clients-elite-shell .clients-pro-badge {
+            border-color: rgb(234 179 8 / 0.24);
+            background: rgb(254 249 195 / 0.84);
+            color: rgb(161 98 7 / 0.96);
+            padding: 0.48rem 0.92rem;
+            box-shadow: 0 14px 30px -24px rgb(161 98 7 / 0.28);
+        }
+
+        .dark .clients-elite-shell .clients-pro-badge {
+            border-color: rgb(234 179 8 / 0.26);
+            background: rgb(161 98 7 / 0.12);
+            color: rgb(253 224 71 / 0.95);
+            box-shadow: 0 14px 32px -24px rgb(234 179 8 / 0.2);
+        }
+
+        .clients-elite-shell .clients-pro-heading {
+            margin-top: 0.42rem;
+            max-width: 24ch;
+            font-size: clamp(1.08rem, 1.55vw, 1.36rem);
+            line-height: 1.04;
+        }
+
+        .clients-elite-shell .clients-pro-summary {
+            max-width: 36rem;
+            margin-top: 0.38rem;
+            font-size: 0.82rem;
+            line-height: 1.42;
+            color: rgb(71 85 105 / 0.96);
+        }
+
+        .dark .clients-elite-shell .clients-pro-summary {
+            color: rgb(203 213 225 / 0.82);
+        }
+
+        .clients-elite-shell .clients-pro-metrics {
+            gap: 0.68rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .clients-elite-shell .clients-pro-metric {
+            min-height: auto;
+            padding: 0.82rem 0.92rem;
+            border-color: rgb(234 179 8 / 0.16);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(248 250 252 / 0.82));
+            box-shadow:
+                0 20px 34px -28px rgb(120 53 15 / 0.14),
+                inset 0 1px 0 rgb(255 255 255 / 0.86);
+        }
+
+        .dark .clients-elite-shell .clients-pro-metric {
+            border-color: rgb(234 179 8 / 0.14);
+            background:
+                linear-gradient(165deg, rgb(15 23 42 / 0.82), rgb(15 23 42 / 0.62));
+            box-shadow:
+                0 22px 38px -30px rgb(2 8 23 / 0.9),
+                inset 0 1px 0 rgb(255 255 255 / 0.04);
+        }
+
+        .clients-elite-shell .clients-pro-metric:first-child {
+            border-color: rgb(234 179 8 / 0.26);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.18), transparent 44%),
+                linear-gradient(180deg, rgb(255 251 235 / 0.96), rgb(255 255 255 / 0.84));
+            grid-column: span 1;
+        }
+
+        .dark .clients-elite-shell .clients-pro-metric:first-child {
+            border-color: rgb(234 179 8 / 0.24);
+            background:
+                radial-gradient(circle at top right, rgb(234 179 8 / 0.15), transparent 44%),
+                linear-gradient(165deg, rgb(31 41 55 / 0.9), rgb(15 23 42 / 0.74));
+        }
+
+        .clients-elite-shell .clients-pro-metric-label {
+            color: rgb(120 53 15 / 0.86);
+        }
+
+        .dark .clients-elite-shell .clients-pro-metric-label {
+            color: rgb(253 224 71 / 0.8);
+        }
+
+        .clients-elite-shell .clients-pro-metric-value {
+            margin-top: 0.42rem;
+            font-size: clamp(1.32rem, 2vw, 1.72rem);
+            line-height: 1;
+        }
+
+        .clients-elite-shell .clients-pro-chip {
+            border-color: rgb(234 179 8 / 0.16);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.84), rgb(255 255 255 / 0.7));
+            box-shadow:
+                0 18px 30px -28px rgb(120 53 15 / 0.12),
+                inset 0 1px 0 rgb(255 255 255 / 0.82);
+        }
+
+        .dark .clients-elite-shell .clients-pro-chip {
+            border-color: rgb(234 179 8 / 0.12);
+            background:
+                linear-gradient(165deg, rgb(15 23 42 / 0.72), rgb(15 23 42 / 0.54));
+            box-shadow:
+                0 20px 34px -28px rgb(2 8 23 / 0.84),
+                inset 0 1px 0 rgb(255 255 255 / 0.04);
+        }
+
+        .clients-elite-shell .clients-pro-chip-title {
+            color: rgb(120 53 15 / 0.9);
+        }
+
+        .dark .clients-elite-shell .clients-pro-chip-title {
+            color: rgb(253 224 71 / 0.82);
+        }
+
+        .clients-elite-shell .clients-pro-actions {
+            gap: 0.55rem;
+            align-items: center;
+            padding-top: 0.72rem;
+            border-top: 1px solid rgb(234 179 8 / 0.18);
+        }
+
+        .dark .clients-elite-shell .clients-pro-actions {
+            border-top-color: rgb(234 179 8 / 0.12);
+        }
+
+        .clients-elite-shell .clients-pro-actions .ui-button {
+            min-height: 2.6rem;
+            border-radius: 0.98rem;
+            box-shadow: 0 16px 28px -24px rgb(15 23 42 / 0.32);
+        }
+
+        .clients-elite-shell .clients-pro-actions .ui-button:first-child {
+            border-color: rgb(234 179 8 / 0.42);
+            background: linear-gradient(135deg, rgb(250 204 21), rgb(16 185 129));
+            color: rgb(6 23 18);
+            box-shadow: 0 20px 36px -24px rgb(16 185 129 / 0.38);
+        }
+
+        .dark .clients-elite-shell .clients-pro-actions .ui-button:first-child {
+            color: rgb(4 12 16);
+        }
+
+        .clients-elite-shell .clients-pro-actions .ui-button:not(:first-child) {
+            background: rgb(255 255 255 / 0.54);
+            border-color: rgb(234 179 8 / 0.14);
+        }
+
+        .dark .clients-elite-shell .clients-pro-actions .ui-button:not(:first-child) {
+            background: rgb(15 23 42 / 0.42);
+            border-color: rgb(234 179 8 / 0.12);
+        }
+
+        .clients-elite-shell .clients-pro-insights {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .clients-elite-shell .clients-pro-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .clients-elite-shell .clients-pro-metrics {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
         @media (min-width: 1280px) {
             .clients-page-shell {
                 padding-left: 0.35rem;
                 padding-right: 0.5rem;
+            }
+
+            .clients-control-grid {
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: start;
+            }
+
+            .clients-pro-metrics {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 768px) {
+            .clients-control-priority-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .clients-pro-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .clients-control-actions .ui-button {
+                width: 100%;
+            }
+
+            .clients-pro-actions .ui-button {
+                width: 100%;
             }
         }
 
@@ -99,9 +840,23 @@
         }
 
         .clients-main-card {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
             border: 1px solid rgb(148 163 184 / 0.28);
             background: linear-gradient(155deg, rgb(255 255 255 / 0.95), rgb(248 250 252 / 0.94));
             box-shadow: 0 24px 46px -38px rgb(15 23 42 / 0.48);
+        }
+
+        .clients-main-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at top right, rgb(14 165 233 / 0.08), transparent 28%),
+                radial-gradient(circle at bottom left, rgb(16 185 129 / 0.06), transparent 24%);
+            opacity: 0.9;
         }
 
         .dark .clients-main-card {
@@ -121,12 +876,85 @@
             font-size: 0.9rem;
         }
 
+        .clients-main-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .clients-toolbar-shell {
+            padding: 1rem;
+            border: 1px solid rgb(148 163 184 / 0.22);
+            border-radius: 1.05rem;
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 250 252 / 0.74));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.82),
+                0 18px 32px -32px rgb(15 23 42 / 0.26);
+        }
+
+        .clients-search-form {
+            align-items: stretch;
+        }
+
+        .clients-search-input {
+            min-height: 2.85rem;
+            border-radius: 0.92rem;
+        }
+
+        .clients-toolbar-button,
+        .clients-create-button {
+            min-height: 2.85rem;
+            border-radius: 0.92rem;
+        }
+
+        .clients-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2.35rem;
+            padding: 0.62rem 0.92rem;
+            border-radius: 999px;
+            border: 1px solid rgb(148 163 184 / 0.24);
+            background: rgb(255 255 255 / 0.78);
+            color: rgb(51 65 85 / 0.9);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+        }
+
+        .clients-filter-chip:hover {
+            border-color: rgb(56 189 248 / 0.38);
+            background: rgb(240 249 255 / 0.92);
+            color: rgb(12 74 110 / 0.96);
+            transform: translateY(-1px);
+        }
+
+        .clients-filter-chip.is-active {
+            border-color: rgb(14 165 233 / 0.34);
+            background:
+                linear-gradient(135deg, rgb(14 165 233 / 0.2), rgb(16 185 129 / 0.18));
+            color: rgb(15 23 42 / 0.96);
+            box-shadow: 0 16px 28px -24px rgb(14 165 233 / 0.62);
+        }
+
         .clients-table-wrap {
-            border-color: rgb(148 163 184 / 0.34);
+            border-color: rgb(148 163 184 / 0.3);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.94));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.82),
+                0 24px 40px -34px rgb(15 23 42 / 0.16);
         }
 
         .dark .clients-table-wrap {
-            border-color: rgb(148 163 184 / 0.18);
+            border-color: rgb(148 163 184 / 0.16);
+            background:
+                linear-gradient(180deg, rgb(15 23 42 / 0.94), rgb(15 23 42 / 0.9));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.03),
+                0 28px 42px -38px rgb(2 8 23 / 0.62);
         }
 
         .clients-table-scroll {
@@ -136,51 +964,236 @@
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
+            scrollbar-gutter: stable both-edges;
         }
 
         .clients-table-scroll .ui-table {
             min-width: 1200px;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
         .clients-table-wrap .ui-table thead tr {
-            background: rgb(248 250 252 / 0.95);
-            border-bottom-color: rgb(226 232 240 / 0.9);
+            background: transparent;
+            border-bottom-color: transparent;
         }
 
         .dark .clients-table-wrap .ui-table thead tr {
-            background: rgb(30 41 59 / 0.9);
-            border-bottom-color: rgb(51 65 85 / 0.9);
+            background: transparent;
+            border-bottom-color: transparent;
         }
 
         .clients-table-wrap .ui-table th {
-            font-size: 0.69rem;
-            letter-spacing: 0.11em;
-            color: rgb(100 116 139 / 0.95);
-            padding-top: 0.95rem;
-            padding-bottom: 0.95rem;
+            position: sticky;
+            top: 0;
+            z-index: 6;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+            color: rgb(71 85 105 / 0.94);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgb(226 232 240 / 0.78);
+            background:
+                linear-gradient(180deg, rgb(248 250 252 / 0.98), rgb(241 245 249 / 0.95));
+            backdrop-filter: blur(10px);
         }
 
         .dark .clients-table-wrap .ui-table th {
             color: rgb(148 163 184 / 0.96);
+            border-bottom-color: rgb(51 65 85 / 0.78);
+            background:
+                linear-gradient(180deg, rgb(15 23 42 / 0.96), rgb(15 23 42 / 0.92));
         }
 
         .clients-table-wrap .ui-table td {
-            padding-top: 0.95rem;
-            padding-bottom: 0.95rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgb(226 232 240 / 0.72);
+            vertical-align: middle;
+        }
+
+        .dark .clients-table-wrap .ui-table td {
+            border-bottom-color: rgb(51 65 85 / 0.54);
         }
 
         .clients-table-wrap .ui-table tbody tr {
-            transition: background-color 140ms ease, box-shadow 140ms ease;
+            transition: background-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
         }
 
-        .clients-table-wrap .ui-table tbody tr:hover {
-            box-shadow: inset 0 0 0 1px rgb(56 189 248 / 0.28);
+        .clients-table-wrap .ui-table tbody tr:hover td {
+            background: rgb(14 165 233 / 0.06);
+            border-bottom-color: rgb(56 189 248 / 0.26);
+        }
+
+        .dark .clients-table-wrap .ui-table tbody tr:hover td {
+            background: rgb(30 41 59 / 0.9);
+            border-bottom-color: rgb(56 189 248 / 0.24);
+        }
+
+        .clients-table-wrap .ui-table tbody tr:hover td:first-child {
+            border-top-left-radius: 0.88rem;
+            border-bottom-left-radius: 0.88rem;
+        }
+
+        .clients-table-wrap .ui-table tbody tr:hover td:last-child {
+            border-top-right-radius: 0.88rem;
+            border-bottom-right-radius: 0.88rem;
+        }
+
+        .theme-light .clients-control-shell {
+            border-color: rgb(163 230 53 / 0.18);
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.1), transparent 34%),
+                linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(241 245 249 / 0.96));
+            box-shadow: 0 28px 48px -40px rgb(15 23 42 / 0.12);
+        }
+
+        .theme-light .clients-pro-shell {
+            border-color: rgb(34 211 238 / 0.16);
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.08), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.06), transparent 28%),
+                linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(241 245 249 / 0.96));
+            box-shadow: 0 28px 48px -40px rgb(15 23 42 / 0.12);
+        }
+
+        .theme-light .clients-control-priority,
+        .theme-light .clients-pro-metric,
+        .theme-light .clients-pro-chip,
+        .theme-light .clients-kpi-card,
+        .theme-light .clients-main-card {
+            border-color: rgb(203 213 225 / 0.82);
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.84),
+                0 18px 30px -30px rgb(15 23 42 / 0.11);
+        }
+
+        .theme-light .clients-main-card > header .ui-muted,
+        .theme-light .clients-kpi-note,
+        .theme-light .clients-client-meta {
+            color: rgb(71 85 105 / 0.92);
+        }
+
+        .theme-light .clients-toolbar-shell,
+        .theme-light .clients-table-footer {
+            border-color: rgb(203 213 225 / 0.82);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.94));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.9),
+                0 18px 30px -32px rgb(15 23 42 / 0.1);
+        }
+
+        .theme-light .clients-filter-chip {
+            border-color: rgb(203 213 225 / 0.86);
+            background: rgb(255 255 255 / 0.94);
+            color: rgb(51 65 85 / 0.92);
+        }
+
+        .theme-light .clients-filter-chip.is-active {
+            border-color: rgb(56 189 248 / 0.4);
+            color: rgb(8 47 73 / 0.96);
+        }
+
+        .theme-light .clients-client-doc {
+            color: rgb(51 65 85 / 0.94);
+        }
+
+        .theme-light .clients-client-avatar {
+            border-color: rgb(255 255 255 / 0.9);
+            box-shadow:
+                0 14px 26px -22px rgb(14 165 233 / 0.22),
+                0 0 0 1px rgb(203 213 225 / 0.55);
+        }
+
+        .theme-light .clients-table-wrap {
+            border-color: rgb(203 213 225 / 0.82);
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.95));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.9),
+                0 24px 38px -36px rgb(15 23 42 / 0.11);
+        }
+
+        .theme-dark .clients-control-shell,
+        .dark .clients-control-shell {
+            border-color: rgb(163 230 53 / 0.18);
+            background:
+                radial-gradient(circle at top right, rgb(163 230 53 / 0.08), transparent 34%),
+                linear-gradient(160deg, rgb(9 16 32 / 0.96), rgb(15 23 42 / 0.88));
+        }
+
+        .theme-dark .clients-pro-shell,
+        .dark .clients-pro-shell {
+            border-color: rgb(34 211 238 / 0.18);
+            background:
+                radial-gradient(circle at top right, rgb(34 211 238 / 0.08), transparent 34%),
+                radial-gradient(circle at bottom left, rgb(245 158 11 / 0.05), transparent 28%),
+                linear-gradient(155deg, rgb(6 12 28 / 0.96), rgb(15 23 42 / 0.9));
+        }
+
+        .theme-dark .clients-main-card,
+        .dark .clients-main-card,
+        .theme-dark .clients-kpi-card,
+        .dark .clients-kpi-card,
+        .theme-dark .clients-table-wrap,
+        .dark .clients-table-wrap {
+            border-color: rgb(51 65 85 / 0.74);
+        }
+
+        .theme-dark .clients-toolbar-shell,
+        .dark .clients-toolbar-shell,
+        .theme-dark .clients-table-footer,
+        .dark .clients-table-footer {
+            border-color: rgb(51 65 85 / 0.74);
+            background:
+                linear-gradient(180deg, rgb(15 23 42 / 0.9), rgb(17 24 39 / 0.86));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.04),
+                0 18px 30px -32px rgb(2 8 23 / 0.72);
+        }
+
+        .theme-dark .clients-filter-chip,
+        .dark .clients-filter-chip {
+            border-color: rgb(51 65 85 / 0.78);
+            background: rgb(15 23 42 / 0.88);
+            color: rgb(226 232 240 / 0.9);
+        }
+
+        .theme-dark .clients-filter-chip:hover,
+        .dark .clients-filter-chip:hover {
+            border-color: rgb(56 189 248 / 0.36);
+            background: rgb(12 74 110 / 0.24);
+            color: rgb(186 230 253 / 0.95);
+        }
+
+        .theme-dark .clients-filter-chip.is-active,
+        .dark .clients-filter-chip.is-active {
+            border-color: rgb(56 189 248 / 0.32);
+            background: linear-gradient(135deg, rgb(8 47 73 / 0.88), rgb(6 95 70 / 0.74));
+            color: rgb(240 249 255 / 0.98);
+        }
+
+        .theme-dark .clients-client-avatar,
+        .dark .clients-client-avatar {
+            border-color: rgb(51 65 85 / 0.92);
+            box-shadow: 0 16px 28px -24px rgb(2 8 23 / 0.76);
         }
 
         .clients-client-doc {
             font-size: 0.76rem;
             font-weight: 700;
             color: rgb(71 85 105 / 0.95);
+        }
+
+        .clients-client-avatar {
+            width: 2.8rem;
+            height: 2.8rem;
+            border-radius: 1rem;
+            border: 1px solid rgb(255 255 255 / 0.58);
+            box-shadow: 0 14px 26px -22px rgb(15 23 42 / 0.42);
+            flex: 0 0 auto;
         }
 
         .dark .clients-client-doc {
@@ -190,6 +1203,25 @@
         .clients-client-meta {
             font-size: 0.7rem;
             color: rgb(100 116 139 / 0.93);
+        }
+
+        .clients-table-footer {
+            margin-top: 1rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgb(148 163 184 / 0.22);
+            border-radius: 1rem;
+            background:
+                linear-gradient(180deg, rgb(255 255 255 / 0.78), rgb(248 250 252 / 0.74));
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.82),
+                0 16px 30px -32px rgb(15 23 42 / 0.24);
+        }
+
+        .clients-empty-state {
+            padding-top: 2.3rem;
+            padding-bottom: 2.3rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .dark .clients-client-meta {
@@ -344,6 +1376,16 @@
         $canManagePromotions = (bool) ($canManagePromotions ?? false);
         $canManageClientAccounts = (bool) ($canManageClientAccounts ?? false);
         $isGlobalScope = (bool) request()->attributes->get('active_gym_is_global', false);
+        $isOwner = (bool) (auth()->user()?->isOwner() ?? false);
+        $contextGym = (string) request()->route('contextGym');
+        $activeGymId = (int) (request()->attributes->get('active_gym_id') ?? auth()->user()?->gym_id ?? 0);
+        $planAccessService = app(\App\Services\PlanAccessService::class);
+        $canUseSalesInventory = $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
+        $canViewReports = $isOwner && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'reports_base');
+        $clientsRouteParams = ['contextGym' => $contextGym] + ($isGlobalScope ? ['scope' => 'global'] : []);
+        $planControlClientsDashboard = is_array($planControlClientsDashboard ?? null) ? $planControlClientsDashboard : null;
+        $professionalClientsDashboard = is_array($professionalClientsDashboard ?? null) ? $professionalClientsDashboard : null;
+        $premiumClientsDashboard = is_array($premiumClientsDashboard ?? null) ? $premiumClientsDashboard : null;
         $filters = [
             'all' => 'Todos',
             'active' => 'Activos',
@@ -473,6 +1515,187 @@
          x-init="init()"
          class="clients-page-shell space-y-4">
 
+        @if ($planControlClientsDashboard)
+            @php
+                $controlClientPriorities = collect($planControlClientsDashboard['priorities'] ?? [])->values();
+                $controlPrimaryAction = (array) ($planControlClientsDashboard['primary_action'] ?? []);
+                $controlPrimaryFilter = (string) ($controlPrimaryAction['filter'] ?? 'active');
+            @endphp
+            <section class="clients-control-shell">
+                <div class="clients-control-grid">
+                    <div class="clients-control-copy">
+                        <span class="clients-control-kicker">Plan Control / Clientes</span>
+                        <h2 class="clients-control-heading">{{ $planControlClientsDashboard['headline'] ?? 'Clientes listos para operar y cobrar' }}</h2>
+                        <p class="clients-control-summary">{{ $planControlClientsDashboard['summary'] ?? 'Usa esta vista para buscar, cobrar y controlar vencimientos con una sola sede.' }}</p>
+                    </div>
+
+                    <div class="clients-control-actions">
+                        <x-ui.button :href="route('clients.index', array_merge($clientsRouteParams, ['filter' => $controlPrimaryFilter]))" variant="primary">
+                            {{ $controlPrimaryAction['label'] ?? 'Ver activos' }}
+                        </x-ui.button>
+                        @if (! $isGlobalScope)
+                            <x-ui.button type="button" variant="secondary" x-on:click="openCreateClient()">Nuevo cliente</x-ui.button>
+                        @endif
+                        <x-ui.button :href="route('cash.index', $clientsRouteParams)" variant="ghost">Ir a caja</x-ui.button>
+                        @if ($canViewReports)
+                            <x-ui.button :href="route('reports.index', $clientsRouteParams)" variant="ghost">Reportes</x-ui.button>
+                        @endif
+                    </div>
+                </div>
+
+                @if ($controlClientPriorities->isNotEmpty())
+                    <div class="clients-control-priority-grid mt-4">
+                        @foreach ($controlClientPriorities as $priority)
+                            <article class="clients-control-priority" data-tone="{{ $priority['tone'] ?? 'neutral' }}">
+                                <p class="clients-control-priority-label">{{ $priority['label'] ?? 'Lectura' }}</p>
+                                <p class="clients-control-priority-value">{{ $priority['value'] ?? '0' }}</p>
+                                <p class="clients-control-priority-note">{{ $priority['note'] ?? '' }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+        @endif
+
+        @if ($professionalClientsDashboard)
+            @php
+                $professionalClientAlerts = collect($professionalClientsDashboard['alerts'] ?? [])->values();
+                $professionalClientMetrics = [
+                    [
+                        'label' => 'Renovaciones por mover',
+                        'value' => (string) ((int) ($professionalClientsDashboard['renewal_opportunities'] ?? 0)),
+                        'note' => 'Por vencer y vencidos listos para cobrar.',
+                        'tone' => 'warning',
+                    ],
+                    [
+                        'label' => 'Clientes vencidos',
+                        'value' => (string) ((int) ($professionalClientsDashboard['expired_count'] ?? 0)),
+                        'note' => 'Base fria que aun puedes recuperar.',
+                        'tone' => 'danger',
+                    ],
+                    [
+                        'label' => 'Promos activas',
+                        'value' => (string) ((int) ($professionalClientsDashboard['active_promotions_count'] ?? 0)),
+                        'note' => 'Campanas listas para empujar renovaciones.',
+                        'tone' => 'accent',
+                    ],
+                    [
+                        'label' => 'Clientes con promo',
+                        'value' => (string) ((int) ($professionalClientsDashboard['clients_with_promotion_count'] ?? 0)),
+                        'note' => 'Check-ins hoy '.(int) ($professionalClientsDashboard['attended_today_count'] ?? 0),
+                        'tone' => 'info',
+                    ],
+                ];
+            @endphp
+            <section class="clients-pro-shell">
+                <div class="clients-pro-grid">
+                    <div class="clients-elite-head flex flex-wrap items-start justify-between gap-3">
+                        <div class="clients-pro-copy">
+                            <span class="clients-pro-kicker">Plan Profesional / Clientes</span>
+                            <h2 class="clients-pro-heading">{{ $professionalClientsDashboard['headline'] ?? 'Base comercial de clientes' }}</h2>
+                            <p class="clients-pro-summary">{{ $professionalClientsDashboard['summary'] ?? 'Renueva, recupera y empuja promos desde una lectura comercial mucho mas ligera.' }}</p>
+                        </div>
+                        <span class="clients-pro-badge">Profesional</span>
+                    </div>
+
+                    <div class="clients-pro-metrics">
+                        @foreach ($professionalClientMetrics as $metric)
+                            <article class="clients-pro-metric" data-tone="{{ $metric['tone'] }}">
+                                <p class="clients-pro-metric-label">{{ $metric['label'] }}</p>
+                                <p class="clients-pro-metric-value">{{ $metric['value'] }}</p>
+                                <p class="clients-pro-metric-note">{{ $metric['note'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    @if ($professionalClientAlerts->isNotEmpty())
+                        <div class="clients-pro-insights">
+                            @foreach ($professionalClientAlerts as $alert)
+                                <article class="clients-pro-chip" data-tone="{{ $alert['tone'] ?? 'info' }}">
+                                    <p class="clients-pro-chip-title">{{ $alert['title'] ?? 'Alerta' }}</p>
+                                    <p class="clients-pro-chip-copy">{{ $alert['description'] ?? '' }}</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="clients-pro-actions">
+                        <x-ui.button :href="route('clients.index', array_merge($clientsRouteParams, ['filter' => 'expiring']))" variant="primary">Ver por vencer</x-ui.button>
+                        <x-ui.button :href="route('clients.index', array_merge($clientsRouteParams, ['filter' => 'expired']))" variant="secondary">Ver vencidos</x-ui.button>
+                        @if ($canManagePromotions && $isOwner)
+                            <x-ui.button :href="route('plans.index', $clientsRouteParams)" variant="ghost">Planes y promos</x-ui.button>
+                        @elseif ($canViewReports)
+                            <x-ui.button :href="route('reports.index', $clientsRouteParams)" variant="ghost">Ver reportes</x-ui.button>
+                        @else
+                            <x-ui.button :href="route('cash.index', $clientsRouteParams)" variant="ghost">Ir a caja</x-ui.button>
+                        @endif
+                        @if ($canUseSalesInventory)
+                            <x-ui.button :href="route('sales.index', $clientsRouteParams)" variant="ghost">Ventas e inventario</x-ui.button>
+                        @elseif ($canManagePromotions && $isOwner && $canViewReports)
+                            <x-ui.button :href="route('reports.index', $clientsRouteParams)" variant="ghost">Ver reportes</x-ui.button>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        @endif
+
+        @if ($premiumClientsDashboard)
+            @php
+                $premiumClientMetrics = [
+                    [
+                        'label' => 'Con app',
+                        'value' => (string) ((int) ($premiumClientsDashboard['clients_with_app_access_count'] ?? 0)),
+                        'note' => (string) ((int) ($premiumClientsDashboard['active_clients_with_app_access_count'] ?? 0)).' activos listos.',
+                        'tone' => 'success',
+                    ],
+                    [
+                        'label' => 'Pendientes',
+                        'value' => (string) ((int) ($premiumClientsDashboard['active_clients_without_app_access_count'] ?? 0)),
+                        'note' => 'Activos sin acceso app.',
+                        'tone' => 'warning',
+                    ],
+                    [
+                        'label' => 'Renovaciones',
+                        'value' => (string) ((int) ($premiumClientsDashboard['renewal_pipeline'] ?? 0)),
+                        'note' => 'Por vencer y vencidos.',
+                        'tone' => 'accent',
+                    ],
+                ];
+            @endphp
+            <section class="clients-pro-shell clients-elite-shell">
+                <div class="clients-pro-grid">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="clients-pro-copy">
+                            <span class="clients-pro-kicker">Plan Elite / Clientes</span>
+                            <h2 class="clients-pro-heading">Clientes premium sin ruido</h2>
+                            <p class="clients-pro-summary">Acceso app y renovaciones en un resumen corto.</p>
+                        </div>
+                        <span class="clients-pro-badge">Premium</span>
+                    </div>
+
+                    <div class="clients-pro-metrics">
+                        @foreach ($premiumClientMetrics as $metric)
+                            <article class="clients-pro-metric" data-tone="{{ $metric['tone'] }}">
+                                <p class="clients-pro-metric-label">{{ $metric['label'] }}</p>
+                                <p class="clients-pro-metric-value">{{ $metric['value'] }}</p>
+                                <p class="clients-pro-metric-note">{{ $metric['note'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <div class="clients-pro-actions">
+                        @if ($canManageClientAccounts && \Illuminate\Support\Facades\Route::has('client-portal.index'))
+                            <x-ui.button :href="route('client-portal.index', $clientsRouteParams)" variant="primary">Portal cliente</x-ui.button>
+                        @endif
+                        @if (! $isGlobalScope)
+                            <x-ui.button type="button" variant="secondary" x-on:click="openCreateClient()">Nuevo cliente</x-ui.button>
+                        @endif
+                        <x-ui.button :href="route('clients.index', array_merge($clientsRouteParams, ['filter' => 'expiring']))" variant="ghost">Ver por vencer</x-ui.button>
+                    </div>
+                </div>
+            </section>
+        @endif
+
         <section class="clients-kpi-grid grid sm:grid-cols-2 xl:grid-cols-4">
             <article class="clients-kpi-card" data-tone="neutral">
                 <p class="clients-kpi-label">Total clientes</p>
@@ -502,26 +1725,26 @@
             </div>
         @endif
 
-        <x-ui.card title="Clientes del gimnasio" subtitle="Vista operacional para recepción, renovaciones y retención." class="clients-main-card">
-            <div class="space-y-4">
+        <x-ui.card title="Clientes del gimnasio" subtitle="{{ $planControlClientsDashboard ? 'Base ordenada para recepcion, renovaciones y seguimiento diario.' : 'Vista operacional para recepcion, renovaciones y retencion.' }}" class="clients-main-card">
+            <div class="clients-toolbar-shell space-y-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <form method="GET" action="{{ route('clients.index') }}" class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
+                    <form method="GET" action="{{ route('clients.index', $clientsRouteParams) }}" class="clients-search-form grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:w-full lg:max-w-3xl">
                         <input type="hidden" name="filter" value="{{ $quickFilter }}">
                         <input id="clients-search"
                                type="text"
                                name="q"
                                value="{{ $search }}"
                                placeholder="Buscar por nombre, apellido o documento..."
-                               class="ui-input">
-                        <x-ui.button type="submit" variant="secondary">Buscar</x-ui.button>
-                        <x-ui.button :href="route('clients.index')" variant="ghost">Limpiar</x-ui.button>
+                               class="clients-search-input ui-input">
+                        <x-ui.button type="submit" variant="secondary" class="clients-toolbar-button">Buscar</x-ui.button>
+                        <x-ui.button :href="route('clients.index', $clientsRouteParams)" variant="ghost" class="clients-toolbar-button">Limpiar</x-ui.button>
                     </form>
 
                     <x-ui.button id="clients-open-create"
                                  type="button"
                                  :variant="$isGlobalScope ? 'ghost' : 'primary'"
                                  x-on:click="openCreateClient()"
-                                 class="whitespace-nowrap"
+                                 class="clients-create-button whitespace-nowrap"
                                  :disabled="$isGlobalScope"
                                  title="{{ $isGlobalScope ? 'Selecciona una sede para crear clientes' : 'Crear cliente' }}">
                         {{ $isGlobalScope ? 'Solo lectura global' : '+ Nuevo cliente' }}
@@ -533,11 +1756,8 @@
                         @php
                             $isActiveFilter = $quickFilter === $filterKey;
                             $chipQuery = array_merge($baseFilterQuery, ['filter' => $filterKey]);
-                            $chipClass = $isActiveFilter
-                                ? 'ui-button ui-button-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wide'
-                                : 'ui-button ui-button-ghost px-3 py-1.5 text-xs font-bold uppercase tracking-wide';
                         @endphp
-                        <a href="{{ route('clients.index', $chipQuery) }}" class="{{ $chipClass }}">{{ $filterLabel }}</a>
+                        <a href="{{ route('clients.index', $chipQuery) }}" class="clients-filter-chip {{ $isActiveFilter ? 'is-active' : '' }}">{{ $filterLabel }}</a>
                     @endforeach
                 </div>
             </div>
@@ -575,7 +1795,7 @@
                                     'danger-strong' => 'bg-rose-600/80 text-rose-50 border border-rose-300/60',
                                     default => 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-500/20 dark:text-slate-200 dark:border-slate-400/30',
                                 };
-                                $showUrl = (string) ($client['show_url'] ?? route('clients.show', ['client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])));
+                                $showUrl = (string) ($client['show_url'] ?? route('clients.show', ['contextGym' => $contextGym, 'client' => $client['id']] + ($isGlobalScope ? ['scope' => 'global'] : [])));
                                 $progressUrl = (string) ($client['progress_url'] ?? $showUrl);
                                 $canShowProgress = ! empty($client['can_show_progress']);
                                 $canManage = ! empty($client['can_manage']);
@@ -588,9 +1808,9 @@
                                         @if ($client['photo_url'])
                                             <img src="{{ $client['photo_url'] }}"
                                                  alt="{{ $client['full_name'] }}"
-                                                 class="h-10 w-10 rounded-full border border-white/20 object-cover">
+                                                 class="clients-client-avatar object-cover">
                                         @else
-                                            <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-slate-700 text-xs font-black uppercase tracking-wider text-white">
+                                            <div class="clients-client-avatar flex items-center justify-center bg-slate-700 text-xs font-black uppercase tracking-wider text-white">
                                                 {{ $client['initials'] }}
                                             </div>
                                         @endif
@@ -725,7 +1945,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isGlobalScope ? 10 : 9 }}" class="px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
+                                <td colspan="{{ $isGlobalScope ? 10 : 9 }}" class="clients-empty-state px-3 py-8 text-center text-sm text-slate-600 dark:text-slate-300">
                                     No hay clientes para los filtros actuales.
                                 </td>
                             </tr>
@@ -735,7 +1955,7 @@
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="clients-table-footer mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <p class="text-sm ui-muted">
                     Mostrando {{ $clients->firstItem() ?? 0 }} - {{ $clients->lastItem() ?? 0 }} de {{ $clients->total() }} clientes
                 </p>
@@ -762,6 +1982,7 @@
                       class="flex h-full min-h-0 flex-1 flex-col space-y-0"
                       x-on:submit="submitCreateClient($event)">
                     @csrf
+                    <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
                     <input type="hidden" name="_open_create_modal" value="1">
 
                     <header class="flex items-start justify-between border-b border-slate-800 px-5 py-4">
@@ -1072,7 +2293,7 @@
                                     <p class="text-xs font-black uppercase tracking-wide">Debe abrir caja para cobrar</p>
                                     <p class="mt-1 text-sm font-semibold">{{ $message }}</p>
                                     <div class="mt-2">
-                                        <x-ui.button :href="route('cash.index')" variant="secondary" size="sm">Ir a caja</x-ui.button>
+                                        <x-ui.button :href="route('cash.index', $clientsRouteParams)" variant="secondary" size="sm">Ir a caja</x-ui.button>
                                     </div>
                                 </div>
                             @enderror
