@@ -189,7 +189,8 @@
                 user-select: none;
                 -webkit-user-select: none;
                 -webkit-touch-callout: none;
-                touch-action: manipulation;
+                touch-action: none;
+                overscroll-behavior: none;
                 transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, opacity 160ms ease;
             }
 
@@ -893,21 +894,102 @@
                         return;
                     }
 
+                    const supportsPointerEvents = 'PointerEvent' in window;
                     const state = {
                         active: false,
                         suppressClick: false,
                         pointerId: null,
+                        touchId: null,
                         startPointerX: 0,
                         startPointerY: 0,
                         startFabX: 0,
                         startFabY: 0,
                         holdTimer: null,
+                        mouseMoveHandler: null,
+                        mouseUpHandler: null,
                     };
 
                     function clearHoldTimer() {
                         if (state.holdTimer) {
                             window.clearTimeout(state.holdTimer);
                             state.holdTimer = null;
+                        }
+                    }
+
+                    function beginInteraction(clientX, clientY, inputType, pointerId, touchId) {
+                        const rect = element.getBoundingClientRect();
+                        state.pointerId = pointerId ?? null;
+                        state.touchId = touchId ?? null;
+                        state.startPointerX = clientX;
+                        state.startPointerY = clientY;
+                        state.startFabX = rect.left;
+                        state.startFabY = rect.top;
+                        state.suppressClick = false;
+
+                        clearHoldTimer();
+                        state.holdTimer = window.setTimeout(function () {
+                            state.active = true;
+                            state.suppressClick = true;
+                            element.classList.add('is-dragging');
+
+                            if (pointerId !== null && supportsPointerEvents) {
+                                try {
+                                    element.setPointerCapture(pointerId);
+                                } catch (error) {
+                                }
+                            }
+                        }, inputType === 'touch' ? 280 : 180);
+                    }
+
+                    function handleInteractionMove(clientX, clientY, preventDefault) {
+                        const deltaX = clientX - state.startPointerX;
+                        const deltaY = clientY - state.startPointerY;
+
+                        if (!state.active) {
+                            if (Math.abs(deltaX) > 12 || Math.abs(deltaY) > 12) {
+                                clearHoldTimer();
+                            }
+                            return;
+                        }
+
+                        preventDefault?.();
+                        setFabPosition(element, state.startFabX + deltaX, state.startFabY + deltaY, false);
+                    }
+
+                    function finishInteraction(preventDefault) {
+                        if (state.active) {
+                            preventDefault?.();
+                            const rect = element.getBoundingClientRect();
+                            setFabPosition(element, rect.left, rect.top, true);
+                        }
+
+                        releaseDrag();
+                    }
+
+                    function findTouchById(touchList, touchId) {
+                        if (!touchList || touchId === null) {
+                            return null;
+                        }
+
+                        for (let index = 0; index < touchList.length; index += 1) {
+                            const touch = touchList[index];
+                            if (touch && touch.identifier === touchId) {
+                                return touch;
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    function detachLegacyMouseListeners() {
+                        if (state.mouseMoveHandler) {
+                            document.removeEventListener('mousemove', state.mouseMoveHandler);
+                            state.mouseMoveHandler = null;
+                        }
+
+                        if (state.mouseUpHandler) {
+                            document.removeEventListener('mouseup', state.mouseUpHandler);
+                            state.mouseUpHandler = null;
                         }
                     }
 
@@ -923,66 +1005,100 @@
                         element.classList.remove('is-dragging');
                         state.active = false;
                         state.pointerId = null;
+                        state.touchId = null;
+                        detachLegacyMouseListeners();
                         window.setTimeout(function () {
                             state.suppressClick = false;
                         }, 120);
                     }
 
-                    element.addEventListener('pointerdown', function (event) {
-                        if (event.button !== 0) {
-                            return;
-                        }
-
-                        const rect = element.getBoundingClientRect();
-                        state.pointerId = event.pointerId;
-                        state.startPointerX = event.clientX;
-                        state.startPointerY = event.clientY;
-                        state.startFabX = rect.left;
-                        state.startFabY = rect.top;
-                        state.suppressClick = false;
-
-                        clearHoldTimer();
-                        state.holdTimer = window.setTimeout(function () {
-                            state.active = true;
-                            state.suppressClick = true;
-                            element.classList.add('is-dragging');
-                            try {
-                                element.setPointerCapture(event.pointerId);
-                            } catch (error) {
-                            }
-                        }, event.pointerType === 'touch' ? 260 : 180);
-                    });
-
-                    element.addEventListener('pointermove', function (event) {
-                        if (event.pointerId !== state.pointerId) {
-                            return;
-                        }
-
-                        const deltaX = event.clientX - state.startPointerX;
-                        const deltaY = event.clientY - state.startPointerY;
-
-                        if (!state.active) {
-                            if (Math.abs(deltaX) > 12 || Math.abs(deltaY) > 12) {
-                                clearHoldTimer();
-                            }
-                            return;
-                        }
-
-                        event.preventDefault();
-                        setFabPosition(element, state.startFabX + deltaX, state.startFabY + deltaY, false);
-                    });
-
-                    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (eventName) {
-                        element.addEventListener(eventName, function (event) {
-                            if (state.active) {
-                                event.preventDefault();
-                                const rect = element.getBoundingClientRect();
-                                setFabPosition(element, rect.left, rect.top, true);
+                    if (supportsPointerEvents) {
+                        element.addEventListener('pointerdown', function (event) {
+                            if (event.button !== 0) {
+                                return;
                             }
 
-                            releaseDrag();
+                            beginInteraction(event.clientX, event.clientY, event.pointerType === 'touch' ? 'touch' : 'pointer', event.pointerId, null);
                         });
-                    });
+
+                        element.addEventListener('pointermove', function (event) {
+                            if (event.pointerId !== state.pointerId) {
+                                return;
+                            }
+
+                            handleInteractionMove(event.clientX, event.clientY, function () {
+                                event.preventDefault();
+                            });
+                        });
+
+                        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (eventName) {
+                            element.addEventListener(eventName, function (event) {
+                                if (event.pointerId !== state.pointerId && state.pointerId !== null) {
+                                    return;
+                                }
+
+                                finishInteraction(function () {
+                                    event.preventDefault();
+                                });
+                            });
+                        });
+                    } else {
+                        element.addEventListener('touchstart', function (event) {
+                            const touch = event.changedTouches && event.changedTouches[0];
+                            if (!touch) {
+                                return;
+                            }
+
+                            beginInteraction(touch.clientX, touch.clientY, 'touch', null, touch.identifier);
+                        }, { passive: true });
+
+                        element.addEventListener('touchmove', function (event) {
+                            const touch = findTouchById(event.changedTouches, state.touchId) || findTouchById(event.touches, state.touchId);
+                            if (!touch) {
+                                return;
+                            }
+
+                            handleInteractionMove(touch.clientX, touch.clientY, function () {
+                                event.preventDefault();
+                            });
+                        }, { passive: false });
+
+                        ['touchend', 'touchcancel'].forEach(function (eventName) {
+                            element.addEventListener(eventName, function (event) {
+                                const touch = findTouchById(event.changedTouches, state.touchId);
+                                if (!touch && state.touchId !== null) {
+                                    return;
+                                }
+
+                                finishInteraction(function () {
+                                    event.preventDefault();
+                                });
+                            }, { passive: false });
+                        });
+
+                        element.addEventListener('mousedown', function (event) {
+                            if (event.button !== 0) {
+                                return;
+                            }
+
+                            beginInteraction(event.clientX, event.clientY, 'mouse', null, null);
+
+                            state.mouseMoveHandler = function (moveEvent) {
+                                handleInteractionMove(moveEvent.clientX, moveEvent.clientY, function () {
+                                    moveEvent.preventDefault();
+                                });
+                            };
+
+                            state.mouseUpHandler = function (upEvent) {
+                                finishInteraction(function () {
+                                    upEvent.preventDefault();
+                                });
+                            };
+
+                            document.addEventListener('mousemove', state.mouseMoveHandler);
+                            document.addEventListener('mouseup', state.mouseUpHandler);
+                        });
+                    }
 
                     element.addEventListener('click', function (event) {
                         if (state.suppressClick) {
