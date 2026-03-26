@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Support\Currency;
 use App\Support\TestingFilesystem;
+use App\Support\WindowsSafeFilesystem;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->runningUnitTests()) {
             $this->app->singleton('files', static fn () => new TestingFilesystem());
+        } elseif (PHP_OS_FAMILY === 'Windows') {
+            $this->app->singleton('files', static fn () => new WindowsSafeFilesystem());
         }
     }
 
