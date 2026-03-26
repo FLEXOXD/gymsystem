@@ -191,6 +191,7 @@
                 -webkit-touch-callout: none;
                 touch-action: none;
                 overscroll-behavior: none;
+                cursor: grab;
                 transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, opacity 160ms ease;
             }
 
@@ -895,6 +896,7 @@
                     }
 
                     const supportsPointerEvents = 'PointerEvent' in window;
+                    const dragThreshold = window.innerWidth < 1024 ? 8 : 6;
                     const state = {
                         active: false,
                         suppressClick: false,
@@ -904,19 +906,11 @@
                         startPointerY: 0,
                         startFabX: 0,
                         startFabY: 0,
-                        holdTimer: null,
                         mouseMoveHandler: null,
                         mouseUpHandler: null,
                     };
 
-                    function clearHoldTimer() {
-                        if (state.holdTimer) {
-                            window.clearTimeout(state.holdTimer);
-                            state.holdTimer = null;
-                        }
-                    }
-
-                    function beginInteraction(clientX, clientY, inputType, pointerId, touchId) {
+                    function beginInteraction(clientX, clientY, pointerId, touchId) {
                         const rect = element.getBoundingClientRect();
                         state.pointerId = pointerId ?? null;
                         state.touchId = touchId ?? null;
@@ -924,34 +918,33 @@
                         state.startPointerY = clientY;
                         state.startFabX = rect.left;
                         state.startFabY = rect.top;
+                        state.active = false;
                         state.suppressClick = false;
+                    }
 
-                        clearHoldTimer();
-                        state.holdTimer = window.setTimeout(function () {
-                            state.active = true;
-                            state.suppressClick = true;
-                            element.classList.add('is-dragging');
+                    function maybeStartDrag(clientX, clientY, preventDefault) {
+                        const deltaX = clientX - state.startPointerX;
+                        const deltaY = clientY - state.startPointerY;
+                        const distance = Math.hypot(deltaX, deltaY);
 
-                            if (pointerId !== null && supportsPointerEvents) {
-                                try {
-                                    element.setPointerCapture(pointerId);
-                                } catch (error) {
-                                }
-                            }
-                        }, inputType === 'touch' ? 280 : 180);
+                        if (state.active || distance < dragThreshold) {
+                            return state.active;
+                        }
+
+                        state.active = true;
+                        state.suppressClick = true;
+                        element.classList.add('is-dragging');
+                        preventDefault?.();
+                        return true;
                     }
 
                     function handleInteractionMove(clientX, clientY, preventDefault) {
-                        const deltaX = clientX - state.startPointerX;
-                        const deltaY = clientY - state.startPointerY;
-
-                        if (!state.active) {
-                            if (Math.abs(deltaX) > 12 || Math.abs(deltaY) > 12) {
-                                clearHoldTimer();
-                            }
+                        if (!maybeStartDrag(clientX, clientY, preventDefault)) {
                             return;
                         }
 
+                        const deltaX = clientX - state.startPointerX;
+                        const deltaY = clientY - state.startPointerY;
                         preventDefault?.();
                         setFabPosition(element, state.startFabX + deltaX, state.startFabY + deltaY, false);
                     }
@@ -994,7 +987,6 @@
                     }
 
                     function releaseDrag() {
-                        clearHoldTimer();
                         if (state.pointerId !== null) {
                             try {
                                 element.releasePointerCapture(state.pointerId);
@@ -1018,7 +1010,12 @@
                                 return;
                             }
 
-                            beginInteraction(event.clientX, event.clientY, event.pointerType === 'touch' ? 'touch' : 'pointer', event.pointerId, null);
+                            beginInteraction(event.clientX, event.clientY, event.pointerId, null);
+
+                            try {
+                                element.setPointerCapture(event.pointerId);
+                            } catch (error) {
+                            }
                         });
 
                         element.addEventListener('pointermove', function (event) {
@@ -1049,7 +1046,7 @@
                                 return;
                             }
 
-                            beginInteraction(touch.clientX, touch.clientY, 'touch', null, touch.identifier);
+                            beginInteraction(touch.clientX, touch.clientY, null, touch.identifier);
                         }, { passive: true });
 
                         element.addEventListener('touchmove', function (event) {
@@ -1081,7 +1078,7 @@
                                 return;
                             }
 
-                            beginInteraction(event.clientX, event.clientY, 'mouse', null, null);
+                            beginInteraction(event.clientX, event.clientY, null, null);
 
                             state.mouseMoveHandler = function (moveEvent) {
                                 handleInteractionMove(moveEvent.clientX, moveEvent.clientY, function () {
