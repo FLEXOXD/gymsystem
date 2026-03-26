@@ -174,6 +174,7 @@
         && $activeGymId > 0
         && $planAccessService->canForGym($activeGymId, 'cashiers');
     $canViewReports = $isSuperAdmin || ($activeGymId > 0 ? $planAccessService->canForGym($activeGymId, 'reports_base') : false);
+    $canUseClassBooking = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'class_booking');
     $canUseSalesInventory = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'sales_inventory');
     $canViewBranches = $canUseMultiBranch;
     $canInstallPwa = ! $isSuperAdmin && $activeGymId > 0 && $planAccessService->canForGym($activeGymId, 'pwa_install');
@@ -196,7 +197,7 @@
             + ($isGlobalScope ? ['scope' => 'global'] : [])
             + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : [])
         : $gymRouteParams;
-    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.client-earnings', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
+    $switchableRouteNames = ['panel.index', 'reception.index', 'clients.index', 'classes.index', 'sales.index', 'products.index', 'plans.index', 'cash.index', 'reports.index', 'reports.client-earnings', 'reports.sales-inventory', 'branches.index', 'staff.index', 'client-portal.index'];
     $currentRouteName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
     $baseSwitcherRoute = in_array($currentRouteName, $switchableRouteNames, true) ? $currentRouteName : 'panel.index';
     $showGlobalBranchOption = ! request()->routeIs('client-portal.*');
@@ -297,26 +298,22 @@
         ] + ($isStandalonePwaMode ? ['pwa_mode' => 'standalone'] : []))
         : '#';
 
-    $gymNavItems = $isCashierMode
-        ? [
-            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
-            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
-            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
-            ['label' => 'Cobros', 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
-        ]
-        : [
-            ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
-            ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
-            ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
-            ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'],
-            ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'],
-        ];
-    if ($canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index')) {
-        $salesNavItem = ['label' => __('ui.nav.sales_inventory'), 'route' => 'sales.index', 'params' => $gymRouteParams, 'active' => 'sales.*', 'icon' => 'sales_inventory'];
-        $productsNavItem = ['label' => __('ui.nav.products'), 'route' => 'products.index', 'params' => $gymRouteParams, 'active' => 'products.*', 'icon' => 'products'];
-
-        array_splice($gymNavItems, 3, 0, [$salesNavItem, $productsNavItem]);
+    $gymNavItems = [
+        ['label' => __('ui.nav.panel'), 'route' => 'panel.index', 'params' => $gymRouteParams, 'active' => 'panel.*', 'icon' => 'panel'],
+        ['label' => __('ui.nav.reception'), 'route' => 'reception.index', 'params' => $gymRouteParams, 'active' => 'reception.*', 'icon' => 'reception'],
+        ['label' => __('ui.nav.clients'), 'route' => 'clients.index', 'params' => $gymRouteParams, 'active' => 'clients.*', 'icon' => 'clients'],
+    ];
+    if ($canUseClassBooking && \Illuminate\Support\Facades\Route::has('classes.index')) {
+        $gymNavItems[] = ['label' => __('ui.nav.classes'), 'route' => 'classes.index', 'params' => $gymRouteParams, 'active' => 'classes.*', 'icon' => 'classes'];
     }
+    if (! $isCashierMode && $canUseSalesInventory && \Illuminate\Support\Facades\Route::has('sales.index')) {
+        $gymNavItems[] = ['label' => __('ui.nav.sales_inventory'), 'route' => 'sales.index', 'params' => $gymRouteParams, 'active' => 'sales.*', 'icon' => 'sales_inventory'];
+        $gymNavItems[] = ['label' => __('ui.nav.products'), 'route' => 'products.index', 'params' => $gymRouteParams, 'active' => 'products.*', 'icon' => 'products'];
+    }
+    if (! $isCashierMode) {
+        $gymNavItems[] = ['label' => __('ui.nav.plans'), 'route' => 'plans.index', 'params' => $gymRouteParams, 'active' => 'plans.*', 'icon' => 'plans'];
+    }
+    $gymNavItems[] = ['label' => __('ui.nav.cash'), 'route' => 'cash.index', 'params' => $gymRouteParams, 'active' => 'cash.*', 'icon' => 'cash'];
     if ($canManageCashiers && \Illuminate\Support\Facades\Route::has('staff.index')) {
         $gymNavItems[] = ['label' => 'Cajeros', 'route' => 'staff.index', 'params' => $gymRouteParams, 'active' => 'staff.*', 'icon' => 'staff'];
     }
@@ -381,7 +378,7 @@
         }
 
         return match ($icon) {
-            'panel', 'reception', 'clients' => 'operation',
+            'panel', 'reception', 'clients', 'classes' => 'operation',
             'sales_inventory', 'products', 'plans', 'cash' => 'commercial',
             'staff', 'branches', 'reports' => 'management',
             'client_portal' => 'channels',
@@ -2672,6 +2669,13 @@
                             @case('clients')
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M16 18v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1m16 0v-1a4 4 0 0 0-3-3.87M13 6.13a4 4 0 1 1 0 7.75M9.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                @break
+                            @case('classes')
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M8 3.8v2.6M16 3.8v2.6M4 9.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M8 13h3M8 16h5M15.5 14.5l1.2 1.2 2.3-2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                                 @break
                             @case('plans')

@@ -5,6 +5,7 @@ use App\Http\Controllers\ClientCardController;
 use App\Http\Controllers\ClientCredentialController;
 use App\Http\Controllers\ClientMobileController;
 use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\GymClassController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\ContactSuggestionController;
@@ -133,6 +134,12 @@ Route::prefix('cliente/{gymSlug}')
             Route::post('/weekly-goal', [ClientMobileController::class, 'updateWeeklyGoal'])
                 ->middleware('throttle:20,1')
                 ->name('weekly-goal.update');
+            Route::post('/classes/{gymClass}/reserve', [ClientMobileController::class, 'reserveClass'])
+                ->middleware('throttle:30,1')
+                ->name('classes.reserve');
+            Route::post('/classes/{gymClass}/cancel', [ClientMobileController::class, 'cancelClass'])
+                ->middleware('throttle:30,1')
+                ->name('classes.cancel');
             Route::get('/push/status', [ClientMobileController::class, 'pushStatus'])
                 ->middleware('throttle:120,1')
                 ->name('push.status');
@@ -391,6 +398,25 @@ Route::middleware(['auth', 'demo.session', 'gym.timezone', 'no.history'])->group
                 Route::get('/clients/{client}/card.pdf', [ClientCardController::class, 'pdf'])
                     ->middleware('role:owner,cashier')
                     ->name('clients.card.pdf');
+
+                Route::get('/clases', [GymClassController::class, 'index'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:class_booking'])
+                    ->name('classes.index');
+                Route::post('/clases', [GymClassController::class, 'store'])
+                    ->middleware(['role:owner', 'plan.feature:class_booking'])
+                    ->name('classes.store');
+                Route::get('/clases/{gymClass}', [GymClassController::class, 'show'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:class_booking'])
+                    ->name('classes.show');
+                Route::put('/clases/{gymClass}', [GymClassController::class, 'update'])
+                    ->middleware(['role:owner', 'plan.feature:class_booking'])
+                    ->name('classes.update');
+                Route::post('/clases/{gymClass}/notify', [GymClassController::class, 'notifyParticipants'])
+                    ->middleware(['role:owner', 'plan.feature:class_booking'])
+                    ->name('classes.notify');
+                Route::patch('/clases/reservations/{reservation}', [GymClassController::class, 'updateReservation'])
+                    ->middleware(['role:owner,cashier', 'plan.feature:class_booking'])
+                    ->name('classes.reservations.update');
 
                 Route::get('/staff', [GymStaffController::class, 'index'])
                     ->middleware(['role:owner', 'plan.feature:cashiers'])

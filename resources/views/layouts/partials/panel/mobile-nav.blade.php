@@ -8,6 +8,7 @@
         'panel' => 'Panel',
         'reception' => 'Recepción',
         'clients' => 'Clientes',
+        'classes' => 'Clases',
         'sales_inventory' => 'Ventas',
         'products' => 'Productos',
         'plans' => 'Planes',

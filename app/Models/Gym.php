@@ -120,6 +120,22 @@ class Gym extends Model
     }
 
     /**
+     * Clases programadas por el gimnasio.
+     */
+    public function classes(): HasMany
+    {
+        return $this->hasMany(GymClass::class);
+    }
+
+    /**
+     * Reservas de clases de clientes para este gimnasio.
+     */
+    public function classReservations(): HasMany
+    {
+        return $this->hasMany(GymClassReservation::class);
+    }
+
+    /**
      * Get product sales for this gym.
      */
     public function productSales(): HasMany

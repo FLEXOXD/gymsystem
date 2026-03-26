@@ -3440,6 +3440,12 @@
         $todaySummaryTip = $trainingHintLine !== ''
             ? $trainingHintLine
             : 'Inicia tu entrenamiento para desbloquear todo el panel.';
+        $classesEnabled = (bool) ($classAccessEnabled ?? false);
+        $classesModulePayload = is_array($classesPayload ?? null) ? $classesPayload : [];
+        $todayGymClasses = collect($classesModulePayload['today_classes'] ?? []);
+        $upcomingGymClasses = collect($classesModulePayload['upcoming_classes'] ?? []);
+        $myGymClassReservations = collect($classesModulePayload['my_reservations'] ?? []);
+        $nextGymClassReservation = $classesModulePayload['next_reservation'] ?? null;
     @endphp
     <section class="mx-auto max-w-md space-y-4 relative z-10">
         <div class="top-user-menu">
@@ -3479,6 +3485,9 @@
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'profile']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Ver perfil</a>
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'physical']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Datos físicos</a>
                 <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'nutrition']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Guía nutricional</a>
+                @if ($classesEnabled)
+                    <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes']) }}" class="user-dropdown-item user-dropdown-link" role="menuitem">Clases y reservas</a>
+                @endif
                 <form id="client-mobile-logout-form" method="POST" action="{{ route('client-mobile.logout', ['gymSlug' => $gym->slug]) }}">
                     @csrf
                     <button type="submit" class="user-dropdown-item user-dropdown-logout" role="menuitem">Cerrar sesión</button>
@@ -3491,6 +3500,24 @@
             <h1 class="mt-1 text-xl font-black text-white">Hola, {{ (string) $client->full_name }}</h1>
             <p class="mt-1 text-xs text-emerald-100/90">Listo para entrenar. Elige una opción para continuar.</p>
         </header>
+
+        @php
+            $showGlobalClientAlert = session('status')
+                || ($errors->any() && ! ($screen === 'classes' && $errors->has('classes')));
+        @endphp
+
+        @if ($showGlobalClientAlert)
+            <article class="glass-card rounded-3xl p-4 space-y-1">
+                @if (session('status'))
+                    <p class="text-xs font-black uppercase tracking-[.15em] text-emerald-200">Actualizacion</p>
+                    <p class="text-sm font-semibold text-white">{{ session('status') }}</p>
+                @endif
+                @if ($errors->any() && ! ($screen === 'classes' && $errors->has('classes')))
+                    <p class="text-xs font-black uppercase tracking-[.15em] text-rose-200">Aviso</p>
+                    <p class="text-sm font-semibold text-white">{{ $errors->first() }}</p>
+                @endif
+            </article>
+        @endif
 
         @if ($screen === 'home')
             <section id="home-view" class="home-stage">
@@ -3602,6 +3629,28 @@
                         </span>
                         <span class="action-arrow" aria-hidden="true">&rsaquo;</span>
                     </button>
+                @endif
+                @if ($classesEnabled)
+                    <article class="glass-card rounded-3xl p-4 space-y-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-[.14em] text-cyan-100">Clases y reservas</p>
+                                <h3 class="mt-1 text-base font-black text-white">Tu agenda del gimnasio</h3>
+                            </div>
+                            <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes']) }}" class="module-action module-action-secondary">Abrir</a>
+                        </div>
+                        @if ($nextGymClassReservation && $nextGymClassReservation->gymClass)
+                            <p class="text-sm font-semibold text-white">Proxima: {{ (string) ($nextGymClassReservation->gymClass->name ?? 'Clase reservada') }}</p>
+                            <p class="text-xs text-slate-300">
+                                {{ (string) ($nextGymClassReservation->gymClass->starts_at?->format('Y-m-d H:i') ?? '-') }}
+                                -
+                                {{ ($nextGymClassReservation->status ?? null) === \App\Models\GymClassReservation::STATUS_WAITLIST ? 'Sigues en lista de espera.' : 'Tu cupo ya esta reservado.' }}
+                            </p>
+                        @else
+                            <p class="text-sm font-semibold text-white">Descubre las clases publicadas por tu gimnasio y reserva tu cupo desde la app.</p>
+                            <p class="text-xs text-slate-300">Cuando haya clases llenas tambien podras entrar a lista de espera.</p>
+                        @endif
+                    </article>
                 @endif
             </section>
         @endif
@@ -4327,6 +4376,15 @@
                     <p id="training-session-feedback" class="training-session-feedback hidden"></p>
                 </div>
             </div>
+        @endif
+        @if ($screen === 'classes' && $classesEnabled)
+            @include('client-mobile.partials.classes-screen', [
+                'gym' => $gym,
+                'todayGymClasses' => $todayGymClasses,
+                'upcomingGymClasses' => $upcomingGymClasses,
+                'myGymClassReservations' => $myGymClassReservations,
+                'nextGymClassReservation' => $nextGymClassReservation,
+            ])
         @endif
         @if ($screen === 'profile')
             <section id="profile-view" class="space-y-4">

@@ -8,6 +8,8 @@ use App\Models\ClientFitnessProfile;
 use App\Models\ClientProgressSnapshot;
 use App\Models\ClientPushSubscription;
 use App\Models\ClientTrainingSession;
+use App\Models\GymClass;
+use App\Models\GymClassReservation;
 use App\Models\Gym;
 use App\Models\Membership;
 use App\Models\PresenceSession;
@@ -15,6 +17,7 @@ use App\Models\User;
 use App\Support\FitnessGoalSupport;
 use App\Services\AttendanceCheckinService;
 use App\Services\ClientPushNotificationService;
+use App\Services\GymClassBookingService;
 use App\Services\MobileCheckInTokenService;
 use App\Services\PlanAccessService;
 use App\Services\PresenceSessionService;
@@ -37,6 +40,7 @@ class ClientMobileController extends Controller
         private readonly AttendanceCheckinService $attendanceCheckinService,
         private readonly MobileCheckInTokenService $mobileCheckInTokenService,
         private readonly ClientPushNotificationService $clientPushNotificationService,
+        private readonly GymClassBookingService $gymClassBookingService,
         private readonly PresenceSessionService $presenceSessionService
     ) {
     }
@@ -189,8 +193,12 @@ class ClientMobileController extends Controller
             return redirect()->route('client-mobile.login', ['gymSlug' => $gym->slug]);
         }
 
+        $classAccessEnabled = $this->planAccessService->canForGym((int) $gym->id, 'class_booking');
         $screen = mb_strtolower(trim((string) $request->query('screen', 'home')));
-        if (! in_array($screen, ['home', 'checkin', 'progress', 'profile', 'physical', 'nutrition'], true)) {
+        if (! in_array($screen, ['home', 'checkin', 'progress', 'profile', 'physical', 'nutrition', 'classes'], true)) {
+            $screen = 'home';
+        }
+        if ($screen === 'classes' && ! $classAccessEnabled) {
             $screen = 'home';
         }
 
@@ -226,6 +234,10 @@ class ClientMobileController extends Controller
             'fitnessProfileCompleted' => $fitnessProfileCompleted,
             'openFitnessModal' => $openFitnessModal,
             'openFitnessModalNextScreen' => $openFitnessModalNextScreen,
+            'classAccessEnabled' => $classAccessEnabled,
+            'classesPayload' => $classAccessEnabled
+                ? $this->classesPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''))
+                : null,
             'webPushPublicKey' => trim((string) config('services.webpush.vapid.public_key', '')),
         ]);
     }
@@ -247,6 +259,66 @@ class ClientMobileController extends Controller
             'ok' => true,
             'progress' => $this->progressPayload((int) $gym->id, (int) $client->id, (string) ($gym->timezone ?? ''), (string) ($gym->slug ?? '')),
         ]);
+    }
+
+    public function reserveClass(Request $request, string $gymSlug, int $gymClass): RedirectResponse
+    {
+        $gym = $this->resolveGymBySlug($gymSlug);
+        $this->abortIfFeatureUnavailable((int) $gym->id);
+        abort_if(! $this->planAccessService->canForGym((int) $gym->id, 'class_booking'), 403, 'Tu plan actual no incluye clases y reservas.');
+
+        $client = $this->resolveSessionClient($request, $gym);
+        if (! $client) {
+            return redirect()->route('client-mobile.login', ['gymSlug' => $gym->slug]);
+        }
+
+        $classModel = GymClass::query()
+            ->forGym((int) $gym->id)
+            ->with('gym:id,name,slug')
+            ->findOrFail($gymClass);
+
+        $classesModalId = trim((string) $request->input('classes_modal_id', ''));
+        $result = $this->gymClassBookingService->reserveForClient($classModel, $client);
+        if (! (bool) ($result['ok'] ?? false)) {
+            return redirect()
+                ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes'])
+                ->withErrors(['classes' => (string) ($result['message'] ?? 'No se pudo reservar la clase.')])
+                ->with('classes_modal_id', $classesModalId);
+        }
+
+        return redirect()
+            ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes'])
+            ->with('status', (string) ($result['message'] ?? 'Reserva actualizada.'));
+    }
+
+    public function cancelClass(Request $request, string $gymSlug, int $gymClass): RedirectResponse
+    {
+        $gym = $this->resolveGymBySlug($gymSlug);
+        $this->abortIfFeatureUnavailable((int) $gym->id);
+        abort_if(! $this->planAccessService->canForGym((int) $gym->id, 'class_booking'), 403, 'Tu plan actual no incluye clases y reservas.');
+
+        $client = $this->resolveSessionClient($request, $gym);
+        if (! $client) {
+            return redirect()->route('client-mobile.login', ['gymSlug' => $gym->slug]);
+        }
+
+        $classModel = GymClass::query()
+            ->forGym((int) $gym->id)
+            ->with('gym:id,name,slug')
+            ->findOrFail($gymClass);
+
+        $classesModalId = trim((string) $request->input('classes_modal_id', ''));
+        $result = $this->gymClassBookingService->cancelForClient($classModel, $client);
+        if (! (bool) ($result['ok'] ?? false)) {
+            return redirect()
+                ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes'])
+                ->withErrors(['classes' => (string) ($result['message'] ?? 'No se pudo cancelar la reserva.')])
+                ->with('classes_modal_id', $classesModalId);
+        }
+
+        return redirect()
+            ->route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes'])
+            ->with('status', (string) ($result['message'] ?? 'Reserva cancelada.'));
     }
 
     public function checkIn(Request $request, string $gymSlug): JsonResponse
@@ -1396,6 +1468,141 @@ class ClientMobileController extends Controller
             ->first(['id']);
 
         return (int) ($user?->id ?? 0);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function classesPayload(int $gymId, int $clientId, string $gymTimezone = ''): array
+    {
+        $timezone = $this->resolveTimezone($gymTimezone);
+        $nowAtGym = Carbon::now($timezone);
+        $windowEnd = $nowAtGym->copy()->addDays(35)->endOfDay();
+
+        $upcomingClasses = GymClass::query()
+            ->forGym($gymId)
+            ->where('status', GymClass::STATUS_SCHEDULED)
+            ->where('ends_at', '>=', $nowAtGym->copy()->startOfDay())
+            ->where('starts_at', '<=', $windowEnd)
+            ->withCount([
+                'activeReservations as reserved_count',
+                'waitlistReservations as waitlist_count',
+            ])
+            ->with([
+                'reservations' => static function ($query) use ($clientId): void {
+                    $query->where('client_id', $clientId)
+                        ->select([
+                            'id',
+                            'gym_id',
+                            'gym_class_id',
+                            'client_id',
+                            'status',
+                            'reserved_at',
+                            'waitlisted_at',
+                            'promoted_at',
+                            'cancelled_at',
+                        ]);
+                },
+            ])
+            ->orderBy('starts_at')
+            ->get([
+                'id',
+                'gym_id',
+                'name',
+                'category',
+                'level',
+                'instructor_name',
+                'room_name',
+                'description',
+                'price',
+                'starts_at',
+                'ends_at',
+                'capacity',
+                'allow_waitlist',
+                'status',
+            ]);
+
+        $upcomingClasses = $upcomingClasses
+            ->sortBy(static function (GymClass $gymClass) use ($nowAtGym): int {
+                $window = $gymClass->nextOccurrenceWindow($nowAtGym);
+
+                if ($window === null) {
+                    return PHP_INT_MAX;
+                }
+
+                return $window['start']->getTimestamp();
+            })
+            ->values();
+
+        $todayClasses = $upcomingClasses
+            ->filter(static function (GymClass $gymClass) use ($nowAtGym): bool {
+                return $gymClass->occursOnDate($nowAtGym);
+            })
+            ->values();
+
+        $myReservations = GymClassReservation::query()
+            ->forGym($gymId)
+            ->where('client_id', $clientId)
+            ->whereIn('status', [
+                GymClassReservation::STATUS_RESERVED,
+                GymClassReservation::STATUS_WAITLIST,
+            ])
+            ->with([
+                'gymClass' => static function ($query): void {
+                    $query->select([
+                        'id',
+                        'gym_id',
+                        'name',
+                        'category',
+                        'level',
+                        'instructor_name',
+                        'room_name',
+                        'price',
+                        'starts_at',
+                        'ends_at',
+                        'capacity',
+                        'status',
+                    ]);
+                },
+            ])
+            ->get([
+                'id',
+                'gym_id',
+                'gym_class_id',
+                'client_id',
+                'status',
+                'reserved_at',
+                'waitlisted_at',
+                'promoted_at',
+                'cancelled_at',
+            ])
+            ->filter(static function (GymClassReservation $reservation) use ($nowAtGym): bool {
+                return $reservation->gymClass instanceof GymClass
+                    && $reservation->gymClass->nextOccurrenceWindow($nowAtGym) !== null;
+            })
+            ->sortBy(static function (GymClassReservation $reservation) use ($nowAtGym): int {
+                if (! ($reservation->gymClass instanceof GymClass)) {
+                    return PHP_INT_MAX;
+                }
+
+                $window = $reservation->gymClass->nextOccurrenceWindow($nowAtGym);
+
+                if ($window === null) {
+                    return PHP_INT_MAX;
+                }
+
+                return $window['start']->getTimestamp();
+            })
+            ->values();
+
+        $nextReservation = $myReservations->first();
+
+        return [
+            'today_classes' => $todayClasses,
+            'upcoming_classes' => $upcomingClasses->values(),
+            'my_reservations' => $myReservations,
+            'next_reservation' => $nextReservation,
+        ];
     }
 
     private function progressPayload(int $gymId, int $clientId, string $gymTimezone = '', string $gymSlug = ''): array

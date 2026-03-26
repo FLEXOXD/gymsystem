@@ -21,6 +21,7 @@ return [
         'suggestions' => 'Sugestoes',
         'reception' => 'Recepcao',
         'clients' => 'Clientes',
+        'classes' => 'Aulas',
         'plans' => 'Planos',
         'cash' => 'Caixa',
         'reports' => 'Relatorios',

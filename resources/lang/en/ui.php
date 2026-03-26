@@ -23,6 +23,7 @@ return [
         'suggestions' => 'Suggestions',
         'reception' => 'Reception',
         'clients' => 'Clients',
+        'classes' => 'Classes',
         'plans' => 'Plans',
         'cash' => 'Cash',
         'reports' => 'Reports',

@@ -128,6 +128,14 @@ class Client extends Model
     }
 
     /**
+     * Reservas del cliente en clases del gimnasio.
+     */
+    public function classReservations(): HasMany
+    {
+        return $this->hasMany(GymClassReservation::class);
+    }
+
+    /**
      * Get the full display name for the client.
      */
     public function getFullNameAttribute(): string
