@@ -1477,12 +1477,13 @@ class ClientMobileController extends Controller
     {
         $timezone = $this->resolveTimezone($gymTimezone);
         $nowAtGym = Carbon::now($timezone);
+        $windowStart = $nowAtGym->copy()->startOfDay();
         $windowEnd = $nowAtGym->copy()->addDays(35)->endOfDay();
 
         $upcomingClasses = GymClass::query()
             ->forGym($gymId)
             ->where('status', GymClass::STATUS_SCHEDULED)
-            ->where('ends_at', '>=', $nowAtGym->copy()->startOfDay())
+            ->where('ends_at', '>=', $windowStart)
             ->where('starts_at', '<=', $windowEnd)
             ->withCount([
                 'activeReservations as reserved_count',
@@ -1515,6 +1516,7 @@ class ClientMobileController extends Controller
                 'room_name',
                 'description',
                 'price',
+                'active_weekdays',
                 'starts_at',
                 'ends_at',
                 'capacity',
@@ -1523,6 +1525,9 @@ class ClientMobileController extends Controller
             ]);
 
         $upcomingClasses = $upcomingClasses
+            ->filter(static function (GymClass $gymClass) use ($windowStart, $windowEnd): bool {
+                return $gymClass->occursWithinRange($windowStart, $windowEnd);
+            })
             ->sortBy(static function (GymClass $gymClass) use ($nowAtGym): int {
                 $window = $gymClass->nextOccurrenceWindow($nowAtGym);
 
@@ -1558,6 +1563,7 @@ class ClientMobileController extends Controller
                         'instructor_name',
                         'room_name',
                         'price',
+                        'active_weekdays',
                         'starts_at',
                         'ends_at',
                         'capacity',

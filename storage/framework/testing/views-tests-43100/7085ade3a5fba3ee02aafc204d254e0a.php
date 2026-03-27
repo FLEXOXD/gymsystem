@@ -1,4 +1,4 @@
-@once
+<?php if (! $__env->hasRenderedOnce('dcba09b8-4508-4a00-b783-6917b3c17ce1')): $__env->markAsRenderedOnce('dcba09b8-4508-4a00-b783-6917b3c17ce1'); ?>
     <style>
         body.gym-classes-modal-open {
             overflow: hidden;
@@ -330,9 +330,9 @@
             }
         }
     </style>
-@endonce
+<?php endif; ?>
 
-@php
+<?php
     $parseClassMoment = static function ($value): ?\Carbon\Carbon {
         try {
             if ($value instanceof \DateTimeInterface) {
@@ -495,7 +495,7 @@
     $classesFeedbackHint = str_contains(mb_strtolower($classesFeedbackMessage), 'cancel')
         ? 'Vuelve a intentarlo en unos segundos.'
         : 'Escoge otro horario o cancela la reserva que ya tienes activa.';
-@endphp
+?>
 
 <section id="classes-view" class="space-y-4">
     <article class="glass-card rounded-3xl p-4 space-y-3">
@@ -505,21 +505,21 @@
                 <h2 class="mt-1 text-lg font-black text-white">Agenda del gimnasio</h2>
                 <p class="mt-1 text-xs text-slate-300">Reserva cupos, revisa horarios y toca un dia del calendario para ver todo lo programado.</p>
             </div>
-            <a href="{{ route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home']) }}" class="module-action module-action-secondary">Inicio</a>
+            <a href="<?php echo e(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'home'])); ?>" class="module-action module-action-secondary">Inicio</a>
         </div>
 
         <div class="gym-classes-kpi-grid">
             <div class="gym-classes-kpi-card">
                 <p class="gym-classes-kpi-label">Hoy</p>
-                <p class="gym-classes-kpi-value">{{ $todayGymClasses->count() }}</p>
+                <p class="gym-classes-kpi-value"><?php echo e($todayGymClasses->count()); ?></p>
             </div>
             <div class="gym-classes-kpi-card">
                 <p class="gym-classes-kpi-label">Agenda</p>
-                <p class="gym-classes-kpi-value">{{ $upcomingGymClasses->count() }}</p>
+                <p class="gym-classes-kpi-value"><?php echo e($upcomingGymClasses->count()); ?></p>
             </div>
             <div class="gym-classes-kpi-card">
                 <p class="gym-classes-kpi-label">Reservas</p>
-                <p class="gym-classes-kpi-value">{{ $myGymClassReservations->count() }}</p>
+                <p class="gym-classes-kpi-value"><?php echo e($myGymClassReservations->count()); ?></p>
             </div>
         </div>
 
@@ -527,75 +527,78 @@
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-xs font-black uppercase tracking-[.14em] text-emerald-100">Calendario interactivo</p>
-                    <h3 class="mt-1 text-base font-black text-white">{{ $calendarMonthLabel }}</h3>
+                    <h3 class="mt-1 text-base font-black text-white"><?php echo e($calendarMonthLabel); ?></h3>
                     <p class="mt-1 text-xs text-slate-300">Toca un dia con color para abrir un modal con todas sus clases.</p>
                 </div>
                 <span class="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-100">
-                    {{ $daysWithClassesCount }} dias activos
+                    <?php echo e($daysWithClassesCount); ?> dias activos
                 </span>
             </div>
 
             <div class="gym-classes-weekdays">
-                @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $weekLabel)
-                    <span class="gym-classes-weekday">{{ $weekLabel }}</span>
-                @endforeach
+                <?php $__currentLoopData = ['L', 'M', 'X', 'J', 'V', 'S', 'D']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $weekLabel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <span class="gym-classes-weekday"><?php echo e($weekLabel); ?></span>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
 
             <div class="gym-classes-calendar-grid">
-                @foreach ($calendarDays as $calendarDay)
-                    @php
+                <?php $__currentLoopData = $calendarDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $calendarDay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $dayKey = $calendarDay->toDateString();
                         $dayClasses = collect($calendarClassMap->get($dayKey, collect()));
                         $isCurrentMonth = $calendarDay->month === $calendarNow->month;
                         $isToday = $calendarDay->isSameDay($calendarNow);
                         $hasClasses = $dayClasses->isNotEmpty();
                         $modalId = 'classes-day-'.$dayKey;
-                    @endphp
+                    ?>
 
-                    @if ($hasClasses)
+                    <?php if($hasClasses): ?>
                         <button
                             type="button"
-                            class="gym-classes-day has-classes {{ $isToday ? 'is-today' : '' }} {{ $isCurrentMonth ? '' : 'is-outside' }}"
-                            data-classes-modal-open="{{ $modalId }}"
+                            class="gym-classes-day has-classes <?php echo e($isToday ? 'is-today' : ''); ?> <?php echo e($isCurrentMonth ? '' : 'is-outside'); ?>"
+                            data-classes-modal-open="<?php echo e($modalId); ?>"
                         >
-                            <span class="gym-classes-day-number">{{ $calendarDay->day }}</span>
+                            <span class="gym-classes-day-number"><?php echo e($calendarDay->day); ?></span>
                             <span class="gym-classes-day-copy">
-                                <span class="gym-classes-day-badge">{{ $dayClasses->count() }}</span>
-                                <span class="gym-classes-day-note">{{ $dayClasses->count() === 1 ? '1 clase' : $dayClasses->count().' clases' }}</span>
+                                <span class="gym-classes-day-badge"><?php echo e($dayClasses->count()); ?></span>
+                                <span class="gym-classes-day-note"><?php echo e($dayClasses->count() === 1 ? '1 clase' : $dayClasses->count().' clases'); ?></span>
                             </span>
                         </button>
-                    @else
-                        <div class="gym-classes-day {{ $isToday ? 'is-today' : '' }} {{ $isCurrentMonth ? '' : 'is-outside' }}">
-                            <span class="gym-classes-day-number">{{ $calendarDay->day }}</span>
+                    <?php else: ?>
+                        <div class="gym-classes-day <?php echo e($isToday ? 'is-today' : ''); ?> <?php echo e($isCurrentMonth ? '' : 'is-outside'); ?>">
+                            <span class="gym-classes-day-number"><?php echo e($calendarDay->day); ?></span>
                             <span class="gym-classes-day-empty">Sin clases</span>
                         </div>
-                    @endif
-                @endforeach
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
     </article>
 
-    @if ($nextReservationModel && $nextReservationClass)
-        @php
+    <?php if($nextReservationModel && $nextReservationClass): ?>
+        <?php
             $nextReservationMeta = $describeReservation($nextReservationModel->status ?? null);
             $nextReservationPriceMeta = $describePrice($nextReservationClass);
-        @endphp
+        ?>
         <article class="glass-card rounded-3xl p-4 space-y-3">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-xs font-black uppercase tracking-[.14em] text-emerald-100">Tu siguiente clase</p>
-                    <h3 class="mt-1 text-base font-black text-white">{{ (string) ($nextReservationClass->name ?? 'Clase reservada') }}</h3>
+                    <h3 class="mt-1 text-base font-black text-white"><?php echo e((string) ($nextReservationClass->name ?? 'Clase reservada')); ?></h3>
                     <p class="mt-1 text-xs text-slate-300">
-                        {{ $formatClassRange($nextReservationClass->starts_at ?? null, $nextReservationClass->ends_at ?? null) }}
+                        <?php echo e($formatClassRange($nextReservationClass->starts_at ?? null, $nextReservationClass->ends_at ?? null)); ?>
+
                     </p>
-                    <p class="text-[11px] text-slate-400">Dias: {{ $formatClassWeekdays($nextReservationClass) }}</p>
+                    <p class="text-[11px] text-slate-400">Dias: <?php echo e($formatClassWeekdays($nextReservationClass)); ?></p>
                 </div>
                 <div class="flex flex-col items-end gap-2">
-                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] {{ $nextReservationMeta['classes'] }}">
-                        {{ $nextReservationMeta['label'] }}
+                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] <?php echo e($nextReservationMeta['classes']); ?>">
+                        <?php echo e($nextReservationMeta['label']); ?>
+
                     </span>
-                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] {{ $nextReservationPriceMeta['classes'] }}">
-                        {{ $nextReservationPriceMeta['label'] }}
+                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] <?php echo e($nextReservationPriceMeta['classes']); ?>">
+                        <?php echo e($nextReservationPriceMeta['label']); ?>
+
                     </span>
                 </div>
             </div>
@@ -603,40 +606,41 @@
             <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                     <p class="text-[10px] font-black uppercase tracking-[.14em] text-slate-400">Instructor</p>
-                    <p class="mt-1 font-semibold text-white">{{ trim((string) ($nextReservationClass->instructor_name ?? 'Por confirmar')) }}</p>
+                    <p class="mt-1 font-semibold text-white"><?php echo e(trim((string) ($nextReservationClass->instructor_name ?? 'Por confirmar'))); ?></p>
                 </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                     <p class="text-[10px] font-black uppercase tracking-[.14em] text-slate-400">Sala</p>
-                    <p class="mt-1 font-semibold text-white">{{ trim((string) ($nextReservationClass->room_name ?? 'Por confirmar')) }}</p>
+                    <p class="mt-1 font-semibold text-white"><?php echo e(trim((string) ($nextReservationClass->room_name ?? 'Por confirmar'))); ?></p>
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('client-mobile.classes.cancel', ['gymSlug' => $gym->slug, 'gymClass' => $nextReservationClass->id]) }}">
-                @csrf
+            <form method="POST" action="<?php echo e(route('client-mobile.classes.cancel', ['gymSlug' => $gym->slug, 'gymClass' => $nextReservationClass->id])); ?>">
+                <?php echo csrf_field(); ?>
                 <button type="submit" class="module-action module-action-secondary">
-                    {{ ($nextReservationModel->status ?? null) === \App\Models\GymClassReservation::STATUS_RESERVED ? 'Cancelar reserva' : 'Salir de espera' }}
+                    <?php echo e(($nextReservationModel->status ?? null) === \App\Models\GymClassReservation::STATUS_RESERVED ? 'Cancelar reserva' : 'Salir de espera'); ?>
+
                 </button>
             </form>
         </article>
-    @endif
+    <?php endif; ?>
 
-    @if ($agendaPreviewClasses->isNotEmpty())
+    <?php if($agendaPreviewClasses->isNotEmpty()): ?>
         <article class="glass-card rounded-3xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <p class="text-xs font-black uppercase tracking-[.14em] text-fuchsia-100">Agenda</p>
                     <h3 class="mt-1 text-base font-black text-white">Proximas clases</h3>
                 </div>
-                <span class="text-xs font-semibold text-slate-300">{{ $upcomingOnlyGymClasses->count() }} disponibles</span>
+                <span class="text-xs font-semibold text-slate-300"><?php echo e($upcomingOnlyGymClasses->count()); ?> disponibles</span>
             </div>
 
-            <div class="gym-classes-scroll {{ $agendaPreviewClasses->count() > 2 ? 'is-scrollable' : '' }}">
-                @foreach ($agendaPreviewClasses as $classItem)
-                    @include('client-mobile.partials.class-card', ['gym' => $gym, 'classItem' => $classItem, 'showDescription' => false])
-                @endforeach
+            <div class="gym-classes-scroll <?php echo e($agendaPreviewClasses->count() > 2 ? 'is-scrollable' : ''); ?>">
+                <?php $__currentLoopData = $agendaPreviewClasses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $classItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php echo $__env->make('client-mobile.partials.class-card', ['gym' => $gym, 'classItem' => $classItem, 'showDescription' => false], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </article>
-    @endif
+    <?php endif; ?>
 
     <article class="glass-card rounded-3xl p-4 space-y-3">
         <div class="flex items-center justify-between gap-3">
@@ -644,103 +648,108 @@
                 <p class="text-xs font-black uppercase tracking-[.14em] text-amber-100">Mi agenda</p>
                 <h3 class="mt-1 text-base font-black text-white">Mis reservas</h3>
             </div>
-            <span class="text-xs font-semibold text-slate-300">{{ $myGymClassReservations->count() }} activas</span>
+            <span class="text-xs font-semibold text-slate-300"><?php echo e($myGymClassReservations->count()); ?> activas</span>
         </div>
 
-        @if ($myGymClassReservations->isNotEmpty())
-            <div class="gym-classes-scroll {{ $myGymClassReservations->count() > 1 ? 'is-scrollable gym-classes-reservations-scroll' : '' }}">
-                @foreach ($myGymClassReservations as $reservation)
-                    @php
+        <?php if($myGymClassReservations->isNotEmpty()): ?>
+            <div class="gym-classes-scroll <?php echo e($myGymClassReservations->count() > 1 ? 'is-scrollable gym-classes-reservations-scroll' : ''); ?>">
+                <?php $__currentLoopData = $myGymClassReservations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reservation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $reservationClass = $reservation->gymClass;
                         $reservationMeta = $describeReservation($reservation->status ?? null);
                         $reservationPriceMeta = $describePrice($reservationClass);
-                    @endphp
+                    ?>
                     <article class="rounded-3xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="text-base font-black text-white">
-                                        {{ $reservationClass ? (string) ($reservationClass->name ?? 'Clase') : 'Clase no disponible' }}
+                                        <?php echo e($reservationClass ? (string) ($reservationClass->name ?? 'Clase') : 'Clase no disponible'); ?>
+
                                     </h3>
-                                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] {{ $reservationMeta['classes'] }}">
-                                        {{ $reservationMeta['label'] }}
+                                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] <?php echo e($reservationMeta['classes']); ?>">
+                                        <?php echo e($reservationMeta['label']); ?>
+
                                     </span>
-                                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] {{ $reservationPriceMeta['classes'] }}">
-                                        {{ $reservationPriceMeta['label'] }}
+                                    <span class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em] <?php echo e($reservationPriceMeta['classes']); ?>">
+                                        <?php echo e($reservationPriceMeta['label']); ?>
+
                                     </span>
                                 </div>
-                                @if ($reservationClass)
+                                <?php if($reservationClass): ?>
                                     <p class="mt-1 text-xs text-slate-300">
-                                        {{ $formatClassRange($reservationClass->starts_at ?? null, $reservationClass->ends_at ?? null) }}
+                                        <?php echo e($formatClassRange($reservationClass->starts_at ?? null, $reservationClass->ends_at ?? null)); ?>
+
                                     </p>
-                                    <p class="text-[11px] text-slate-400">Dias: {{ $formatClassWeekdays($reservationClass) }}</p>
-                                @endif
+                                    <p class="text-[11px] text-slate-400">Dias: <?php echo e($formatClassWeekdays($reservationClass)); ?></p>
+                                <?php endif; ?>
                             </div>
-                            @if ($reservationClass)
-                                <form method="POST" action="{{ route('client-mobile.classes.cancel', ['gymSlug' => $gym->slug, 'gymClass' => $reservationClass->id]) }}">
-                                    @csrf
+                            <?php if($reservationClass): ?>
+                                <form method="POST" action="<?php echo e(route('client-mobile.classes.cancel', ['gymSlug' => $gym->slug, 'gymClass' => $reservationClass->id])); ?>">
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="module-action module-action-secondary">
-                                        {{ ($reservation->status ?? null) === \App\Models\GymClassReservation::STATUS_RESERVED ? 'Cancelar' : 'Salir' }}
+                                        <?php echo e(($reservation->status ?? null) === \App\Models\GymClassReservation::STATUS_RESERVED ? 'Cancelar' : 'Salir'); ?>
+
                                     </button>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
-                        @if ($reservationClass)
+                        <?php if($reservationClass): ?>
                             <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
                                 <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                                     <p class="text-[10px] font-black uppercase tracking-[.14em] text-slate-400">Instructor</p>
-                                    <p class="mt-1 font-semibold text-white">{{ trim((string) ($reservationClass->instructor_name ?? 'Por confirmar')) }}</p>
+                                    <p class="mt-1 font-semibold text-white"><?php echo e(trim((string) ($reservationClass->instructor_name ?? 'Por confirmar'))); ?></p>
                                 </div>
                                 <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                                     <p class="text-[10px] font-black uppercase tracking-[.14em] text-slate-400">Sala</p>
-                                    <p class="mt-1 font-semibold text-white">{{ trim((string) ($reservationClass->room_name ?? 'Por confirmar')) }}</p>
+                                    <p class="mt-1 font-semibold text-white"><?php echo e(trim((string) ($reservationClass->room_name ?? 'Por confirmar'))); ?></p>
                                 </div>
                             </div>
-                        @else
+                        <?php else: ?>
                             <p class="text-xs text-slate-300">La informacion de esta clase ya no esta disponible.</p>
-                        @endif
+                        <?php endif; ?>
                     </article>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-        @else
+        <?php else: ?>
             <div class="rounded-3xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center">
                 <p class="text-sm font-semibold text-white">Aun no tienes reservas activas.</p>
                 <p class="mt-1 text-xs text-slate-300">Reserva una clase y aparecera aqui con su estado.</p>
             </div>
-        @endif
+        <?php endif; ?>
     </article>
 
-    @foreach ($calendarClassMap as $dayKey => $dayClasses)
-        @php
+    <?php $__currentLoopData = $calendarClassMap; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dayKey => $dayClasses): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
             $modalId = 'classes-day-'.$dayKey;
             $modalDate = \Carbon\Carbon::parse($dayKey)->locale('es')->translatedFormat('l d \d\e F');
             $modalClasses = collect($dayClasses)->values();
-        @endphp
+        ?>
 
-        <div id="{{ $modalId }}" class="gym-classes-modal classes-day-modal hidden" aria-hidden="true">
+        <div id="<?php echo e($modalId); ?>" class="gym-classes-modal classes-day-modal hidden" aria-hidden="true">
             <button type="button" class="gym-classes-modal-backdrop" data-classes-modal-close aria-label="Cerrar clases del dia"></button>
             <div class="gym-classes-modal-dialog">
                 <div class="gym-classes-modal-head">
                     <div>
                         <p class="text-xs font-black uppercase tracking-[.14em] text-cyan-100">Clases del dia</p>
-                        <h3 class="mt-1 text-lg font-black text-white">{{ ucfirst($modalDate) }}</h3>
-                        <p class="mt-1 text-xs text-slate-300">{{ $modalClasses->count() === 1 ? '1 clase programada' : $modalClasses->count().' clases programadas' }}</p>
+                        <h3 class="mt-1 text-lg font-black text-white"><?php echo e(ucfirst($modalDate)); ?></h3>
+                        <p class="mt-1 text-xs text-slate-300"><?php echo e($modalClasses->count() === 1 ? '1 clase programada' : $modalClasses->count().' clases programadas'); ?></p>
                     </div>
                     <button type="button" class="gym-classes-modal-close" data-classes-modal-close>Cerrar</button>
                 </div>
                 <div class="gym-classes-modal-body">
                     <div class="gym-classes-modal-list gym-classes-scroll is-scrollable">
-                        @foreach ($modalClasses as $classItem)
-                            @include('client-mobile.partials.class-card', ['gym' => $gym, 'classItem' => $classItem, 'classModalId' => $modalId])
-                        @endforeach
+                        <?php $__currentLoopData = $modalClasses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $classItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php echo $__env->make('client-mobile.partials.class-card', ['gym' => $gym, 'classItem' => $classItem, 'classModalId' => $modalId], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </div>
         </div>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-    @if ($classesFeedbackMessage !== '')
+    <?php if($classesFeedbackMessage !== ''): ?>
         <div id="classes-feedback-modal" class="gym-classes-modal classes-feedback-modal hidden" aria-hidden="true">
             <button type="button" class="gym-classes-modal-backdrop" data-classes-modal-close aria-label="Cerrar aviso de reserva"></button>
             <div class="gym-classes-modal-dialog gym-classes-feedback-dialog">
@@ -748,19 +757,19 @@
                     <div class="gym-classes-feedback-copy">
                         <span class="gym-classes-feedback-badge">Aviso</span>
                         <div>
-                            <h3 class="text-lg font-black text-white">{{ $classesFeedbackTitle }}</h3>
-                            <p class="mt-2 gym-classes-feedback-text">{{ $classesFeedbackMessage }}</p>
-                            <p class="mt-2 gym-classes-feedback-hint">{{ $classesFeedbackHint }}</p>
+                            <h3 class="text-lg font-black text-white"><?php echo e($classesFeedbackTitle); ?></h3>
+                            <p class="mt-2 gym-classes-feedback-text"><?php echo e($classesFeedbackMessage); ?></p>
+                            <p class="mt-2 gym-classes-feedback-hint"><?php echo e($classesFeedbackHint); ?></p>
                         </div>
                     </div>
                     <button type="button" class="gym-classes-modal-close" data-classes-modal-close>Cerrar</button>
                 </div>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 </section>
 
-@once
+<?php if (! $__env->hasRenderedOnce('33f9e1b9-cd6a-4da4-a5ad-cd41a60aff61')): $__env->markAsRenderedOnce('33f9e1b9-cd6a-4da4-a5ad-cd41a60aff61'); ?>
     <script>
         (function () {
             const syncBodyScrollState = () => {
@@ -834,8 +843,8 @@
                 });
             });
 
-            const restoreModalId = @json($classesFeedbackModalId !== '' ? $classesFeedbackModalId : null);
-            const shouldOpenFeedbackModal = @json($classesFeedbackMessage !== '');
+            const restoreModalId = <?php echo json_encode($classesFeedbackModalId !== '' ? $classesFeedbackModalId : null, 15, 512) ?>;
+            const shouldOpenFeedbackModal = <?php echo json_encode($classesFeedbackMessage !== '', 15, 512) ?>;
 
             if (restoreModalId) {
                 openDayModal(restoreModalId);
@@ -846,4 +855,5 @@
             }
         })();
     </script>
-@endonce
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\gymsystem\resources\views/client-mobile/partials/classes-screen.blade.php ENDPATH**/ ?>

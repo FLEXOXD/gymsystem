@@ -327,6 +327,7 @@ it('stores classes from separate date and time fields', function () {
             'room_name' => 'Sala larga',
             'description' => 'Clase extendida para probar rango.',
             'price' => '8.50',
+            'active_weekdays' => ['1', '3', '5'],
             'capacity' => 18,
             'start_date' => '2026-03-26',
             'start_time' => '18:00',
@@ -346,6 +347,7 @@ it('stores classes from separate date and time fields', function () {
     expect($storedClass->starts_at?->format('Y-m-d H:i'))->toBe('2026-03-26 18:00');
     expect($storedClass->ends_at?->format('Y-m-d H:i'))->toBe('2026-04-26 19:00');
     expect((float) $storedClass->price)->toBe(8.5);
+    expect($storedClass->activeWeekdays())->toBe([1, 3, 5]);
 });
 
 it('shows multi-day classes when the agenda is filtered inside their date range', function () {
@@ -471,6 +473,91 @@ it('formats multi-day schedules with separate date and time ranges in the client
             ->get(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes']))
             ->assertOk()
             ->assertSee('jue. 26 mar. al dom. 26 abr. | 14:00 a 17:00');
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('marks only the selected weekdays of a ranged class in the client calendar', function () {
+    Carbon::setTestNow(Carbon::create(2026, 3, 10, 9, 0, 0, 'America/Guayaquil'));
+
+    try {
+        $gym = makeGymClassesGym('calendar-weekdays');
+        $owner = makeGymClassesOwner($gym, 'classes-calendar-weekdays@example.test');
+        setGymClassesPlan($gym, 'premium');
+
+        $client = makeGymClassesClient($gym, 'calendar-weekdays');
+
+        makeScheduledGymClass($gym, $owner, 'Ritmo semanal', [
+            'starts_at' => Carbon::create(2026, 3, 23, 18, 0, 0, 'America/Guayaquil'),
+            'ends_at' => Carbon::create(2026, 3, 29, 19, 0, 0, 'America/Guayaquil'),
+            'active_weekdays' => [1, 3, 5],
+        ]);
+
+        $this->withSession(gymClassesClientSession($gym, $client))
+            ->get(route('client-mobile.app', ['gymSlug' => $gym->slug, 'screen' => 'classes']))
+            ->assertOk()
+            ->assertSee('3 dias activos')
+            ->assertSee('classes-day-2026-03-23', false)
+            ->assertSee('classes-day-2026-03-25', false)
+            ->assertSee('classes-day-2026-03-27', false)
+            ->assertDontSee('classes-day-2026-03-24', false)
+            ->assertDontSee('classes-day-2026-03-26', false);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('ignores non-selected weekdays when checking reservation conflicts', function () {
+    Carbon::setTestNow(Carbon::create(2026, 3, 20, 9, 0, 0, 'America/Guayaquil'));
+
+    try {
+        $gym = makeGymClassesGym('weekday-no-conflict');
+        $owner = makeGymClassesOwner($gym, 'classes-weekday-no-conflict@example.test');
+        setGymClassesPlan($gym, 'premium');
+
+        $client = makeGymClassesClient($gym, 'weekday-no-conflict');
+        makeGymClassesMembership($gym, $client);
+
+        $reservedClass = makeScheduledGymClass($gym, $owner, 'Martes fijo', [
+            'starts_at' => Carbon::create(2026, 3, 24, 18, 0, 0, 'America/Guayaquil'),
+            'ends_at' => Carbon::create(2026, 3, 24, 19, 0, 0, 'America/Guayaquil'),
+        ]);
+        $rangeClass = makeScheduledGymClass($gym, $owner, 'Lunes miercoles viernes', [
+            'starts_at' => Carbon::create(2026, 3, 23, 18, 0, 0, 'America/Guayaquil'),
+            'ends_at' => Carbon::create(2026, 3, 29, 19, 0, 0, 'America/Guayaquil'),
+            'active_weekdays' => [1, 3, 5],
+        ]);
+
+        $this->withSession(gymClassesClientSession($gym, $client))
+            ->post(route('client-mobile.classes.reserve', [
+                'gymSlug' => $gym->slug,
+                'gymClass' => $reservedClass->id,
+            ]))
+            ->assertRedirect(route('client-mobile.app', [
+                'gymSlug' => $gym->slug,
+                'screen' => 'classes',
+            ]))
+            ->assertSessionHas('status');
+
+        $this->withSession(gymClassesClientSession($gym, $client))
+            ->post(route('client-mobile.classes.reserve', [
+                'gymSlug' => $gym->slug,
+                'gymClass' => $rangeClass->id,
+            ]))
+            ->assertRedirect(route('client-mobile.app', [
+                'gymSlug' => $gym->slug,
+                'screen' => 'classes',
+            ]))
+            ->assertSessionHas('status')
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('gym_class_reservations', [
+            'gym_id' => $gym->id,
+            'gym_class_id' => $rangeClass->id,
+            'client_id' => $client->id,
+            'status' => 'reserved',
+        ]);
     } finally {
         Carbon::setTestNow();
     }

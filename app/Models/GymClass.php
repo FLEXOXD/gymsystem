@@ -16,6 +16,24 @@ class GymClass extends Model
 
     public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_CANCELLED = 'cancelled';
+    public const WEEKDAY_LABELS = [
+        1 => 'Lun',
+        2 => 'Mar',
+        3 => 'Mie',
+        4 => 'Jue',
+        5 => 'Vie',
+        6 => 'Sab',
+        7 => 'Dom',
+    ];
+    public const WEEKDAY_FULL_LABELS = [
+        1 => 'Lunes',
+        2 => 'Martes',
+        3 => 'Miercoles',
+        4 => 'Jueves',
+        5 => 'Viernes',
+        6 => 'Sabado',
+        7 => 'Domingo',
+    ];
 
     /**
      * @var list<string>
@@ -31,6 +49,7 @@ class GymClass extends Model
         'room_name',
         'description',
         'price',
+        'active_weekdays',
         'starts_at',
         'ends_at',
         'capacity',
@@ -47,6 +66,7 @@ class GymClass extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'price' => 'decimal:2',
+            'active_weekdays' => 'array',
             'capacity' => 'integer',
             'allow_waitlist' => 'boolean',
         ];
@@ -146,7 +166,9 @@ class GymClass extends Model
 
         $targetDate = $this->normalizeScheduleDate($date);
 
-        return $targetDate->gte($startDate) && $targetDate->lte($endDate);
+        return $targetDate->gte($startDate)
+            && $targetDate->lte($endDate)
+            && in_array((int) $targetDate->dayOfWeekIso, $this->activeWeekdays(), true);
     }
 
     /**
@@ -247,6 +269,68 @@ class GymClass extends Model
         return false;
     }
 
+    /**
+     * @return list<int>
+     */
+    public function activeWeekdays(): array
+    {
+        return self::normalizeWeekdaySelection($this->active_weekdays);
+    }
+
+    public function usesAllWeekdays(): bool
+    {
+        return $this->activeWeekdays() === self::weekdayKeys();
+    }
+
+    public function activeWeekdaysLabel(bool $full = false): string
+    {
+        $weekdays = $this->activeWeekdays();
+        if ($weekdays === self::weekdayKeys()) {
+            return 'Todos los dias';
+        }
+
+        $labels = $full ? self::WEEKDAY_FULL_LABELS : self::WEEKDAY_LABELS;
+
+        return collect($weekdays)
+            ->map(static fn (int $weekday): ?string => $labels[$weekday] ?? null)
+            ->filter()
+            ->implode(', ');
+    }
+
+    public function occursWithinRange(DateTimeInterface|string $fromDate, DateTimeInterface|string $toDate): bool
+    {
+        $startDate = $this->scheduleStartDate();
+        $endDate = $this->scheduleEndDate();
+
+        if (! $startDate || ! $endDate) {
+            return false;
+        }
+
+        $rangeStart = $this->normalizeScheduleDate($fromDate);
+        $rangeEnd = $this->normalizeScheduleDate($toDate);
+
+        if ($rangeEnd->lt($rangeStart)) {
+            [$rangeStart, $rangeEnd] = [$rangeEnd, $rangeStart];
+        }
+
+        if ($rangeEnd->lt($startDate) || $rangeStart->gt($endDate)) {
+            return false;
+        }
+
+        $cursor = $rangeStart->gte($startDate) ? $rangeStart->copy() : $startDate->copy();
+        $limit = $rangeEnd->lte($endDate) ? $rangeEnd->copy() : $endDate->copy();
+
+        while ($cursor->lte($limit)) {
+            if ($this->occursOnDate($cursor)) {
+                return true;
+            }
+
+            $cursor->addDay();
+        }
+
+        return false;
+    }
+
     public function dailyStartSortKey(): int
     {
         if (! $this->starts_at) {
@@ -268,6 +352,31 @@ class GymClass extends Model
         }
 
         return $currencySymbol.number_format((float) $this->price, 2, '.', ',');
+    }
+
+    /**
+     * @param  array<int, mixed>|null  $weekdays
+     * @return list<int>
+     */
+    public static function normalizeWeekdaySelection(?array $weekdays): array
+    {
+        $normalized = collect($weekdays ?? [])
+            ->map(static fn ($weekday): int => (int) $weekday)
+            ->filter(static fn (int $weekday): bool => $weekday >= 1 && $weekday <= 7)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        return $normalized !== [] ? $normalized : self::weekdayKeys();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public static function weekdayKeys(): array
+    {
+        return array_keys(self::WEEKDAY_LABELS);
     }
 
     private function normalizeScheduleDate(DateTimeInterface|string $date): Carbon

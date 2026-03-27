@@ -147,6 +147,76 @@
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 
+    .classes-weekday-picker {
+        display: grid;
+        gap: 0.65rem;
+    }
+
+    .classes-weekday-grid {
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    }
+
+    .classes-weekday-option {
+        position: relative;
+    }
+
+    .classes-weekday-option input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .classes-weekday-chip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.95rem;
+        border: 1px solid rgb(148 163 184 / 0.24);
+        background: rgb(255 255 255 / 0.78);
+        padding: 0.72rem 0.55rem;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: rgb(51 65 85 / 0.95);
+        cursor: pointer;
+        transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .classes-weekday-option input:checked + .classes-weekday-chip {
+        border-color: rgb(6 182 212 / 0.46);
+        background: linear-gradient(135deg, rgb(14 165 233 / 0.14), rgb(16 185 129 / 0.14));
+        color: rgb(14 116 144);
+        transform: translateY(-1px);
+    }
+
+    .theme-dark .classes-weekday-chip,
+    .dark .classes-weekday-chip {
+        border-color: rgb(71 85 105 / 0.68);
+        background: rgb(15 23 42 / 0.62);
+        color: rgb(226 232 240 / 0.94);
+    }
+
+    .theme-dark .classes-weekday-option input:checked + .classes-weekday-chip,
+    .dark .classes-weekday-option input:checked + .classes-weekday-chip {
+        border-color: rgb(34 211 238 / 0.44);
+        background: linear-gradient(135deg, rgb(8 47 73 / 0.92), rgb(6 78 59 / 0.9));
+        color: rgb(165 243 252);
+    }
+
+    .classes-weekday-summary {
+        font-size: 0.72rem;
+        line-height: 1.4;
+        color: rgb(100 116 139 / 0.94);
+    }
+
+    .theme-dark .classes-weekday-summary,
+    .dark .classes-weekday-summary {
+        color: rgb(148 163 184 / 0.9);
+    }
+
     .classes-price-pill {
         display: inline-flex;
         align-items: center;
@@ -197,6 +267,23 @@
                 'cancelled' => ['label' => 'Cancelada', 'variant' => 'danger'],
                 default => ['label' => 'Programada', 'variant' => 'success'],
             };
+        };
+        $weekdayOptions = \App\Models\GymClass::WEEKDAY_FULL_LABELS;
+        $weekdayKeys = \App\Models\GymClass::weekdayKeys();
+        $normalizeWeekdaySelection = static function ($value) {
+            return \App\Models\GymClass::normalizeWeekdaySelection(is_array($value) ? $value : []);
+        };
+        $formatWeekdays = static function ($classModel): string {
+            return $classModel instanceof \App\Models\GymClass
+                ? $classModel->activeWeekdaysLabel()
+                : 'Todos los dias';
+        };
+        $encodeWeekdays = static function ($classModel): string {
+            if (! ($classModel instanceof \App\Models\GymClass)) {
+                return implode(',', \App\Models\GymClass::weekdayKeys());
+            }
+
+            return implode(',', $classModel->activeWeekdays());
         };
         $describeClassPrice = static function ($classModel): array {
             $amount = (float) ($classModel?->price ?? 0);
@@ -287,11 +374,15 @@
         $createEndDateValue = $createOld('end_date', $splitMomentDate($createOld('ends_at', $createEndSeed)));
         $createEndTimeValue = $createOld('end_time', $splitMomentTime($createOld('ends_at', $createEndSeed)));
         $createPriceValue = $createOld('price', '0.00');
+        $createActiveWeekdays = $normalizeWeekdaySelection($createOld('active_weekdays', $weekdayKeys));
         $editStartDateValue = $editOld('start_date', $splitMomentDate($editOld('starts_at', $editingClass?->starts_at)));
         $editStartTimeValue = $editOld('start_time', $splitMomentTime($editOld('starts_at', $editingClass?->starts_at)));
         $editEndDateValue = $editOld('end_date', $splitMomentDate($editOld('ends_at', $editingClass?->ends_at)));
         $editEndTimeValue = $editOld('end_time', $splitMomentTime($editOld('ends_at', $editingClass?->ends_at)));
         $editPriceValue = $editOld('price', $editPriceMeta['input']);
+        $editActiveWeekdays = $isEditFormRequest
+            ? $normalizeWeekdaySelection($editOld('active_weekdays', $editingClass?->activeWeekdays() ?? $weekdayKeys))
+            : ($editingClass?->activeWeekdays() ?? $weekdayKeys);
     @endphp
 
     <div class="classes-page">
@@ -338,6 +429,7 @@
                                 data-class-reserved-count="{{ (int) $nextClass->reserved_count }}"
                                 data-class-waitlist-count="{{ (int) $nextClass->waitlist_count }}"
                                 data-class-gym="{{ $nextClassGymLabel }}"
+                                data-class-weekdays="{{ $encodeWeekdays($nextClass) }}"
                             >Editar proxima clase</x-ui.button>
                         @else
                             <x-ui.button :href="route('classes.show', $routeParams + ['gymClass' => $nextClass->id])" variant="primary">Ver proxima clase</x-ui.button>
@@ -451,6 +543,22 @@
                             </label>
                         </div>
 
+                        <div class="classes-weekday-picker">
+                            <div>
+                                <p class="font-semibold text-slate-700 dark:text-slate-200">Dias activos</p>
+                                <p class="classes-weekday-summary">Marca solo los dias en que esta clase debe aparecer dentro del rango elegido.</p>
+                            </div>
+                            <div class="classes-weekday-grid">
+                                @foreach ($weekdayOptions as $weekdayValue => $weekdayLabel)
+                                    <label class="classes-weekday-option">
+                                        <input type="checkbox" name="active_weekdays[]" value="{{ $weekdayValue }}" @checked(in_array((int) $weekdayValue, $createActiveWeekdays, true))>
+                                        <span class="classes-weekday-chip">{{ $weekdayLabel }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="classes-weekday-summary">Si dejas todos marcados, la clase correra todos los dias del rango.</p>
+                        </div>
+
                         <label class="block space-y-2 text-sm">
                             <span class="font-semibold text-slate-700 dark:text-slate-200">Descripcion</span>
                             <textarea name="description" rows="4" class="ui-input" placeholder="Que incluye, recomendaciones o detalles del dia.">{{ $createOld('description', '') }}</textarea>
@@ -523,6 +631,7 @@
                                                         | {{ $classItem->room_name }}
                                                     @endif
                                                 </p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">Dias: {{ $formatWeekdays($classItem) }}</p>
                                             </div>
                                         </td>
                                         <td>
@@ -573,6 +682,7 @@
                                                         data-class-reserved-count="{{ (int) $classItem->reserved_count }}"
                                                         data-class-waitlist-count="{{ (int) $classItem->waitlist_count }}"
                                                         data-class-gym="{{ $gymLabel }}"
+                                                        data-class-weekdays="{{ $encodeWeekdays($classItem) }}"
                                                     >Editar</x-ui.button>
                                                 </div>
                                             @else
@@ -695,6 +805,22 @@
                                 </label>
                             </div>
 
+                            <div class="classes-weekday-picker">
+                                <div>
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200">Dias activos</p>
+                                    <p class="classes-weekday-summary">Define exactamente que dias debe repetirse la clase dentro del rango.</p>
+                                </div>
+                                <div class="classes-weekday-grid">
+                                    @foreach ($weekdayOptions as $weekdayValue => $weekdayLabel)
+                                        <label class="classes-weekday-option">
+                                            <input type="checkbox" name="active_weekdays[]" value="{{ $weekdayValue }}" @checked(in_array((int) $weekdayValue, $editActiveWeekdays, true))>
+                                            <span class="classes-weekday-chip">{{ $weekdayLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                <p class="classes-weekday-summary">Esto hace evidente si la clase corre todos los dias o solo lunes, miercoles, viernes, etc.</p>
+                            </div>
+
                             <label class="block space-y-2 text-sm">
                                 <span class="font-semibold text-slate-700 dark:text-slate-200">Descripcion</span>
                                 <textarea name="description" rows="4" class="ui-input">{{ $editOld('description', $editingClass?->description ?? '') }}</textarea>
@@ -757,6 +883,10 @@
         const statusField = getField('status');
         const descriptionField = getField('description');
         const waitlistField = getField('allow_waitlist');
+        const weekdayFields = Array.from(form ? form.querySelectorAll('input[name="active_weekdays[]"]') : []);
+        const defaultWeekdays = weekdayFields.length > 0
+            ? weekdayFields.map(function (field) { return String(field.value || '').trim(); }).filter(Boolean)
+            : ['1', '2', '3', '4', '5', '6', '7'];
 
         const splitDateTime = function (value) {
             const raw = String(value || '').trim();
@@ -786,6 +916,21 @@
                 label: '$' + amount.toFixed(2),
                 classes: 'classes-price-pill is-paid',
             };
+        };
+
+        const normalizeWeekdays = function (value) {
+            const values = Array.isArray(value)
+                ? value
+                : String(value || '').split(',');
+            const normalized = values
+                .map(function (item) {
+                    return String(item || '').trim();
+                })
+                .filter(function (item, index, items) {
+                    return item !== '' && items.indexOf(item) === index;
+                });
+
+            return normalized.length > 0 ? normalized : defaultWeekdays;
         };
 
         const getFocusableElements = function (container) {
@@ -835,6 +980,11 @@
             if (statusField) statusField.value = data.status || 'scheduled';
             if (descriptionField) descriptionField.value = data.description || '';
             if (waitlistField) waitlistField.checked = data.allowWaitlist === '1';
+
+            const selectedWeekdays = normalizeWeekdays(data.activeWeekdays);
+            weekdayFields.forEach(function (field) {
+                field.checked = selectedWeekdays.includes(String(field.value || '').trim());
+            });
         };
 
         const updateMeta = function (data) {
@@ -916,6 +1066,7 @@
                 reservedCount: button.dataset.classReservedCount || '0',
                 waitlistCount: button.dataset.classWaitlistCount || '0',
                 gym: button.dataset.classGym || 'Sede actual',
+                activeWeekdays: button.dataset.classWeekdays || defaultWeekdays,
             };
 
             if (form) {
@@ -969,4 +1120,5 @@
     })();
 </script>
 @endpush
+
 

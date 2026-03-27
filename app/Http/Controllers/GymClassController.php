@@ -44,14 +44,26 @@ class GymClassController extends Controller
             ->search($search)
             ->where('starts_at', '<=', $windowEnd)
             ->where('ends_at', '>=', $windowStart)
-            ->orderBy('starts_at')
-            ->get();
+            ->get()
+            ->filter(static function (GymClass $classModel) use ($windowStart, $windowEnd): bool {
+                return $classModel->occursWithinRange($windowStart, $windowEnd);
+            })
+            ->sortBy(static function (GymClass $classModel) use ($windowStart): int {
+                $window = $classModel->nextOccurrenceWindow($windowStart);
+
+                return $window ? $window['start']->getTimestamp() : PHP_INT_MAX;
+            })
+            ->values();
 
         $todayClassesCount = GymClass::query()
             ->forGyms($gymIds)
             ->where('status', GymClass::STATUS_SCHEDULED)
             ->where('starts_at', '<=', $todayEnd)
             ->where('ends_at', '>=', $todayStart)
+            ->get()
+            ->filter(static function (GymClass $classModel) use ($todayStart): bool {
+                return $classModel->occursOnDate($todayStart);
+            })
             ->count();
 
         $todayReservationsCount = GymClassReservation::query()
@@ -60,17 +72,29 @@ class GymClassController extends Controller
                 GymClassReservation::STATUS_RESERVED,
                 GymClassReservation::STATUS_ATTENDED,
             ])
+            ->with(['gymClass:id,gym_id,active_weekdays,starts_at,ends_at,status'])
             ->whereHas('gymClass', function ($query) use ($todayStart, $todayEnd): void {
                 $query->where('starts_at', '<=', $todayEnd)
                     ->where('ends_at', '>=', $todayStart);
+            })
+            ->get()
+            ->filter(static function (GymClassReservation $reservation) use ($todayStart): bool {
+                return $reservation->gymClass instanceof GymClass
+                    && $reservation->gymClass->occursOnDate($todayStart);
             })
             ->count();
 
         $waitlistCount = GymClassReservation::query()
             ->whereIn('gym_id', $gymIds)
             ->where('status', GymClassReservation::STATUS_WAITLIST)
+            ->with(['gymClass:id,gym_id,active_weekdays,starts_at,ends_at,status'])
             ->whereHas('gymClass', function ($query): void {
                 $query->where('ends_at', '>=', now());
+            })
+            ->get()
+            ->filter(static function (GymClassReservation $reservation): bool {
+                return $reservation->gymClass instanceof GymClass
+                    && $reservation->gymClass->nextOccurrenceWindow(now()) !== null;
             })
             ->count();
 
@@ -83,7 +107,15 @@ class GymClassController extends Controller
             ])
             ->where('status', GymClass::STATUS_SCHEDULED)
             ->where('ends_at', '>=', now())
-            ->orderBy('starts_at')
+            ->get()
+            ->filter(static function (GymClass $classModel): bool {
+                return $classModel->nextOccurrenceWindow(now()) !== null;
+            })
+            ->sortBy(static function (GymClass $classModel): int {
+                $window = $classModel->nextOccurrenceWindow(now());
+
+                return $window ? $window['start']->getTimestamp() : PHP_INT_MAX;
+            })
             ->first();
 
         $canManageClasses = ! ActiveGymContext::isGlobal($request) && ! (bool) $request->user()?->isCashier();
@@ -292,6 +324,8 @@ class GymClassController extends Controller
             'room_name' => ['nullable', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:1200'],
             'price' => ['nullable', 'numeric', 'min:0', 'max:99999.99'],
+            'active_weekdays' => ['nullable', 'array'],
+            'active_weekdays.*' => ['integer', 'between:1,7'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date'],
             'start_date' => ['nullable', 'date_format:Y-m-d'],
@@ -318,6 +352,7 @@ class GymClassController extends Controller
         $data['starts_at'] = $startsAt;
         $data['ends_at'] = $endsAt;
         $data['price'] = round((float) ($data['price'] ?? 0), 2);
+        $data['active_weekdays'] = GymClass::normalizeWeekdaySelection($data['active_weekdays'] ?? []);
         $data['allow_waitlist'] = $request->boolean('allow_waitlist');
 
         return $data;

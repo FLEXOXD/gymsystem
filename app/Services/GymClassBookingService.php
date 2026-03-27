@@ -392,7 +392,7 @@ class GymClassBookingService
                     ->whereDate('ends_at', '>=', $gymClass->starts_at->toDateString());
             })
             ->with([
-                'gymClass:id,gym_id,name,starts_at,ends_at,status',
+                'gymClass:id,gym_id,name,active_weekdays,starts_at,ends_at,status',
             ])
             ->orderByRaw(
                 "CASE status
@@ -437,7 +437,11 @@ class GymClassBookingService
             return 'el '.$startDateLabel.' de '.$startTimeLabel.' a '.$endTimeLabel;
         }
 
-        return 'del '.$startDateLabel.' al '.$endDateLabel.', de '.$startTimeLabel.' a '.$endTimeLabel;
+        $weekdaySummary = $gymClass->usesAllWeekdays()
+            ? ''
+            : ' ('.$gymClass->activeWeekdaysLabel().')';
+
+        return 'del '.$startDateLabel.' al '.$endDateLabel.$weekdaySummary.', de '.$startTimeLabel.' a '.$endTimeLabel;
     }
 
     /**

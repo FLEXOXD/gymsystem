@@ -115,7 +115,10 @@
                 | {{ $classModel->instructor_name ?: 'Instructor por definir' }}
             </p>
             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                La edicion de la clase ahora se hace desde la agenda con el boton Abrir.
+                Dias activos: {{ $classModel->activeWeekdaysLabel(true) }}
+            </p>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                La edicion de la clase ahora se hace desde la agenda con el boton Editar.
             </p>
         </div>
 
@@ -146,6 +149,10 @@
                 <p class="class-detail-stat-label">Precio</p>
                 <p class="class-detail-stat-value text-lg !tracking-normal">{{ $priceMeta['label'] }}</p>
             </article>
+            <article class="class-detail-stat">
+                <p class="class-detail-stat-label">Dias activos</p>
+                <p class="class-detail-stat-value text-lg !tracking-normal">{{ $classModel->activeWeekdaysLabel() }}</p>
+            </article>
         </section>
 
         <section class="class-detail-grid">
@@ -167,6 +174,10 @@
                         <div>
                             <dt class="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">Nivel</dt>
                             <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $classModel->level ?: '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">Dias activos</dt>
+                            <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $classModel->activeWeekdaysLabel(true) }}</dd>
                         </div>
                     </dl>
 

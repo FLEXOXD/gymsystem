@@ -911,7 +911,7 @@
             padding-top: 2.2rem;
             border-top: 1px solid #2b5a40;
         }
-        main section[id] { scroll-margin-top: 7.6rem; }
+        main section[id] { scroll-margin-top: var(--landing-scroll-offset, 7.6rem); }
         .heading { text-align: center; margin-bottom: 1.35rem; }
         .heading small {
             display: inline-block; color: #9cf7b1;
@@ -3592,8 +3592,15 @@
 
             const topWrap = document.querySelector('.top-wrap');
             if (topWrap) {
+                const syncScrollOffset = function () {
+                    const navHeight = Math.ceil(topWrap.getBoundingClientRect().height || 0);
+                    const scrollOffset = Math.max(122, navHeight + 24);
+                    document.documentElement.style.setProperty('--landing-scroll-offset', scrollOffset + 'px');
+                };
+
                 const syncCompactNav = function () {
                     topWrap.classList.toggle('is-compact', window.scrollY > 18);
+                    syncScrollOffset();
                 };
 
                 syncCompactNav();
@@ -3621,6 +3628,11 @@
 
                 const currentPath = function () {
                     return normalizePath(window.location.pathname);
+                };
+
+                const getSectionActivationOffset = function () {
+                    const navHeight = topWrap ? Math.ceil(topWrap.getBoundingClientRect().height || 0) : 0;
+                    return Math.max(122, navHeight + 24);
                 };
 
                 const sectionCandidates = [];
@@ -3715,31 +3727,16 @@
                         return '';
                     }
 
-                    const topOffset = Math.max(120, Math.floor(window.innerHeight * 0.18));
-                    let active = '';
-                    let bestDistance = Number.POSITIVE_INFINITY;
+                    const marker = window.scrollY + getSectionActivationOffset();
+                    let active = normalizePath(homePathname) + '#inicio';
 
                     sectionCandidates.forEach(function (candidate) {
-                        const rect = candidate.section.getBoundingClientRect();
-                        const isInRange = rect.top <= topOffset && rect.bottom >= (topOffset * 0.35);
-                        if (isInRange) {
-                            const distance = Math.abs(rect.top - topOffset);
-                            if (distance < bestDistance) {
-                                bestDistance = distance;
-                                active = candidate.key;
-                            }
+                        if (marker >= (candidate.section.offsetTop - 1)) {
+                            active = candidate.key;
                         }
                     });
 
-                    if (active !== '') {
-                        return active;
-                    }
-
-                    if (window.scrollY < 64) {
-                        return normalizePath(homePathname) + '#inicio';
-                    }
-
-                    return '';
+                    return active;
                 };
 
                 const syncActiveNav = function () {
