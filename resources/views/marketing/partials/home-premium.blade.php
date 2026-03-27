@@ -637,9 +637,11 @@
                     $hasOffer = $offerText !== '' || ($discountPrice !== null && ($isContactMode || $discountPrice < $price));
                     $planFeatures = collect((array) ($planCard['features'] ?? []))
                         ->map(static fn ($feature): string => trim((string) $feature))
-                        ->filter(static fn (string $feature): bool => $feature !== '')
+                        ->filter(static fn (string $feature): bool => $feature !== '' && ! preg_match('/^todo lo del plan\s+/iu', $feature))
                         ->take(4)
                         ->values();
+                    $planIdealFor = trim((string) ($planCard['ideal_for'] ?? ''));
+                    $planOpsFocus = trim((string) ($planCard['ops_focus'] ?? ''));
                 @endphp
 
                 <article class="premium-plan-card reveal {{ $isFeatured ? 'is-featured' : '' }}">
@@ -677,6 +679,24 @@
                                 <strong>Ahora ${{ $formatPlanMoney($discountPrice) }}</strong>
                             @else
                                 <strong>Oferta comercial activa</strong>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if ($planIdealFor !== '' || $planOpsFocus !== '')
+                        <div class="premium-plan-meta">
+                            @if ($planIdealFor !== '')
+                                <article class="premium-plan-meta-item">
+                                    <strong>Ideal para</strong>
+                                    <span>{{ $planIdealFor }}</span>
+                                </article>
+                            @endif
+
+                            @if ($planOpsFocus !== '')
+                                <article class="premium-plan-meta-item">
+                                    <strong>Lo que más te ayuda</strong>
+                                    <span>{{ $planOpsFocus }}</span>
+                                </article>
                             @endif
                         </div>
                     @endif
